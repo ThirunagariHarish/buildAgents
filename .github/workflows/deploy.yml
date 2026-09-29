@@ -80,10 +80,11 @@ jobs:
             DOMAIN="${{ secrets.BOX_DOMAIN }}"
             [ -n "$DOMAIN" ] || DOMAIN="box.cashflowus.com"
 
-            if [ -d /data/coolify/proxy/dynamic ]; then
+            if [ -d /data/coolify/proxy ]; then
               # Coolify's Traefik owns 80/443. Publish Box through it with a
               # dynamic-config file: hot-reloaded by Traefik's file watcher,
               # auto Let's Encrypt, zero impact on Coolify-managed apps.
+              mkdir -p /data/coolify/proxy/dynamic
               GW=$(docker inspect coolify-proxy --format '{{range .NetworkSettings.Networks}}{{.Gateway}} {{end}}' 2>/dev/null | awk '{print $1}')
               [ -n "$GW" ] || GW=172.17.0.1
               {
@@ -114,9 +115,13 @@ jobs:
                 echo "          - url: \"http://$GW:3400\""
               } > /data/coolify/proxy/dynamic/box.yaml
               echo "Traefik route written: https://$DOMAIN -> $GW:3400"
+              echo "--- route file on disk ---"; ls -la /data/coolify/proxy/dynamic/; cat /data/coolify/proxy/dynamic/box.yaml
+              echo "--- traefik mounts ---"; docker inspect coolify-proxy --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{"\n"}}{{end}}' | head -6
+              echo "--- traefik file provider flags ---"; docker inspect coolify-proxy --format '{{json .Args}}' | tr ',' '\n' | grep -i 'providers.file' || echo "(NO file provider configured!)"
               sleep 8
+              echo "--- traefik recent log ---"; docker logs coolify-proxy --tail 15 2>&1 | grep -iE 'error|box|filename' || echo "(no relevant traefik log lines)"
               HC=$(curl -sk -o /dev/null -w "%{http_code}" --resolve "$DOMAIN:443:127.0.0.1" "https://$DOMAIN/" || true)
-              echo "HTTPS via Traefik answered: HTTP $HC (401 = Box login prompt = SUCCESS; 502 = Traefik cannot reach host; cert may take ~1 min on first issue)"
+              echo "HTTPS via Traefik answered: HTTP $HC (401 = Box login prompt = SUCCESS; 502 = Traefik cannot reach host; 404 = route not loaded; cert may take ~1 min on first issue)"
               exit 0
             fi
 
