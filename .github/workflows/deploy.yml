@@ -60,7 +60,7 @@ jobs:
               C=$(curl -s -o /tmp/selftest -w "%{http_code}" -u "box:$PW" --max-time 10 "http://localhost:3400$p" || echo FAIL)
               echo "GET $p -> $C ($(wc -c < /tmp/selftest 2>/dev/null || echo 0) bytes)"
             done
-            echo "--- first 200B of / ---"; curl -s -u "box:$PW" --max-time 10 http://localhost:3400/ | head -c 200; echo
+            echo "--- first 200B of / ---"; curl -s -u "box:$PW" --max-time 10 -o /tmp/selftest-index http://localhost:3400/ || true; head -c 200 /tmp/selftest-index || true; echo
             echo "--- recent service log ---"; journalctl -u box --no-pager -n 30 || true
             echo "--- files on disk ---"; ls -la /opt/box/public 2>/dev/null | head -12
             echo "===== END SELF-TEST ====="
