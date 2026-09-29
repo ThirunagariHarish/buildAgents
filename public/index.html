@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Box</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+</head>
+<body>
+<div id="app">
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div class="side-head">
+      <div class="logo">📦 <span>Box</span></div>
+      <button id="new-idea-btn" class="btn primary">＋ New idea</button>
+    </div>
+    <div id="idea-list"></div>
+    <div class="side-foot">Powered by your Claude subscription<br><span class="dim">via headless Claude Code CLI</span></div>
+  </aside>
+
+  <!-- Main -->
+  <main id="main">
+    <div id="empty-state">
+      <div class="empty-inner">
+        <div class="empty-logo">📦</div>
+        <h1>Welcome to Box</h1>
+        <p>Drop in a raw idea. A room of expert agents — entrepreneur, marketer, architect, visionary, critic — will debate it, stress-test it, and mature it into a project brief while you watch.</p>
+        <button class="btn primary big" onclick="openNewIdea()">＋ Start with an idea</button>
+      </div>
+    </div>
+
+    <div id="room" class="hidden">
+      <header id="room-head">
+        <div class="room-title-wrap">
+          <div id="room-title"></div>
+          <div id="room-meta"></div>
+        </div>
+        <div class="room-controls">
+          <span id="status-pill"></span>
+          <button id="run-btn" class="btn primary">▶ Start debate</button>
+          <button id="pause-btn" class="btn hidden">⏸ Pause</button>
+          <button id="brief-btn" class="btn hidden">📄 Idea brief</button>
+          <button id="delete-btn" class="btn danger-ghost" title="Delete idea">🗑</button>
+        </div>
+      </header>
+
+      <div id="agent-strip"></div>
+
+      <div id="chat"></div>
+
+      <footer id="composer">
+        <textarea id="composer-input" rows="1" placeholder="Steer the room — add context, answer questions, push a direction… (agents read this next turn)"></textarea>
+        <button id="send-btn" class="btn primary">Send</button>
+      </footer>
+    </div>
+  </main>
+
+  <!-- Agent detail panel -->
+  <aside id="agent-panel" class="hidden">
+    <div class="panel-head">
+      <div id="agent-panel-title"></div>
+      <button class="icon-btn" onclick="closeAgentPanel()">✕</button>
+    </div>
+    <div id="agent-panel-body"></div>
+  </aside>
+</div>
+
+<!-- New idea modal -->
+<div id="modal-backdrop" class="hidden">
+  <div id="new-idea-modal">
+    <h2>New idea</h2>
+    <input id="idea-title" type="text" placeholder="Short title (optional)">
+    <textarea id="idea-text" rows="8" placeholder="Describe your idea in your own words — rough is fine. The room will do the polishing."></textarea>
+    <div class="modal-row">
+      <label>Debate rounds
+        <select id="idea-rounds">
+          <option value="1">1 — quick pass</option>
+          <option value="2" selected>2 — standard</option>
+          <option value="3">3 — deep</option>
+          <option value="4">4 — exhaustive</option>
+        </select>
+      </label>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeNewIdea()">Cancel</button>
+        <button class="btn primary" id="create-idea-btn">Create &amp; start</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Brief modal -->
+<div id="brief-backdrop" class="hidden">
+  <div id="brief-modal">
+    <div class="panel-head">
+      <div>📄 Idea Brief</div>
+      <button class="icon-btn" onclick="closeBrief()">✕</button>
+    </div>
+    <div id="brief-body" class="md"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

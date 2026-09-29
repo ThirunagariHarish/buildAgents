@@ -1,0 +1,11 @@
+{
+  "name": "box",
+  "version": "1.0.0",
+  "description": "A room of AI experts that debates your idea until it's a real project. Powered by your Claude subscription via headless Claude Code CLI — no API key, no SDK, no dependencies.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": { "node": ">=18" },
+  "license": "MIT"
+}
