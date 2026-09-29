@@ -1,8 +1,8 @@
-run: 17  commit: d7c0291  ssh step: success  at: 2026-09-29T09:38:55Z
+run: 18  commit: 7eb6400  ssh step: success  at: 2026-09-29T09:39:49Z
 
-HEAD: d7c0291   domain: box.cashflowus.com
+HEAD: 7eb6400   domain: box.cashflowus.com
 == env file ==
-claude token shape: prefix=SiddU6lFgiMCq length=92 (expect prefix sk-ant-oat01-, length ~108)
+claude token: WRONG FORMAT (length 92) — expected the sk-ant-oat01-... token that 'claude setup-token' prints in the terminal
 keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN 
 == box service ==
 ==> Installing Node.js 22 (if missing)
