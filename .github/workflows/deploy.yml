@@ -52,6 +52,19 @@ jobs:
               *) echo "❌ Box did not respond"; journalctl -u box --no-pager -n 30; exit 1 ;;
             esac
 
+            # ---- Self-test: fetch the UI exactly as a browser would ----
+            echo "===== SELF-TEST ====="
+            echo "--- node ---"; node --version; echo "--- service ---"; systemctl is-active box || true
+            PW=$(grep -oP '(?<=^BOX_PASSWORD=).*' /etc/box.env 2>/dev/null || echo '')
+            for p in "/" "/style.css" "/app.js" "/api/agents"; do
+              C=$(curl -s -o /tmp/selftest -w "%{http_code}" -u "box:$PW" --max-time 10 "http://localhost:3400$p" || echo FAIL)
+              echo "GET $p -> $C ($(wc -c < /tmp/selftest 2>/dev/null || echo 0) bytes)"
+            done
+            echo "--- first 200B of / ---"; curl -s -u "box:$PW" --max-time 10 http://localhost:3400/ | head -c 200; echo
+            echo "--- recent service log ---"; journalctl -u box --no-pager -n 30 || true
+            echo "--- files on disk ---"; ls -la /opt/box/public 2>/dev/null | head -12
+            echo "===== END SELF-TEST ====="
+
             # ---- Diagnostics: what owns 80/443, so Box can be routed behind it ----
             echo "===== DIAGNOSTICS ====="
             echo "--- box service ---";      systemctl --no-pager -l status box 2>&1 | head -12 || true
