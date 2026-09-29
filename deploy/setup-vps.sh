@@ -19,7 +19,7 @@ if ! command -v claude >/dev/null; then
 fi
 
 echo "==> Checking Claude login"
-if claude -p "Reply with exactly: OK" --model haiku >/dev/null 2>&1; then
+if (set -a; [ -f /etc/box.env ] && . /etc/box.env; set +a; claude -p "Reply with exactly: OK" --model haiku >/dev/null 2>&1); then
   echo "   Claude login OK"
 else
   cat <<'EOF'
