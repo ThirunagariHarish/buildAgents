@@ -9,6 +9,10 @@ cd "$APP_DIR"
 echo "HEAD: $(git rev-parse --short HEAD)   domain: $DOMAIN"
 
 echo "== env file =="
+CLAUDE_CODE_OAUTH_TOKEN=$(printf '%s' "${CLAUDE_CODE_OAUTH_TOKEN:-}" | tr -d '[:space:]')
+if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+  echo "claude token shape: prefix=${CLAUDE_CODE_OAUTH_TOKEN:0:13} length=${#CLAUDE_CODE_OAUTH_TOKEN} (expect prefix sk-ant-oat01-, length ~108)"
+fi
 {
   [ -n "${BOX_PASSWORD:-}" ] && printf 'BOX_PASSWORD=%s\n' "$BOX_PASSWORD"
   [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] && printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "$CLAUDE_CODE_OAUTH_TOKEN"
