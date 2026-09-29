@@ -50,3 +50,30 @@ jobs:
               200|401) echo "✅ Box is up" ;;
               *) echo "❌ Box did not respond"; journalctl -u box --no-pager -n 30; exit 1 ;;
             esac
+
+            # HTTPS via Caddy on the server's hostname (auto Let's Encrypt).
+            # Only if the domain resolves to this server and ports 80/443 are
+            # free or already Caddy's — never disturbs other services.
+            DOMAIN="${{ secrets.BOX_DOMAIN }}"
+            [ -n "$DOMAIN" ] || DOMAIN="srv1349789.hstgr.cloud"
+            MY_IP=$(curl -s --max-time 10 https://api.ipify.org || hostname -I | awk '{print $1}')
+            DNS_IP=$(getent hosts "$DOMAIN" | awk '{print $1}' | head -1)
+            if [ "$DNS_IP" != "$MY_IP" ]; then
+              echo "⚠ $DOMAIN resolves to '$DNS_IP', not this server ($MY_IP) — skipping HTTPS setup"
+            elif ss -ltn | awk '{print $4}' | grep -qE ':(80|443)$' && ! systemctl is-active --quiet caddy; then
+              echo "⚠ Ports 80/443 busy with a non-Caddy service — skipping HTTPS setup, Box stays on :3400"
+            else
+              if ! command -v caddy >/dev/null; then
+                apt-get update -y
+                apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl gnupg
+                curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/gpg.key | gpg --yes --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+                curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt > /etc/apt/sources.list.d/caddy-stable.list
+                apt-get update -y && apt-get install -y caddy
+              fi
+              printf '%s {\n\treverse_proxy localhost:3400\n}\n' "$DOMAIN" > /etc/caddy/Caddyfile
+              systemctl enable --now caddy
+              systemctl reload caddy || systemctl restart caddy
+              sleep 8
+              HCODE=$(curl -sk -o /dev/null -w "%{http_code}" "https://$DOMAIN/" || true)
+              echo "HTTPS check on $DOMAIN: HTTP $HCODE (cert may take ~1 min on first issue)"
+            fi
