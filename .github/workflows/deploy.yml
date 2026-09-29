@@ -76,11 +76,51 @@ jobs:
             echo "--- coolify/dokploy ---";  ls /data/coolify 2>/dev/null && echo coolify-present || true; ls /etc/dokploy 2>/dev/null && echo dokploy-present || true
             echo "===== END DIAGNOSTICS ====="
 
-            # HTTPS via Caddy on the server's hostname (auto Let's Encrypt).
-            # Only if the domain resolves to this server and ports 80/443 are
-            # free or already Caddy's — never disturbs other services.
+            # ---- Publish Box on the domain ----
             DOMAIN="${{ secrets.BOX_DOMAIN }}"
-            [ -n "$DOMAIN" ] || DOMAIN="srv1349789.hstgr.cloud"
+            [ -n "$DOMAIN" ] || DOMAIN="box.cashflowus.com"
+
+            if [ -d /data/coolify/proxy/dynamic ]; then
+              # Coolify's Traefik owns 80/443. Publish Box through it with a
+              # dynamic-config file: hot-reloaded by Traefik's file watcher,
+              # auto Let's Encrypt, zero impact on Coolify-managed apps.
+              GW=$(docker inspect coolify-proxy --format '{{range .NetworkSettings.Networks}}{{.Gateway}} {{end}}' 2>/dev/null | awk '{print $1}')
+              [ -n "$GW" ] || GW=172.17.0.1
+              {
+                echo 'http:'
+                echo '  routers:'
+                echo '    box-http:'
+                echo "      rule: Host(\`$DOMAIN\`)"
+                echo '      entryPoints:'
+                echo '        - http'
+                echo '      middlewares:'
+                echo '        - box-https-redirect'
+                echo '      service: box'
+                echo '    box-https:'
+                echo "      rule: Host(\`$DOMAIN\`)"
+                echo '      entryPoints:'
+                echo '        - https'
+                echo '      service: box'
+                echo '      tls:'
+                echo '        certResolver: letsencrypt'
+                echo '  middlewares:'
+                echo '    box-https-redirect:'
+                echo '      redirectScheme:'
+                echo '        scheme: https'
+                echo '  services:'
+                echo '    box:'
+                echo '      loadBalancer:'
+                echo '        servers:'
+                echo "          - url: \"http://$GW:3400\""
+              } > /data/coolify/proxy/dynamic/box.yaml
+              echo "Traefik route written: https://$DOMAIN -> $GW:3400"
+              sleep 8
+              HC=$(curl -sk -o /dev/null -w "%{http_code}" --resolve "$DOMAIN:443:127.0.0.1" "https://$DOMAIN/" || true)
+              echo "HTTPS via Traefik answered: HTTP $HC (401 = Box login prompt = SUCCESS; 502 = Traefik cannot reach host; cert may take ~1 min on first issue)"
+              exit 0
+            fi
+
+            # Fallback: Caddy on a free 80/443 (non-Coolify servers).
             MY_IP=$(curl -s --max-time 10 https://api.ipify.org || hostname -I | awk '{print $1}')
             DNS_IP=$(getent hosts "$DOMAIN" | awk '{print $1}' | head -1)
             if [ "$DNS_IP" != "$MY_IP" ]; then
