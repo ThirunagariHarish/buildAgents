@@ -1,0 +1,60 @@
+run: 14  commit: 56fe510  ssh step: success  at: 2026-09-29T09:27:58Z
+
+HEAD: 56fe510   domain: box.cashflowus.com
+== env file ==
+keys in /etc/box.env: BOX_PASSWORD 
+== box service ==
+==> Installing Node.js 22 (if missing)
+==> Installing Claude Code CLI (if missing)
+==> Checking Claude login
+  ⚠ Claude CLI is not logged in yet — Box will start but agents will
+==> Installing systemd service (port 3400)
+    ⚠ If you expose Box publicly, protect it (Caddy basic_auth, VPN, or
+service: active
+local /: HTTP 401
+== claude login ==
+Not logged in · Please run /login
+== traefik ==
+--- docker engine: 29.5.2 (API 1.54) ---
+--- traefik args ---
+--api.dashboard=true
+--api.insecure=false
+--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
+--certificatesresolvers.letsencrypt.acme.httpchallenge=true
+--certificatesresolvers.letsencrypt.acme.storage=/traefik/acme.json
+--entryPoints.http.http2.maxConcurrentStreams=250
+--entryPoints.https.http2.maxConcurrentStreams=250
+--entrypoints.http.address=:80
+--entrypoints.http.http.encodequerysemicolons=true
+--entrypoints.https.address=:443
+--entrypoints.https.http.encodequerysemicolons=true
+--entrypoints.https.http3
+--ping.entrypoint=http
+--ping=true
+--providers.docker.exposedbydefault=false
+--providers.docker=true
+--providers.file.directory=/traefik/dynamic/
+--providers.file.watch=true
+detected: http_ep=http https_ep=https resolver=letsencrypt file_dir=/traefik/dynamic/ network=coolify
+--- mounts ---
+/data/coolify/proxy -> /traefik
+/var/run/docker.sock -> /var/run/docker.sock
+== relay container (docker provider) ==
+relay: Up 3 seconds
+--- relay -> box (inside relay's network) ---
+box-web:3400 -> HTTP 401
+== file provider: container /traefik/dynamic/ = host /data/coolify/proxy/dynamic/ ==
+wrote /data/coolify/proxy/dynamic//box.yaml
+== traefik API view ==
+(traefik API not reachable on :8080)
+== domain checks (from the server) ==
+https://box.cashflowus.com -> HTTP 404
+http://box.cashflowus.com  -> HTTP 404
+cert: subject=CN = TRAEFIK DEFAULT CERT issuer=CN = TRAEFIK DEFAULT CERT 
+== traefik log (filtered) ==
+[90m2026-09-29T09:23:41Z[0m [31mERR[0m [1mUnable to obtain ACME certificate for domains[0m [36merror=[0m[31m[1m"unable to generate a certificate for the domains [box.cashflowus.com]: error: one or more domains had a problem:\n[box.cashflowus.com] invalid authorization: acme: error: 403 :: urn:ietf:params:acme:error:unauthorized :: 69.62.86.166: Invalid response from http://box.cashflowus.com/.well-known/acme-challenge/haXkf-loyxbb0SuaxnXuY-44YLunDBEeBirApICNHWw: 404\n"[0m[0m [36mACME CA=[0mhttps://acme-v02.api.letsencrypt.org/directory [36macmeCA=[0mhttps://acme-v02.api.letsencrypt.org/directory [36mdomains=[0m["box.cashflowus.com"] [36mproviderName=[0mletsencrypt.acme [36mrouterName=[0mbox-https@docker [36mrule=[0mHost(`box.cashflowus.com`)
+[90m2026-09-29T09:27:50Z[0m [31mERR[0m [1mUnable to obtain ACME certificate for domains[0m [36merror=[0m[31m[1m"unable to generate a certificate for the domains [box.cashflowus.com]: error: one or more domains had a problem:\n[box.cashflowus.com] invalid authorization: acme: error: 403 :: urn:ietf:params:acme:error:unauthorized :: 69.62.86.166: Invalid response from http://box.cashflowus.com/.well-known/acme-challenge/M7XWzzDI3TuO4QjAbSrae_B08Ef0sxqe3XxVZwAP4xQ: 404\n"[0m[0m [36mACME CA=[0mhttps://acme-v02.api.letsencrypt.org/directory [36macmeCA=[0mhttps://acme-v02.api.letsencrypt.org/directory [36mdomains=[0m["box.cashflowus.com"] [36mproviderName=[0mletsencrypt.acme [36mrouterName=[0mbox-https@file [36mrule=[0mHost(`box.cashflowus.com`)
+== done ==
+===============================================
+✅ Successfully executed commands to all hosts.
+===============================================
