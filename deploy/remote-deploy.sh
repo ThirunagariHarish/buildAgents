@@ -11,7 +11,10 @@ echo "HEAD: $(git rev-parse --short HEAD)   domain: $DOMAIN"
 echo "== env file =="
 CLAUDE_CODE_OAUTH_TOKEN=$(printf '%s' "${CLAUDE_CODE_OAUTH_TOKEN:-}" | tr -d '[:space:]')
 if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
-  echo "claude token shape: prefix=${CLAUDE_CODE_OAUTH_TOKEN:0:13} length=${#CLAUDE_CODE_OAUTH_TOKEN} (expect prefix sk-ant-oat01-, length ~108)"
+  case "$CLAUDE_CODE_OAUTH_TOKEN" in
+    sk-ant-oat01-*) echo "claude token: looks valid (length ${#CLAUDE_CODE_OAUTH_TOKEN})" ;;
+    *) echo "claude token: WRONG FORMAT (length ${#CLAUDE_CODE_OAUTH_TOKEN}) — expected the sk-ant-oat01-... token that 'claude setup-token' prints in the terminal" ;;
+  esac
 fi
 {
   [ -n "${BOX_PASSWORD:-}" ] && printf 'BOX_PASSWORD=%s\n' "$BOX_PASSWORD"
