@@ -1,8 +1,8 @@
-run: 15  commit: dbfbfc3  ssh step: success  at: 2026-09-29T09:36:25Z
+run: 16  commit: addcf7c  ssh step: success  at: 2026-09-29T09:38:11Z
 
-HEAD: dbfbfc3   domain: box.cashflowus.com
+HEAD: addcf7c   domain: box.cashflowus.com
 == env file ==
-keys in /etc/box.env: BOX_PASSWORD 
+keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN 
 == box service ==
 ==> Installing Node.js 22 (if missing)
 ==> Installing Claude Code CLI (if missing)
@@ -13,109 +13,15 @@ keys in /etc/box.env: BOX_PASSWORD
 service: active
 local /: HTTP 401
 == claude login ==
-Not logged in · Please run /login
-== traefik ==
---- docker engine: 29.5.2 (API 1.54) ---
---- traefik args ---
---api.dashboard=true
---api.insecure=false
---certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
---certificatesresolvers.letsencrypt.acme.httpchallenge=true
---certificatesresolvers.letsencrypt.acme.storage=/traefik/acme.json
---entryPoints.http.http2.maxConcurrentStreams=250
---entryPoints.https.http2.maxConcurrentStreams=250
---entrypoints.http.address=:80
---entrypoints.http.http.encodequerysemicolons=true
---entrypoints.https.address=:443
---entrypoints.https.http.encodequerysemicolons=true
---entrypoints.https.http3
---ping.entrypoint=http
---ping=true
---providers.docker.exposedbydefault=false
---providers.docker=true
---providers.file.directory=/traefik/dynamic/
---providers.file.watch=true
-detected: http_ep=http https_ep=https resolver=letsencrypt file_dir=/traefik/dynamic/ network=coolify
---- mounts ---
-/data/coolify/proxy -> /traefik
-/var/run/docker.sock -> /var/run/docker.sock
-== relay container (docker provider) ==
-relay: Up 3 seconds
---- relay -> box (inside relay's network) ---
-box-web:3400 -> HTTP 401
-== file provider: container /traefik/dynamic/ = host /data/coolify/proxy/dynamic/ ==
-wrote /data/coolify/proxy/dynamic//box.yaml
-== traefik API view ==
-(traefik API not reachable on :8080)
-== domain checks (from the server) ==
-https://box.cashflowus.com -> HTTP 404
-http://box.cashflowus.com  -> HTTP 404
-cert: subject=CN = TRAEFIK DEFAULT CERT issuer=CN = TRAEFIK DEFAULT CERT 
-== who really owns :80/:443 (read-only) ==
---- nat rules for 80/443 ---
--A CNI-DN-8b66edb14f97e69834fcb -s 10.42.2.0/24 -p tcp -m tcp --dport 80 -j CNI-HOSTPORT-SETMARK
--A CNI-DN-8b66edb14f97e69834fcb -s 127.0.0.1/32 -p tcp -m tcp --dport 80 -j CNI-HOSTPORT-SETMARK
--A CNI-DN-8b66edb14f97e69834fcb -p tcp -m tcp --dport 80 -j DNAT --to-destination 10.42.2.218:80
--A CNI-DN-8b66edb14f97e69834fcb -s 10.42.2.0/24 -p tcp -m tcp --dport 443 -j CNI-HOSTPORT-SETMARK
--A CNI-DN-8b66edb14f97e69834fcb -s 127.0.0.1/32 -p tcp -m tcp --dport 443 -j CNI-HOSTPORT-SETMARK
--A CNI-DN-8b66edb14f97e69834fcb -p tcp -m tcp --dport 443 -j DNAT --to-destination 10.42.2.218:443
--A DOCKER ! -i br-48b74ee24a26 -p tcp -m tcp --dport 80 -j DNAT --to-destination 172.16.1.3:80
--A DOCKER ! -i br-48b74ee24a26 -p tcp -m tcp --dport 443 -j DNAT --to-destination 172.16.1.3:443
--A DOCKER ! -i br-48b74ee24a26 -p udp -m udp --dport 443 -j DNAT --to-destination 172.16.1.3:443
--A KUBE-SERVICES -d 10.43.59.249/32 -p tcp -m comment --comment "kube-system/traefik:web cluster IP" -m tcp --dport 80 -j KUBE-SVC-UQMCRMJZLI3FTLDP
--A KUBE-SERVICES -d 2.25.157.104/32 -p tcp -m comment --comment "kube-system/traefik:web loadbalancer IP" -m tcp --dport 80 -j KUBE-EXT-UQMCRMJZLI3FTLDP
--A KUBE-SERVICES -d 69.62.86.166/32 -p tcp -m comment --comment "kube-system/traefik:web loadbalancer IP" -m tcp --dport 80 -j KUBE-EXT-UQMCRMJZLI3FTLDP
--A KUBE-SERVICES -d 10.43.0.1/32 -p tcp -m comment --comment "default/kubernetes:https cluster IP" -m tcp --dport 443 -j KUBE-SVC-NPX46M4PTMTKRN6Y
--A KUBE-SERVICES -d 10.43.59.249/32 -p tcp -m comment --comment "kube-system/traefik:websecure cluster IP" -m tcp --dport 443 -j KUBE-SVC-CVG3OEGEH7H5P3HQ
--A KUBE-SERVICES -d 2.25.157.104/32 -p tcp -m comment --comment "kube-system/traefik:websecure loadbalancer IP" -m tcp --dport 443 -j KUBE-EXT-CVG3OEGEH7H5P3HQ
--A KUBE-SERVICES -d 69.62.86.166/32 -p tcp -m comment --comment "kube-system/traefik:websecure loadbalancer IP" -m tcp --dport 443 -j KUBE-EXT-CVG3OEGEH7H5P3HQ
--A KUBE-SERVICES -d 10.43.180.80/32 -p tcp -m comment --comment "kube-system/metrics-server:https cluster IP" -m tcp --dport 443 -j KUBE-SVC-Z4ANX4WAEWEBLCTM
--A KUBE-SERVICES -d 10.43.151.247/32 -p tcp -m comment --comment "cert-manager/cert-manager-webhook:https cluster IP" -m tcp --dport 443 -j KUBE-SVC-ZUD4L6KQKCHD52W4
--A KUBE-SVC-CVG3OEGEH7H5P3HQ ! -s 10.42.0.0/16 -d 10.43.59.249/32 -p tcp -m comment --comment "kube-system/traefik:websecure cluster IP" -m tcp --dport 443 -j KUBE-MARK-MASQ
--A KUBE-SVC-NPX46M4PTMTKRN6Y ! -s 10.42.0.0/16 -d 10.43.0.1/32 -p tcp -m comment --comment "default/kubernetes:https cluster IP" -m tcp --dport 443 -j KUBE-MARK-MASQ
---- direct to coolify-proxy (172.16.1.3) with Host header ---
-http  -> HTTP 302
-https -> HTTP 401
---- via public IP (as the internet sees it) ---
-http://box.cashflowus.com via 69.62.86.166 -> HTTP 404
---- k3s nodes ---
-E0929 09:29:31.865422 2825882 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:55888->[::1]:8080: read: connection reset by peer - error from a previous attempt: EOF"
-E0929 09:29:41.884236 2825882 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:47880->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:47876->[::1]:8080: read: connection reset by peer"
-E0929 09:29:51.905231 2825882 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:44674->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:44662->[::1]:8080: read: connection reset by peer"
-E0929 09:30:01.933718 2825882 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:53022->[::1]:8080: read: connection reset by peer - error from a previous attempt: EOF"
-E0929 09:30:12.098641 2825882 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:40006->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:39990->[::1]:8080: read: connection reset by peer"
---- k3s LoadBalancer/NodePort services ---
---- k3s kube-system pods (traefik/svclb) ---
---- k3s ingresses ---
-E0929 09:32:02.962294 2831814 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": EOF - error from a previous attempt: read tcp [::1]:41502->[::1]:8080: read: connection reset by peer"
-E0929 09:32:12.995397 2831814 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:55568->[::1]:8080: read: connection reset by peer - error from a previous attempt: EOF"
-E0929 09:32:23.023285 2831814 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:57074->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:57058->[::1]:8080: read: connection reset by peer"
-E0929 09:32:33.046936 2831814 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:56618->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:56610->[::1]:8080: read: connection reset by peer"
-E0929 09:32:43.069373 2831814 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:41258->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:41256->[::1]:8080: read: connection reset by peer"
-error: Get "http://localhost:8080/api?timeout=32s": read tcp [::1]:41258->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:41256->[::1]:8080: read: connection reset by peer
---- k3s ingressroutes ---
-E0929 09:32:53.229127 2833730 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:34296->[::1]:8080: read: connection reset by peer - error from a previous attempt: EOF"
-E0929 09:33:03.284156 2833730 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": EOF - error from a previous attempt: read tcp [::1]:52304->[::1]:8080: read: connection reset by peer"
-E0929 09:33:13.310337 2833730 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:59664->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:59650->[::1]:8080: read: connection reset by peer"
-E0929 09:33:23.333195 2833730 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:48570->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:48564->[::1]:8080: read: connection reset by peer"
-E0929 09:33:33.356195 2833730 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:59568->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:59566->[::1]:8080: read: connection reset by peer"
-E0929 09:33:43.385119 2833730 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:53966->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:53950->[::1]:8080: read: connection reset by peer"
-E0929 09:33:53.403364 2833730 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:59344->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:59332->[::1]:8080: read: connection reset by peer"
-error: Get "http://localhost:8080/api?timeout=32s": read tcp [::1]:59344->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:59332->[::1]:8080: read: connection reset by peer
---- cert-manager issuers ---
-E0929 09:34:03.575921 2836311 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:52502->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:52496->[::1]:8080: read: connection reset by peer"
-E0929 09:34:13.599173 2836311 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:47246->[::1]:8080: read: connection reset by peer - error from a previous attempt: EOF"
-E0929 09:34:23.632227 2836311 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:39372->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:39366->[::1]:8080: read: connection reset by peer"
-E0929 09:34:33.659401 2836311 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:52266->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:52258->[::1]:8080: read: connection reset by peer"
-E0929 09:34:43.692829 2836311 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:52474->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:52466->[::1]:8080: read: connection reset by peer"
---- k3s traefik config ---
-E0929 09:34:53.827279 2838134 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:41776->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:41772->[::1]:8080: read: connection reset by peer"
-E0929 09:35:03.869839 2838134 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": EOF"
-E0929 09:35:13.904781 2838134 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:58280->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:58268->[::1]:8080: read: connection reset by peer"
-E0929 09:35:23.924026 2838134 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:55892->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:55888->[::1]:8080: read: connection reset by peer"
-E0929 09:35:33.944711 2838134 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": read tcp [::1]:53388->[::1]:8080: read: connection reset by peer - error from a previous attempt: read tcp [::1]:53372->[::1]:8080: read: connection reset by peer"
-== traefik log (filtered) ==
-(nothing relevant)
+Failed to authenticate. API Error: 401 Invalid bearer token
+== remove earlier Coolify routing attempts ==
+removed relay container box-web
+removed Coolify route file
+== domain, as the internet reaches it (k3s Traefik on the public IP) ==
+http  -> HTTP 404
+https -> HTTP 404
+cert  -> subject=CN = TRAEFIK DEFAULT CERT issuer=CN = TRAEFIK DEFAULT CERT 
+(401 = Box login prompt = working; 404 = k8s route not applied yet)
 == done ==
 ===============================================
 ✅ Successfully executed commands to all hosts.
