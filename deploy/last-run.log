@@ -1,7 +1,8 @@
-run: 16  commit: addcf7c  ssh step: success  at: 2026-09-29T09:38:11Z
+run: 17  commit: d7c0291  ssh step: success  at: 2026-09-29T09:38:55Z
 
-HEAD: addcf7c   domain: box.cashflowus.com
+HEAD: d7c0291   domain: box.cashflowus.com
 == env file ==
+claude token shape: prefix=SiddU6lFgiMCq length=92 (expect prefix sk-ant-oat01-, length ~108)
 keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN 
 == box service ==
 ==> Installing Node.js 22 (if missing)
