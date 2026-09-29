@@ -1,0 +1,12 @@
+{
+  "name": "Box",
+  "short_name": "Box",
+  "description": "A room of AI experts that debates your idea until it's a real project.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1f1e1d",
+  "theme_color": "#1f1e1d",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

@@ -9,6 +9,16 @@ let thinkingAgent = null;
 
 const $ = (id) => document.getElementById(id);
 
+// ---------- mobile drawer ----------
+function openDrawer() {
+  $('sidebar').classList.add('open');
+  $('drawer-backdrop').classList.remove('hidden');
+}
+function closeDrawer() {
+  $('sidebar').classList.remove('open');
+  $('drawer-backdrop').classList.add('hidden');
+}
+
 // ---------- tiny markdown renderer ----------
 function esc(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -82,6 +92,7 @@ async function openIdea(id) {
   $('empty-state').classList.add('hidden');
   $('room').classList.remove('hidden');
   closeAgentPanel();
+  closeDrawer();
   renderRoom();
   connectEvents(id);
   refreshIdeas();
@@ -258,11 +269,17 @@ async function sendSteer() {
   const text = input.value.trim();
   if (!text || !current) return;
   input.value = '';
+  input.style.height = 'auto';
   await api(`/api/ideas/${current.id}/message`, { method: 'POST', body: JSON.stringify({ text }) });
 }
 $('send-btn').onclick = sendSteer;
 $('composer-input').addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendSteer(); }
+});
+// auto-grow composer as you type (mobile-friendly)
+$('composer-input').addEventListener('input', function () {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
 });
 
 // ---------- agent panel ----------
@@ -285,11 +302,16 @@ function openAgentPanel(agentId) {
   }
   $('agent-panel-body').innerHTML = html || '<div class="panel-desc">No contributions yet.</div>';
   $('agent-panel').classList.remove('hidden');
+  $('panel-backdrop').classList.remove('hidden');
 }
-function closeAgentPanel() { $('agent-panel').classList.add('hidden'); }
+function closeAgentPanel() {
+  $('agent-panel').classList.add('hidden');
+  $('panel-backdrop').classList.add('hidden');
+}
 
 // ---------- new idea modal ----------
 function openNewIdea() {
+  closeDrawer();
   $('modal-backdrop').classList.remove('hidden');
   $('idea-text').focus();
 }
