@@ -24,127 +24,16 @@ echo "service: $(systemctl is-active box)"
 echo "local /: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:3400/)"
 
 echo "== claude login =="
-if (set -a; . /etc/box.env 2>/dev/null; set +a; timeout 90 claude -p "Reply with exactly: OK" --model haiku 2>&1 | head -c 200); then echo; fi
+(set -a; . /etc/box.env 2>/dev/null; set +a; timeout 90 claude -p "Reply with exactly: OK" --model haiku 2>&1 | head -c 200); echo
 
-echo "== traefik =="
-if ! docker ps --format '{{.Names}}' | grep -q '^coolify-proxy$'; then
-  echo "coolify-proxy not running; skipping domain setup"; exit 0
-fi
-echo "--- docker engine: $(docker version --format '{{.Server.Version}} (API {{.Server.APIVersion}})') ---"
-ARGS=$(docker inspect coolify-proxy --format '{{join .Config.Cmd "\n"}}'; docker inspect coolify-proxy --format '{{join .Args "\n"}}')
-echo "--- traefik args ---"; echo "$ARGS" | sort -u | grep -E -- '^--' || echo "(no args found)"
+echo "== remove earlier Coolify routing attempts =="
+docker rm -f box-web >/dev/null 2>&1 && echo "removed relay container box-web" || echo "no relay container"
+rm -f /data/coolify/proxy/dynamic/box.yaml && echo "removed Coolify route file"
 
-HTTP_EP=$(echo "$ARGS"  | grep -oP -- '--entrypoints\.\K[^.]+(?=\.address=:80$)'  | head -1); HTTP_EP=${HTTP_EP:-http}
-HTTPS_EP=$(echo "$ARGS" | grep -oP -- '--entrypoints\.\K[^.]+(?=\.address=:443$)' | head -1); HTTPS_EP=${HTTPS_EP:-https}
-RESOLVER=$(echo "$ARGS" | grep -oP -- '--certificatesresolvers\.\K[^.]+' | head -1); RESOLVER=${RESOLVER:-letsencrypt}
-FILE_DIR=$(echo "$ARGS" | grep -oP -- '--providers\.file\.directory=\K.*' | head -1)
-NET=$(docker inspect coolify-proxy --format '{{range $k, $e := .NetworkSettings.Networks}}{{$k}} {{end}}' | awk '{print $1}')
-echo "detected: http_ep=$HTTP_EP https_ep=$HTTPS_EP resolver=$RESOLVER file_dir=${FILE_DIR:-none} network=$NET"
-echo "--- mounts ---"; docker inspect coolify-proxy --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{"\n"}}{{end}}'
-
-echo "== relay container (docker provider) =="
-docker rm -f box-web >/dev/null 2>&1 || true
-docker run -d --restart unless-stopped --name box-web \
-  --network "$NET" \
-  --add-host host.docker.internal:host-gateway \
-  -l traefik.enable=true \
-  -l "traefik.docker.network=$NET" \
-  -l "traefik.http.routers.box-https.rule=Host(\`$DOMAIN\`)" \
-  -l "traefik.http.routers.box-https.entrypoints=$HTTPS_EP" \
-  -l "traefik.http.routers.box-https.tls=true" \
-  -l "traefik.http.routers.box-https.tls.certresolver=$RESOLVER" \
-  -l traefik.http.routers.box-https.service=box-svc \
-  -l "traefik.http.routers.box-http.rule=Host(\`$DOMAIN\`)" \
-  -l "traefik.http.routers.box-http.entrypoints=$HTTP_EP" \
-  -l traefik.http.routers.box-http.middlewares=box-redir \
-  -l traefik.http.routers.box-http.service=box-svc \
-  -l traefik.http.middlewares.box-redir.redirectscheme.scheme=https \
-  -l traefik.http.services.box-svc.loadbalancer.server.port=3400 \
-  alpine/socat tcp-listen:3400,fork,reuseaddr tcp:host.docker.internal:3400 >/dev/null
-sleep 3
-echo "relay: $(docker ps --filter name=box-web --format '{{.Status}}')"
-echo "--- relay -> box (inside relay's network) ---"
-docker run --rm --network "$NET" curlimages/curl -s -o /dev/null -w 'box-web:3400 -> HTTP %{http_code}\n' --max-time 6 http://box-web:3400/ 2>&1 | tail -1
-
-if [ -n "$FILE_DIR" ]; then
-  HOST_DIR=$(docker inspect coolify-proxy --format '{{range .Mounts}}{{.Source}}|{{.Destination}}{{"\n"}}{{end}}' \
-    | awk -F'|' -v d="$FILE_DIR" 'index(d, $2)==1 && length($2)>len {len=length($2); src=$1; dst=$2} END {if (src) print src substr(d, length(dst)+1)}')
-  echo "== file provider: container $FILE_DIR = host ${HOST_DIR:-unknown} =="
-  if [ -n "$HOST_DIR" ]; then
-    mkdir -p "$HOST_DIR"
-    rm -f "$HOST_DIR/box.yaml"
-    cat > "$HOST_DIR/box.yaml" <<EOF
-http:
-  routers:
-    box-file-https:
-      rule: Host(\`$DOMAIN\`)
-      entryPoints: [$HTTPS_EP]
-      service: box-file
-      tls:
-        certResolver: $RESOLVER
-    box-file-http:
-      rule: Host(\`$DOMAIN\`)
-      entryPoints: [$HTTP_EP]
-      middlewares: [box-file-redir]
-      service: box-file
-  middlewares:
-    box-file-redir:
-      redirectScheme:
-        scheme: https
-  services:
-    box-file:
-      loadBalancer:
-        servers:
-          - url: "http://box-web:3400"
-EOF
-    echo "wrote $HOST_DIR/box.yaml"
-  fi
-fi
-
-sleep 10
-echo "== traefik API view =="
-for u in http://localhost:8080/api/http/routers http://127.0.0.1:8080/api/http/routers; do
-  R=$(curl -s --max-time 5 "$u") && [ -n "$R" ] && break
-done
-if [ -n "${R:-}" ]; then
-  echo "router count: $(echo "$R" | grep -o '"name":"[^"]*"' | wc -l)"
-  echo "$R" | grep -o '"name":"[^"]*box[^"]*"[^}]*"status":"[^"]*"' | head -10 || echo "(no box routers registered)"
-  echo "$R" | grep -o '"name":"[^"]*box[^"]*"' || echo "(no router names containing box)"
-  echo "--- any router errors ---"
-  echo "$R" | grep -o '"error":\[[^]]*\]' | head -5 || echo "(none)"
-else
-  echo "(traefik API not reachable on :8080)"
-fi
-
-echo "== domain checks (from the server) =="
-echo "https://$DOMAIN -> HTTP $(curl -sk -o /dev/null -w '%{http_code}' --max-time 10 --resolve "$DOMAIN:443:127.0.0.1" "https://$DOMAIN/" || true)"
-echo "http://$DOMAIN  -> HTTP $(curl -s  -o /dev/null -w '%{http_code}' --max-time 10 --resolve "$DOMAIN:80:127.0.0.1"  "http://$DOMAIN/"  || true)"
-echo "cert: $(echo | openssl s_client -connect 127.0.0.1:443 -servername "$DOMAIN" 2>/dev/null | openssl x509 -noout -subject -issuer 2>/dev/null | tr '\n' ' ')"
-
-echo "== who really owns :80/:443 (read-only) =="
-echo "--- nat rules for 80/443 ---"
-iptables -t nat -S 2>/dev/null | grep -E 'dport (80|443)\b' | head -20 || echo "(none)"
-PROXY_IP=$(docker inspect coolify-proxy --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' | awk '{print $1}')
-echo "--- direct to coolify-proxy ($PROXY_IP) with Host header ---"
-echo "http  -> HTTP $(curl -s  -o /dev/null -w '%{http_code}' --max-time 6 -H "Host: $DOMAIN" "http://$PROXY_IP/" || true)"
-echo "https -> HTTP $(curl -sk -o /dev/null -w '%{http_code}' --max-time 6 --resolve "$DOMAIN:443:$PROXY_IP" "https://$DOMAIN/" || true)"
-echo "--- via public IP (as the internet sees it) ---"
-PUB=$(hostname -I | awk '{print $1}')
-echo "http://$DOMAIN via $PUB -> HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 6 --resolve "$DOMAIN:80:$PUB" "http://$DOMAIN/" || true)"
-if command -v k3s >/dev/null; then
-  K="k3s kubectl"
-  echo "--- k3s nodes ---";          $K get nodes -o wide 2>&1 | head -5
-  echo "--- k3s LoadBalancer/NodePort services ---"
-  $K get svc -A 2>&1 | grep -E 'LoadBalancer|NodePort|NAMESPACE' | head -15
-  echo "--- k3s kube-system pods (traefik/svclb) ---"
-  $K get pods -n kube-system 2>&1 | grep -iE 'traefik|svclb|NAME' | head -10
-  echo "--- k3s ingresses ---";     $K get ingress -A 2>&1 | head -15
-  echo "--- k3s ingressroutes ---";  $K get ingressroutes.traefik.io -A 2>&1 | head -15
-  echo "--- cert-manager issuers ---"; $K get clusterissuers 2>&1 | head -5
-  echo "--- k3s traefik config ---"; $K get helmchartconfig -n kube-system 2>&1 | head -5
-  $K get deploy traefik -n kube-system -o jsonpath='{.spec.template.spec.containers[0].args}' 2>/dev/null | tr ',' '\n' | head -30; echo
-fi
-
-echo "== traefik log (filtered) =="
-docker logs coolify-proxy --since 5m 2>&1 | grep -iE 'error|box|provider|acme|certif' | tail -25 || echo "(nothing relevant)"
+echo "== domain, as the internet reaches it (k3s Traefik on the public IP) =="
+PUB=69.62.86.166
+echo "http  -> HTTP $(curl -s  -o /dev/null -w '%{http_code}' --max-time 10 --resolve "$DOMAIN:80:$PUB"  "http://$DOMAIN/"  || true)"
+echo "https -> HTTP $(curl -sk -o /dev/null -w '%{http_code}' --max-time 10 --resolve "$DOMAIN:443:$PUB" "https://$DOMAIN/" || true)"
+echo "cert  -> $(echo | openssl s_client -connect "$PUB:443" -servername "$DOMAIN" 2>/dev/null | openssl x509 -noout -subject -issuer 2>/dev/null | tr '\n' ' ')"
+echo "(401 = Box login prompt = working; 404 = k8s route not applied yet)"
 echo "== done =="

@@ -1,0 +1,65 @@
+# Routes box.cashflowus.com through the cluster's Traefik to Box, which runs
+# as a systemd service on the worker node (69.62.86.166:3400), outside k8s.
+# Apply once on the control-plane node:
+#   kubectl apply -f https://raw.githubusercontent.com/ThirunagariHarish/buildAgents/box/deploy/k8s/box.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: box
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: box
+  namespace: box
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3400
+      protocol: TCP
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: box-host
+  namespace: box
+  labels:
+    kubernetes.io/service-name: box
+    endpointslice.kubernetes.io/managed-by: box-manual
+addressType: IPv4
+ports:
+  - name: http
+    port: 3400
+    protocol: TCP
+endpoints:
+  - addresses:
+      - 69.62.86.166
+    conditions:
+      ready: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: box
+  namespace: box
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: box.cashflowus.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: box
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - box.cashflowus.com
+      secretName: box-tls
