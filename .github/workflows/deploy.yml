@@ -52,6 +52,17 @@ jobs:
               *) echo "❌ Box did not respond"; journalctl -u box --no-pager -n 30; exit 1 ;;
             esac
 
+            # ---- Diagnostics: what owns 80/443, so Box can be routed behind it ----
+            echo "===== DIAGNOSTICS ====="
+            echo "--- box service ---";      systemctl --no-pager -l status box 2>&1 | head -12 || true
+            echo "--- listeners ---";        ss -ltnp 2>/dev/null | grep -E ':(80|443|3400|8080)\s' || echo "(none on 80/443/3400/8080)"
+            echo "--- docker ---";           docker ps --format '{{.Names}}  {{.Image}}  {{.Ports}}' 2>/dev/null | head -15 || echo "(no docker)"
+            echo "--- k3s/kube ---";         (command -v k3s >/dev/null && k3s --version | head -1) || echo "(no k3s)"; ls /etc/rancher/k3s/k3s.yaml 2>/dev/null || true
+            command -v kubectl >/dev/null && kubectl get ingress -A 2>/dev/null | head -10 || true
+            echo "--- traefik config ---";   ls /etc/traefik 2>/dev/null || true; docker inspect traefik --format '{{json .Config.Cmd}}' 2>/dev/null | head -c 400 || true
+            echo "--- coolify/dokploy ---";  ls /data/coolify 2>/dev/null && echo coolify-present || true; ls /etc/dokploy 2>/dev/null && echo dokploy-present || true
+            echo "===== END DIAGNOSTICS ====="
+
             # HTTPS via Caddy on the server's hostname (auto Let's Encrypt).
             # Only if the domain resolves to this server and ports 80/443 are
             # free or already Caddy's — never disturbs other services.
