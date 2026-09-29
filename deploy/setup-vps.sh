@@ -19,18 +19,19 @@ if ! command -v claude >/dev/null; then
 fi
 
 echo "==> Checking Claude login"
-if ! claude -p "Reply with exactly: OK" --model haiku >/dev/null 2>&1; then
+if claude -p "Reply with exactly: OK" --model haiku >/dev/null 2>&1; then
+  echo "   Claude login OK"
+else
   cat <<'EOF'
-  ⚠ Claude CLI is not logged in yet. On this VPS run:
+  ⚠ Claude CLI is not logged in yet — Box will start but agents will
+    error until you log in. On this VPS run:
 
       claude setup-token
 
   and follow the link on your phone/laptop to authorize with your
-  Claude (Max) account. Then re-run this script.
+  Claude (Max) account. Then: sudo systemctl restart box
 EOF
-  exit 1
 fi
-echo "   Claude login OK"
 
 echo "==> Installing systemd service (port ${BOX_PORT})"
 sudo tee /etc/systemd/system/box.service >/dev/null <<EOF
@@ -43,6 +44,7 @@ Type=simple
 User=${BOX_USER}
 WorkingDirectory=${BOX_DIR}
 Environment=BOX_PORT=${BOX_PORT}
+EnvironmentFile=-/etc/box.env
 ExecStart=$(command -v node) ${BOX_DIR}/server.js
 Restart=on-failure
 RestartSec=3

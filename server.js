@@ -61,7 +61,27 @@ function ideaSummary(i) {
 }
 
 // ---- server --------------------------------------------------------------
+// Optional HTTP Basic auth (set BOX_PASSWORD to enable; any username works).
+// Strongly recommended when Box is reachable from the internet.
+const BOX_PASSWORD = process.env.BOX_PASSWORD || '';
+function checkAuth(req, res) {
+  if (!BOX_PASSWORD) return true;
+  const h = req.headers.authorization || '';
+  if (h.startsWith('Basic ')) {
+    const decoded = Buffer.from(h.slice(6), 'base64').toString();
+    const pass = decoded.slice(decoded.indexOf(':') + 1);
+    if (pass.length === BOX_PASSWORD.length &&
+        require('crypto').timingSafeEqual(Buffer.from(pass), Buffer.from(BOX_PASSWORD))) {
+      return true;
+    }
+  }
+  res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Box"', 'Content-Type': 'text/plain' });
+  res.end('Authentication required');
+  return false;
+}
+
 const server = http.createServer(async (req, res) => {
+  if (!checkAuth(req, res)) return;
   const url = new URL(req.url, `http://localhost:${PORT}`);
   const p = url.pathname;
 

@@ -42,12 +42,28 @@ You can also **steer** the room at any time from the composer — your message e
 | What | How |
 |---|---|
 | Port | `BOX_PORT=4000 node server.js` |
+| Password-protect the UI | `BOX_PASSWORD=secret node server.js` (HTTP Basic auth — set this if Box is reachable from the internet) |
 | Claude binary | `BOX_CLAUDE_BIN=/path/to/claude` |
 | Per-turn timeout | `BOX_TURN_TIMEOUT_MS=600000` |
 | Agent personas & models | edit `lib/agents.js` (Orchestrator uses `opus`, personas use `sonnet` by default; any model alias/ID the CLI accepts works) |
 | Rounds per debate | chosen per-idea in the UI |
 
 Ideas are stored as plain JSON in `data/ideas/` — easy to back up, inspect, or delete.
+
+## Deploying to a VPS
+
+One-time on the server (Ubuntu/Debian):
+
+```bash
+git clone https://github.com/ThirunagariHarish/box.git /opt/box && cd /opt/box
+claude setup-token        # authorize with your Claude (Max) account
+bash deploy/setup-vps.sh  # installs Node + Claude CLI, systemd service, auto-start
+```
+
+Continuous deployment: `.github/workflows/deploy.yml` redeploys on every push to
+`main` over SSH. Repo secrets it uses: `VPS_HOST`, `VPS_USER`, `VPS_PASSWORD`
+(or switch to `VPS_SSH_KEY`), and optionally `BOX_PASSWORD` to set the app's
+login password (written to `/etc/box.env`).
 
 ## Project layout
 
