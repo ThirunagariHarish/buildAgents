@@ -80,48 +80,31 @@ jobs:
             DOMAIN="${{ secrets.BOX_DOMAIN }}"
             [ -n "$DOMAIN" ] || DOMAIN="box.cashflowus.com"
 
-            if [ -d /data/coolify/proxy ]; then
-              # Coolify's Traefik owns 80/443. Publish Box through it with a
-              # dynamic-config file: hot-reloaded by Traefik's file watcher,
-              # auto Let's Encrypt, zero impact on Coolify-managed apps.
-              mkdir -p /data/coolify/proxy/dynamic
-              GW=$(docker inspect coolify-proxy --format '{{range .NetworkSettings.Networks}}{{.Gateway}} {{end}}' 2>/dev/null | awk '{print $1}')
-              [ -n "$GW" ] || GW=172.17.0.1
-              {
-                echo 'http:'
-                echo '  routers:'
-                echo '    box-http:'
-                echo "      rule: Host(\`$DOMAIN\`)"
-                echo '      entryPoints:'
-                echo '        - http'
-                echo '      middlewares:'
-                echo '        - box-https-redirect'
-                echo '      service: box'
-                echo '    box-https:'
-                echo "      rule: Host(\`$DOMAIN\`)"
-                echo '      entryPoints:'
-                echo '        - https'
-                echo '      service: box'
-                echo '      tls:'
-                echo '        certResolver: letsencrypt'
-                echo '  middlewares:'
-                echo '    box-https-redirect:'
-                echo '      redirectScheme:'
-                echo '        scheme: https'
-                echo '  services:'
-                echo '    box:'
-                echo '      loadBalancer:'
-                echo '        servers:'
-                echo "          - url: \"http://$GW:3400\""
-              } > /data/coolify/proxy/dynamic/box.yaml
-              echo "Traefik route written: https://$DOMAIN -> $GW:3400"
-              echo "--- route file on disk ---"; ls -la /data/coolify/proxy/dynamic/; cat /data/coolify/proxy/dynamic/box.yaml
-              echo "--- traefik mounts ---"; docker inspect coolify-proxy --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{"\n"}}{{end}}' | head -6
-              echo "--- traefik file provider flags ---"; docker inspect coolify-proxy --format '{{json .Args}}' | tr ',' '\n' | grep -i 'providers.file' || echo "(NO file provider configured!)"
-              sleep 8
-              echo "--- traefik recent log ---"; docker logs coolify-proxy --tail 15 2>&1 | grep -iE 'error|box|filename' || echo "(no relevant traefik log lines)"
+            if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^coolify-proxy$'; then
+              # Publish through Coolify's Traefik using its Docker provider:
+              # a small relay container on the proxy network carries the
+              # routing labels and forwards to Box on the host at :3400.
+              NET=$(docker inspect coolify-proxy --format '{{range $k, $e := .NetworkSettings.Networks}}{{$k}} {{end}}' | awk '{print $1}')
+              echo "Proxy network: $NET"
+              docker rm -f box-web >/dev/null 2>&1 || true
+              docker run -d --restart unless-stopped --name box-web \
+                --network "$NET" \
+                --add-host host.docker.internal:host-gateway \
+                -l traefik.enable=true \
+                -l "traefik.http.routers.box-https.rule=Host(\`$DOMAIN\`)" \
+                -l traefik.http.routers.box-https.entrypoints=https \
+                -l traefik.http.routers.box-https.tls.certresolver=letsencrypt \
+                -l traefik.http.routers.box-https.service=box-svc \
+                -l "traefik.http.routers.box-http.rule=Host(\`$DOMAIN\`)" \
+                -l traefik.http.routers.box-http.entrypoints=http \
+                -l traefik.http.routers.box-http.middlewares=box-redir \
+                -l traefik.http.middlewares.box-redir.redirectscheme.scheme=https \
+                -l traefik.http.services.box-svc.loadbalancer.server.port=3400 \
+                alpine/socat tcp-listen:3400,fork,reuseaddr tcp:host.docker.internal:3400
+              sleep 12
+              echo "--- relay container ---"; docker ps --filter name=box-web --format '{{.Names}} {{.Status}}'
               HC=$(curl -sk -o /dev/null -w "%{http_code}" --resolve "$DOMAIN:443:127.0.0.1" "https://$DOMAIN/" || true)
-              echo "HTTPS via Traefik answered: HTTP $HC (401 = Box login prompt = SUCCESS; 502 = Traefik cannot reach host; 404 = route not loaded; cert may take ~1 min on first issue)"
+              echo "Domain route check: HTTP $HC (401 = login prompt = SUCCESS; 404 = not routed; 502 = relay unreachable)"
               exit 0
             fi
 
