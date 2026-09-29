@@ -2,7 +2,7 @@ name: Deploy to VPS
 
 on:
   push:
-    branches: [main]
+    branches: [box]
   workflow_dispatch:
 
 jobs:
@@ -20,16 +20,17 @@ jobs:
           script: |
             set -euo pipefail
             APP_DIR="/opt/box"
-            REPO_URL="https://github.com/ThirunagariHarish/box.git"
+            REPO_URL="https://github.com/ThirunagariHarish/buildAgents.git"
+            BRANCH="box"
 
             command -v git >/dev/null || (apt-get update -y && apt-get install -y git curl)
 
             if [ ! -d "$APP_DIR/.git" ]; then
-              git clone "$REPO_URL" "$APP_DIR"
+              git clone -b "$BRANCH" --single-branch "$REPO_URL" "$APP_DIR"
             else
               cd "$APP_DIR"
-              git fetch origin main
-              git reset --hard origin/main
+              git fetch origin "$BRANCH"
+              git reset --hard "origin/$BRANCH"
             fi
             cd "$APP_DIR"
 
