@@ -121,6 +121,30 @@ echo "https://$DOMAIN -> HTTP $(curl -sk -o /dev/null -w '%{http_code}' --max-ti
 echo "http://$DOMAIN  -> HTTP $(curl -s  -o /dev/null -w '%{http_code}' --max-time 10 --resolve "$DOMAIN:80:127.0.0.1"  "http://$DOMAIN/"  || true)"
 echo "cert: $(echo | openssl s_client -connect 127.0.0.1:443 -servername "$DOMAIN" 2>/dev/null | openssl x509 -noout -subject -issuer 2>/dev/null | tr '\n' ' ')"
 
+echo "== who really owns :80/:443 (read-only) =="
+echo "--- nat rules for 80/443 ---"
+iptables -t nat -S 2>/dev/null | grep -E 'dport (80|443)\b' | head -20 || echo "(none)"
+PROXY_IP=$(docker inspect coolify-proxy --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' | awk '{print $1}')
+echo "--- direct to coolify-proxy ($PROXY_IP) with Host header ---"
+echo "http  -> HTTP $(curl -s  -o /dev/null -w '%{http_code}' --max-time 6 -H "Host: $DOMAIN" "http://$PROXY_IP/" || true)"
+echo "https -> HTTP $(curl -sk -o /dev/null -w '%{http_code}' --max-time 6 --resolve "$DOMAIN:443:$PROXY_IP" "https://$DOMAIN/" || true)"
+echo "--- via public IP (as the internet sees it) ---"
+PUB=$(hostname -I | awk '{print $1}')
+echo "http://$DOMAIN via $PUB -> HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 6 --resolve "$DOMAIN:80:$PUB" "http://$DOMAIN/" || true)"
+if command -v k3s >/dev/null; then
+  K="k3s kubectl"
+  echo "--- k3s nodes ---";          $K get nodes -o wide 2>&1 | head -5
+  echo "--- k3s LoadBalancer/NodePort services ---"
+  $K get svc -A 2>&1 | grep -E 'LoadBalancer|NodePort|NAMESPACE' | head -15
+  echo "--- k3s kube-system pods (traefik/svclb) ---"
+  $K get pods -n kube-system 2>&1 | grep -iE 'traefik|svclb|NAME' | head -10
+  echo "--- k3s ingresses ---";     $K get ingress -A 2>&1 | head -15
+  echo "--- k3s ingressroutes ---";  $K get ingressroutes.traefik.io -A 2>&1 | head -15
+  echo "--- cert-manager issuers ---"; $K get clusterissuers 2>&1 | head -5
+  echo "--- k3s traefik config ---"; $K get helmchartconfig -n kube-system 2>&1 | head -5
+  $K get deploy traefik -n kube-system -o jsonpath='{.spec.template.spec.containers[0].args}' 2>/dev/null | tr ',' '\n' | head -30; echo
+fi
+
 echo "== traefik log (filtered) =="
 docker logs coolify-proxy --since 5m 2>&1 | grep -iE 'error|box|provider|acme|certif' | tail -25 || echo "(nothing relevant)"
 echo "== done =="
