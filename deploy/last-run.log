@@ -1,6 +1,6 @@
-run: 19  commit: 1a7ccea  ssh step: success  at: 2026-09-30T00:46:24Z
+run: 20  commit: 4becc10  ssh step: success  at: 2026-09-30T22:54:20Z
 
-HEAD: 1a7ccea   domain: box.cashflowus.com
+HEAD: 4becc10   domain: box.cashflowus.com
 == env file ==
 claude token: WRONG FORMAT (length 92) — expected the sk-ant-oat01-... token that 'claude setup-token' prints in the terminal
 keys in /etc/box.env: CLAUDE_CODE_OAUTH_TOKEN 
