@@ -16,11 +16,12 @@ if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
     *) echo "claude token: WRONG FORMAT (length ${#CLAUDE_CODE_OAUTH_TOKEN}) — expected the sk-ant-oat01-... token that 'claude setup-token' prints in the terminal" ;;
   esac
 fi
+REQUIRE_LOGIN=false   # true puts the BOX_PASSWORD sign-in prompt back
 {
-  [ -n "${BOX_PASSWORD:-}" ] && printf 'BOX_PASSWORD=%s\n' "$BOX_PASSWORD"
+  [ "$REQUIRE_LOGIN" = true ] && [ -n "${BOX_PASSWORD:-}" ] && printf 'BOX_PASSWORD=%s\n' "$BOX_PASSWORD"
   [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] && printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "$CLAUDE_CODE_OAUTH_TOKEN"
-} > /etc/box.env.new
-if [ -s /etc/box.env.new ]; then mv /etc/box.env.new /etc/box.env; chmod 600 /etc/box.env; else rm -f /etc/box.env.new; fi
+} > /etc/box.env
+chmod 600 /etc/box.env
 echo "keys in /etc/box.env: $(cut -d= -f1 /etc/box.env 2>/dev/null | tr '\n' ' ')"
 
 echo "== box service =="
