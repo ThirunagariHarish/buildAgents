@@ -1,9 +1,9 @@
-run: 18  commit: 7eb6400  ssh step: success  at: 2026-09-29T09:39:49Z
+run: 19  commit: 1a7ccea  ssh step: success  at: 2026-09-30T00:46:24Z
 
-HEAD: 7eb6400   domain: box.cashflowus.com
+HEAD: 1a7ccea   domain: box.cashflowus.com
 == env file ==
 claude token: WRONG FORMAT (length 92) — expected the sk-ant-oat01-... token that 'claude setup-token' prints in the terminal
-keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN 
+keys in /etc/box.env: CLAUDE_CODE_OAUTH_TOKEN 
 == box service ==
 ==> Installing Node.js 22 (if missing)
 ==> Installing Claude Code CLI (if missing)
@@ -12,16 +12,16 @@ keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN
 ==> Installing systemd service (port 3400)
     ⚠ If you expose Box publicly, protect it (Caddy basic_auth, VPN, or
 service: active
-local /: HTTP 401
+local /: HTTP 200
 == claude login ==
 Failed to authenticate. API Error: 401 Invalid bearer token
 == remove earlier Coolify routing attempts ==
 removed relay container box-web
 removed Coolify route file
 == domain, as the internet reaches it (k3s Traefik on the public IP) ==
-http  -> HTTP 404
-https -> HTTP 404
-cert  -> subject=CN = TRAEFIK DEFAULT CERT issuer=CN = TRAEFIK DEFAULT CERT 
+http  -> HTTP 200
+https -> HTTP 200
+cert  -> subject=CN = box.cashflowus.com issuer=C = US, O = Let's Encrypt, CN = YR1 
 (401 = Box login prompt = working; 404 = k8s route not applied yet)
 == done ==
 ===============================================
