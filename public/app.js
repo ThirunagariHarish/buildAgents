@@ -195,6 +195,12 @@ function renderChat() {
       </div>`;
     chat.appendChild(el);
   }
+  if (current.status === 'error' && current.error) {
+    const el = document.createElement('div');
+    el.className = 'error-card';
+    el.innerHTML = `<strong>The debate stopped</strong><div>${esc(current.error)}</div>`;
+    chat.appendChild(el);
+  }
   if (stick) chat.scrollTop = chat.scrollHeight;
 }
 
@@ -225,6 +231,7 @@ function connectEvents(id) {
       renderRoomHead();
     } else if (ev.event === 'status') {
       current.status = ev.status;
+      current.error = ev.error || null;
       thinkingAgent = null;
       if (ev.status === 'done') openIdea(id); // reload to pick up brief
       else renderRoom();

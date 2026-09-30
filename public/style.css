@@ -190,6 +190,15 @@ body {
 }
 .round-divider::before, .round-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 
+.error-card {
+  max-width: 836px; margin: 14px 12px; padding: 12px 14px;
+  border: 1px solid var(--red); border-radius: var(--radius);
+  background: rgba(212, 106, 106, 0.1); font-size: 14px; line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.error-card strong { color: var(--red); display: block; margin-bottom: 4px; }
+@media (min-width: 900px) { .error-card { margin: 14px auto; } }
+
 /* ---------- Composer ---------- */
 #composer {
   display: flex; gap: 8px; align-items: flex-end;
