@@ -32,7 +32,7 @@ echo "service: $(systemctl is-active box)"
 echo "local /: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:3400/)"
 
 echo "== claude login =="
-(set -a; . /etc/box.env 2>/dev/null; set +a; timeout 90 claude -p "Reply with exactly: OK" --model haiku 2>&1 | head -c 200); echo
+(set -a; . /etc/box.env 2>/dev/null; set +a; timeout 300 node deploy/check-claude.js 2>&1)
 
 echo "== remove earlier Coolify routing attempts =="
 docker rm -f box-web >/dev/null 2>&1 && echo "removed relay container box-web" || echo "no relay container"
