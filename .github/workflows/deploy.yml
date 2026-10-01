@@ -3,8 +3,6 @@ name: Deploy to VPS
 on:
   push:
     branches: [box]
-    paths-ignore:
-      - deploy/last-run.log
   workflow_dispatch:
 
 permissions:
