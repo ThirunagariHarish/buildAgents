@@ -1,6 +1,6 @@
-run: 20  commit: 4becc10  ssh step: success  at: 2026-09-30T22:54:20Z
+run: 21  commit: 9d77e99  ssh step: success  at: 2026-10-01T08:48:58Z
 
-HEAD: 4becc10   domain: box.cashflowus.com
+HEAD: 9d77e99   domain: box.cashflowus.com
 == env file ==
 claude token: WRONG FORMAT (length 92) — expected the sk-ant-oat01-... token that 'claude setup-token' prints in the terminal
 keys in /etc/box.env: CLAUDE_CODE_OAUTH_TOKEN 
@@ -14,7 +14,9 @@ keys in /etc/box.env: CLAUDE_CODE_OAUTH_TOKEN
 service: active
 local /: HTTP 200
 == claude login ==
-Failed to authenticate. API Error: 401 Invalid bearer token
+haiku: FAILED -> Claude is not logged in on the server, so the agents cannot run. Set a valid CLAUDE_CODE_OAUTH_TOKEN (the sk-ant-oat01-… token printed by `claude setup-token`), redeploy, then tap Resume. Details: Failed to authenticate. API Error: 401 Invalid bearer token | api_error
+sonnet: FAILED -> Claude is not logged in on the server, so the agents cannot run. Set a valid CLAUDE_CODE_OAUTH_TOKEN (the sk-ant-oat01-… token printed by `claude setup-token`), redeploy, then tap Resume. Details: Failed to authenticate. API Error: 401 Invalid bearer token | api_error
+opus: FAILED -> Claude is not logged in on the server, so the agents cannot run. Set a valid CLAUDE_CODE_OAUTH_TOKEN (the sk-ant-oat01-… token printed by `claude setup-token`), redeploy, then tap Resume. Details: Failed to authenticate. API Error: 401 Invalid bearer token | api_error
 == remove earlier Coolify routing attempts ==
 removed relay container box-web
 removed Coolify route file
