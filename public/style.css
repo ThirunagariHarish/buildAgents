@@ -303,6 +303,65 @@ body {
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 @keyframes sheetup { from { transform: translateY(40px); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }
 
+/* ---------- Agents screen ---------- */
+.side-agents-btn { width: 100%; margin-top: 8px; }
+#agents-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex;
+  align-items: flex-end; justify-content: center; z-index: 80;
+}
+#agents-sheet {
+  width: 100%; height: 94dvh; background: var(--bg-raise);
+  border: 1px solid var(--border); border-bottom: none; border-radius: 18px 18px 0 0;
+  display: flex; flex-direction: column; overflow-y: auto;
+  animation: sheetup 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+#agents-sheet .panel-head { position: sticky; top: 0; background: var(--bg-raise); z-index: 1; gap: 6px; }
+#agents-title { flex: 1; }
+#agents-back { font-size: 26px; }
+.agents-body { padding: 14px 16px calc(24px + var(--sab)); }
+.agents-intro { color: var(--text-dim); font-size: 13.5px; line-height: 1.55; margin-bottom: 14px; }
+.agent-row {
+  display: flex; gap: 11px; align-items: flex-start; padding: 12px;
+  background: var(--bg-deep); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px;
+}
+.agent-row-body { flex: 1; min-width: 0; }
+.agent-row-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 3px; }
+.agent-row-desc { font-size: 13px; color: var(--text-dim); line-height: 1.45; }
+.agent-remove { font-size: 17px; }
+.agents-wide { width: 100%; margin-top: 10px; }
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-dim); margin-bottom: 12px; flex: 1; }
+.field input, .field textarea, .field select {
+  width: 100%; background: var(--bg-deep); color: var(--text); border: 1px solid var(--border);
+  border-radius: 12px; padding: 11px 13px; font-family: inherit; font-size: 16px; outline: none; resize: vertical;
+}
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent); }
+.field-row { display: flex; gap: 10px; }
+.field-row .field:first-child { flex: 0 0 84px; }
+.field-hint { font-size: 12px; color: var(--text-dim); margin: -6px 0 12px; line-height: 1.45; }
+.form-error {
+  border: 1px solid var(--red); background: rgba(212,106,106,0.1); color: var(--text);
+  border-radius: 10px; padding: 9px 12px; font-size: 13.5px; margin-bottom: 8px;
+}
+.confirm-card {
+  background: var(--bg-deep); border: 1px solid var(--accent); border-radius: 14px; padding: 14px;
+  margin-bottom: 14px;
+}
+.confirm-emoji { font-size: 22px; }
+.confirm-model { font-size: 12.5px; color: var(--text-dim); margin: 2px 0 10px; }
+.confirm-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-dim); margin-bottom: 4px; }
+.confirm-instructions { white-space: pre-wrap; font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.confirm-notes { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-bottom: 14px; }
+.confirm-actions { display: flex; gap: 10px; }
+.confirm-actions .btn { flex: 1; }
+.btn:disabled { opacity: 0.6; }
+#toast {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(90px + var(--sab)); z-index: 100;
+  background: var(--bg-raise); border: 1px solid var(--green); color: var(--text);
+  padding: 10px 16px; border-radius: 999px; font-size: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  max-width: calc(100vw - 32px); text-align: center; animation: fadein 0.2s;
+}
+
 /* ================= Desktop (≥900px) ================= */
 @media (min-width: 900px) {
   #sidebar {
@@ -332,5 +391,7 @@ body {
   #agent-panel::before { display: none; }
   #modal-backdrop, #brief-backdrop { align-items: center; }
   #new-idea-modal { width: min(620px, 92vw); border-radius: 16px; border-bottom: 1px solid var(--border); padding: 24px; animation: none; }
+  #agents-backdrop { align-items: center; }
+  #agents-sheet { width: min(640px, 94vw); height: auto; max-height: 88vh; border-radius: 16px; border-bottom: 1px solid var(--border); animation: none; }
   #brief-modal { width: min(820px, 94vw); height: auto; max-height: 88vh; border-radius: 16px; border-bottom: 1px solid var(--border); animation: none; }
 }

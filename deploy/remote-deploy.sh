@@ -31,6 +31,7 @@ systemctl restart box
 sleep 2
 echo "service: $(systemctl is-active box)"
 echo "local /: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:3400/)"
+echo "agent pool: $(curl -s --max-time 8 http://localhost:3400/api/agents | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const l=JSON.parse(d);console.log(l.length+' agents — '+l.map(a=>a.name+(a.builtin?'':' (added)')).join(', '))}catch(e){console.log('unreadable: '+d.slice(0,120))}})")"
 
 echo "== claude login =="
 (set -a; . /etc/box.env 2>/dev/null; set +a; timeout 300 node deploy/check-claude.js 2>&1)

@@ -130,15 +130,15 @@ function renderAgentStrip() {
   }
 }
 
-function agentMeta(agentId) {
+function agentMeta(agentId, fallbackName) {
   if (agentId === 'user') return { name: 'You', emoji: '🧑', color: 'var(--accent)' };
-  return AGENTS[agentId] || { name: agentId, emoji: '🤖', color: 'var(--border)' };
+  return AGENTS[agentId] || { name: fallbackName || agentId, emoji: '🤖', color: 'var(--border)' };
 }
 
 const KIND_LABEL = { kickoff: 'kickoff', debate: 'debate', synthesis: 'synthesis', brief: 'final brief', user: 'steer' };
 
 function msgEl(m) {
-  const a = agentMeta(m.agentId);
+  const a = agentMeta(m.agentId, m.agentName);
   const el = document.createElement('div');
   el.className = 'msg' + (m.agentId === 'user' ? ' user-msg' : '');
   el.dataset.mid = m.id;
@@ -239,6 +239,8 @@ function connectEvents(id) {
     } else if (ev.event === 'round') {
       current.round = ev.round;
       renderRoomHead();
+    } else if (ev.event === 'agents_changed') {
+      loadAgents();
     } else if (ev.event === 'hello') {
       current.status = ev.status;
       renderRoomHead();
@@ -290,20 +292,12 @@ $('composer-input').addEventListener('input', function () {
 });
 
 // ---------- agent panel ----------
-const AGENT_DESC = {
-  orchestrator: 'Chairs the debate: sets the agenda, rules on disagreements, decides when the idea is mature, and writes the final Idea Brief.',
-  entrepreneur: 'Thinks like a founder: business model, unit economics, moat, what the MVP must prove, fastest path to revenue.',
-  marketer: 'Growth and positioning: exactly who the customer is, the wedge into the market, channels, naming, and go-to-market.',
-  architect: 'Pragmatic principal engineer: how to actually build it, simplest viable architecture, technical risks, effort estimates.',
-  visionary: 'Big-picture ideologist: the 10x version, "why now", adjacent applications, features nobody else would think of.',
-  critic: 'The red team: strongest reasons it fails, hidden assumptions, ignored competition, risks — always with mitigations.',
-};
 function openAgentPanel(agentId) {
   const a = AGENTS[agentId];
   if (!a || !current) return;
   $('agent-panel-title').innerHTML = `${a.emoji} ${esc(a.name)}`;
   const entries = current.messages.filter((m) => m.agentId === agentId);
-  let html = `<div class="panel-desc">${esc(AGENT_DESC[agentId] || '')}<br><br>Model: <code>${esc(a.model)}</code> · ${entries.length} contribution${entries.length === 1 ? '' : 's'}</div>`;
+  let html = `<div class="panel-desc">${esc(a.description || '')}<br><br>Model: <code>${esc(a.model)}</code> · ${entries.length} contribution${entries.length === 1 ? '' : 's'}</div>`;
   for (const m of [...entries].reverse()) {
     html += `<div class="panel-entry"><div class="pe-meta">${KIND_LABEL[m.kind] || m.kind} · round ${m.round} · ${new Date(m.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${m.durationMs ? ' · ' + Math.round(m.durationMs / 1000) + 's' : ''}</div>${mdInline(esc(m.summary))}</div>`;
   }
@@ -342,9 +336,139 @@ $('modal-backdrop').addEventListener('click', (e) => { if (e.target.id === 'moda
 $('brief-backdrop').addEventListener('click', (e) => { if (e.target.id === 'brief-backdrop') closeBrief(); });
 
 // ---------- boot ----------
-(async function boot() {
+// ---------- agents screen ----------
+async function loadAgents() {
   const list = await api('/api/agents');
   AGENTS = Object.fromEntries(list.map((a) => [a.id, a]));
+  $('agents-count').textContent = list.length;
+  if (current) { renderAgentStrip(); renderChat(); }
+  if (!$('agents-backdrop').classList.contains('hidden') && !$('agents-list-view').classList.contains('hidden')) renderAgentsList();
+}
+
+let agentDraft = null;
+
+function showToast(text) {
+  const t = $('toast');
+  t.textContent = text;
+  t.classList.remove('hidden');
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => t.classList.add('hidden'), 4000);
+}
+
+function agentsStep(step) {
+  for (const v of ['list', 'form', 'confirm']) $(`agents-${v}-view`).classList.toggle('hidden', v !== step);
+  $('agents-back').classList.toggle('hidden', step === 'list');
+  $('agents-title').textContent = { list: '🤖 Agents', form: 'New agent', confirm: 'Confirm new agent' }[step];
+  $('agents-sheet').scrollTop = 0;
+}
+
+function renderAgentsList() {
+  const rows = Object.values(AGENTS).map((a) => `
+    <div class="agent-row" style="--agent-color:${esc(a.color || '#888')}">
+      <div class="avatar">${a.emoji}</div>
+      <div class="agent-row-body">
+        <div class="agent-row-head">
+          <span class="msg-name">${esc(a.name)}</span>
+          <span class="msg-kind">${a.builtin ? 'built-in' : 'added'} · ${esc(a.model)}</span>
+        </div>
+        <div class="agent-row-desc">${esc(a.description || '')}</div>
+      </div>
+      ${a.builtin ? '' : `<button class="icon-btn agent-remove" data-id="${esc(a.id)}" title="Remove ${esc(a.name)}">🗑</button>`}
+    </div>`).join('');
+  $('agents-list').innerHTML = rows;
+  $('agents-list').querySelectorAll('.agent-remove').forEach((b) => {
+    b.onclick = async () => {
+      const a = AGENTS[b.dataset.id];
+      if (!a || !confirm(`Remove ${a.name} from the room? It stops speaking in all debates from their next turn. Its past messages stay.`)) return;
+      try {
+        await api(`/api/agents/${a.id}`, { method: 'DELETE' });
+        await loadAgents();
+        renderAgentsList();
+        showToast(`${a.name} left the room`);
+      } catch (e) { alert(e.message); }
+    };
+  });
+}
+
+function openAgentsScreen() {
+  closeDrawer();
+  renderAgentsList();
+  agentsStep('list');
+  $('agents-backdrop').classList.remove('hidden');
+}
+function closeAgentsScreen() {
+  $('agents-backdrop').classList.add('hidden');
+}
+
+function readAgentForm() {
+  return {
+    name: $('ag-name').value.trim(),
+    emoji: $('ag-emoji').value.trim() || '🤖',
+    model: $('ag-model').value,
+    instructions: $('ag-instructions').value.trim(),
+  };
+}
+
+function formError(msg) {
+  $('ag-error').textContent = msg || '';
+  $('ag-error').classList.toggle('hidden', !msg);
+}
+
+$('agents-btn').onclick = openAgentsScreen;
+$('agents-add-btn').onclick = () => {
+  formError('');
+  agentsStep('form');
+  $('ag-name').focus();
+};
+$('agents-back').onclick = () => {
+  if (!$('agents-confirm-view').classList.contains('hidden')) agentsStep('form');
+  else agentsStep('list');
+};
+$('ag-instructions').addEventListener('input', () => { $('ag-count').textContent = $('ag-instructions').value.length; });
+$('ag-review').onclick = () => {
+  const d = readAgentForm();
+  if (d.name.length < 2) return formError('Give the agent a name (at least 2 characters).');
+  if (Object.values(AGENTS).some((a) => a.name.toLowerCase() === d.name.toLowerCase())) return formError(`An agent named "${d.name}" is already in the room.`);
+  if ([...d.emoji].length > 4) return formError('Use a single emoji for the icon.');
+  if (d.instructions.length < 30) return formError('Instructions need at least 30 characters — describe what this agent focuses on and how it should argue.');
+  formError('');
+  agentDraft = d;
+  const modelLabel = $('ag-model').selectedOptions[0].textContent;
+  $('ag-preview').innerHTML = `
+    <div class="agent-row-head"><span class="confirm-emoji">${esc(d.emoji)}</span><span class="msg-name">${esc(d.name)}</span></div>
+    <div class="confirm-model">Model: ${esc(modelLabel)}</div>
+    <div class="confirm-label">Instructions</div>
+    <div class="confirm-instructions">${esc(d.instructions)}</div>`;
+  $('ag-confirm-error').classList.add('hidden');
+  agentsStep('confirm');
+};
+$('ag-edit').onclick = () => agentsStep('form');
+$('ag-confirm').onclick = async () => {
+  if (!agentDraft) return;
+  const btn = $('ag-confirm');
+  btn.disabled = true;
+  btn.textContent = 'Adding…';
+  try {
+    const agent = await api('/api/agents', { method: 'POST', body: JSON.stringify(agentDraft) });
+    agentDraft = null;
+    for (const id of ['ag-name', 'ag-emoji', 'ag-instructions']) $(id).value = '';
+    $('ag-count').textContent = '0';
+    await loadAgents();
+    renderAgentsList();
+    agentsStep('list');
+    showToast(`${agent.emoji} ${agent.name} joined the room`);
+  } catch (e) {
+    $('ag-confirm-error').textContent = e.message;
+    $('ag-confirm-error').classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Confirm & add';
+  }
+};
+$('agents-backdrop').addEventListener('click', (e) => { if (e.target.id === 'agents-backdrop') closeAgentsScreen(); });
+
+(async function boot() {
+  await loadAgents();
   await refreshIdeas();
   if (ideas.length) openIdea(ideas[0].id);
 })();

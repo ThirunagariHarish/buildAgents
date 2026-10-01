@@ -20,6 +20,7 @@
     <div class="side-head">
       <div class="logo">📦 <span>Box</span></div>
       <button id="new-idea-btn" class="btn primary">＋ New idea</button>
+      <button id="agents-btn" class="btn side-agents-btn">🤖 Agents <span id="agents-count" class="dim"></span></button>
     </div>
     <div id="idea-list"></div>
     <div class="side-foot">Powered by your Claude subscription<br><span class="dim">via headless Claude Code CLI</span></div>
@@ -110,6 +111,67 @@
     <div id="brief-body" class="md"></div>
   </div>
 </div>
+
+<!-- Agents screen -->
+<div id="agents-backdrop" class="hidden">
+  <div id="agents-sheet">
+    <div class="panel-head">
+      <button id="agents-back" class="icon-btn hidden" title="Back">‹</button>
+      <div id="agents-title">🤖 Agents</div>
+      <button class="icon-btn" onclick="closeAgentsScreen()">✕</button>
+    </div>
+
+    <!-- Step 1: the pool -->
+    <div id="agents-list-view" class="agents-body">
+      <p class="agents-intro">Everyone below speaks in every debate. Agents you add join new ideas right away and ideas already in progress from their next round.</p>
+      <div id="agents-list"></div>
+      <button id="agents-add-btn" class="btn primary agents-wide">＋ Add an agent</button>
+    </div>
+
+    <!-- Step 2: write it -->
+    <div id="agents-form-view" class="agents-body hidden">
+      <label class="field">Name
+        <input id="ag-name" type="text" maxlength="40" placeholder="e.g. Legal Advisor">
+      </label>
+      <div class="field-row">
+        <label class="field">Icon
+          <input id="ag-emoji" type="text" maxlength="8" placeholder="🤖">
+        </label>
+        <label class="field">Model
+          <select id="ag-model">
+            <option value="sonnet" selected>Sonnet — balanced (recommended)</option>
+            <option value="opus">Opus — deepest, uses limits fastest</option>
+            <option value="haiku">Haiku — fastest, lightest</option>
+          </select>
+        </label>
+      </div>
+      <label class="field">Instructions
+        <textarea id="ag-instructions" rows="9" maxlength="3000" placeholder="Who is this agent and what should it push on? For example:&#10;&#10;You are a startup lawyer. Flag regulatory, privacy, IP and contract risks in the idea, say how serious each one is, and propose the cheapest way to stay compliant at MVP stage. Challenge anyone who hand-waves legal issues."></textarea>
+      </label>
+      <div class="field-hint"><span id="ag-count">0</span> / 3000 · at least 30 characters. Describe the role, what it focuses on, and how it should argue.</div>
+      <div id="ag-error" class="form-error hidden"></div>
+      <button id="ag-review" class="btn primary agents-wide">Review →</button>
+    </div>
+
+    <!-- Step 3: confirm -->
+    <div id="agents-confirm-view" class="agents-body hidden">
+      <p class="agents-intro">Check this before adding. The agent will speak in every idea once per round.</p>
+      <div id="ag-preview" class="confirm-card"></div>
+      <div class="confirm-notes">
+        <div>• Joins new debates immediately, and running debates from their next round.</div>
+        <div>• Adds one Claude call per round to every debate, which counts toward your Claude Max limits.</div>
+        <div>• You can remove it any time from this screen.</div>
+      </div>
+      <div id="ag-confirm-error" class="form-error hidden"></div>
+      <div class="confirm-actions">
+        <button id="ag-edit" class="btn">Edit</button>
+        <button id="ag-confirm" class="btn primary">Confirm &amp; add</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="hidden"></div>
 
 <script src="app.js"></script>
 </body>

@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const { listIdeas, loadIdea, saveIdea, createIdea, deleteIdea, addMessage } = require('./lib/store');
 const { runIdea, pauseIdea, isRunning } = require('./lib/engine');
-const { AGENTS } = require('./lib/agents');
+const { getAgents, getDebateOrder, addAgent, removeAgent } = require('./lib/agents');
 
 const PORT = Number(process.env.BOX_PORT || 3400);
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -21,7 +21,18 @@ const bus = {
     const data = `data: ${JSON.stringify(payload)}\n\n`;
     for (const res of subs) res.write(data);
   },
+  // Every open page, whichever idea it is viewing.
+  broadcast(payload) {
+    const data = `data: ${JSON.stringify(payload)}\n\n`;
+    for (const subs of subscribers.values()) for (const res of subs) res.write(data);
+  },
 };
+
+function agentList() {
+  const order = ['orchestrator', ...getDebateOrder()];
+  const agents = getAgents();
+  return order.map((id) => agents[id]).filter(Boolean).map(({ system, ...a }) => a);
+}
 
 // ---- helpers -------------------------------------------------------------
 function json(res, code, obj) {
@@ -88,7 +99,27 @@ const server = http.createServer(async (req, res) => {
   try {
     // Agents metadata
     if (p === '/api/agents' && req.method === 'GET') {
-      return json(res, 200, Object.values(AGENTS).map(({ system, ...a }) => a));
+      return json(res, 200, agentList());
+    }
+    if (p === '/api/agents' && req.method === 'POST') {
+      const body = await readBody(req);
+      try {
+        const agent = addAgent(body);
+        bus.broadcast({ event: 'agents_changed', added: agent.name });
+        return json(res, 201, agent);
+      } catch (e) {
+        return json(res, 400, { error: e.message });
+      }
+    }
+    const am = p.match(/^\/api\/agents\/([a-z0-9-]+)$/);
+    if (am && req.method === 'DELETE') {
+      try {
+        removeAgent(am[1]);
+        bus.broadcast({ event: 'agents_changed' });
+        return json(res, 200, { ok: true });
+      } catch (e) {
+        return json(res, 400, { error: e.message });
+      }
     }
 
     // Ideas collection
