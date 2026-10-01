@@ -13,7 +13,8 @@ CLAUDE_CODE_OAUTH_TOKEN=$(printf '%s' "${CLAUDE_CODE_OAUTH_TOKEN:-}" | tr -d '[:
 if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
   case "$CLAUDE_CODE_OAUTH_TOKEN" in
     sk-ant-oat01-*) echo "claude token: looks valid (length ${#CLAUDE_CODE_OAUTH_TOKEN})" ;;
-    *) echo "claude token: WRONG FORMAT (length ${#CLAUDE_CODE_OAUTH_TOKEN}) — expected the sk-ant-oat01-... token that 'claude setup-token' prints in the terminal" ;;
+    *) echo "claude token: WRONG FORMAT (length ${#CLAUDE_CODE_OAUTH_TOKEN}) — ignoring it so the server's own 'claude /login' is used instead"
+       CLAUDE_CODE_OAUTH_TOKEN= ;;
   esac
 fi
 REQUIRE_LOGIN=false   # true puts the BOX_PASSWORD sign-in prompt back
