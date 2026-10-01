@@ -1,6 +1,6 @@
-run: 22  commit: 5b81b7d  ssh step: success  at: 2026-10-01T09:07:38Z
+run: 23  commit: 029caeb  ssh step: success  at: 2026-10-01T09:08:11Z
 
-HEAD: 5b81b7d   domain: box.cashflowus.com
+HEAD: 029caeb   domain: box.cashflowus.com
 == env file ==
 claude token: WRONG FORMAT (length 92) — ignoring it so the server's own 'claude /login' is used instead
 keys in /etc/box.env: 
@@ -14,9 +14,9 @@ keys in /etc/box.env:
 service: active
 local /: HTTP 200
 == claude login ==
-haiku: FAILED -> Claude is not logged in on the server, so the agents cannot run. Set a valid CLAUDE_CODE_OAUTH_TOKEN (the sk-ant-oat01-… token printed by `claude setup-token`), redeploy, then tap Resume. Details: Not logged in · Please run /login | api_error
-sonnet: FAILED -> Claude is not logged in on the server, so the agents cannot run. Set a valid CLAUDE_CODE_OAUTH_TOKEN (the sk-ant-oat01-… token printed by `claude setup-token`), redeploy, then tap Resume. Details: Not logged in · Please run /login | api_error
-opus: FAILED -> Claude is not logged in on the server, so the agents cannot run. Set a valid CLAUDE_CODE_OAUTH_TOKEN (the sk-ant-oat01-… token printed by `claude setup-token`), redeploy, then tap Resume. Details: Not logged in · Please run /login | api_error
+haiku: FAILED -> Claude is not logged in on the server, so the agents cannot run. On the server, run `claude`, type `/login`, finish the login, then tap Resume. Details: Not logged in · Please run /login | api_error
+sonnet: FAILED -> Claude is not logged in on the server, so the agents cannot run. On the server, run `claude`, type `/login`, finish the login, then tap Resume. Details: Not logged in · Please run /login | api_error
+opus: FAILED -> Claude is not logged in on the server, so the agents cannot run. On the server, run `claude`, type `/login`, finish the login, then tap Resume. Details: Not logged in · Please run /login | api_error
 == remove earlier Coolify routing attempts ==
 removed relay container box-web
 removed Coolify route file
