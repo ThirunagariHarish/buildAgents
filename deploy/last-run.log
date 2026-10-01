@@ -1,22 +1,22 @@
-run: 23  commit: 029caeb  ssh step: success  at: 2026-10-01T09:08:11Z
+run: 24  commit: 5b0b178  ssh step: success  at: 2026-10-01T09:45:22Z
 
-HEAD: 029caeb   domain: box.cashflowus.com
+HEAD: 5b0b178   domain: box.cashflowus.com
 == env file ==
-claude token: WRONG FORMAT (length 92) — ignoring it so the server's own 'claude /login' is used instead
-keys in /etc/box.env: 
+claude token: looks valid (length 108)
+keys in /etc/box.env: CLAUDE_CODE_OAUTH_TOKEN 
 == box service ==
 ==> Installing Node.js 22 (if missing)
 ==> Installing Claude Code CLI (if missing)
 ==> Checking Claude login
-  ⚠ Claude CLI is not logged in yet — Box will start but agents will
+   Claude login OK
 ==> Installing systemd service (port 3400)
     ⚠ If you expose Box publicly, protect it (Caddy basic_auth, VPN, or
 service: active
 local /: HTTP 200
 == claude login ==
-haiku: FAILED -> Claude is not logged in on the server, so the agents cannot run. On the server, run `claude`, type `/login`, finish the login, then tap Resume. Details: Not logged in · Please run /login | api_error
-sonnet: FAILED -> Claude is not logged in on the server, so the agents cannot run. On the server, run `claude`, type `/login`, finish the login, then tap Resume. Details: Not logged in · Please run /login | api_error
-opus: FAILED -> Claude is not logged in on the server, so the agents cannot run. On the server, run `claude`, type `/login`, finish the login, then tap Resume. Details: Not logged in · Please run /login | api_error
+haiku: OK (2s) -> OK
+sonnet: OK (2s) -> OK
+opus: OK (2s) -> OK
 == remove earlier Coolify routing attempts ==
 removed relay container box-web
 removed Coolify route file
