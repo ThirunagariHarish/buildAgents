@@ -2,175 +2,91 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1f1e1d">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#151515">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Box">
 <title>Box</title>
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg">
 <link rel="stylesheet" href="style.css">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
 </head>
 <body>
-<div id="app">
-  <div id="drawer-backdrop" class="hidden" onclick="closeDrawer()"></div>
-  <!-- Sidebar / drawer -->
-  <aside id="sidebar">
-    <div class="side-head">
-      <div class="logo">📦 <span>Box</span></div>
-      <button id="new-idea-btn" class="btn primary">＋ New idea</button>
-      <button id="agents-btn" class="btn side-agents-btn">🤖 Agents <span id="agents-count" class="dim"></span></button>
+
+<!-- Sidebar: sits under the main panel on phones, beside it on desktop -->
+<aside id="sidebar">
+  <div class="sb-top">
+    <div class="sb-brand"><span class="sb-mark" data-icon="spark"></span>Box</div>
+  </div>
+  <nav class="sb-nav">
+    <button class="sb-link" id="nav-new"><span data-icon="chat"></span>New idea</button>
+    <button class="sb-link" id="nav-agents"><span data-icon="users"></span>Agents</button>
+    <button class="sb-link" id="nav-briefs"><span data-icon="stack"></span>Idea Briefs</button>
+  </nav>
+  <div class="sb-label">Recents</div>
+  <div id="idea-list" class="sb-list"></div>
+  <div class="sb-bottom">
+    <button class="avatar-btn" id="avatar-btn" aria-label="Settings"></button>
+    <button class="pill-btn" id="sb-new"><span data-icon="plus"></span>New idea</button>
+  </div>
+</aside>
+
+<!-- Main panel -->
+<div id="main">
+  <header id="topbar">
+    <button class="circle-btn" id="menu-btn" aria-label="Open sidebar">
+      <span data-icon="menu"></span><i id="menu-dot" class="hidden"></i>
+    </button>
+    <button class="top-title" id="top-title">
+      <span id="title-text">New idea</span>
+      <span id="subtitle-text"></span>
+    </button>
+    <button class="circle-btn" id="more-btn" aria-label="More"><span data-icon="more"></span></button>
+  </header>
+
+  <main id="thread">
+    <div id="welcome" class="hidden">
+      <div class="welcome-mark" data-icon="spark"></div>
+      <h1 id="greeting">Good evening</h1>
+      <p class="welcome-sub">Drop in a rough idea. The room debates it, stress-tests it, and hands you a plan.</p>
+      <div class="suggestions" id="suggestions"></div>
     </div>
-    <div id="idea-list"></div>
-    <div class="side-foot">Powered by your Claude subscription<br><span class="dim">via headless Claude Code CLI</span></div>
-  </aside>
-
-  <!-- Main -->
-  <main id="main">
-    <div id="empty-state">
-      <button class="icon-btn menu-btn empty-menu" onclick="openDrawer()">☰</button>
-      <div class="empty-inner">
-        <div class="empty-logo">📦</div>
-        <h1>Welcome to Box</h1>
-        <p>Drop in a raw idea. A room of expert agents — entrepreneur, marketer, architect, visionary, critic — will debate it, stress-test it, and mature it into a project brief while you watch.</p>
-        <button class="btn primary big" onclick="openNewIdea()">＋ Start with an idea</button>
-      </div>
-    </div>
-
-    <div id="room" class="hidden">
-      <header id="room-head">
-        <div class="head-row">
-          <button class="icon-btn menu-btn" onclick="openDrawer()">☰</button>
-          <div class="room-title-wrap">
-            <div id="room-title"></div>
-            <div id="room-meta"></div>
-          </div>
-          <button id="delete-btn" class="icon-btn" title="Delete idea">🗑</button>
-        </div>
-        <div class="room-controls">
-          <span id="status-pill"></span>
-          <button id="run-btn" class="btn primary">▶ Start debate</button>
-          <button id="pause-btn" class="btn hidden">⏸ Pause</button>
-          <button id="brief-btn" class="btn hidden">📄 Idea brief</button>
-        </div>
-      </header>
-
-      <div id="agent-strip"></div>
-
-      <div id="chat"></div>
-
-      <footer id="composer">
-        <textarea id="composer-input" rows="1" placeholder="Steer the room — add context, answer questions, push a direction… (agents read this next turn)"></textarea>
-        <button id="send-btn" class="btn primary">Send</button>
-      </footer>
-    </div>
+    <div id="messages"></div>
   </main>
 
-  <!-- Agent detail panel -->
-  <div id="panel-backdrop" class="hidden" onclick="closeAgentPanel()"></div>
-  <aside id="agent-panel" class="hidden">
-    <div class="panel-head">
-      <div id="agent-panel-title"></div>
-      <button class="icon-btn" onclick="closeAgentPanel()">✕</button>
-    </div>
-    <div id="agent-panel-body"></div>
-  </aside>
-</div>
-
-<!-- New idea modal -->
-<div id="modal-backdrop" class="hidden">
-  <div id="new-idea-modal">
-    <h2>New idea</h2>
-    <input id="idea-title" type="text" placeholder="Short title (optional)">
-    <textarea id="idea-text" rows="8" placeholder="Describe your idea in your own words — rough is fine. The room will do the polishing."></textarea>
-    <div class="modal-row">
-      <label>Debate rounds
-        <select id="idea-rounds">
-          <option value="1">1 — quick pass</option>
-          <option value="2" selected>2 — standard</option>
-          <option value="3">3 — deep</option>
-          <option value="4">4 — exhaustive</option>
-        </select>
-      </label>
-      <div class="modal-actions">
-        <button class="btn" onclick="closeNewIdea()">Cancel</button>
-        <button class="btn primary" id="create-idea-btn">Create &amp; start</button>
+  <footer id="dock">
+    <button id="jump-btn" class="circle-btn hidden" aria-label="Scroll to latest"><span data-icon="arrowDown"></span></button>
+    <div id="state-actions"></div>
+    <div id="composer">
+      <div id="attach-strip" class="hidden"></div>
+      <textarea id="input" rows="1" placeholder="Describe your idea…" enterkeyhint="send"></textarea>
+      <div class="composer-row" id="composer-row">
+        <button class="circle-btn ghost" id="plus-btn" aria-label="Add photos, files and settings"><span data-icon="plus"></span></button>
+        <button class="chip-btn hidden" id="rounds-chip"></button>
+        <div class="spacer"></div>
+        <button class="icon-btn" id="mic-btn" aria-label="Dictate"><span data-icon="mic"></span></button>
+        <button class="send-btn hidden" id="send-btn" aria-label="Send"><span data-icon="arrowUp"></span></button>
+        <button class="stop-btn hidden" id="stop-btn" aria-label="Pause the debate"><span data-icon="stop"></span></button>
+      </div>
+      <div class="composer-row hidden" id="record-row">
+        <button class="circle-btn filled" id="rec-cancel" aria-label="Cancel dictation"><span data-icon="x"></span></button>
+        <canvas id="wave" height="36"></canvas>
+        <button class="circle-btn filled" id="rec-stop" aria-label="Stop dictation"><span data-icon="stopSmall"></span></button>
+        <button class="send-btn" id="rec-send" aria-label="Send"><span data-icon="arrowUp"></span></button>
       </div>
     </div>
-  </div>
+  </footer>
+
+  <div id="scrim"></div>
 </div>
 
-<!-- Brief modal -->
-<div id="brief-backdrop" class="hidden">
-  <div id="brief-modal">
-    <div class="panel-head">
-      <div>📄 Idea Brief</div>
-      <button class="icon-btn" onclick="closeBrief()">✕</button>
-    </div>
-    <div id="brief-body" class="md"></div>
-  </div>
-</div>
+<input type="file" id="file-camera" accept="image/*" capture="environment" hidden>
+<input type="file" id="file-photos" accept="image/*" multiple hidden>
+<input type="file" id="file-any" accept="image/*,application/pdf,.pdf,.txt,.md,.markdown,.csv,.json,text/plain,text/markdown,text/csv,application/json" multiple hidden>
 
-<!-- Agents screen -->
-<div id="agents-backdrop" class="hidden">
-  <div id="agents-sheet">
-    <div class="panel-head">
-      <button id="agents-back" class="icon-btn hidden" title="Back">‹</button>
-      <div id="agents-title">🤖 Agents</div>
-      <button class="icon-btn" onclick="closeAgentsScreen()">✕</button>
-    </div>
-
-    <!-- Step 1: the pool -->
-    <div id="agents-list-view" class="agents-body">
-      <p class="agents-intro">Everyone below speaks in every debate. Agents you add join new ideas right away and ideas already in progress from their next round.</p>
-      <div id="agents-list"></div>
-      <button id="agents-add-btn" class="btn primary agents-wide">＋ Add an agent</button>
-    </div>
-
-    <!-- Step 2: write it -->
-    <div id="agents-form-view" class="agents-body hidden">
-      <label class="field">Name
-        <input id="ag-name" type="text" maxlength="40" placeholder="e.g. Legal Advisor">
-      </label>
-      <div class="field-row">
-        <label class="field">Icon
-          <input id="ag-emoji" type="text" maxlength="8" placeholder="🤖">
-        </label>
-        <label class="field">Model
-          <select id="ag-model">
-            <option value="sonnet" selected>Sonnet — balanced (recommended)</option>
-            <option value="opus">Opus — deepest, uses limits fastest</option>
-            <option value="haiku">Haiku — fastest, lightest</option>
-          </select>
-        </label>
-      </div>
-      <label class="field">Instructions
-        <textarea id="ag-instructions" rows="9" maxlength="3000" placeholder="Who is this agent and what should it push on? For example:&#10;&#10;You are a startup lawyer. Flag regulatory, privacy, IP and contract risks in the idea, say how serious each one is, and propose the cheapest way to stay compliant at MVP stage. Challenge anyone who hand-waves legal issues."></textarea>
-      </label>
-      <div class="field-hint"><span id="ag-count">0</span> / 3000 · at least 30 characters. Describe the role, what it focuses on, and how it should argue.</div>
-      <div id="ag-error" class="form-error hidden"></div>
-      <button id="ag-review" class="btn primary agents-wide">Review →</button>
-    </div>
-
-    <!-- Step 3: confirm -->
-    <div id="agents-confirm-view" class="agents-body hidden">
-      <p class="agents-intro">Check this before adding. The agent will speak in every idea once per round.</p>
-      <div id="ag-preview" class="confirm-card"></div>
-      <div class="confirm-notes">
-        <div>• Joins new debates immediately, and running debates from their next round.</div>
-        <div>• Adds one Claude call per round to every debate, which counts toward your Claude Max limits.</div>
-        <div>• You can remove it any time from this screen.</div>
-      </div>
-      <div id="ag-confirm-error" class="form-error hidden"></div>
-      <div class="confirm-actions">
-        <button id="ag-edit" class="btn">Edit</button>
-        <button id="ag-confirm" class="btn primary">Confirm &amp; add</button>
-      </div>
-    </div>
-  </div>
-</div>
-
+<div id="layer"></div>
 <div id="toast" class="hidden"></div>
 
 <script src="app.js"></script>

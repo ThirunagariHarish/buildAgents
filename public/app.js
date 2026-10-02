@@ -1,474 +1,1236 @@
-// Box frontend — vanilla JS, no build step.
-
-let AGENTS = {};          // agentId -> meta
-let ideas = [];           // sidebar list
-let current = null;       // full current idea object
-let evtSource = null;
-let expanded = new Set(); // message ids shown in full
-let thinkingAgent = null;
+// Box frontend — vanilla JS, no build step. Modeled on the Claude mobile app.
+'use strict';
 
 const $ = (id) => document.getElementById(id);
+const desktop = window.matchMedia('(min-width: 900px)');
+const finePointer = window.matchMedia('(pointer: fine)');
 
-// ---------- mobile drawer ----------
-function openDrawer() {
-  $('sidebar').classList.add('open');
-  $('drawer-backdrop').classList.remove('hidden');
+// ---------- icons ----------
+const PATHS = {
+  menu: '<path d="M4 7h11M4 12h16M4 17h8"/>',
+  more: '<circle cx="5.5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.8" fill="currentColor" stroke="none"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  mic: '<rect x="9" y="3" width="6" height="11.5" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/>',
+  arrowUp: '<path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/>',
+  arrowDown: '<path d="M12 5v14M5.5 12.5L12 19l6.5-6.5"/>',
+  stop: '<rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor" stroke="none"/>',
+  stopSmall: '<rect x="7.5" y="7.5" width="9" height="9" rx="1.5" fill="currentColor" stroke="none"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  copy: '<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2.5"/><path d="M15.5 8.5V6.5a2.5 2.5 0 0 0-2.5-2.5H6.5A2.5 2.5 0 0 0 4 6.5V13a2.5 2.5 0 0 0 2.5 2.5h2"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  share: '<path d="M12 15V3.5M7.5 8L12 3.5 16.5 8"/><path d="M5 12v6.5A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V12"/>',
+  pencil: '<path d="M15.5 4.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/><path d="M13.5 6.5l3 3"/>',
+  trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>',
+  doc: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+  chevR: '<path d="M9.5 6l6 6-6 6"/>',
+  chevL: '<path d="M14.5 6l-6 6 6 6"/>',
+  camera: '<path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.8l1.5-2h4.4l1.5 2h1.8A2.5 2.5 0 0 1 20 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.5"/>',
+  image: '<rect x="3.5" y="4" width="17" height="16" rx="2.5"/><circle cx="9" cy="9.5" r="1.8"/><path d="M20.5 15.5l-5-5L5 20"/>',
+  fileUp: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 18v-6M9.5 14.5L12 12l2.5 2.5"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M21.5 20a6.5 6.5 0 0 0-4-6"/>',
+  chat: '<path d="M20 11.5a8 8 0 0 1-11.7 7.1L4 19.5l1-4.1A8 8 0 1 1 20 11.5z"/>',
+  stack: '<path d="M6 4h12M4.5 8h15"/><rect x="3.5" y="12" width="17" height="8.5" rx="2"/>',
+  pause: '<rect x="6.5" y="5" width="3.5" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="5" width="3.5" height="14" rx="1" fill="currentColor" stroke="none"/>',
+  play: '<path d="M7.5 5.2v13.6a.8.8 0 0 0 1.2.7l11-6.8a.8.8 0 0 0 0-1.4l-11-6.8a.8.8 0 0 0-1.2.7z" fill="currentColor" stroke="none"/>',
+  refresh: '<path d="M20 11.5a8 8 0 1 0-2.4 5.7"/><path d="M20 4.5v7h-7"/>',
+  rounds: '<path d="M4.5 12a7.5 7.5 0 0 1 13.2-4.9M19.5 12a7.5 7.5 0 0 1-13.2 4.9"/><path d="M18.5 3.5v4h-4M5.5 20.5v-4h4"/>',
+  alert: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16.5v.01"/>',
+  spark: '<path d="M12 2.5C12.8 8 16 11.2 21.5 12 16 12.8 12.8 16 12 21.5 11.2 16 8 12.8 2.5 12 8 11.2 11.2 8 12 2.5Z" fill="currentColor" stroke="none"/>',
+};
+function ic(name) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PATHS[name] || ''}</svg>`;
 }
-function closeDrawer() {
-  $('sidebar').classList.remove('open');
-  $('drawer-backdrop').classList.add('hidden');
+function hydrateIcons(root = document) {
+  root.querySelectorAll('[data-icon]').forEach((el) => { if (!el.firstElementChild) el.innerHTML = ic(el.dataset.icon); });
 }
 
-// ---------- tiny markdown renderer ----------
+// ---------- tiny markdown ----------
 function esc(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 function mdInline(s) {
   return s
     .replace(/`([^`]+)`/g, (_, c) => `<code>${c}</code>`)
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
-    .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
 }
 function md(src) {
   const lines = esc(src).split('\n');
-  let html = '', inCode = false, inUl = false, inOl = false, para = [];
+  let html = '', inCode = false, list = null, para = [], table = [];
   const flushPara = () => { if (para.length) { html += `<p>${mdInline(para.join(' '))}</p>`; para = []; } };
-  const closeLists = () => {
-    if (inUl) { html += '</ul>'; inUl = false; }
-    if (inOl) { html += '</ol>'; inOl = false; }
+  const closeList = () => { if (list) { html += `</${list}>`; list = null; } };
+  const flushTable = () => {
+    if (!table.length) return;
+    const rows = table.filter((r) => !/^\|?\s*:?-{2,}/.test(r));
+    html += '<table>' + rows.map((r, i) => '<tr>' + r.replace(/^\||\|$/g, '').split('|')
+      .map((c) => `<${i ? 'td' : 'th'}>${mdInline(c.trim())}</${i ? 'td' : 'th'}>`).join('') + '</tr>').join('') + '</table>';
+    table = [];
   };
   for (const raw of lines) {
     const line = raw.replace(/\s+$/, '');
-    if (line.trim().startsWith('```')) {
-      flushPara(); closeLists();
-      html += inCode ? '</code></pre>' : '<pre><code>';
-      inCode = !inCode; continue;
-    }
+    if (line.trim().startsWith('```')) { flushPara(); closeList(); flushTable(); html += inCode ? '</code></pre>' : '<pre><code>'; inCode = !inCode; continue; }
     if (inCode) { html += line + '\n'; continue; }
+    if (/^\s*\|.*\|\s*$/.test(line)) { flushPara(); closeList(); table.push(line.trim()); continue; }
+    flushTable();
     const h = line.match(/^(#{1,4})\s+(.*)/);
-    if (h) { flushPara(); closeLists(); html += `<h${h[1].length}>${mdInline(h[2])}</h${h[1].length}>`; continue; }
-    if (/^(-{3,}|\*{3,})$/.test(line.trim())) { flushPara(); closeLists(); html += '<hr>'; continue; }
+    if (h) { flushPara(); closeList(); const n = Math.min(h[1].length, 3); html += `<h${n}>${mdInline(h[2])}</h${n}>`; continue; }
+    if (/^\s*(-{3,}|\*{3,})\s*$/.test(line)) { flushPara(); closeList(); html += '<hr>'; continue; }
     const ul = line.match(/^\s*[-*+]\s+(.*)/);
-    if (ul) { flushPara(); if (inOl) { html += '</ol>'; inOl = false; } if (!inUl) { html += '<ul>'; inUl = true; } html += `<li>${mdInline(ul[1])}</li>`; continue; }
     const ol = line.match(/^\s*\d+[.)]\s+(.*)/);
-    if (ol) { flushPara(); if (inUl) { html += '</ul>'; inUl = false; } if (!inOl) { html += '<ol>'; inOl = true; } html += `<li>${mdInline(ol[1])}</li>`; continue; }
-    const bq = line.match(/^\s*>\s?(.*)/);
-    if (bq) { flushPara(); closeLists(); html += `<blockquote>${mdInline(bq[1])}</blockquote>`; continue; }
-    if (!line.trim()) { flushPara(); closeLists(); continue; }
+    if (ul || ol) {
+      flushPara();
+      const want = ul ? 'ul' : 'ol';
+      if (list !== want) { closeList(); html += `<${want}>`; list = want; }
+      html += `<li>${mdInline((ul || ol)[1])}</li>`;
+      continue;
+    }
+    const bq = line.match(/^\s*&gt;\s?(.*)/);
+    if (bq) { flushPara(); closeList(); html += `<blockquote>${mdInline(bq[1])}</blockquote>`; continue; }
+    if (!line.trim()) { flushPara(); closeList(); continue; }
+    closeList();
     para.push(line.trim());
   }
   if (inCode) html += '</code></pre>';
-  flushPara(); closeLists();
+  flushPara(); closeList(); flushTable();
   return html;
 }
 
+// ---------- state ----------
+let AGENTS = [];          // ordered: orchestrator first, then the debate order
+let AGENT_MAP = {};
+let ideas = [];
+let current = null;       // the open idea (full object)
+let route = { view: 'new' };
+let thinking = null;      // { agentId, since }
+let pending = [];         // composer attachments
+let busy = false;
+const expanded = new Set();
+
+const settings = (() => {
+  const d = { name: '', theme: 'system', rounds: 2 };
+  try { return { ...d, ...JSON.parse(localStorage.getItem('box-settings') || '{}') }; } catch { return d; }
+})();
+function saveSettings() {
+  try { localStorage.setItem('box-settings', JSON.stringify(settings)); } catch {}
+}
+
+const KIND_LABEL = { kickoff: 'Kickoff', synthesis: 'Synthesis', brief: 'Final brief' };
+const STATUS_LABEL = { running: 'Debating', paused: 'Paused', done: 'Concluded', error: 'Stopped', idle: 'Not started' };
+const ROUND_LABEL = { 1: 'Quick pass', 2: 'Standard', 3: 'Deep', 4: 'Exhaustive' };
+const SUGGESTIONS = [
+  'An app that matches dog owners with neighbors for midday walks',
+  'A browser extension that turns long YouTube videos into ready-to-post shorts',
+  'A subscription box for home cooks built around local farms',
+];
+
 // ---------- api ----------
 async function api(path, opts) {
-  const r = await fetch(path, opts ? { headers: { 'Content-Type': 'application/json' }, ...opts } : undefined);
-  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || r.statusText);
-  return r.json();
+  const init = opts ? { headers: { 'Content-Type': 'application/json' }, ...opts } : undefined;
+  const r = await fetch(path, init);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || `Request failed (${r.status})`);
+  return data;
+}
+
+// ---------- helpers ----------
+function toast(text) {
+  const t = $('toast');
+  t.textContent = text;
+  t.classList.remove('hidden');
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => t.classList.add('hidden'), 3200);
+}
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch {}
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  const ok = document.execCommand('copy'); ta.remove();
+  return ok;
+}
+function timeOf(ts) { return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
+function agentOf(id, fallbackName) {
+  if (id === 'user') return { name: 'You', emoji: '🧑', color: 'var(--accent)' };
+  return AGENT_MAP[id] || { name: fallbackName || id, emoji: '🤖', color: 'var(--line-strong)' };
+}
+function briefTitle(brief) {
+  const h = (brief || '').match(/^#\s+(.+)$/m);
+  return h ? h[1].replace(/[*_`]/g, '').trim() : 'Idea Brief';
+}
+function fileLabel(a) {
+  if (a.kind === 'pdf') return 'PDF';
+  const ext = (a.name.split('.').pop() || '').toUpperCase();
+  return a.kind === 'image' ? 'Image' : (ext.length <= 5 ? ext : 'File');
+}
+function attachmentsHtml(list) {
+  if (!list || !list.length) return '';
+  return `<div class="att-row">${list.map((a) => a.kind === 'image'
+    ? `<img class="att-img" src="/api/uploads/${a.id}" alt="${esc(a.name)}" loading="lazy" data-zoom="${a.id}">`
+    : `<a class="att-file" href="/api/uploads/${a.id}" target="_blank" rel="noopener">
+         <span class="att-ico">${ic('doc')}</span>
+         <span style="min-width:0"><div class="att-name">${esc(a.name)}</div><div class="att-meta">${fileLabel(a)}</div></span>
+       </a>`).join('')}</div>`;
+}
+
+// ---------- theme & greeting ----------
+const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+function applyTheme() {
+  const theme = settings.theme === 'system' ? (darkQuery.matches ? 'dark' : 'light') : settings.theme;
+  document.documentElement.dataset.theme = theme;
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', theme === 'light' ? '#faf9f5' : '#151515');
+}
+darkQuery.addEventListener?.('change', applyTheme);
+function greeting() {
+  const h = new Date().getHours();
+  const part = h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  return settings.name ? `${part}, ${settings.name}` : part;
+}
+function renderAvatar() {
+  $('avatar-btn').textContent = (settings.name.trim()[0] || 'B').toUpperCase();
+}
+
+// ---------- drawer ----------
+function openDrawer() { if (!desktop.matches) document.body.classList.add('drawer-open'); }
+function closeDrawer() { document.body.classList.remove('drawer-open'); }
+$('menu-btn').onclick = openDrawer;
+$('scrim').onclick = closeDrawer;
+(() => {
+  let sx = null, sy = 0;
+  const main = $('main');
+  main.addEventListener('touchstart', (e) => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; }, { passive: true });
+  main.addEventListener('touchend', (e) => {
+    if (sx === null || desktop.matches || $('layer').children.length) { sx = null; return; }
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) > 70 && Math.abs(dy) < 45) {
+      if (dx > 0 && !document.body.classList.contains('drawer-open')) openDrawer();
+      else if (dx < 0) closeDrawer();
+    }
+    sx = null;
+  }, { passive: true });
+})();
+
+// Keep the composer above the iOS keyboard.
+if (window.visualViewport) {
+  const vv = window.visualViewport;
+  const fit = () => {
+    const main = $('main');
+    if (desktop.matches) { main.style.height = ''; main.style.top = ''; return; }
+    main.style.height = `${vv.height}px`;
+    main.style.top = `${vv.offsetTop}px`;
+    main.style.bottom = 'auto';
+  };
+  vv.addEventListener('resize', fit);
+  vv.addEventListener('scroll', fit);
+  fit();
+}
+
+// ---------- layers: sheets, popovers, dialogs ----------
+function closeTopLayer() {
+  const top = $('layer').lastElementChild;
+  if (top) top._close ? top._close() : top.remove();
+}
+function closeAllLayers() {
+  while ($('layer').lastElementChild) closeTopLayer();
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeTopLayer(); });
+
+function openSheet({ title = '', tall = false, render, onClose }) {
+  const bd = document.createElement('div');
+  bd.className = 'backdrop';
+  bd.innerHTML = `<div class="sheet${tall ? ' tall' : ''}">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <button class="circle-btn sheet-left" aria-label="Close">${ic('x')}</button>
+        <div class="sheet-title"></div>
+        <div class="head-spacer"></div>
+      </div>
+      <div class="sheet-body"></div>
+    </div>`;
+  const sheet = bd.firstElementChild;
+  const body = sheet.querySelector('.sheet-body');
+  const leftBtn = sheet.querySelector('.sheet-left');
+  const ctl = {
+    body,
+    setTitle(t) { sheet.querySelector('.sheet-title').textContent = t; },
+    setBack(fn) {
+      leftBtn.innerHTML = fn ? ic('chevL') : ic('x');
+      leftBtn.onclick = fn || ctl.close;
+      leftBtn.setAttribute('aria-label', fn ? 'Back' : 'Close');
+    },
+    close() { bd.remove(); onClose?.(); },
+  };
+  bd._close = ctl.close;
+  ctl.setTitle(title);
+  ctl.setBack(null);
+  bd.addEventListener('click', (e) => { if (e.target === bd) ctl.close(); });
+  $('layer').appendChild(bd);
+  render(ctl);
+  return ctl;
+}
+
+function openPopover(anchor, items) {
+  const bd = document.createElement('div');
+  bd.className = 'backdrop clear';
+  const pop = document.createElement('div');
+  pop.className = 'popover';
+  pop.innerHTML = items.map((it, i) => it === '-' ? '<div class="pop-sep"></div>'
+    : `<button class="pop-item${it.danger ? ' danger' : ''}" data-i="${i}"><span data-icon="${it.icon}"></span>${esc(it.label)}</button>`).join('');
+  hydrateIcons(pop);
+  const r = anchor.getBoundingClientRect();
+  pop.style.top = `${r.bottom + 8}px`;
+  pop.style.right = `${Math.max(12, window.innerWidth - r.right)}px`;
+  bd.appendChild(pop);
+  bd._close = () => bd.remove();
+  bd.addEventListener('click', (e) => {
+    const b = e.target.closest('.pop-item');
+    bd.remove();
+    if (b) items[Number(b.dataset.i)].run();
+  });
+  $('layer').appendChild(bd);
+}
+
+function dialog({ title, text = '', input = null, confirm = 'OK', danger = false }) {
+  return new Promise((resolve) => {
+    const bd = document.createElement('div');
+    bd.className = 'backdrop dialog-wrap';
+    bd.innerHTML = `<div class="dialog">
+        <h3>${esc(title)}</h3>
+        ${text ? `<p>${esc(text)}</p>` : ''}
+        ${input !== null ? `<input type="text" maxlength="120" value="${esc(input)}">` : ''}
+        <div class="dialog-actions">
+          <button class="d-cancel">Cancel</button>
+          <button class="d-ok ${danger ? 'danger' : 'primary'}">${esc(confirm)}</button>
+        </div>
+      </div>`;
+    const field = bd.querySelector('input');
+    const done = (val) => { bd.remove(); resolve(val); };
+    bd._close = () => done(input !== null ? null : false);
+    bd.querySelector('.d-cancel').onclick = () => bd._close();
+    bd.querySelector('.d-ok').onclick = () => done(input !== null ? field.value.trim() : true);
+    bd.addEventListener('click', (e) => { if (e.target === bd) bd._close(); });
+    field?.addEventListener('keydown', (e) => { if (e.key === 'Enter') bd.querySelector('.d-ok').click(); });
+    $('layer').appendChild(bd);
+    if (field) setTimeout(() => { field.focus(); field.select(); }, 50);
+  });
+}
+
+function openLightbox(id) {
+  const bd = document.createElement('div');
+  bd.className = 'lightbox';
+  bd.innerHTML = `<img src="/api/uploads/${id}" alt="">`;
+  bd._close = () => bd.remove();
+  bd.onclick = () => bd.remove();
+  $('layer').appendChild(bd);
 }
 
 // ---------- sidebar ----------
 async function refreshIdeas() {
-  ideas = await api('/api/ideas');
+  try { ideas = await api('/api/ideas'); } catch { return; }
+  ideas.sort((a, b) => b.lastActivity - a.lastActivity);
+  renderSidebar();
+  renderTop();
+}
+function refreshIdeasSoon() {
+  clearTimeout(refreshIdeasSoon.t);
+  refreshIdeasSoon.t = setTimeout(refreshIdeas, 300);
+}
+function renderSidebar() {
   const list = $('idea-list');
-  list.innerHTML = '';
-  for (const i of ideas) {
-    const el = document.createElement('div');
-    el.className = 'idea-item' + (current && current.id === i.id ? ' active' : '');
-    el.innerHTML = `<span class="idot ${i.status}"></span><span class="ititle">${esc(i.title)}</span><span class="icount">${i.messageCount}</span>`;
-    el.onclick = () => openIdea(i.id);
-    list.appendChild(el);
+  if (!ideas.length) {
+    list.innerHTML = '<div class="sb-empty">Your ideas will show up here.</div>';
+    return;
   }
+  list.innerHTML = ideas.map((i) => {
+    const cls = i.status === 'running' ? 'running' : i.status === 'error' ? 'error' : '';
+    const iconName = i.status === 'running' ? 'spark' : i.status === 'error' ? 'alert' : 'chat';
+    return `<button class="sb-item${current && current.id === i.id ? ' active' : ''}" data-id="${i.id}">
+        <span class="sb-ico ${cls}">${ic(iconName)}</span>
+        <span class="sb-item-title">${esc(i.title)}</span>
+      </button>`;
+  }).join('');
 }
-
-// ---------- room ----------
-async function openIdea(id) {
-  current = await api(`/api/ideas/${id}`);
-  expanded = new Set();
-  thinkingAgent = null;
-  $('empty-state').classList.add('hidden');
-  $('room').classList.remove('hidden');
-  closeAgentPanel();
+$('idea-list').addEventListener('click', (e) => {
+  const b = e.target.closest('.sb-item');
+  if (!b) return;
   closeDrawer();
-  renderRoom();
-  connectEvents(id);
-  refreshIdeas();
-}
+  location.hash = `#/idea/${b.dataset.id}`;
+});
+function goNew() { closeDrawer(); if (location.hash === '#/' || !location.hash) showNew(); else location.hash = '#/'; }
+$('nav-new').onclick = goNew;
+$('sb-new').onclick = goNew;
+$('nav-agents').onclick = () => { closeDrawer(); openAgentsSheet(); };
+$('nav-briefs').onclick = () => { closeDrawer(); openBriefsSheet(); };
+$('avatar-btn').onclick = () => { closeDrawer(); openSettingsSheet(); };
 
-function statusLabel(s) {
-  return { idle: 'Not started', running: 'Debating…', paused: 'Paused', done: 'Concluded', error: 'Error' }[s] || s;
-}
-
-function renderRoomHead() {
-  $('room-title').textContent = current.title;
-  $('room-meta').textContent = `Round ${current.round || '–'} of ${current.maxRounds} · ${current.messages.length} messages`;
-  const pill = $('status-pill');
-  pill.textContent = statusLabel(current.status);
-  pill.className = current.status;
-  const running = current.status === 'running';
-  $('run-btn').classList.toggle('hidden', running);
-  $('run-btn').textContent = current.status === 'idle' ? '▶ Start debate'
-    : current.status === 'done' ? '↻ Refine further' : '▶ Resume';
-  $('pause-btn').classList.toggle('hidden', !running);
-  $('brief-btn').classList.toggle('hidden', !current.brief);
-}
-
-function renderAgentStrip() {
-  const strip = $('agent-strip');
-  strip.innerHTML = '';
-  for (const a of Object.values(AGENTS)) {
-    const count = current.messages.filter((m) => m.agentId === a.id).length;
-    const chip = document.createElement('div');
-    chip.className = 'agent-chip' + (thinkingAgent === a.id ? ' thinking' : '');
-    chip.style.setProperty('--chip-color', a.color);
-    chip.innerHTML = `<span>${a.emoji}</span><span>${esc(a.name)}</span><span class="chip-count">${count}</span><span class="chip-status"></span>`;
-    chip.onclick = () => openAgentPanel(a.id);
-    strip.appendChild(chip);
+// ---------- top bar ----------
+function renderTop() {
+  const others = ideas.some((i) => i.status === 'running' && (!current || i.id !== current.id));
+  $('menu-dot').classList.toggle('hidden', !others);
+  if (route.view === 'new' || !current) {
+    $('title-text').textContent = 'New idea';
+    $('subtitle-text').textContent = `${AGENTS.length} agents ready · ${settings.rounds} ${settings.rounds === 1 ? 'round' : 'rounds'}`;
+    return;
   }
+  $('title-text').textContent = current.title;
+  let sub = `Round ${Math.max(current.round, 1)} of ${current.maxRounds}`;
+  if (current.status === 'running' && thinking) sub = `${agentOf(thinking.agentId).name} is thinking…`;
+  else sub += ` · ${STATUS_LABEL[current.status] || current.status}`;
+  $('subtitle-text').textContent = sub;
+  document.title = `${current.title} · Box`;
+}
+$('top-title').onclick = () => (route.view === 'idea' && current ? openRoomSheet() : openAgentsSheet());
+$('more-btn').onclick = () => {
+  if (route.view !== 'idea' || !current) {
+    openPopover($('more-btn'), [
+      { icon: 'users', label: 'Agents', run: openAgentsSheet },
+      { icon: 'stack', label: 'Idea Briefs', run: openBriefsSheet },
+      '-',
+      { icon: 'pencil', label: 'Settings', run: openSettingsSheet },
+    ]);
+    return;
+  }
+  const s = current.status;
+  const items = [
+    { icon: 'share', label: 'Share', run: shareIdea },
+    { icon: 'pencil', label: 'Rename', run: renameCurrent },
+    { icon: 'users', label: 'Room & agents', run: openRoomSheet },
+  ];
+  if (current.brief) items.push({ icon: 'doc', label: 'Idea Brief', run: openBriefViewer });
+  if (s === 'running') items.push({ icon: 'pause', label: 'Pause debate', run: pauseCurrent });
+  else if (s === 'done') items.push({ icon: 'refresh', label: 'Refine further', run: runCurrent });
+  else items.push({ icon: 'play', label: s === 'idle' ? 'Start debate' : 'Resume debate', run: runCurrent });
+  items.push('-', { icon: 'trash', label: 'Delete', danger: true, run: deleteCurrent });
+  openPopover($('more-btn'), items);
+};
+
+// ---------- routing ----------
+function parseHash() {
+  const m = location.hash.match(/^#\/idea\/([a-f0-9]+)/);
+  return m ? { view: 'idea', id: m[1] } : { view: 'new' };
+}
+async function onRoute() {
+  closeAllLayers();
+  closeDrawer();
+  route = parseHash();
+  if (route.view === 'idea') await openIdea(route.id);
+  else showNew();
+}
+window.addEventListener('hashchange', onRoute);
+
+function showNew() {
+  route = { view: 'new' };
+  current = null;
+  thinking = null;
+  document.title = 'Box';
+  $('greeting').textContent = greeting();
+  $('welcome').classList.remove('hidden');
+  $('messages').innerHTML = '';
+  $('suggestions').innerHTML = SUGGESTIONS.map((s) => `<button class="suggestion">${esc(s)}</button>`).join('');
+  renderTop();
+  renderSidebar();
+  renderDock();
+}
+$('suggestions').addEventListener('click', (e) => {
+  const b = e.target.closest('.suggestion');
+  if (!b) return;
+  $('input').value = b.textContent;
+  autosize();
+  updateSendState();
+  $('input').focus();
+});
+
+async function openIdea(id, { silent = false } = {}) {
+  let idea;
+  try { idea = await api(`/api/ideas/${id}`); } catch {
+    if (!silent) toast('That idea no longer exists.');
+    location.hash = '#/';
+    return;
+  }
+  const switching = !current || current.id !== idea.id;
+  current = idea;
+  if (switching) expanded.clear();
+  thinking = idea.speaker ? { agentId: idea.speaker.agentId, since: Date.now() - idea.speaker.elapsedMs } : null;
+  $('welcome').classList.add('hidden');
+  renderTop();
+  renderSidebar();
+  renderThread(switching);
+  renderDock();
 }
 
-function agentMeta(agentId, fallbackName) {
-  if (agentId === 'user') return { name: 'You', emoji: '🧑', color: 'var(--accent)' };
-  return AGENTS[agentId] || { name: fallbackName || agentId, emoji: '🤖', color: 'var(--border)' };
+// ---------- thread ----------
+function nearBottom() {
+  const t = $('thread');
+  return t.scrollHeight - t.scrollTop - t.clientHeight < 140;
 }
+function scrollToBottom(smooth) {
+  const t = $('thread');
+  t.scrollTo({ top: t.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+}
+$('thread').addEventListener('scroll', () => {
+  const t = $('thread');
+  $('jump-btn').classList.toggle('hidden', t.scrollHeight - t.scrollTop - t.clientHeight < 400);
+}, { passive: true });
+$('jump-btn').onclick = () => scrollToBottom(true);
 
-const KIND_LABEL = { kickoff: 'kickoff', debate: 'debate', synthesis: 'synthesis', brief: 'final brief', user: 'steer' };
-
-function msgEl(m) {
-  const a = agentMeta(m.agentId, m.agentName);
-  const el = document.createElement('div');
-  el.className = 'msg' + (m.agentId === 'user' ? ' user-msg' : '');
-  el.dataset.mid = m.id;
-  el.style.setProperty('--agent-color', a.color);
-  const time = new Date(m.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const isOpen = expanded.has(m.id);
-  const body = isOpen
-    ? `<div class="msg-full"><div class="md">${md(m.content)}</div><div class="collapse-hint">▲ collapse</div></div>`
-    : `<div class="msg-summary">${mdInline(esc(m.summary))}${m.agentId !== 'user' ? '<div class="expand-hint">▼ click for full message</div>' : ''}</div>`;
-  el.innerHTML = `
-    <div class="avatar" title="${esc(a.name)}">${a.emoji}</div>
-    <div class="msg-body">
-      <div class="msg-head">
-        <span class="msg-name">${esc(a.name)}</span>
-        <span class="msg-kind">${KIND_LABEL[m.kind] || m.kind}${m.kind !== 'user' ? ' · r' + m.round : ''}</span>
-        <span class="msg-time">${time}</span>
+function agentMsgHtml(m) {
+  const a = agentOf(m.agentId, m.agentName);
+  const open = expanded.has(m.id);
+  const label = KIND_LABEL[m.kind] || '';
+  const meta = [timeOf(m.ts), m.durationMs ? `${Math.round(m.durationMs / 1000)}s` : ''].filter(Boolean).join(' · ');
+  return `<div class="a-msg" style="--agent-color:${esc(a.color)}" data-mid="${m.id}">
+      <div class="a-head">
+        <span class="a-avatar" data-agent="${esc(m.agentId)}">${a.emoji}</span>
+        <span class="a-name" data-agent="${esc(m.agentId)}">${esc(a.name)}</span>
+        ${label ? `<span class="a-kind">${label}</span>` : ''}
       </div>
-      ${body}
+      <div class="a-body">${mdInline(esc(m.summary))}</div>
+      ${m.kind === 'brief' ? '' : `
+        <button class="a-more${open ? ' open' : ''}" data-toggle="${m.id}">${open ? 'Hide' : 'Full'} argument <span data-icon="chevR">${ic('chevR')}</span></button>
+        ${open ? `<div class="a-full a-body md">${md(m.content)}</div>` : ''}`}
+      <div class="a-actions">
+        <button class="icon-btn" data-copy="${m.id}" aria-label="Copy">${ic('copy')}</button>
+        <span class="a-meta">${esc(meta)}</span>
+      </div>
     </div>`;
-  el.querySelector('.avatar').onclick = () => m.agentId !== 'user' && openAgentPanel(m.agentId);
-  if (m.agentId !== 'user') {
-    const toggle = () => { expanded.has(m.id) ? expanded.delete(m.id) : expanded.add(m.id); renderChat(); };
-    el.querySelector('.msg-summary')?.addEventListener('click', toggle);
-    el.querySelector('.collapse-hint')?.addEventListener('click', toggle);
-  }
-  return el;
 }
 
-function renderChat() {
-  const chat = $('chat');
-  const stick = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 120;
-  chat.innerHTML = '';
+function renderThread(forceBottom = false) {
+  if (!current) return;
+  const stick = forceBottom || nearBottom();
+  let html = `<div class="u-msg">${attachmentsHtml(current.attachments)}<div class="u-bubble">${esc(current.text)}</div></div>`;
   let lastRound = null;
   for (const m of current.messages) {
-    if (m.kind !== 'user' && m.round !== lastRound) {
-      lastRound = m.round;
-      const div = document.createElement('div');
-      div.className = 'round-divider';
-      div.textContent = `Round ${m.round}`;
-      chat.appendChild(div);
+    if (m.kind === 'user') {
+      html += `<div class="u-msg"><div class="u-label">You · to the room</div>${attachmentsHtml(m.attachments)}<div class="u-bubble">${esc(m.content)}</div></div>`;
+      continue;
     }
-    chat.appendChild(msgEl(m));
-  }
-  if (thinkingAgent) {
-    const a = agentMeta(thinkingAgent);
-    const el = document.createElement('div');
-    el.className = 'msg thinking-msg';
-    el.style.setProperty('--agent-color', a.color);
-    el.innerHTML = `
-      <div class="avatar">${a.emoji}</div>
-      <div class="msg-body">
-        <div class="msg-head"><span class="msg-name">${esc(a.name)}</span></div>
-        <div class="msg-summary"><span class="dots"><i></i><i></i><i></i></span> thinking…</div>
-      </div>`;
-    chat.appendChild(el);
+    if (m.round !== lastRound) {
+      lastRound = m.round;
+      html += `<div class="round-mark">Round ${m.round}</div>`;
+    }
+    html += agentMsgHtml(m);
+    if (m.kind === 'brief') {
+      html += `<button class="brief-card" data-brief="1">
+          <span class="brief-ico">${ic('doc')}</span>
+          <span style="min-width:0"><div class="brief-title">${esc(briefTitle(m.content))}</div><div class="brief-sub">Idea Brief · Tap to open</div></span>
+        </button>`;
+    }
   }
   if (current.status === 'error' && current.error) {
-    const el = document.createElement('div');
-    el.className = 'error-card';
-    el.innerHTML = `<strong>The debate stopped</strong><div>${esc(current.error)}</div>`;
-    chat.appendChild(el);
+    html += `<div class="error-card"><strong>The debate stopped</strong>${esc(current.error)}</div>`;
   }
-  if (stick) chat.scrollTop = chat.scrollHeight;
+  if (current.status === 'running') {
+    const who = thinking ? agentOf(thinking.agentId) : null;
+    html += `<div class="brewing">
+        <span class="brew-mark">${ic('spark')}</span>
+        <span class="shimmer">${who ? `${who.emoji} ${esc(who.name)} is thinking` : 'Gathering the room'}</span>
+        <span class="brew-time" id="brew-time"></span>
+      </div>`;
+  }
+  $('messages').innerHTML = html;
+  tickBrew();
+  if (stick) requestAnimationFrame(() => scrollToBottom(false));
 }
 
-function renderRoom() {
-  renderRoomHead();
-  renderAgentStrip();
-  renderChat();
+function tickBrew() {
+  const el = $('brew-time');
+  if (el && thinking) el.textContent = `${Math.floor((Date.now() - thinking.since) / 1000)}s`;
 }
+setInterval(tickBrew, 1000);
 
-// ---------- live events ----------
-function connectEvents(id) {
-  if (evtSource) evtSource.close();
-  evtSource = new EventSource(`/api/ideas/${id}/events`);
-  evtSource.onmessage = (e) => {
-    if (!current || current.id !== id) return;
-    const ev = JSON.parse(e.data);
-    if (ev.event === 'message') {
-      thinkingAgent = null;
-      current.messages.push(ev.message);
-      if (ev.message.round) current.round = ev.message.round;
-      renderRoom();
-      refreshIdeas();
-    } else if (ev.event === 'agent_thinking') {
-      thinkingAgent = ev.agentId;
-      if (ev.round) current.round = ev.round;
-      renderAgentStrip();
-      renderChat();
-      renderRoomHead();
-    } else if (ev.event === 'status') {
-      current.status = ev.status;
-      current.error = ev.error || null;
-      thinkingAgent = null;
-      if (ev.status === 'done') openIdea(id); // reload to pick up brief
-      else renderRoom();
-      refreshIdeas();
-    } else if (ev.event === 'round') {
-      current.round = ev.round;
-      renderRoomHead();
-    } else if (ev.event === 'agents_changed') {
-      loadAgents();
-    } else if (ev.event === 'hello') {
-      current.status = ev.status;
-      renderRoomHead();
+$('messages').addEventListener('click', async (e) => {
+  const t = e.target.closest('[data-toggle],[data-copy],[data-brief],[data-zoom],[data-agent]');
+  if (!t) return;
+  if (t.dataset.toggle) {
+    const id = t.dataset.toggle;
+    expanded.has(id) ? expanded.delete(id) : expanded.add(id);
+    renderThread();
+  } else if (t.dataset.copy) {
+    const m = current.messages.find((x) => x.id === t.dataset.copy);
+    if (m && await copyText(m.content)) {
+      t.innerHTML = ic('check');
+      setTimeout(() => { t.innerHTML = ic('copy'); }, 1500);
     }
-  };
-}
-
-// ---------- actions ----------
-$('run-btn').onclick = async () => {
-  if (!current) return;
-  await api(`/api/ideas/${current.id}/run`, { method: 'POST', body: JSON.stringify({}) });
-  current.status = 'running';
-  renderRoomHead();
-};
-$('pause-btn').onclick = async () => {
-  await api(`/api/ideas/${current.id}/pause`, { method: 'POST', body: '{}' });
-};
-$('delete-btn').onclick = async () => {
-  if (!current || !confirm(`Delete "${current.title}"? This cannot be undone.`)) return;
-  await api(`/api/ideas/${current.id}`, { method: 'DELETE' });
-  current = null;
-  if (evtSource) evtSource.close();
-  $('room').classList.add('hidden');
-  $('empty-state').classList.remove('hidden');
-  refreshIdeas();
-};
-$('brief-btn').onclick = () => {
-  $('brief-body').innerHTML = md(current.brief || '');
-  $('brief-backdrop').classList.remove('hidden');
-};
-function closeBrief() { $('brief-backdrop').classList.add('hidden'); }
-
-async function sendSteer() {
-  const input = $('composer-input');
-  const text = input.value.trim();
-  if (!text || !current) return;
-  input.value = '';
-  input.style.height = 'auto';
-  await api(`/api/ideas/${current.id}/message`, { method: 'POST', body: JSON.stringify({ text }) });
-}
-$('send-btn').onclick = sendSteer;
-$('composer-input').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendSteer(); }
-});
-// auto-grow composer as you type (mobile-friendly)
-$('composer-input').addEventListener('input', function () {
-  this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-});
-
-// ---------- agent panel ----------
-function openAgentPanel(agentId) {
-  const a = AGENTS[agentId];
-  if (!a || !current) return;
-  $('agent-panel-title').innerHTML = `${a.emoji} ${esc(a.name)}`;
-  const entries = current.messages.filter((m) => m.agentId === agentId);
-  let html = `<div class="panel-desc">${esc(a.description || '')}<br><br>Model: <code>${esc(a.model)}</code> · ${entries.length} contribution${entries.length === 1 ? '' : 's'}</div>`;
-  for (const m of [...entries].reverse()) {
-    html += `<div class="panel-entry"><div class="pe-meta">${KIND_LABEL[m.kind] || m.kind} · round ${m.round} · ${new Date(m.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${m.durationMs ? ' · ' + Math.round(m.durationMs / 1000) + 's' : ''}</div>${mdInline(esc(m.summary))}</div>`;
+  } else if (t.dataset.brief) {
+    openBriefViewer();
+  } else if (t.dataset.zoom) {
+    openLightbox(t.dataset.zoom);
+  } else if (t.dataset.agent && AGENT_MAP[t.dataset.agent]) {
+    openAgentDetail(t.dataset.agent);
   }
-  $('agent-panel-body').innerHTML = html || '<div class="panel-desc">No contributions yet.</div>';
-  $('agent-panel').classList.remove('hidden');
-  $('panel-backdrop').classList.remove('hidden');
+});
+
+// ---------- dock / composer ----------
+function autosize() {
+  const i = $('input');
+  i.style.height = 'auto';
+  i.style.height = `${Math.min(i.scrollHeight, 190)}px`;
 }
-function closeAgentPanel() {
-  $('agent-panel').classList.add('hidden');
-  $('panel-backdrop').classList.add('hidden');
+function hasContent() {
+  return $('input').value.trim().length > 0 || pending.some((p) => p.status === 'ready');
+}
+function updateSendState() {
+  const running = route.view === 'idea' && current && current.status === 'running';
+  const content = hasContent();
+  $('send-btn').classList.toggle('hidden', !content);
+  $('stop-btn').classList.toggle('hidden', content || !running);
+}
+function renderDock() {
+  const input = $('input');
+  if (route.view === 'new' || !current) {
+    input.placeholder = 'Describe your idea…';
+    $('rounds-chip').classList.remove('hidden');
+    $('rounds-chip').innerHTML = `${ic('rounds')}${settings.rounds} ${settings.rounds === 1 ? 'round' : 'rounds'}`;
+    $('state-actions').innerHTML = '';
+  } else {
+    $('rounds-chip').classList.add('hidden');
+    const s = current.status;
+    input.placeholder = s === 'running' ? 'Steer the room…' : 'Reply to the room…';
+    const pills = [];
+    if (s === 'paused' || s === 'error') pills.push(['primary', 'play', 'Resume debate', 'run']);
+    if (s === 'idle') pills.push(['primary', 'play', 'Start debate', 'run']);
+    if (s === 'done') {
+      pills.push(['', 'doc', 'Idea Brief', 'brief']);
+      pills.push(['', 'refresh', 'Refine further', 'run']);
+    }
+    $('state-actions').innerHTML = pills.map(([cls, icon, label, act]) =>
+      `<button class="state-pill ${cls}" data-act="${act}">${ic(icon)}${label}</button>`).join('');
+  }
+  updateSendState();
+}
+$('state-actions').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act]');
+  if (!b) return;
+  if (b.dataset.act === 'run') runCurrent();
+  if (b.dataset.act === 'brief') openBriefViewer();
+});
+$('input').addEventListener('input', () => { autosize(); updateSendState(); });
+$('input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey && finePointer.matches) { e.preventDefault(); send(); }
+});
+$('send-btn').onclick = send;
+$('stop-btn').onclick = pauseCurrent;
+$('rounds-chip').onclick = openRoundsSheet;
+$('plus-btn').onclick = openAddSheet;
+
+async function send() {
+  if (busy) return;
+  if (pending.some((p) => p.status === 'uploading')) return toast('Waiting for uploads to finish…');
+  const text = $('input').value.trim();
+  const attachments = pending.filter((p) => p.status === 'ready').map((p) => p.uploadId);
+  if (!text && !attachments.length) return;
+  busy = true;
+  try {
+    if (route.view === 'new' || !current) {
+      const idea = await api('/api/ideas', { method: 'POST', body: JSON.stringify({ text, attachments, maxRounds: settings.rounds }) });
+      clearComposer();
+      location.hash = `#/idea/${idea.id}`;
+    } else {
+      const id = current.id;
+      const msg = await api(`/api/ideas/${id}/message`, { method: 'POST', body: JSON.stringify({ text, attachments }) });
+      clearComposer();
+      if (current && current.id === id && !current.messages.some((m) => m.id === msg.id)) {
+        current.messages.push(msg);
+        renderThread(true);
+      }
+      if (current && current.status !== 'running') await runCurrent();
+    }
+  } catch (e) {
+    toast(e.message);
+  } finally {
+    busy = false;
+  }
+}
+function clearComposer() {
+  $('input').value = '';
+  for (const p of pending) if (p.preview) URL.revokeObjectURL(p.preview);
+  pending = [];
+  renderPending();
+  autosize();
+  updateSendState();
 }
 
-// ---------- new idea modal ----------
-function openNewIdea() {
-  closeDrawer();
-  $('modal-backdrop').classList.remove('hidden');
-  $('idea-text').focus();
+// ---------- attachments ----------
+const MAX_PENDING = 8;
+function guessType(name) {
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  return { pdf: 'application/pdf', txt: 'text/plain', md: 'text/markdown', markdown: 'text/markdown', csv: 'text/csv', json: 'application/json', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' }[ext] || 'application/octet-stream';
 }
-function closeNewIdea() {
-  $('modal-backdrop').classList.add('hidden');
-  $('idea-title').value = '';
-  $('idea-text').value = '';
-}
-$('new-idea-btn').onclick = openNewIdea;
-$('create-idea-btn').onclick = async () => {
-  const text = $('idea-text').value.trim();
-  if (!text) return $('idea-text').focus();
-  const title = $('idea-title').value.trim();
-  const maxRounds = Number($('idea-rounds').value);
-  const idea = await api('/api/ideas', { method: 'POST', body: JSON.stringify({ title, text }) });
-  closeNewIdea();
-  await api(`/api/ideas/${idea.id}/run`, { method: 'POST', body: JSON.stringify({ maxRounds }) });
-  await openIdea(idea.id);
-};
-$('modal-backdrop').addEventListener('click', (e) => { if (e.target.id === 'modal-backdrop') closeNewIdea(); });
-$('brief-backdrop').addEventListener('click', (e) => { if (e.target.id === 'brief-backdrop') closeBrief(); });
-
-// ---------- boot ----------
-// ---------- agents screen ----------
-async function loadAgents() {
-  const list = await api('/api/agents');
-  AGENTS = Object.fromEntries(list.map((a) => [a.id, a]));
-  $('agents-count').textContent = list.length;
-  if (current) { renderAgentStrip(); renderChat(); }
-  if (!$('agents-backdrop').classList.contains('hidden') && !$('agents-list-view').classList.contains('hidden')) renderAgentsList();
-}
-
-let agentDraft = null;
-
-function showToast(text) {
-  const t = $('toast');
-  t.textContent = text;
-  t.classList.remove('hidden');
-  clearTimeout(showToast.timer);
-  showToast.timer = setTimeout(() => t.classList.add('hidden'), 4000);
-}
-
-function agentsStep(step) {
-  for (const v of ['list', 'form', 'confirm']) $(`agents-${v}-view`).classList.toggle('hidden', v !== step);
-  $('agents-back').classList.toggle('hidden', step === 'list');
-  $('agents-title').textContent = { list: '🤖 Agents', form: 'New agent', confirm: 'Confirm new agent' }[step];
-  $('agents-sheet').scrollTop = 0;
-}
-
-function renderAgentsList() {
-  const rows = Object.values(AGENTS).map((a) => `
-    <div class="agent-row" style="--agent-color:${esc(a.color || '#888')}">
-      <div class="avatar">${a.emoji}</div>
-      <div class="agent-row-body">
-        <div class="agent-row-head">
-          <span class="msg-name">${esc(a.name)}</span>
-          <span class="msg-kind">${a.builtin ? 'built-in' : 'added'} · ${esc(a.model)}</span>
-        </div>
-        <div class="agent-row-desc">${esc(a.description || '')}</div>
-      </div>
-      ${a.builtin ? '' : `<button class="icon-btn agent-remove" data-id="${esc(a.id)}" title="Remove ${esc(a.name)}">🗑</button>`}
-    </div>`).join('');
-  $('agents-list').innerHTML = rows;
-  $('agents-list').querySelectorAll('.agent-remove').forEach((b) => {
-    b.onclick = async () => {
-      const a = AGENTS[b.dataset.id];
-      if (!a || !confirm(`Remove ${a.name} from the room? It stops speaking in all debates from their next turn. Its past messages stay.`)) return;
-      try {
-        await api(`/api/agents/${a.id}`, { method: 'DELETE' });
-        await loadAgents();
-        renderAgentsList();
-        showToast(`${a.name} left the room`);
-      } catch (e) { alert(e.message); }
+function downscale(file, max = 1600) {
+  return new Promise((resolve) => {
+    if (file.type === 'image/gif') return resolve(file);
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob((b) => resolve(b || file), 'image/jpeg', 0.86);
     };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+async function addFiles(fileList) {
+  const files = [...fileList].slice(0, Math.max(0, MAX_PENDING - pending.length));
+  if (fileList.length > files.length) toast(`Up to ${MAX_PENDING} files per message.`);
+  for (const f of files) {
+    const type = f.type || guessType(f.name);
+    const kind = type.startsWith('image/') ? 'image' : type === 'application/pdf' ? 'pdf' : 'text';
+    const p = { local: Math.random().toString(36).slice(2), name: f.name || 'photo.jpg', kind, status: 'uploading' };
+    pending.push(p);
+    let blob = f;
+    if (kind === 'image') {
+      blob = await downscale(f);
+      if (blob !== f) p.name = p.name.replace(/\.[^.]+$/, '') + '.jpg';
+      p.preview = URL.createObjectURL(blob);
+    }
+    renderPending();
+    updateSendState();
+    try {
+      const r = await fetch(`/api/uploads?name=${encodeURIComponent(p.name)}`, {
+        method: 'POST', headers: { 'Content-Type': blob.type || type }, body: blob,
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || 'Upload failed');
+      p.uploadId = data.id;
+      p.status = 'ready';
+    } catch (e) {
+      pending = pending.filter((x) => x !== p);
+      toast(`${p.name}: ${e.message}`);
+    }
+    renderPending();
+    updateSendState();
+  }
+}
+function renderPending() {
+  const strip = $('attach-strip');
+  strip.classList.toggle('hidden', !pending.length);
+  strip.innerHTML = pending.map((p) => `<div class="pending ${p.status === 'uploading' ? 'uploading' : ''}">
+      ${p.preview
+        ? `<img class="att-img" src="${p.preview}" alt="">`
+        : `<div class="att-file"><span class="att-ico">${ic('doc')}</span><span style="min-width:0"><div class="att-name">${esc(p.name)}</div><div class="att-meta">${fileLabel(p)}</div></span></div>`}
+      <button class="pending-x" data-remove="${p.local}" aria-label="Remove">${ic('x')}</button>
+    </div>`).join('');
+}
+$('attach-strip').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-remove]');
+  if (!b) return;
+  pending = pending.filter((p) => p.local !== b.dataset.remove);
+  renderPending();
+  updateSendState();
+});
+for (const id of ['file-camera', 'file-photos', 'file-any']) {
+  $(id).addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });
+}
+
+// ---------- dictation ----------
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null;
+let recording = false;
+let recBase = '';
+let energy = 0;
+let waveBars = [];
+let waveTimer = null;
+
+function startDictation() {
+  if (!SpeechRec) return toast('Dictation isn’t available in this browser. Use the mic on your keyboard instead.');
+  try {
+    rec = new SpeechRec();
+  } catch {
+    return toast('Dictation couldn’t start in this browser.');
+  }
+  rec.lang = navigator.language || 'en-US';
+  rec.continuous = true;
+  rec.interimResults = true;
+  recBase = $('input').value ? $('input').value.replace(/\s*$/, ' ') : '';
+  rec.onresult = (e) => {
+    let finals = '', interim = '';
+    for (const r of e.results) (r.isFinal ? (finals += r[0].transcript) : (interim += r[0].transcript));
+    $('input').value = recBase + finals + interim;
+    autosize();
+    energy = 1;
+  };
+  rec.onsoundstart = rec.onspeechstart = () => { energy = Math.max(energy, 0.7); };
+  rec.onerror = (e) => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast('Microphone access is blocked. Allow it in your browser settings to dictate.');
+    else if (e.error !== 'aborted' && e.error !== 'no-speech') toast(`Dictation stopped (${e.error}).`);
+    stopDictation(true);
+  };
+  rec.onend = () => { if (recording) stopDictation(true); };
+  try { rec.start(); } catch { return toast('Dictation couldn’t start.'); }
+  recording = true;
+  $('composer-row').classList.add('hidden');
+  $('record-row').classList.remove('hidden');
+  startWave();
+}
+function stopDictation(keep) {
+  if (!recording) return;
+  recording = false;
+  try { rec?.stop(); } catch {}
+  rec = null;
+  if (!keep) $('input').value = recBase.trimEnd();
+  $('record-row').classList.add('hidden');
+  $('composer-row').classList.remove('hidden');
+  stopWave();
+  autosize();
+  updateSendState();
+}
+function startWave() {
+  const c = $('wave');
+  const dpr = window.devicePixelRatio || 1;
+  c.width = c.clientWidth * dpr;
+  c.height = 36 * dpr;
+  const slots = Math.floor(c.clientWidth / 7);
+  waveBars = new Array(slots).fill(0);
+  energy = 0.3;
+  const color = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+  const dim = getComputedStyle(document.documentElement).getPropertyValue('--text-3').trim();
+  const ctx = c.getContext('2d');
+  waveTimer = setInterval(() => {
+    waveBars.shift();
+    waveBars.push(energy > 0.12 ? (0.25 + Math.random() * 0.75) * energy : 0);
+    energy *= 0.9;
+    ctx.clearRect(0, 0, c.width, c.height);
+    const mid = c.height / 2;
+    waveBars.forEach((v, i) => {
+      const x = (i * 7 + 3) * dpr;
+      if (v < 0.06) {
+        ctx.fillStyle = dim;
+        ctx.beginPath(); ctx.arc(x, mid, 1.6 * dpr, 0, Math.PI * 2); ctx.fill();
+      } else {
+        const h = Math.max(6 * dpr, v * c.height * 0.95);
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.roundRect(x - 1.6 * dpr, mid - h / 2, 3.2 * dpr, h, 1.6 * dpr); ctx.fill();
+      }
+    });
+  }, 70);
+}
+function stopWave() { clearInterval(waveTimer); waveTimer = null; }
+$('mic-btn').onclick = startDictation;
+$('rec-cancel').onclick = () => stopDictation(false);
+$('rec-stop').onclick = () => stopDictation(true);
+$('rec-send').onclick = () => { stopDictation(true); send(); };
+
+// ---------- idea actions ----------
+async function runCurrent() {
+  if (!current) return;
+  try {
+    await api(`/api/ideas/${current.id}/run`, { method: 'POST', body: '{}' });
+    current.status = 'running';
+    current.error = null;
+    renderTop(); renderThread(true); renderDock();
+  } catch (e) { toast(e.message); }
+}
+async function pauseCurrent() {
+  if (!current) return;
+  try {
+    await api(`/api/ideas/${current.id}/pause`, { method: 'POST', body: '{}' });
+    toast('Pausing after the current speaker finishes…');
+  } catch (e) { toast(e.message); }
+}
+async function renameCurrent() {
+  if (!current) return;
+  const title = await dialog({ title: 'Rename idea', input: current.title, confirm: 'Save' });
+  if (!title || title === current.title) return;
+  try {
+    await api(`/api/ideas/${current.id}`, { method: 'PATCH', body: JSON.stringify({ title }) });
+    current.title = title;
+    const i = ideas.find((x) => x.id === current.id);
+    if (i) i.title = title;
+    renderTop(); renderSidebar();
+  } catch (e) { toast(e.message); }
+}
+async function deleteCurrent() {
+  if (!current) return;
+  const ok = await dialog({ title: 'Delete idea?', text: `“${current.title}” and its whole debate will be permanently deleted.`, confirm: 'Delete', danger: true });
+  if (!ok) return;
+  try {
+    await api(`/api/ideas/${current.id}`, { method: 'DELETE' });
+    ideas = ideas.filter((i) => i.id !== current.id);
+    location.hash = '#/';
+  } catch (e) { toast(e.message); }
+}
+async function shareIdea() {
+  if (!current) return;
+  const url = location.href;
+  if (navigator.share) {
+    try { await navigator.share({ title: current.title, text: current.brief ? briefTitle(current.brief) : current.title, url }); } catch {}
+    return;
+  }
+  if (await copyText(url)) toast('Link copied');
+}
+
+// ---------- sheets ----------
+function openAddSheet() {
+  openSheet({
+    title: 'Add context',
+    render(s) {
+      const isNew = route.view === 'new' || !current;
+      s.body.innerHTML = `
+        <div class="tiles">
+          <button class="tile" data-pick="file-camera">${ic('camera')}Camera</button>
+          <button class="tile" data-pick="file-photos">${ic('image')}Photos</button>
+          <button class="tile" data-pick="file-any">${ic('fileUp')}Files</button>
+        </div>
+        ${isNew ? `<button class="row" data-go="rounds">${ic('rounds')}<span class="row-label">Debate rounds</span><span class="row-value">${settings.rounds} · ${ROUND_LABEL[settings.rounds]}</span><span class="row-chev">${ic('chevR')}</span></button>` : ''}
+        <button class="row" data-go="agents">${ic('users')}<span class="row-label">Agents</span><span class="row-value">${AGENTS.length}</span><span class="row-chev">${ic('chevR')}</span></button>
+        <p class="sheet-intro" style="margin-top:12px">Agents can see photos and PDFs, and read text files (txt, md, csv, json).</p>`;
+      s.body.onclick = (e) => {
+        const pick = e.target.closest('[data-pick]');
+        if (pick) { s.close(); $(pick.dataset.pick).click(); return; }
+        const go = e.target.closest('[data-go]');
+        if (go?.dataset.go === 'rounds') { s.close(); openRoundsSheet(); }
+        if (go?.dataset.go === 'agents') { s.close(); openAgentsSheet(); }
+      };
+    },
   });
 }
 
-function openAgentsScreen() {
-  closeDrawer();
-  renderAgentsList();
-  agentsStep('list');
-  $('agents-backdrop').classList.remove('hidden');
-}
-function closeAgentsScreen() {
-  $('agents-backdrop').classList.add('hidden');
+function openRoundsSheet() {
+  openSheet({
+    title: 'Debate rounds',
+    render(s) {
+      const draw = () => {
+        s.body.innerHTML = `<p class="sheet-intro">How many rounds the room debates before the Orchestrator writes the brief. It can conclude early once the idea is mature.</p>` +
+          [1, 2, 3, 4].map((n) => `<button class="row check" data-n="${n}">
+              <span class="row-label">${n} ${n === 1 ? 'round' : 'rounds'}<span class="row-sub">${ROUND_LABEL[n]}${n >= 3 ? ' · uses more of your Claude limits' : ''}</span></span>
+              <span class="row-value">${settings.rounds === n ? ic('check') : ''}</span>
+            </button>`).join('');
+      };
+      draw();
+      s.body.onclick = (e) => {
+        const b = e.target.closest('[data-n]');
+        if (!b) return;
+        settings.rounds = Number(b.dataset.n);
+        saveSettings();
+        draw();
+        renderTop(); renderDock();
+        setTimeout(s.close, 180);
+      };
+    },
+  });
 }
 
-function readAgentForm() {
-  return {
-    name: $('ag-name').value.trim(),
-    emoji: $('ag-emoji').value.trim() || '🤖',
-    model: $('ag-model').value,
-    instructions: $('ag-instructions').value.trim(),
-  };
+function openRoomSheet() {
+  if (!current) return;
+  openSheet({
+    title: 'Room',
+    tall: true,
+    render(s) {
+      const counts = {};
+      for (const m of current.messages) counts[m.agentId] = (counts[m.agentId] || 0) + 1;
+      s.body.innerHTML = `
+        <button class="row" data-act="rename">${ic('pencil')}<span class="row-label">${esc(current.title)}</span><span class="row-chev">${ic('chevR')}</span></button>
+        <div class="row" style="cursor:default">${ic('rounds')}<span class="row-label">Round ${Math.max(current.round, 1)} of ${current.maxRounds}</span><span class="row-value">${STATUS_LABEL[current.status] || ''}</span></div>
+        ${current.brief ? `<button class="row" data-act="brief">${ic('doc')}<span class="row-label">Idea Brief</span><span class="row-chev">${ic('chevR')}</span></button>` : ''}
+        <div class="sb-label" style="padding:14px 6px 8px">In this room</div>
+        ${AGENTS.map((a) => `<button class="ag-row tap" data-agent="${a.id}" style="--agent-color:${esc(a.color)}">
+            <span class="a-avatar">${a.emoji}</span>
+            <span class="ag-main"><span class="ag-top"><span class="a-name">${esc(a.name)}</span></span><span class="ag-desc">${esc(a.description || '')}</span></span>
+            <span class="ag-count">${counts[a.id] || 0}</span>
+          </button>`).join('')}
+        <button class="wide-btn soft" data-act="agents" style="margin-top:6px">Manage agents</button>`;
+      s.body.onclick = (e) => {
+        const ag = e.target.closest('[data-agent]');
+        if (ag) { openAgentDetail(ag.dataset.agent); return; }
+        const act = e.target.closest('[data-act]')?.dataset.act;
+        if (act === 'rename') { s.close(); renameCurrent(); }
+        if (act === 'brief') { s.close(); openBriefViewer(); }
+        if (act === 'agents') { s.close(); openAgentsSheet(); }
+      };
+    },
+  });
 }
 
-function formError(msg) {
-  $('ag-error').textContent = msg || '';
-  $('ag-error').classList.toggle('hidden', !msg);
+function openAgentDetail(agentId) {
+  const a = AGENT_MAP[agentId];
+  if (!a) return;
+  openSheet({
+    title: `${a.emoji} ${a.name}`,
+    tall: true,
+    render(s) {
+      const entries = current ? current.messages.filter((m) => m.agentId === agentId) : [];
+      s.body.innerHTML = `
+        <p class="sheet-intro">${esc(a.description || '')}</p>
+        <div class="row" style="cursor:default"><span class="row-label">Model</span><span class="row-value">${esc(a.model)}</span></div>
+        ${current ? `<div class="sb-label" style="padding:14px 6px 8px">${entries.length} ${entries.length === 1 ? 'contribution' : 'contributions'} to this idea</div>` : ''}
+        ${entries.slice().reverse().map((m) => `<div class="ag-row"><span class="ag-main">
+            <span class="ag-top"><span class="ag-tag">${KIND_LABEL[m.kind] || `Round ${m.round}`}</span><span class="a-meta">${timeOf(m.ts)}</span></span>
+            <span class="ag-desc" style="color:var(--text);font-size:15px">${mdInline(esc(m.summary))}</span>
+          </span></div>`).join('')}`;
+    },
+  });
 }
 
-$('agents-btn').onclick = openAgentsScreen;
-$('agents-add-btn').onclick = () => {
-  formError('');
-  agentsStep('form');
-  $('ag-name').focus();
-};
-$('agents-back').onclick = () => {
-  if (!$('agents-confirm-view').classList.contains('hidden')) agentsStep('form');
-  else agentsStep('list');
-};
-$('ag-instructions').addEventListener('input', () => { $('ag-count').textContent = $('ag-instructions').value.length; });
-$('ag-review').onclick = () => {
-  const d = readAgentForm();
-  if (d.name.length < 2) return formError('Give the agent a name (at least 2 characters).');
-  if (Object.values(AGENTS).some((a) => a.name.toLowerCase() === d.name.toLowerCase())) return formError(`An agent named "${d.name}" is already in the room.`);
-  if ([...d.emoji].length > 4) return formError('Use a single emoji for the icon.');
-  if (d.instructions.length < 30) return formError('Instructions need at least 30 characters — describe what this agent focuses on and how it should argue.');
-  formError('');
-  agentDraft = d;
-  const modelLabel = $('ag-model').selectedOptions[0].textContent;
-  $('ag-preview').innerHTML = `
-    <div class="agent-row-head"><span class="confirm-emoji">${esc(d.emoji)}</span><span class="msg-name">${esc(d.name)}</span></div>
-    <div class="confirm-model">Model: ${esc(modelLabel)}</div>
-    <div class="confirm-label">Instructions</div>
-    <div class="confirm-instructions">${esc(d.instructions)}</div>`;
-  $('ag-confirm-error').classList.add('hidden');
-  agentsStep('confirm');
-};
-$('ag-edit').onclick = () => agentsStep('form');
-$('ag-confirm').onclick = async () => {
-  if (!agentDraft) return;
-  const btn = $('ag-confirm');
-  btn.disabled = true;
-  btn.textContent = 'Adding…';
+function openBriefViewer() {
+  if (!current?.brief) return;
+  const brief = current.brief;
+  const title = current.title;
+  openSheet({
+    title: 'Idea Brief',
+    tall: true,
+    render(s) {
+      s.body.innerHTML = `
+        <div class="btn-pair" style="margin-bottom:16px">
+          <button class="wide-btn soft" data-act="copy">Copy</button>
+          <button class="wide-btn soft" data-act="share">Share</button>
+        </div>
+        <div class="md a-body">${md(brief)}</div>`;
+      s.body.onclick = async (e) => {
+        const act = e.target.closest('[data-act]')?.dataset.act;
+        if (act === 'copy' && await copyText(brief)) toast('Brief copied');
+        if (act === 'share') {
+          if (navigator.share) { try { await navigator.share({ title, text: brief }); } catch {} }
+          else if (await copyText(brief)) toast('Brief copied');
+        }
+      };
+    },
+  });
+}
+
+function openBriefsSheet() {
+  openSheet({
+    title: 'Idea Briefs',
+    tall: true,
+    render(s) {
+      const done = ideas.filter((i) => i.hasBrief);
+      s.body.innerHTML = done.length
+        ? done.map((i) => `<button class="row" data-id="${i.id}">${ic('doc')}<span class="row-label">${esc(i.title)}<span class="row-sub">${new Date(i.lastActivity).toLocaleDateString()}</span></span><span class="row-chev">${ic('chevR')}</span></button>`).join('')
+        : '<p class="sheet-intro">No briefs yet. Each idea gets one when its debate concludes.</p>';
+      s.body.onclick = async (e) => {
+        const b = e.target.closest('[data-id]');
+        if (!b) return;
+        s.close();
+        location.hash = `#/idea/${b.dataset.id}`;
+        await openIdea(b.dataset.id);
+        openBriefViewer();
+      };
+    },
+  });
+}
+
+function openSettingsSheet() {
+  openSheet({
+    title: 'Settings',
+    render(s) {
+      const draw = () => {
+        s.body.innerHTML = `
+          <label class="field"><span>Your name</span><input id="set-name" type="text" maxlength="40" placeholder="Used in your greeting" value="${esc(settings.name)}"></label>
+          <div class="sb-label" style="padding:6px 6px 8px">Appearance</div>
+          ${['system', 'dark', 'light'].map((t) => `<button class="row check" data-theme="${t}"><span class="row-label">${t[0].toUpperCase() + t.slice(1)}</span><span class="row-value">${settings.theme === t ? ic('check') : ''}</span></button>`).join('')}
+          <p class="sheet-intro" style="margin-top:10px">Box runs every agent through your Claude subscription on your server. ${AGENTS.length} agents in the room.</p>`;
+        $('set-name').addEventListener('input', (e) => {
+          settings.name = e.target.value.trim();
+          saveSettings(); renderAvatar();
+          if (route.view === 'new') $('greeting').textContent = greeting();
+        });
+      };
+      draw();
+      s.body.onclick = (e) => {
+        const b = e.target.closest('[data-theme]');
+        if (!b) return;
+        settings.theme = b.dataset.theme;
+        saveSettings(); applyTheme(); draw();
+      };
+    },
+  });
+}
+
+// ---------- agents sheet ----------
+async function loadAgents() {
   try {
-    const agent = await api('/api/agents', { method: 'POST', body: JSON.stringify(agentDraft) });
-    agentDraft = null;
-    for (const id of ['ag-name', 'ag-emoji', 'ag-instructions']) $(id).value = '';
-    $('ag-count').textContent = '0';
-    await loadAgents();
-    renderAgentsList();
-    agentsStep('list');
-    showToast(`${agent.emoji} ${agent.name} joined the room`);
-  } catch (e) {
-    $('ag-confirm-error').textContent = e.message;
-    $('ag-confirm-error').classList.remove('hidden');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Confirm & add';
-  }
-};
-$('agents-backdrop').addEventListener('click', (e) => { if (e.target.id === 'agents-backdrop') closeAgentsScreen(); });
+    AGENTS = await api('/api/agents');
+    AGENT_MAP = Object.fromEntries(AGENTS.map((a) => [a.id, a]));
+  } catch {}
+  renderTop();
+  if (current) renderThread();
+}
 
+function openAgentsSheet() {
+  let draft = null;
+  openSheet({
+    title: 'Agents',
+    tall: true,
+    render(s) {
+      const list = () => {
+        s.setTitle('Agents');
+        s.setBack(null);
+        s.body.innerHTML = `
+          <p class="sheet-intro">Everyone here speaks in every debate. New agents join new ideas right away, and ideas already running from their next round.</p>
+          ${AGENTS.map((a) => `<div class="ag-row" style="--agent-color:${esc(a.color)}">
+              <span class="a-avatar">${a.emoji}</span>
+              <span class="ag-main">
+                <span class="ag-top"><span class="a-name">${esc(a.name)}</span><span class="ag-tag">${a.builtin ? 'built-in' : 'added'} · ${esc(a.model)}</span></span>
+                <span class="ag-desc">${esc(a.description || '')}</span>
+              </span>
+              ${a.builtin ? '' : `<button class="icon-btn" data-remove="${a.id}" aria-label="Remove ${esc(a.name)}">${ic('trash')}</button>`}
+            </div>`).join('')}
+          <button class="wide-btn accent" data-act="add" style="margin-top:6px">Add an agent</button>`;
+      };
+      const form = (err = '') => {
+        s.setTitle('New agent');
+        s.setBack(list);
+        const d = draft || { name: '', emoji: '', model: 'sonnet', instructions: '' };
+        s.body.innerHTML = `
+          <label class="field"><span>Name</span><input id="ag-name" type="text" maxlength="40" placeholder="e.g. Legal Advisor" value="${esc(d.name)}"></label>
+          <div class="field-row">
+            <label class="field icon"><span>Icon</span><input id="ag-emoji" type="text" maxlength="8" placeholder="🤖" value="${esc(d.emoji)}"></label>
+            <label class="field"><span>Model</span><select id="ag-model">
+              <option value="sonnet">Sonnet — balanced</option>
+              <option value="opus">Opus — deepest</option>
+              <option value="haiku">Haiku — fastest</option>
+            </select></label>
+          </div>
+          <label class="field"><span>Instructions</span><textarea id="ag-instructions" rows="8" maxlength="3000" placeholder="Who is this agent and what should it push on? For example: You are a startup lawyer. Flag regulatory, privacy and IP risks, rate each one, and propose the cheapest way to stay compliant at MVP stage.">${esc(d.instructions)}</textarea></label>
+          <div class="hint"><span id="ag-count">${d.instructions.length}</span> / 3000 · at least 30 characters: the role, what it focuses on, and how it argues.</div>
+          ${err ? `<div class="form-error">${esc(err)}</div>` : ''}
+          <button class="wide-btn" data-act="review">Review</button>`;
+        $('ag-model').value = d.model;
+        $('ag-instructions').addEventListener('input', (e) => { $('ag-count').textContent = e.target.value.length; });
+        if (!d.name) setTimeout(() => $('ag-name')?.focus(), 60);
+      };
+      const read = () => ({
+        name: $('ag-name').value.trim(),
+        emoji: $('ag-emoji').value.trim() || '🤖',
+        model: $('ag-model').value,
+        instructions: $('ag-instructions').value.trim(),
+      });
+      const confirmView = (err = '') => {
+        s.setTitle('Confirm new agent');
+        s.setBack(() => form());
+        const modelName = { sonnet: 'Sonnet — balanced', opus: 'Opus — deepest', haiku: 'Haiku — fastest' }[draft.model];
+        s.body.innerHTML = `
+          <p class="sheet-intro">Check this before adding. Nothing is saved until you confirm.</p>
+          <div class="preview-card">
+            <div class="pv-head"><span class="pv-emoji">${esc(draft.emoji)}</span><span class="pv-name">${esc(draft.name)}</span></div>
+            <div class="pv-model">Model: ${modelName}</div>
+            <div class="pv-label">Instructions</div>
+            <div class="pv-text">${esc(draft.instructions)}</div>
+          </div>
+          <ul class="notes">
+            <li>Speaks once per round in every idea: new ones right away, running ones from their next round.</li>
+            <li>Each round costs one more Claude call per debate, which counts toward your Claude limits.</li>
+            <li>You can remove it any time from this screen.</li>
+          </ul>
+          ${err ? `<div class="form-error">${esc(err)}</div>` : ''}
+          <div class="btn-pair">
+            <button class="wide-btn soft" data-act="edit">Edit</button>
+            <button class="wide-btn accent" data-act="confirm">Confirm &amp; add</button>
+          </div>`;
+      };
+      list();
+      s.body.onclick = async (e) => {
+        const rm = e.target.closest('[data-remove]');
+        if (rm) {
+          const a = AGENT_MAP[rm.dataset.remove];
+          const ok = await dialog({ title: `Remove ${a.name}?`, text: 'It stops speaking in all debates from their next turn. Its past messages stay.', confirm: 'Remove', danger: true });
+          if (!ok) return;
+          try {
+            await api(`/api/agents/${a.id}`, { method: 'DELETE' });
+            await loadAgents(); list();
+            toast(`${a.name} left the room`);
+          } catch (err) { toast(err.message); }
+          return;
+        }
+        const act = e.target.closest('[data-act]')?.dataset.act;
+        if (act === 'add') { draft = null; form(); }
+        if (act === 'review') {
+          const d = read();
+          draft = d;
+          if (d.name.length < 2) return form('Give the agent a name (at least 2 characters).');
+          if (AGENTS.some((a) => a.name.toLowerCase() === d.name.toLowerCase())) return form(`An agent named “${d.name}” is already in the room.`);
+          if ([...d.emoji].length > 4) return form('Use a single emoji for the icon.');
+          if (d.instructions.length < 30) return form('Instructions need at least 30 characters.');
+          confirmView();
+        }
+        if (act === 'edit') form();
+        if (act === 'confirm') {
+          const btn = e.target.closest('button');
+          btn.disabled = true; btn.textContent = 'Adding…';
+          try {
+            const agent = await api('/api/agents', { method: 'POST', body: JSON.stringify(draft) });
+            draft = null;
+            await loadAgents(); list();
+            toast(`${agent.emoji} ${agent.name} joined the room`);
+          } catch (err) { confirmView(err.message); }
+        }
+      };
+    },
+  });
+}
+
+// ---------- live events ----------
+function handleEvent(ev) {
+  const mine = current && ev.ideaId === current.id;
+  switch (ev.event) {
+    case 'hello':
+      refreshIdeas();
+      if (current) openIdea(current.id, { silent: true });
+      break;
+    case 'message':
+      if (mine && !current.messages.some((m) => m.id === ev.message.id)) {
+        current.messages.push(ev.message);
+        if (ev.message.round) current.round = Math.max(current.round, ev.message.round);
+        if (thinking && thinking.agentId === ev.message.agentId) thinking = null;
+        renderThread(); renderTop();
+      }
+      refreshIdeasSoon();
+      break;
+    case 'agent_thinking':
+      if (mine) {
+        thinking = { agentId: ev.agentId, since: Date.now() };
+        if (ev.round) current.round = ev.round;
+        current.status = 'running';
+        renderThread(); renderTop(); renderDock();
+      }
+      break;
+    case 'status':
+      if (mine) {
+        current.status = ev.status;
+        current.error = ev.error || null;
+        thinking = null;
+        if (ev.status === 'done') openIdea(current.id, { silent: true });
+        else { renderThread(); renderTop(); renderDock(); }
+      }
+      refreshIdeasSoon();
+      break;
+    case 'round':
+      if (mine) { current.round = ev.round; renderTop(); }
+      break;
+    case 'renamed': {
+      const i = ideas.find((x) => x.id === ev.ideaId);
+      if (i) i.title = ev.title;
+      if (mine) { current.title = ev.title; renderTop(); }
+      renderSidebar();
+      break;
+    }
+    case 'ideas_changed':
+      refreshIdeasSoon();
+      if (current && ev.deleted === current.id) location.hash = '#/';
+      break;
+    case 'agents_changed':
+      loadAgents();
+      break;
+  }
+}
+function connectEvents() {
+  const es = new EventSource('/api/events');
+  es.onmessage = (e) => { try { handleEvent(JSON.parse(e.data)); } catch {} };
+}
+
+// ---------- boot ----------
 (async function boot() {
+  applyTheme();
+  hydrateIcons();
+  renderAvatar();
   await loadAgents();
   await refreshIdeas();
-  if (ideas.length) openIdea(ideas[0].id);
+  await onRoute();
+  connectEvents();
 })();

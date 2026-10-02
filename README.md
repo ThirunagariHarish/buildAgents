@@ -27,15 +27,13 @@ That's it — no `npm install`.
 
 ## How a debate works
 
-1. **＋ New idea** — describe your idea roughly; pick how many debate rounds (1–4).
-2. 🧭 **Orchestrator kickoff** — frames the idea and assigns pointed questions to each agent.
-3. **Debate round** — 💼 Entrepreneur → 📣 Marketer → 🛠️ Architect → 🔮 Visionary → ⚖️ Critic, each seeing the whole transcript and arguing with the others by name.
+1. **New idea** — type (or dictate) a rough idea, optionally attach photos, PDFs or text files with **+**, and send. Box names it automatically.
+2. 🧭 **Orchestrator kickoff** — frames the idea and assigns pointed questions to every agent in the room.
+3. **Debate round** — 💼 Entrepreneur → 📣 Marketer → 🛠️ Architect → 🔮 Visionary → ⚖️ Critic, plus any agents you added, each seeing the whole transcript and every attachment, and arguing with the others by name.
 4. 🧭 **Synthesis** — the Orchestrator rules on disagreements and decides `CONTINUE` (another round) or `CONCLUDE`.
-5. 📄 **Final Idea Brief** — problem, solution, target customer, business model, GTM, MVP scope, architecture, risks, roadmap.
+5. 📄 **Idea Brief** — problem, solution, target customer, business model, GTM, MVP scope, architecture, risks, roadmap.
 
-While it runs you see the live chat room. Each message shows a **one-line summary** — click it to expand the agent's full argument. Click any **agent chip** to see that agent's profile and everything it has contributed.
-
-You can also **steer** the room at any time from the composer — your message enters the transcript and the agents respond to it in their next turns. When a debate concludes, hit **↻ Refine further** to run a new cycle on the matured idea.
+The interface follows the Claude mobile app: a slide-out sidebar of recent ideas, a centered thread with a "brewing" indicator while an agent thinks, a composer with **+** (camera, photos, files, rounds, agents), dictation, and send/stop. Reply at any time — your message goes into the transcript and the room picks it up (a finished debate starts a new round). **⋯** has Share, Rename, Room & agents, the Idea Brief, pause/resume, and Delete. **Agents** lets you add your own agents with instructions; they join every debate.
 
 ## Configuration
 

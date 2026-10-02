@@ -5,27 +5,24 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { listIdeas, loadIdea, saveIdea, createIdea, deleteIdea, addMessage } = require('./lib/store');
-const { runIdea, pauseIdea, isRunning } = require('./lib/engine');
+const { listIdeas, loadIdea, saveIdea, createIdea, deleteIdea, addMessage, renameIdea } = require('./lib/store');
+const { runIdea, pauseIdea, isRunning, currentSpeaker } = require('./lib/engine');
 const { getAgents, getDebateOrder, addAgent, removeAgent } = require('./lib/agents');
+const { saveUpload, getUpload, resolveIds, removeUploads } = require('./lib/uploads');
+const { generateTitle } = require('./lib/title');
 
 const PORT = Number(process.env.BOX_PORT || 3400);
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
-// ---- SSE bus -------------------------------------------------------------
-const subscribers = new Map(); // ideaId -> Set<res>
+// ---- SSE bus: one stream per open page, carrying events for every idea ----
+const clients = new Set();
+function send(payload) {
+  const data = `data: ${JSON.stringify(payload)}\n\n`;
+  for (const res of clients) res.write(data);
+}
 const bus = {
-  publish(ideaId, payload) {
-    const subs = subscribers.get(ideaId);
-    if (!subs) return;
-    const data = `data: ${JSON.stringify(payload)}\n\n`;
-    for (const res of subs) res.write(data);
-  },
-  // Every open page, whichever idea it is viewing.
-  broadcast(payload) {
-    const data = `data: ${JSON.stringify(payload)}\n\n`;
-    for (const subs of subscribers.values()) for (const res of subs) res.write(data);
-  },
+  publish(ideaId, payload) { send({ ...payload, ideaId }); },
+  broadcast(payload) { send(payload); },
 };
 
 function agentList() {
@@ -51,7 +48,10 @@ function readBody(req) {
   });
 }
 
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
+const MIME = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css',
+  '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json',
+};
 
 function serveStatic(res, urlPath) {
   const rel = urlPath === '/' ? '/index.html' : urlPath;
@@ -59,21 +59,30 @@ function serveStatic(res, urlPath) {
   if (!file.startsWith(PUBLIC_DIR) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
     res.writeHead(404); return res.end('not found');
   }
-  res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' });
+  res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
   fs.createReadStream(file).pipe(res);
 }
 
 function ideaSummary(i) {
   return {
     id: i.id, title: i.title, status: isRunning(i.id) ? 'running' : i.status,
-    round: i.round, createdAt: i.createdAt, messageCount: i.messages.length,
+    round: i.round, maxRounds: i.maxRounds, createdAt: i.createdAt, messageCount: i.messages.length,
+    hasBrief: !!i.brief,
     lastActivity: i.messages.length ? i.messages[i.messages.length - 1].ts : i.createdAt,
   };
 }
 
-// ---- server --------------------------------------------------------------
+function nameIdea(idea) {
+  generateTitle(idea.text)
+    .then((title) => {
+      if (idea.titleSource !== 'auto' || !loadIdea(idea.id)) return;
+      renameIdea(idea, title, 'generated');
+      bus.publish(idea.id, { event: 'renamed', title });
+    })
+    .catch(() => {}); // keep the provisional title
+}
+
 // Optional HTTP Basic auth (set BOX_PASSWORD to enable; any username works).
-// Strongly recommended when Box is reachable from the internet.
 const BOX_PASSWORD = process.env.BOX_PASSWORD || '';
 function checkAuth(req, res) {
   if (!BOX_PASSWORD) return true;
@@ -91,21 +100,29 @@ function checkAuth(req, res) {
   return false;
 }
 
+// ---- server --------------------------------------------------------------
 const server = http.createServer(async (req, res) => {
   if (!checkAuth(req, res)) return;
   const url = new URL(req.url, `http://localhost:${PORT}`);
   const p = url.pathname;
 
   try {
-    // Agents metadata
-    if (p === '/api/agents' && req.method === 'GET') {
-      return json(res, 200, agentList());
+    if (p === '/api/events' && req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+      res.write(`data: ${JSON.stringify({ event: 'hello' })}\n\n`);
+      clients.add(res);
+      const ping = setInterval(() => res.write(': ping\n\n'), 25000);
+      req.on('close', () => { clearInterval(ping); clients.delete(res); });
+      return;
     }
+
+    // ---- agents ----
+    if (p === '/api/agents' && req.method === 'GET') return json(res, 200, agentList());
     if (p === '/api/agents' && req.method === 'POST') {
       const body = await readBody(req);
       try {
         const agent = addAgent(body);
-        bus.broadcast({ event: 'agents_changed', added: agent.name });
+        bus.broadcast({ event: 'agents_changed' });
         return json(res, 201, agent);
       } catch (e) {
         return json(res, 400, { error: e.message });
@@ -122,18 +139,46 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    // Ideas collection
+    // ---- uploads ----
+    if (p === '/api/uploads' && req.method === 'POST') {
+      try {
+        const meta = await saveUpload(req, { name: url.searchParams.get('name'), type: req.headers['content-type'] });
+        return json(res, 201, meta);
+      } catch (e) {
+        return json(res, 400, { error: e.message });
+      }
+    }
+    const um = p.match(/^\/api\/uploads\/([a-f0-9]{16})$/);
+    if (um && req.method === 'GET') {
+      const u = getUpload(um[1]);
+      if (!u) return json(res, 404, { error: 'file not found' });
+      res.writeHead(200, {
+        'Content-Type': u.meta.type,
+        'Cache-Control': 'private, max-age=31536000, immutable',
+        'Content-Disposition': `inline; filename="${encodeURIComponent(u.meta.name)}"`,
+      });
+      return fs.createReadStream(u.path).pipe(res);
+    }
+
+    // ---- ideas ----
     if (p === '/api/ideas' && req.method === 'GET') {
       return json(res, 200, listIdeas().map(ideaSummary));
     }
     if (p === '/api/ideas' && req.method === 'POST') {
       const body = await readBody(req);
-      if (!body.text || !body.text.trim()) return json(res, 400, { error: 'idea text required' });
-      const idea = createIdea({ title: body.title, text: body.text.trim() });
+      const text = String(body.text || '').trim();
+      const attachments = resolveIds(body.attachments);
+      if (!text && !attachments.length) return json(res, 400, { error: 'Describe your idea first.' });
+      const maxRounds = Math.min(4, Math.max(1, Number(body.maxRounds) || 2));
+      const idea = createIdea({
+        title: body.title, text: text || 'See the attached files.', attachments, maxRounds,
+      });
+      if (idea.titleSource === 'auto') nameIdea(idea);
+      if (body.autostart !== false) runIdea(bus, idea, { maxRounds });
+      bus.broadcast({ event: 'ideas_changed' });
       return json(res, 201, idea);
     }
 
-    // Single idea routes: /api/ideas/:id[/action]
     const m = p.match(/^\/api\/ideas\/([a-f0-9]+)(?:\/([a-z]+))?$/);
     if (m) {
       const idea = loadIdea(m[1]);
@@ -141,11 +186,21 @@ const server = http.createServer(async (req, res) => {
       const action = m[2];
 
       if (!action && req.method === 'GET') {
-        return json(res, 200, { ...idea, status: isRunning(idea.id) ? 'running' : idea.status });
+        return json(res, 200, { ...idea, status: isRunning(idea.id) ? 'running' : idea.status, speaker: currentSpeaker(idea.id) });
+      }
+      if (!action && req.method === 'PATCH') {
+        const body = await readBody(req);
+        const title = String(body.title || '').trim();
+        if (!title) return json(res, 400, { error: 'Title cannot be empty.' });
+        renameIdea(idea, title, 'user');
+        bus.publish(idea.id, { event: 'renamed', title: idea.title });
+        return json(res, 200, { ok: true, title: idea.title });
       }
       if (!action && req.method === 'DELETE') {
         pauseIdea(idea);
+        removeUploads([...(idea.attachments || []), ...idea.messages.flatMap((x) => x.attachments || [])]);
         deleteIdea(idea.id);
+        bus.broadcast({ event: 'ideas_changed', deleted: idea.id });
         return json(res, 200, { ok: true });
       }
       if (action === 'run' && req.method === 'POST') {
@@ -161,27 +216,16 @@ const server = http.createServer(async (req, res) => {
       if (action === 'message' && req.method === 'POST') {
         // User steers the room; agents see this in the transcript next turn.
         const body = await readBody(req);
-        if (!body.text || !body.text.trim()) return json(res, 400, { error: 'text required' });
+        const text = String(body.text || '').trim();
+        const attachments = resolveIds(body.attachments);
+        if (!text && !attachments.length) return json(res, 400, { error: 'Write something or attach a file.' });
         const msg = addMessage(idea, {
           agentId: 'user', kind: 'user', round: idea.round,
-          summary: body.text.trim().slice(0, 140), content: body.text.trim(),
+          summary: (text || 'Attached files').slice(0, 140), content: text || 'See the attached files.',
+          attachments,
         });
         bus.publish(idea.id, { event: 'message', message: msg });
         return json(res, 201, msg);
-      }
-      if (action === 'events' && req.method === 'GET') {
-        res.writeHead(200, {
-          'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive',
-        });
-        res.write(`data: ${JSON.stringify({ event: 'hello', status: isRunning(idea.id) ? 'running' : idea.status })}\n\n`);
-        if (!subscribers.has(idea.id)) subscribers.set(idea.id, new Set());
-        subscribers.get(idea.id).add(res);
-        const ping = setInterval(() => res.write(': ping\n\n'), 25000);
-        req.on('close', () => {
-          clearInterval(ping);
-          subscribers.get(idea.id)?.delete(res);
-        });
-        return;
       }
     }
 
