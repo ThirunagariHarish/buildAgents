@@ -1,6 +1,6 @@
-run: 31  commit: b27ed25  ssh step: success  at: 2026-10-02T02:43:42Z
+run: 32  commit: b27ed25  ssh step: success  at: 2026-10-02T02:44:03Z
 
-HEAD: b27ed25   domain: box.cashflowus.com
+HEAD: 6beb53e   domain: box.cashflowus.com
 == env file ==
 claude token: looks valid (length 108)
 keys in /etc/box.env: CLAUDE_CODE_OAUTH_TOKEN 
@@ -18,7 +18,7 @@ agent pool: 6 agents — Orchestrator, Entrepreneur, Marketer, Solution Architec
 (none yet)
 == claude login ==
 haiku: OK (2s) -> OK
-sonnet: OK (3s) -> OK
+sonnet: OK (2s) -> OK
 opus: OK (3s) -> OK
 == remove earlier Coolify routing attempts ==
 removed relay container box-web
