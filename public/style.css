@@ -49,7 +49,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
 body {
-  background: var(--bg-side);
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font);
   font-size: 16px;

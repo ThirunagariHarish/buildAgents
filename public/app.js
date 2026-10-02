@@ -214,13 +214,17 @@ $('scrim').onclick = closeDrawer;
 // Keep the composer above the iOS keyboard.
 if (window.visualViewport) {
   const vv = window.visualViewport;
+  // Only while the keyboard is up; otherwise the panel fills the screen,
+  // because iOS doesn't reliably report toolbar changes through vv.
   const fit = () => {
     const main = $('main');
-    if (desktop.matches) { main.style.height = ''; main.style.top = ''; return; }
-    main.style.height = `${vv.height}px`;
-    main.style.top = `${vv.offsetTop}px`;
-    main.style.bottom = 'auto';
+    const keyboardUp = !desktop.matches && window.innerHeight - vv.height > 120;
+    main.style.height = keyboardUp ? `${vv.height}px` : '';
+    main.style.top = keyboardUp ? `${vv.offsetTop}px` : '';
+    main.style.bottom = keyboardUp ? 'auto' : '';
   };
+  window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', fit);
   vv.addEventListener('resize', fit);
   vv.addEventListener('scroll', fit);
   fit();
