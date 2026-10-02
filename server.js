@@ -116,6 +116,17 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // Layout report from the client, read back by the deploy script.
+    if (p === '/api/diag' && req.method === 'POST') {
+      const body = await readBody(req).catch(() => ({}));
+      const file = path.join(__dirname, 'data', 'diag.json');
+      let list = [];
+      try { list = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
+      list = [{ at: new Date().toISOString(), ...body }, ...list].slice(0, 5);
+      fs.writeFileSync(file, JSON.stringify(list, null, 1).slice(0, 20000));
+      return json(res, 200, { ok: true });
+    }
+
     // ---- agents ----
     if (p === '/api/agents' && req.method === 'GET') return json(res, 200, agentList());
     if (p === '/api/agents' && req.method === 'POST') {

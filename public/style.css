@@ -109,7 +109,7 @@ svg { width: 22px; height: 22px; flex: none; }
 
 /* ---------- Sidebar ---------- */
 #sidebar {
-  position: fixed; top: 0; bottom: 0; left: 0; width: var(--side-w); z-index: 1;
+  position: fixed; top: 0; left: 0; height: var(--app-h, 100%); width: var(--side-w); z-index: 1;
   background: var(--bg-side); display: flex; flex-direction: column;
   padding-top: calc(10px + var(--sat));
 }
@@ -153,7 +153,7 @@ svg { width: 22px; height: 22px; flex: none; }
 
 /* ---------- Main panel (slides aside for the sidebar on phones) ---------- */
 #main {
-  position: fixed; inset: 0; z-index: 2; background: var(--bg);
+  position: fixed; top: 0; left: 0; right: 0; height: var(--app-h, 100%); z-index: 2; background: var(--bg);
   display: flex; flex-direction: column;
   transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1), border-radius 0.34s;
   will-change: transform;

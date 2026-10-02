@@ -211,24 +211,58 @@ $('scrim').onclick = closeDrawer;
   }, { passive: true });
 })();
 
-// Keep the composer above the iOS keyboard.
-if (window.visualViewport) {
-  const vv = window.visualViewport;
-  // Only while the keyboard is up; otherwise the panel fills the screen,
-  // because iOS doesn't reliably report toolbar changes through vv.
-  const fit = () => {
-    const main = $('main');
-    const keyboardUp = !desktop.matches && window.innerHeight - vv.height > 120;
-    main.style.height = keyboardUp ? `${vv.height}px` : '';
-    main.style.top = keyboardUp ? `${vv.offsetTop}px` : '';
-    main.style.bottom = keyboardUp ? 'auto' : '';
-  };
-  window.addEventListener('resize', fit);
-  window.addEventListener('orientationchange', fit);
-  vv.addEventListener('resize', fit);
-  vv.addEventListener('scroll', fit);
-  fit();
+// App height. In a home-screen web app with the translucent status bar,
+// iOS reports the viewport shorter than the screen by the status bar
+// height, so size to the screen there. While the keyboard is up, size to
+// the visible area so the composer stays above it.
+const standalone = navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+function screenHeight() {
+  const landscape = window.matchMedia('(orientation: landscape)').matches;
+  const a = screen.width, b = screen.height;
+  return landscape ? Math.min(a, b) : Math.max(a, b);
 }
+let tallestView = 0;
+function fitApp() {
+  const root = document.documentElement.style;
+  const main = $('main');
+  const vv = window.visualViewport;
+  if (vv) tallestView = Math.max(tallestView, vv.height);
+  const keyboardUp = vv && !desktop.matches && tallestView - vv.height > 120;
+  if (keyboardUp) {
+    main.style.height = `${vv.height}px`;
+    main.style.top = `${vv.offsetTop}px`;
+    main.style.bottom = 'auto';
+    return;
+  }
+  main.style.height = main.style.top = main.style.bottom = '';
+  if (standalone && !desktop.matches) root.setProperty('--app-h', `${Math.max(window.innerHeight, screenHeight())}px`);
+  else root.removeProperty('--app-h');
+}
+window.addEventListener('resize', fitApp);
+window.addEventListener('orientationchange', () => { tallestView = 0; setTimeout(fitApp, 300); });
+window.visualViewport?.addEventListener('resize', fitApp);
+window.visualViewport?.addEventListener('scroll', fitApp);
+fitApp();
+
+// One-off layout report so screen-size problems on a real phone can be diagnosed.
+setTimeout(() => {
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom);padding-top:env(safe-area-inset-top)';
+  document.body.appendChild(probe);
+  const cs = getComputedStyle(probe);
+  const report = {
+    ua: navigator.userAgent, standalone,
+    innerHeight: window.innerHeight, outerHeight: window.outerHeight,
+    clientHeight: document.documentElement.clientHeight,
+    screen: [screen.width, screen.height], vv: window.visualViewport && [window.visualViewport.height, window.visualViewport.offsetTop],
+    safeTop: cs.paddingTop, safeBottom: cs.height,
+    mainBottom: Math.round($('main').getBoundingClientRect().bottom),
+    composerBottom: Math.round($('composer').getBoundingClientRect().bottom),
+    appH: document.documentElement.style.getPropertyValue('--app-h') || null,
+  };
+  probe.remove();
+  fetch('/api/diag', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(report) }).catch(() => {});
+}, 1500);
 
 // ---------- layers: sheets, popovers, dialogs ----------
 function closeTopLayer() {
