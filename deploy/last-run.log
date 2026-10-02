@@ -1,6 +1,6 @@
-run: 28  commit: 445678b  ssh step: success  at: 2026-10-02T00:11:53Z
+run: 29  commit: c68fd01  ssh step: success  at: 2026-10-02T02:21:29Z
 
-HEAD: ce0cf84   domain: box.cashflowus.com
+HEAD: c68fd01   domain: box.cashflowus.com
 == env file ==
 claude token: looks valid (length 108)
 keys in /etc/box.env: CLAUDE_CODE_OAUTH_TOKEN 
@@ -16,8 +16,8 @@ local /: HTTP 200
 agent pool: 6 agents — Orchestrator, Entrepreneur, Marketer, Solution Architect, Visionary, Critic
 == claude login ==
 haiku: OK (2s) -> OK
-sonnet: OK (2s) -> OK
-opus: FAILED -> Failed to launch Claude CLI (claude): spawn claude ENOENT
+sonnet: OK (3s) -> OK
+opus: OK (2s) -> OK
 == remove earlier Coolify routing attempts ==
 removed relay container box-web
 removed Coolify route file
