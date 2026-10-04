@@ -29,11 +29,6 @@ BOX_GITHUB_TOKEN=$(printf '%s' "${BOX_GITHUB_TOKEN:-}" | tr -d '[:space:]')
     v=$(printf '%s' "${!k:-}" | tr -d '\r\n'); [ -n "$v" ] && printf '%s=%s\n' "$k" "$v"
   done
   printf 'BOX_DOMAIN=%s\n' "$DOMAIN"
-  # Enable the bubblewrap sandbox only if it works for the build user here.
-  if command -v bwrap >/dev/null && sudo -u boxbuild -H bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --tmpfs /opt/box/data --unshare-pid --die-with-parent -- /bin/sh -c '[ -z "$(ls -A /opt/box/data)" ] && ! touch /usr/box-sandbox-test 2>/dev/null' >/dev/null 2>&1; then
-    printf 'BOX_BWRAP=1\n'
-  fi
-  printf 'BOX_KUBECONFIG_FILE=/etc/box-kubeconfig\n'
 } > /etc/box.env
 chmod 600 /etc/box.env
 echo "keys in /etc/box.env: $(cut -d= -f1 /etc/box.env 2>/dev/null | tr '\n' ' ')"
@@ -53,7 +48,11 @@ fi
 echo "github token: $([ -n "$BOX_GITHUB_TOKEN" ] && echo "set (length ${#BOX_GITHUB_TOKEN})" || echo 'none (projects can be built but not deployed)')"
 
 echo "== box service =="
-bash deploy/setup-vps.sh 2>&1 | grep -E '==>|⚠|OK' || true
+bash deploy/setup-vps.sh 2>&1 | grep -E '==>|⚠|OK|bubblewrap' || true
+# Enable the bubblewrap sandbox only if it works for the build user here (after setup loaded its profile).
+if command -v bwrap >/dev/null && sudo -u boxbuild -H bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --tmpfs /opt/box/data --unshare-pid --die-with-parent -- /bin/sh -c '[ -z "$(ls -A /opt/box/data)" ] && ! touch /usr/box-sandbox-test 2>/dev/null' >/dev/null 2>&1; then
+  grep -q '^BOX_BWRAP=1' /etc/box.env || echo 'BOX_BWRAP=1' >> /etc/box.env
+fi
 systemctl restart box
 sleep 2
 echo "service: $(systemctl is-active box)"
