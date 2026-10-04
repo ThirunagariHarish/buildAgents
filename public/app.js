@@ -242,8 +242,18 @@ function fitApp() {
     return;
   }
   main.style.height = main.style.top = main.style.bottom = '';
-  if (standalone && !desktop.matches) root.setProperty('--app-h', `${Math.max(window.innerHeight, screenHeight())}px`);
-  else root.removeProperty('--app-h');
+  if (standalone && !desktop.matches) {
+    // Size to what iOS actually shows. Some iOS versions give a home-screen
+    // app a view that is shorter than the screen (a black band stays under
+    // it); then the home indicator sits in that band, so no bottom inset.
+    const h = window.innerHeight;
+    const band = screenHeight() - h;
+    root.setProperty('--app-h', `${h}px`);
+    root.setProperty('--sab', band >= 40 ? '0px' : 'env(safe-area-inset-bottom, 0px)');
+  } else {
+    root.removeProperty('--app-h');
+    root.removeProperty('--sab');
+  }
 }
 window.addEventListener('resize', fitApp);
 window.addEventListener('orientationchange', () => { tallestView = 0; setTimeout(fitApp, 300); });
