@@ -27,6 +27,9 @@ fi
 sudo mkdir -p "$BOX_DIR/data/work"
 sudo chown boxbuild:boxbuild "$BOX_DIR/data/work"
 sudo chmod 755 "$BOX_DIR/data" "$BOX_DIR/data/work"
+# Ideas and uploads stay private to Box; the build user can't read them.
+sudo mkdir -p "$BOX_DIR/data/ideas" "$BOX_DIR/data/uploads"
+sudo chmod 700 "$BOX_DIR/data/ideas" "$BOX_DIR/data/uploads"
 sudo corepack enable 2>/dev/null || true
 if ! command -v kubectl >/dev/null; then
   curl -fsSL -o /tmp/kubectl "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
