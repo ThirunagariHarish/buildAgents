@@ -53,7 +53,8 @@ if [ -n "$BOX_GITHUB_TOKEN" ]; then
   GH_LOGIN=$(node -e "try{console.log(JSON.parse(require('fs').readFileSync('/tmp/gh-user.json','utf8')).login||'?')}catch(e){console.log('?')}")
   GH_SCOPES=$(printf '%s' "$GH_HDR" | tr -d '\r' | awk -F': ' 'tolower($1)=="x-oauth-scopes"{print $2}')
   if [ -n "$GH_SCOPES" ]; then
-    MISSING=""; for s in repo workflow read:packages; do printf '%s' "$GH_SCOPES" | grep -qw "$s" || MISSING="$MISSING $s"; done
+    MISSING=""; for s in repo workflow; do printf '%s' "$GH_SCOPES" | grep -qw "$s" || MISSING="$MISSING $s"; done
+    printf '%s' "$GH_SCOPES" | grep -qwE "read:packages|write:packages" || MISSING="$MISSING read:packages"
     echo "github token check: classic token for $GH_LOGIN, scopes: $GH_SCOPES$([ -n "$MISSING" ] && echo " — MISSING:$MISSING (deploys will fail until added)" || echo ' — OK')"
   else
     echo "github token check: fine-grained token for $GH_LOGIN — must have Administration, Contents and Workflows write on ALL repositories, or deploys fail with 403; a classic token with repo, workflow, read:packages is simpler"
