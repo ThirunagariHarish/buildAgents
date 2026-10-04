@@ -40,6 +40,15 @@ const PATHS = {
   rocket: '<path d="M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2c.9-.9.9-2.2 0-3s-2.1-.9-3 0z"/><path d="M12 15l-3-3a19 19 0 0 1 9-8c1.3-.5 2.6.8 2.1 2.1A19 19 0 0 1 12 15z"/><path d="M9 12H5l2-3.5h4.5M12 15v4l3.5-2v-4.5"/>',
   inbox: '<path d="M3.5 13.5h5l1.5 2.5h4l1.5-2.5h5"/><path d="M5.5 5h13l2 8.5V18a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-4.5z"/>',
   list: '<path d="M8 6.5h12M8 12h12M8 17.5h12"/><path d="M4 6.5h.01M4 12h.01M4 17.5h.01"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
+  fork: '<circle cx="6" cy="5" r="2.2"/><circle cx="18" cy="5" r="2.2"/><circle cx="12" cy="19" r="2.2"/><path d="M6 7.2v2.3a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V7.2M12 12.5v4.3"/>',
+  flame: '<path d="M12 3c1 3 4 4.5 4 8.5a4 4 0 0 1-8 0c0-1.5.6-2.5 1.2-3.2.3 1 .9 1.7 1.8 2 .2-2.5-.5-4.8 1-7.3z"/>',
+  tag: '<path d="M3.5 12.5V5a1.5 1.5 0 0 1 1.5-1.5h7.5l8 8-8.5 8.5z"/><path d="M8 8h.01"/>',
+  archive: '<path d="M3.5 5.5h17v4h-17zM5 9.5v9a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-9M10 13.5h4"/>',
+  folder: '<path d="M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h4.5l2 2.5h7.5a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.2-1.2"/>',
+  download: '<path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M4.5 19.5h15"/>',
+  question: '<circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.5a2.5 2.5 0 0 1 5 0c0 1.8-2.5 2-2.5 4M12 17h.01"/>',
   globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.7 5.4 3.7 8.5s-1.2 5.9-3.7 8.5c-2.5-2.6-3.7-5.4-3.7-8.5S9.5 6.1 12 3.5z"/>',
   spark: '<path d="M12 2.5C12.8 8 16 11.2 21.5 12 16 12.8 12.8 16 12 21.5 11.2 16 8 12.8 2.5 12 8 11.2 11.2 8 12 2.5Z" fill="currentColor" stroke="none"/>',
 };
@@ -121,7 +130,12 @@ function saveSettings() {
   try { localStorage.setItem('box-settings', JSON.stringify(settings)); } catch {}
 }
 
-const KIND_LABEL = { kickoff: 'Kickoff', research: 'Web research', synthesis: 'Synthesis', brief: 'Final brief', doc: 'Document', approved: 'Approved' };
+const KIND_LABEL = { kickoff: 'Kickoff', research: 'Web research', synthesis: 'Synthesis', brief: 'Final brief', doc: 'Document', approved: 'Approved', answer: 'Answer', scorecard: 'Room score' };
+let TEMPLATES = [];
+let quickMode = null;      // null | { agentId: string|null, name: string } — next message is a quick question
+let sidebarQuery = '';
+let showArchived = false;
+let lastActivity = null;   // latest build-crew activity line for the open project
 const STATUS_LABEL = { running: 'Debating', paused: 'Paused', done: 'Concluded', error: 'Stopped', idle: 'Not started' };
 const ROUND_LABEL = { 1: 'Quick pass', 2: 'Standard', 3: 'Deep', 4: 'Exhaustive' };
 const SUGGESTIONS = [
@@ -501,28 +515,117 @@ function placeOf(i) {
 }
 function renderSidebar() {
   const list = $('idea-list');
-  const groups = { needs: [], ideas: [], projects: [] };
-  for (const i of ideas) groups[placeOf(i).group].push(i);
+  const q = sidebarQuery.trim().toLowerCase();
+  const visible = ideas.filter((i) => (!i.archived || showArchived || (current && current.id === i.id)) && (!q || i.title.toLowerCase().includes(q) || (i.tags || []).some((t) => t.toLowerCase().includes(q))));
+  const groups = { needs: [], ideas: [], projects: [], archived: [] };
+  for (const i of visible) groups[i.archived ? 'archived' : placeOf(i).group].push(i);
   const item = (i) => {
     const pl = placeOf(i);
+    const tags = (i.tags || []).length ? `<span class="sb-tags">${i.tags.map((t) => `<span class="sb-tag">${esc(t)}</span>`).join('')}</span>` : '';
+    const dot = i.uptime && i.url ? `<i class="up-dot ${i.uptime.up === false ? 'down' : 'up'}" title="${i.uptime.up === false ? 'down' : 'up'}"></i>` : '';
     return `<button class="sb-item${current && current.id === i.id ? ' active' : ''}" data-id="${i.id}">
         <span class="sb-ico ${pl.cls}">${ic(pl.icon)}</span>
-        <span class="sb-item-text"><span class="sb-item-title">${esc(i.title)}</span><span class="sb-item-sub ${pl.cls}">${esc(pl.label)}</span></span>
+        <span class="sb-item-text"><span class="sb-item-title">${esc(i.title)}</span><span class="sb-item-sub ${pl.cls}">${dot}${esc(pl.label)}${i.score ? ` · ${i.score}/10` : ''}</span>${tags}</span>
       </button>`;
   };
   const section = (title, arr, empty) => (arr.length || empty)
     ? `<div class="sb-label">${title}${arr.length ? ` <span class="sb-count">${arr.length}</span>` : ''}</div>${arr.length ? arr.map(item).join('') : `<div class="sb-empty">${empty}</div>`}`
     : '';
+  const archivedCount = ideas.filter((i) => i.archived).length;
   list.innerHTML = section('Needs you', groups.needs, '')
-    + section('Ideas', groups.ideas, groups.needs.length || groups.projects.length ? '' : 'Your ideas will show up here.')
-    + section('Projects', groups.projects, 'Promote an idea with a finished brief to start a project.');
+    + section('Ideas', groups.ideas, groups.needs.length || groups.projects.length || q ? '' : 'Your ideas will show up here.')
+    + section('Projects', groups.projects, q ? '' : 'Promote an idea with a finished brief to start a project.')
+    + (q && !visible.length ? `<div class="sb-empty">No titles match. <button class="sb-inline" data-search="1">Search inside ideas</button></div>` : '')
+    + (archivedCount ? `<button class="sb-toggle" data-archived="1">${ic('archive')}${showArchived ? 'Hide' : 'Show'} ${archivedCount} archived</button>` : '')
+    + (showArchived ? section('Archived', groups.archived, '') : '');
 }
 $('idea-list').addEventListener('click', (e) => {
   const b = e.target.closest('.sb-item');
-  if (!b) return;
-  closeDrawer();
-  location.hash = `#/idea/${b.dataset.id}`;
+  if (b) { closeDrawer(); location.hash = `#/idea/${b.dataset.id}`; return; }
+  if (e.target.closest('[data-archived]')) { showArchived = !showArchived; renderSidebar(); }
+  if (e.target.closest('[data-search]')) { closeDrawer(); openSearchSheet(sidebarQuery); }
 });
+$('sb-search').addEventListener('input', (e) => { sidebarQuery = e.target.value; renderSidebar(); });
+$('sb-search').addEventListener('keydown', (e) => { if (e.key === 'Enter' && sidebarQuery.trim().length >= 2) { closeDrawer(); openSearchSheet(sidebarQuery.trim()); } });
+$('nav-board').onclick = () => { closeDrawer(); openBoardSheet(); };
+
+function openSearchSheet(q) {
+  openSheet({
+    title: 'Search',
+    tall: true,
+    render(s) {
+      s.body.innerHTML = `<label class="field"><span>Across ideas, briefs, documents and debates</span><input id="search-q" type="search" value="${esc(q)}" placeholder="Search…"></label><div id="search-results"><p class="sheet-intro">Searching…</p></div>`;
+      const run = async () => {
+        const v = $('search-q').value.trim();
+        if (v.length < 2) { $('search-results').innerHTML = '<p class="sheet-intro">Type at least two characters.</p>'; return; }
+        let hits = [];
+        try { hits = await api(`/api/search?q=${encodeURIComponent(v)}`); } catch { hits = []; }
+        $('search-results').innerHTML = hits.length ? hits.map((h) => `<button class="row" data-id="${h.ideaId}" data-doc="${esc(h.docKey || '')}">${ic(h.where === 'brief' ? 'doc' : h.docKey ? 'stack' : 'chat')}<span class="row-label">${esc(h.ideaTitle)}<span class="row-sub"><b>${esc(h.where)}</b> · …${esc(h.snippet || '')}…</span></span><span class="row-chev">${ic('chevR')}</span></button>`).join('') : '<p class="sheet-intro">Nothing found.</p>';
+      };
+      run();
+      let t;
+      $('search-q').addEventListener('input', () => { clearTimeout(t); t = setTimeout(run, 300); });
+      s.body.onclick = async (e) => {
+        const b = e.target.closest('[data-id]');
+        if (!b) return;
+        s.close();
+        location.hash = `#/idea/${b.dataset.id}`;
+        await openIdea(b.dataset.id);
+        if (b.dataset.doc) openDocViewer(b.dataset.doc);
+      };
+    },
+  });
+}
+
+/** All projects by stage, like a kanban board. */
+function openBoardSheet() {
+  openSheet({
+    title: 'Projects board',
+    tall: true,
+    render(s) {
+      const cols = [
+        ['Planning', (i) => ['planning', 'design'].includes(i.stage)], ['Needs you', (i) => NEEDS_YOU.has(i.stage)],
+        ['Building & testing', (i) => ['building', 'testing', 'deploying'].includes(i.stage)], ['Live', (i) => ['live', 'maintenance'].includes(i.stage)],
+      ];
+      const projects = ideas.filter((i) => i.phase === 'project' && !i.archived);
+      s.body.innerHTML = projects.length ? `<div class="board">${cols.map(([title, f]) => {
+        const items = projects.filter(f);
+        return `<div class="board-col"><div class="board-head">${title} <span class="sb-count">${items.length}</span></div>${items.map((i) => `<button class="board-card" data-id="${i.id}">
+            <span class="board-title">${esc(i.title)}</span>
+            <span class="board-sub">${esc(STAGE_LABEL[i.stage] || i.stage)}${i.tasks ? ` · ${i.tasks.done}/${i.tasks.total} tasks` : ''}${i.status === 'running' ? ' · working…' : ''}</span>
+            ${i.tasks?.total ? `<span class="tb-bar"><i style="width:${Math.round((i.tasks.done / i.tasks.total) * 100)}%"></i></span>` : ''}
+          </button>`).join('') || '<div class="sb-empty">—</div>'}</div>`;
+      }).join('')}</div>` : '<p class="sheet-intro">No projects yet. Promote an idea with a finished brief.</p>';
+      s.body.onclick = (e) => { const b = e.target.closest('[data-id]'); if (b) { s.close(); location.hash = `#/idea/${b.dataset.id}`; } };
+    },
+  });
+}
+
+/** Every link the researchers cited, across ideas. */
+function openSourcesSheet() {
+  openSheet({
+    title: 'Source library',
+    tall: true,
+    render(s) {
+      s.body.innerHTML = '<p class="sheet-intro">Loading…</p>';
+      api('/api/sources').then((list) => {
+        if (!list.length) { s.body.innerHTML = '<p class="sheet-intro">No sources yet. The researchers cite links in every debate that includes web research.</p>'; return; }
+        const byIdea = {};
+        for (const x of list) (byIdea[x.ideaId] = byIdea[x.ideaId] || { title: x.ideaTitle, items: [] }).items.push(x);
+        s.body.innerHTML = `<label class="field"><span>${list.length} sources</span><input id="src-q" type="search" placeholder="Filter by title or site"></label><div id="src-list"></div>`;
+        const draw = () => {
+          const q = ($('src-q').value || '').toLowerCase();
+          $('src-list').innerHTML = Object.entries(byIdea).map(([id, g]) => {
+            const items = g.items.filter((x) => !q || x.title.toLowerCase().includes(q) || x.host.includes(q));
+            return items.length ? `<div class="sb-label" style="padding:12px 6px 6px">${esc(g.title)}</div>${items.map((x) => `<a class="row" href="${esc(x.url)}" target="_blank" rel="noopener">${ic('link')}<span class="row-label">${esc(x.title)}<span class="row-sub">${esc(x.host)} · ${esc(agentOf(x.agentId).name)}</span></span></a>`).join('')}` : '';
+          }).join('') || '<p class="sheet-intro">No matches.</p>';
+        };
+        draw();
+        $('src-q').addEventListener('input', draw);
+      }).catch((e) => { s.body.innerHTML = `<p class="sheet-intro">${esc(e.message)}</p>`; });
+    },
+  });
+}
 function goNew() { closeDrawer(); if (location.hash === '#/' || !location.hash) showNew(); else location.hash = '#/'; }
 $('nav-new').onclick = goNew;
 $('sb-new').onclick = goNew;
@@ -551,7 +654,7 @@ function renderTop() {
     document.title = `${current.title} · Box`;
     return;
   }
-  let sub = `Round ${Math.max(current.round, 1)} of ${current.maxRounds}`;
+  let sub = `Round ${Math.max(current.round, 1)}${current.round <= current.maxRounds ? ` of ${current.maxRounds}` : ''}`;
   if (current.status === 'running' && thinking) sub = thinking.label ? `${thinking.label}…` : `${agentOf(thinking.agentId).name} is thinking…`;
   else sub += ` · ${STATUS_LABEL[current.status] || current.status}`;
   $('subtitle-text').textContent = sub;
@@ -641,7 +744,10 @@ $('more-btn').onclick = () => {
   ];
   if (canPromote()) items.unshift({ icon: 'rocket', label: 'Promote to project', run: promoteCurrent });
   if (current.brief) items.push({ icon: 'doc', label: 'Idea Brief', run: openBriefViewer });
+  items.push({ icon: 'tag', label: 'Tags', run: editTags });
+  items.push({ icon: 'archive', label: current.archived ? 'Unarchive' : 'Archive', run: toggleArchive });
   if (isProject()) {
+    if (current.project.slug && current.project.tasks?.length) items.push({ icon: 'folder', label: 'Browse the code', run: openFilesSheet });
     if (canApprove()) items.unshift({ icon: 'check', label: 'Approve plan', run: approveCurrent });
     if (canComplete()) items.unshift({ icon: 'check', label: 'Mark complete', run: completeCurrent });
     if (current.project.url) items.unshift({ icon: 'globe', label: 'Open the site', run: openSite });
@@ -656,12 +762,59 @@ $('more-btn').onclick = () => {
     openPopover($('more-btn'), items);
     return;
   }
+  const started = current.messages.some((m) => m.kind === 'kickoff');
   if (s === 'running') items.push({ icon: 'pause', label: 'Pause debate', run: pauseCurrent });
   else if (s === 'done') items.push({ icon: 'refresh', label: 'Run another round', run: runCurrent });
   else items.push({ icon: 'play', label: s === 'idle' ? 'Start debate' : 'Resume debate', run: runCurrent });
+  if (started && s !== 'running') {
+    items.push({ icon: 'question', label: 'Ask a quick question', run: () => startQuick(null) });
+    items.push({ icon: 'flame', label: 'Devil’s advocate round', run: devilRound });
+    items.push({ icon: 'fork', label: 'Fork this idea', run: forkCurrent });
+  }
   items.push('-', { icon: 'trash', label: 'Delete', danger: true, run: deleteCurrent });
   openPopover($('more-btn'), items);
 };
+
+async function devilRound() {
+  if (!current) return;
+  const ok = await dialog({ title: 'Devil’s advocate round?', text: 'Every agent in the room argues against the idea for one round, then the Orchestrator ranks the attacks and rewrites the brief with what survived. The room re-scores it afterwards.', confirm: 'Run it' });
+  if (!ok) return;
+  try {
+    await api(`/api/ideas/${current.id}/devil`, { method: 'POST', body: '{}' });
+    current.status = 'running';
+    renderTop(); renderThread(true); renderDock();
+  } catch (e) { toast(e.message); }
+}
+async function forkCurrent(messageId = null) {
+  if (!current) return;
+  const title = await dialog({ title: 'Fork this idea', text: 'A copy with the debate so far, so you can take it in a different direction. The original stays as it is.', input: `${current.title} (fork)`, confirm: 'Fork' });
+  if (!title) return;
+  try {
+    const fork = await api(`/api/ideas/${current.id}/fork`, { method: 'POST', body: JSON.stringify({ title, messageId }) });
+    toast('Forked');
+    location.hash = `#/idea/${fork.id}`;
+  } catch (e) { toast(e.message); }
+}
+async function editTags() {
+  if (!current) return;
+  const v = await dialog({ title: 'Tags', text: 'Comma-separated. Tags show in the sidebar and can be searched.', input: (current.tags || []).join(', '), confirm: 'Save' });
+  if (v === null) return;
+  const tags = v.split(',').map((t) => t.trim()).filter(Boolean).slice(0, 8);
+  try {
+    await api(`/api/ideas/${current.id}`, { method: 'PATCH', body: JSON.stringify({ tags }) });
+    current.tags = tags;
+    refreshIdeasSoon();
+  } catch (e) { toast(e.message); }
+}
+async function toggleArchive() {
+  if (!current) return;
+  try {
+    const r = await api(`/api/ideas/${current.id}`, { method: 'PATCH', body: JSON.stringify({ archived: !current.archived }) });
+    current.archived = r.archived;
+    toast(r.archived ? 'Archived' : 'Restored');
+    refreshIdeasSoon();
+  } catch (e) { toast(e.message); }
+}
 
 // ---------- routing ----------
 function parseHash() {
@@ -686,11 +839,43 @@ function showNew() {
   $('welcome').classList.remove('hidden');
   $('messages').innerHTML = '';
   $('suggestions').innerHTML = SUGGESTIONS.map((s) => `<button class="suggestion">${esc(s)}</button>`).join('');
+  renderTemplates();
+  renderHomeStrip();
   renderTop();
   renderSidebar();
   renderDock();
   maybeShowNotifyBanner();
 }
+let pickedTemplate = null;
+function renderTemplates() {
+  const el = $('templates');
+  if (!TEMPLATES.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="tpl-label">What kind of idea?</div><div class="tpl-row">${TEMPLATES.map((t) => `<button class="tpl${pickedTemplate === t.id ? ' on' : ''}" data-tpl="${t.id}" title="${esc(t.hint)}">${t.emoji} ${esc(t.name)}</button>`).join('')}</div>`;
+}
+$('templates').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-tpl]');
+  if (!b) return;
+  pickedTemplate = pickedTemplate === b.dataset.tpl ? null : b.dataset.tpl;
+  renderTemplates();
+});
+function renderHomeStrip() {
+  const needs = ideas.filter((i) => !i.archived && placeOf(i).group === 'needs').length;
+  const running = ideas.filter((i) => i.status === 'running').length;
+  const live = ideas.filter((i) => i.url).length;
+  const el = $('home-strip');
+  if (!needs && !running && !live) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="strip">
+      ${needs ? `<button class="strip-item needs" data-strip="needs"><b>${needs}</b>${needs === 1 ? 'needs you' : 'need you'}</button>` : ''}
+      ${running ? `<button class="strip-item" data-strip="running"><b>${running}</b>working</button>` : ''}
+      ${live ? `<button class="strip-item live" data-strip="live"><b>${live}</b>live</button>` : ''}
+    </div>`;
+}
+$('home-strip').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-strip]');
+  if (!b) return;
+  if (b.dataset.strip === 'live') return openBoardSheet();
+  openDrawer();
+});
 $('suggestions').addEventListener('click', (e) => {
   const b = e.target.closest('.suggestion');
   if (!b) return;
@@ -780,12 +965,23 @@ function agentMsgHtml(m) {
 function debateHtml(messages) {
   let html = `<div class="u-msg">${attachmentsHtml(current.attachments)}<div class="u-bubble">${esc(current.text)}</div></div>`;
   let lastRound = null;
+  if (current.forkedFrom) html += `<div class="system-mark">${ic('fork')}Forked from “${esc(current.forkedFrom.title)}”</div>`;
   for (const m of messages) {
     if (m.kind === 'user') {
-      html += `<div class="u-msg"><div class="u-label">You · to the room</div>${attachmentsHtml(m.attachments)}<div class="u-bubble">${esc(m.content)}</div></div>`;
+      html += `<div class="u-msg"><div class="u-label">You · ${m.quick ? (m.toAgent ? `quick question for ${esc(agentOf(m.toAgent).name)}` : 'quick question') : 'to the room'}</div>${attachmentsHtml(m.attachments)}<div class="u-bubble">${esc(m.content)}</div></div>`;
       continue;
     }
-    if (m.round !== lastRound) {
+    if (m.kind === 'scorecard') {
+      const sc = m.scorecard || {};
+      html += `<div class="score-card">
+          <div class="score-big"><span class="score-num">${esc(String(sc.avg ?? ''))}</span><span class="score-of">/ 10</span><span class="score-label">Room score · round ${m.round}</span></div>
+          ${(sc.votes || []).map((v) => { const a = agentOf(v.agentId); return `<div class="score-row" title="${esc(v.why)}"><span class="score-who">${a.emoji} ${esc(a.name)}</span><span class="score-bar"><i style="width:${v.score * 10}%;background:${esc(a.color)}"></i></span><span class="score-val">${v.score}</span></div>`; }).join('')}
+          <button class="a-more${expanded.has(m.id) ? ' open' : ''}" data-toggle="${m.id}">${expanded.has(m.id) ? 'Hide' : 'Show'} reasons ${ic('chevR')}</button>
+          ${expanded.has(m.id) ? `<div class="a-full a-body md">${md(m.content)}</div>` : ''}
+        </div>`;
+      continue;
+    }
+    if (m.round !== lastRound && m.kind !== 'answer') {
       lastRound = m.round;
       html += `<div class="round-mark">Round ${m.round}</div>`;
     }
@@ -901,26 +1097,73 @@ function taskBoardHtml(p) {
     </button>`;
 }
 
+function fmtDuration(ms) {
+  const m = Math.round((ms || 0) / 60000);
+  if (m < 1) return 'under a minute';
+  if (m < 60) return `${m} min`;
+  return `${Math.floor(m / 60)} h ${m % 60} min`;
+}
+
 function openTasksSheet() {
   if (!current?.project?.tasks?.length) return;
+  let taskSheet;
   openSheet({
     title: 'Task board',
     tall: true,
     render(s) {
-      const tasks = current.project.tasks;
-      const icon = { done: 'check', doing: 'spark', blocked: 'alert', todo: 'chevR' };
-      s.body.innerHTML = `<p class="sheet-intro">${tasks.filter((t) => t.status === 'done').length} of ${tasks.length} done. Tasks come from the Tech Lead’s build plan, then from QA and your feedback.</p>
-        ${tasks.map((t) => {
-          const a = agentOf(t.agentId || (t.role === 'frontend' ? 'frontend' : 'backend'));
-          return `<div class="task-row ${esc(t.status)}">
-            <span class="task-ico">${ic(icon[t.status] || 'chevR')}</span>
-            <span class="task-main">
-              <span class="task-title">${esc(t.id)} · ${esc(t.title)}</span>
-              <span class="task-sub">${a.emoji} ${esc(a.name)} · ${esc(t.size || 'M')}${t.source === 'qa' ? ' · fix from QA' : t.source === 'owner' ? ' · from you' : ''}${t.commit ? ` · ${esc(t.commit)}` : ''}</span>
-              ${t.report ? `<span class="task-report">${esc(t.report)}</span>` : ''}
-            </span>
-          </div>`;
-        }).join('')}`;
+      taskSheet = s;
+      const draw = () => {
+        const p = current.project;
+        const tasks = p.tasks || [];
+        const icon = { done: 'check', doing: 'spark', blocked: 'alert', todo: 'chevR' };
+        const running = current.status === 'running';
+        const crewMs = p.crewMs || tasks.reduce((sum, t) => sum + (t.durationMs || 0), 0);
+        s.body.innerHTML = `<p class="sheet-intro">${tasks.filter((t) => t.status === 'done').length} of ${tasks.length} done · ${fmtDuration(crewMs)} of crew time. Tap a task for actions.${running ? ' The crew is working; waiting tasks can still be edited.' : ''}</p>
+          ${tasks.map((t) => {
+            const a = agentOf(t.agentId || (t.role === 'frontend' ? 'frontend' : 'backend'));
+            const src = { qa: 'fix from QA', review: 'fix from code review', owner: 'from you' }[t.source] || '';
+            return `<button class="task-row ${esc(t.status)}" data-task="${esc(t.id)}">
+              <span class="task-ico">${ic(icon[t.status] || 'chevR')}</span>
+              <span class="task-main">
+                <span class="task-title">${esc(t.id)} · ${esc(t.title)}${t.holdBefore ? ' <em class="task-hold">pause before</em>' : ''}</span>
+                <span class="task-sub">${a.emoji} ${esc(a.name)} · ${esc(t.size || 'M')}${src ? ` · ${src}` : ''}${t.durationMs ? ` · ${fmtDuration(t.durationMs)}` : ''}${t.attempts > 1 ? ` · attempt ${t.attempts}` : ''}${t.commit ? ` · ${esc(t.commit)}` : ''}</span>
+                ${t.report ? `<span class="task-report">${esc(t.report)}</span>` : ''}
+              </span>
+            </button>`;
+          }).join('')}
+          <button class="wide-btn soft" data-add-task="1" style="margin-top:10px">Add a task</button>`;
+      };
+      draw();
+      s.body.closest('.backdrop')._redraw = draw;
+      s.body.onclick = async (e) => {
+        if (e.target.closest('[data-add-task]')) {
+          const title = await dialog({ title: 'New task', text: 'One sentence of what to build or change. The crew gets it after the current task.', input: '', confirm: 'Add' });
+          if (!title) return;
+          try { await api(`/api/ideas/${current.id}/tasks`, { method: 'POST', body: JSON.stringify({ action: 'add', title, description: title }) }); toast('Task added'); } catch (err) { toast(err.message); }
+          return;
+        }
+        const row = e.target.closest('[data-task]');
+        if (!row) return;
+        const t = current.project.tasks.find((x) => x.id === row.dataset.task);
+        if (!t) return;
+        const i = current.project.tasks.indexOf(t);
+        const call = async (body, okText) => {
+          try { await api(`/api/ideas/${current.id}/tasks`, { method: 'POST', body: JSON.stringify({ taskId: t.id, ...body }) }); if (okText) toast(okText); } catch (err) { toast(err.message); }
+        };
+        const items = [{ icon: 'doc', label: 'Read the task', run: () => dialog({ title: `${t.id} · ${t.title}`, text: t.description || '', confirm: 'Close' }) }];
+        if (t.status === 'todo') {
+          items.push({ icon: 'pencil', label: 'Edit title', run: async () => { const v = await dialog({ title: 'Edit task', input: t.title, confirm: 'Save' }); if (v) call({ action: 'edit', title: v }); } });
+          items.push({ icon: 'pencil', label: 'Edit instructions', run: async () => { const v = await dialog({ title: 'Instructions for the developer', input: t.description || '', confirm: 'Save' }); if (v) call({ action: 'edit', description: v }); } });
+          if (i > 0 && current.project.tasks[i - 1].status === 'todo') items.push({ icon: 'arrowUp', label: 'Move up', run: () => call({ action: 'move', dir: 'up' }) });
+          if (i < current.project.tasks.length - 1 && current.project.tasks[i + 1].status === 'todo') items.push({ icon: 'arrowDown', label: 'Move down', run: () => call({ action: 'move', dir: 'down' }) });
+          items.push({ icon: 'pause', label: t.holdBefore ? 'Don’t pause before it' : 'Pause before this task', run: () => call({ action: 'hold', holdBefore: !t.holdBefore }, t.holdBefore ? 'Hold removed' : 'The crew will pause before it') });
+          items.push('-', { icon: 'trash', label: 'Delete task', danger: true, run: () => call({ action: 'delete' }, 'Task deleted') });
+        }
+        if (t.status === 'done' || t.status === 'blocked') {
+          items.push({ icon: 'refresh', label: 'Redo with a note', run: async () => { const v = await dialog({ title: `Redo ${t.id}`, text: 'What should be different this time?', input: '', confirm: 'Redo' }); if (v) call({ action: 'redo', note: v }, 'Queued for a redo'); } });
+        }
+        openPopover(row, items);
+      };
     },
   });
 }
@@ -933,15 +1176,21 @@ function openDocViewer(key) {
     title: d.title,
     tall: true,
     render(s) {
-      s.body.innerHTML = `
+      let showDiff = false;
+      const draw = () => {
+        s.body.innerHTML = `
         <div class="doc-by" style="--agent-color:${esc(a.color)}"><span class="a-avatar">${a.emoji}</span><span>${esc(a.name)}${d.version > 1 ? ` · version ${d.version}` : ''} · ${new Date(d.updatedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span></div>
         <div class="btn-pair" style="margin-bottom:16px">
           <button class="wide-btn soft" data-act="copy">Copy</button>
           <button class="wide-btn soft" data-act="share">Share</button>
+          ${d.previous ? `<button class="wide-btn ${showDiff ? 'accent' : 'soft'}" data-act="diff">${showDiff ? 'Hide changes' : 'What changed'}</button>` : ''}
         </div>
-        <div class="md a-body">${md(d.content)}</div>`;
+        ${showDiff ? diffHtml(d.previous, d.content) : `<div class="md a-body">${md(d.content)}</div>`}`;
+      };
+      draw();
       s.body.onclick = async (e) => {
         const act = e.target.closest('[data-act]')?.dataset.act;
+        if (act === 'diff') { showDiff = !showDiff; draw(); return; }
         if (act === 'copy' && await copyText(d.content)) toast('Document copied');
         if (act === 'share') {
           if (navigator.share) { try { await navigator.share({ title: `${current.title} — ${d.title}`, text: d.content }); } catch {} }
@@ -950,6 +1199,32 @@ function openDocViewer(key) {
       };
     },
   });
+}
+
+/** Line diff (LCS) rendered as added/removed/unchanged lines. */
+function diffHtml(oldText, newText) {
+  const a = String(oldText || '').split('\n'), b = String(newText || '').split('\n');
+  const n = a.length, m = b.length;
+  if (n * m > 4e6) return `<div class="md a-body">${md(newText)}</div>`;
+  const dp = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const out = [];
+  let i = 0, j = 0;
+  while (i < n && j < m) {
+    if (a[i] === b[j]) { out.push(['=', a[i]]); i++; j++; }
+    else if (dp[i + 1][j] >= dp[i][j + 1]) { out.push(['-', a[i]]); i++; }
+    else { out.push(['+', b[j]]); j++; }
+  }
+  while (i < n) out.push(['-', a[i++]]);
+  while (j < m) out.push(['+', b[j++]]);
+  const changed = out.filter((x) => x[0] !== '=').length;
+  // Collapse long unchanged runs.
+  const rows = [];
+  let run = [];
+  const flush = () => { if (run.length > 6) { rows.push(...run.slice(0, 2), ['…', `${run.length - 4} unchanged lines`], ...run.slice(-2)); } else rows.push(...run); run = []; };
+  for (const x of out) { if (x[0] === '=') run.push(x); else { flush(); rows.push(x); } }
+  flush();
+  return `<p class="sheet-intro">${changed} ${changed === 1 ? 'line' : 'lines'} changed from the previous version.</p><div class="diff">${rows.map(([k, line]) => `<div class="diff-line ${k === '+' ? 'add' : k === '-' ? 'del' : k === '…' ? 'skip' : ''}">${esc(line)}</div>`).join('')}</div>`;
 }
 
 function openDocsSheet() {
@@ -982,10 +1257,49 @@ function openPrototype() {
       s.body.classList.add('proto-body');
       s.body.innerHTML = `
         <div class="proto-bar"><span>By the UX Designer · sample content, nothing is saved</span><a class="proto-open" href="${src}" target="_blank" rel="noopener">Full screen ${ic('chevR')}</a></div>
-        <iframe class="proto-frame" src="${src}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" title="Prototype"></iframe>`;
+        <iframe class="proto-frame" src="${src}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" title="Prototype"></iframe>
+        <button class="wide-btn soft" data-act="feedback" style="margin-top:10px">Comment on the prototype</button>`;
+      s.body.onclick = async (e) => {
+        if (e.target.closest('[data-act]')?.dataset.act !== 'feedback') return;
+        const v = await dialog({ title: 'Prototype feedback', text: 'Say which screen or element and what should change. During plan review this revises the design; later it becomes a task for the developers.', input: '', confirm: 'Send' });
+        if (!v) return;
+        s.close();
+        $('input').value = `Prototype feedback: ${v}`;
+        autosize(); updateSendState();
+        await send();
+      };
     },
   });
 }
+
+/** Browse the project's repository. */
+function openFilesSheet() {
+  if (!current?.project?.slug) return;
+  openSheet({
+    title: 'Code',
+    tall: true,
+    render(s) {
+      let dir = '';
+      const load = async (rel) => {
+        s.body.innerHTML = '<p class="sheet-intro">Loading…</p>';
+        let r;
+        try { r = await api(`/api/ideas/${current.id}/files?path=${encodeURIComponent(rel)}`); } catch (e) { s.body.innerHTML = `<p class="sheet-intro">${esc(e.message)}</p>`; return; }
+        s.setTitle(r.path ? r.path.split('/').pop() : 'Code');
+        s.setBack(r.path ? () => load(r.path.split('/').slice(0, -1).join('/')) : null);
+        if (r.dir) {
+          dir = r.path;
+          s.body.innerHTML = `<p class="sheet-intro">${r.path ? `/${esc(r.path)}` : current.project.slug}${current.project.repoUrl ? ` · <a href="${esc(current.project.repoUrl)}" target="_blank" rel="noopener">GitHub</a>` : ''}</p>` +
+            (r.items.map((it) => `<button class="row" data-path="${esc(r.path ? `${r.path}/${it.name}` : it.name)}">${ic(it.dir ? 'folder' : 'doc')}<span class="row-label">${esc(it.name)}</span><span class="row-value">${it.dir ? '' : fmtBytes(it.size)}</span><span class="row-chev">${ic('chevR')}</span></button>`).join('') || '<p class="sheet-intro">Empty.</p>');
+        } else {
+          s.body.innerHTML = `<p class="sheet-intro">/${esc(r.path)} · ${fmtBytes(r.size)}</p>` + (r.tooBig ? '<p class="sheet-intro">Too large to show here.</p>' : r.binary ? '<p class="sheet-intro">Binary file.</p>' : `<pre class="code">${esc(r.content)}</pre>`);
+        }
+      };
+      load('');
+      s.body.onclick = (e) => { const b = e.target.closest('[data-path]'); if (b) load(b.dataset.path); };
+    },
+  });
+}
+function fmtBytes(n) { return n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1048576).toFixed(1)} MB`; }
 
 function renderThread(forceBottom = false) {
   if (!current) return;
@@ -1003,17 +1317,27 @@ function renderThread(forceBottom = false) {
   }
   if (current.status === 'running') {
     const who = thinking ? agentOf(thinking.agentId) : null;
+    const acts = isProject() ? (current.project.activity || []).slice(-8) : [];
+    const open = expanded.has('activity');
     html += `<div class="brewing">
         <span class="brew-mark">${ic('spark')}</span>
         <span class="shimmer">${thinking?.label ? esc(thinking.label) : who ? `${who.emoji} ${esc(who.name)} is thinking` : 'Gathering the room'}</span>
         <span class="brew-time" id="brew-time"></span>
       </div>`;
+    if (lastActivity || acts.length) {
+      const last = lastActivity || acts[acts.length - 1];
+      html += `<div class="activity${open ? ' open' : ''}">
+          <button class="act-line" data-toggle="activity"><span class="act-tool ${esc(last.tool)}">${esc(ACT_LABEL[last.tool] || last.tool)}</span><span class="act-text">${esc(last.text)}</span>${ic('chevR')}</button>
+          ${open ? `<div class="act-list">${acts.slice().reverse().map((x) => `<div class="act-row"><span class="act-tool ${esc(x.tool)}">${esc(ACT_LABEL[x.tool] || x.tool)}</span><span class="act-text">${esc(x.text)}</span></div>`).join('')}</div>` : ''}
+        </div>`;
+    }
   }
   $('messages').innerHTML = html;
   tickBrew();
   if (stick) requestAnimationFrame(() => scrollToBottom(false));
 }
 
+const ACT_LABEL = { run: 'ran', read: 'read', write: 'wrote', edit: 'edited', search: 'searched', fetch: 'opened', say: 'said' };
 function tickBrew() {
   const el = $('brew-time');
   if (el && thinking) el.textContent = `${Math.floor((Date.now() - thinking.since) / 1000)}s`;
@@ -1095,6 +1419,12 @@ function renderDock() {
       updateSendState();
       return;
     }
+    if (quickMode) {
+      input.placeholder = `Quick question for ${quickMode.name}…`;
+      $('state-actions').innerHTML = `<button class="state-pill" data-act="cancel-quick">${ic('x')}Quick question for ${esc(quickMode.name)} · cancel</button>`;
+      updateSendState();
+      return;
+    }
     if (s === 'paused' || s === 'error') pills.push(['primary', 'play', 'Resume debate', 'run']);
     if (s === 'idle') pills.push(['primary', 'play', 'Start debate', 'run']);
     if (s === 'done' && current.brief) {
@@ -1116,6 +1446,7 @@ $('state-actions').addEventListener('click', (e) => {
   if (b.dataset.act === 'complete') completeCurrent();
   if (b.dataset.act === 'site') openSite();
   if (b.dataset.act === 'proto') openPrototype();
+  if (b.dataset.act === 'cancel-quick') cancelQuick();
 });
 $('input').addEventListener('input', () => { autosize(); updateSendState(); });
 $('input').addEventListener('keydown', (e) => {
@@ -1135,9 +1466,21 @@ async function send() {
   busy = true;
   try {
     if (route.view === 'new' || !current) {
-      const idea = await api('/api/ideas', { method: 'POST', body: JSON.stringify({ text, attachments, maxRounds: settings.rounds }) });
+      const idea = await api('/api/ideas', { method: 'POST', body: JSON.stringify({ text, attachments, maxRounds: settings.rounds, template: pickedTemplate }) });
+      pickedTemplate = null;
       clearComposer();
       location.hash = `#/idea/${idea.id}`;
+    } else if (quickMode && !isProject()) {
+      const id = current.id;
+      const q = quickMode;
+      const r = await api(`/api/ideas/${id}/quick`, { method: 'POST', body: JSON.stringify({ text, agentId: q.agentId }) });
+      quickMode = null;
+      clearComposer();
+      if (current && current.id === id && r.message && !current.messages.some((m) => m.id === r.message.id)) {
+        current.messages.push(r.message);
+        current.status = 'running';
+        renderThread(true); renderTop(); renderDock();
+      }
     } else {
       const id = current.id;
       const msg = await api(`/api/ideas/${id}/message`, { method: 'POST', body: JSON.stringify({ text, attachments }) });
@@ -1390,6 +1733,7 @@ function openAddSheet() {
           <button class="tile" data-pick="file-any">${ic('fileUp')}Files</button>
         </div>
         ${isNew ? `<button class="row" data-go="rounds">${ic('rounds')}<span class="row-label">Debate rounds</span><span class="row-value">${settings.rounds} · ${ROUND_LABEL[settings.rounds]}</span><span class="row-chev">${ic('chevR')}</span></button>` : ''}
+        ${!isNew && !isProject() && current.messages.some((m) => m.kind === 'kickoff') ? `<button class="row" data-go="quick">${ic('question')}<span class="row-label">Ask the room a quick question<span class="row-sub">One or two agents answer directly. No new round, the brief stays as it is.</span></span><span class="row-chev">${ic('chevR')}</span></button>` : ''}
         <button class="row" data-go="agents">${ic('users')}<span class="row-label">Agents</span><span class="row-value">${AGENTS.length}</span><span class="row-chev">${ic('chevR')}</span></button>
         <p class="sheet-intro" style="margin-top:12px">Agents can see photos and PDFs, and read text files (txt, md, csv, json).</p>`;
       s.body.onclick = (e) => {
@@ -1398,10 +1742,21 @@ function openAddSheet() {
         const go = e.target.closest('[data-go]');
         if (go?.dataset.go === 'rounds') { s.close(); openRoundsSheet(); }
         if (go?.dataset.go === 'agents') { s.close(); openAgentsSheet(); }
+        if (go?.dataset.go === 'quick') { s.close(); startQuick(null); }
       };
     },
   });
 }
+
+/** Put the composer into quick-question mode (optionally aimed at one agent). */
+function startQuick(agentId) {
+  if (!current || isProject()) return;
+  if (current.status === 'running') return toast('Wait for the room to finish, then ask.');
+  quickMode = { agentId, name: agentId ? agentOf(agentId).name : 'the room' };
+  renderDock();
+  setTimeout(() => $('input').focus(), 50);
+}
+function cancelQuick() { quickMode = null; renderDock(); }
 
 function openRoundsSheet() {
   openSheet({
@@ -1473,40 +1828,145 @@ function openAgentDetail(agentId) {
     tall: true,
     render(s) {
       const entries = current ? current.messages.filter((m) => m.agentId === agentId) : [];
+      // How often the chair cited this agent by name in syntheses and the brief.
+      const cited = current ? current.messages.filter((m) => m.kind === 'synthesis' || m.kind === 'brief').reduce((n, m) => n + ((m.content.match(new RegExp(a.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')) || []).length), 0) : 0;
+      const canAsk = current && !isProject() && current.status !== 'running' && current.messages.some((m) => m.kind === 'kickoff') && agentId !== 'orchestrator' && !a.crew;
       s.body.innerHTML = `
         <p class="sheet-intro">${esc(a.description || '')}</p>
         <div class="row" style="cursor:default"><span class="row-label">Model</span><span class="row-value">${esc(a.model)}</span></div>
+        ${current && entries.length ? `<div class="row" style="cursor:default"><span class="row-label">Cited by the chair</span><span class="row-value">${cited} ${cited === 1 ? 'time' : 'times'}</span></div>` : ''}
+        ${canAsk ? `<button class="wide-btn soft" data-ask="${esc(agentId)}" style="margin:8px 0 4px">Ask ${esc(a.name)} directly</button>` : ''}
+        ${!a.builtin && !a.crew ? `<button class="wide-btn soft" data-edit-agent="${esc(agentId)}" style="margin:4px 0">Edit this agent</button>` : ''}
         ${current ? `<div class="sb-label" style="padding:14px 6px 8px">${entries.length} ${entries.length === 1 ? 'contribution' : 'contributions'} to this idea</div>` : ''}
         ${entries.slice().reverse().map((m) => `<div class="ag-row"><span class="ag-main">
             <span class="ag-top"><span class="ag-tag">${KIND_LABEL[m.kind] || `Round ${m.round}`}</span><span class="a-meta">${timeOf(m.ts)}</span></span>
             <span class="ag-desc" style="color:var(--text);font-size:15px">${mdInline(esc(m.summary))}</span>
           </span></div>`).join('')}`;
+      s.body.onclick = (e) => {
+        const ask = e.target.closest('[data-ask]');
+        if (ask) { closeAllLayers(); startQuick(ask.dataset.ask); return; }
+        const ed = e.target.closest('[data-edit-agent]');
+        if (ed) { closeAllLayers(); openAgentsSheet({ edit: ed.dataset.editAgent }); }
+      };
     },
   });
 }
 
+const EXTRA_KINDS = [
+  ['pitch', 'Pitch deck', '10 slides for investors'], ['onepager', 'One-pager', 'The idea on one page'],
+  ['elevator', 'Elevator pitches', '10 s, 30 s and 2 min, spoken'], ['landing', 'Landing page copy', 'Headline to FAQ'],
+  ['premortem', 'Pre-mortem', 'How it fails a year from now, by the Critic'],
+];
+
 function openBriefViewer() {
   if (!current?.brief) return;
-  const brief = current.brief;
   const title = current.title;
+  let version = 'current'; // or an index into briefHistory
+  let showDiff = false;
   openSheet({
     title: 'Idea Brief',
     tall: true,
     render(s) {
-      s.body.innerHTML = `
-        <div class="btn-pair" style="margin-bottom:16px">
-          <button class="wide-btn soft" data-act="copy">Copy</button>
-          <button class="wide-btn soft" data-act="share">Share</button>
-        </div>
-        <div class="md a-body">${md(brief)}</div>`;
+      const draw = () => {
+        const history = current.briefHistory || [];
+        const brief = version === 'current' ? current.brief : history[version].content;
+        const prev = version === 'current' ? history[history.length - 1]?.content : history[version - 1]?.content;
+        const extras = current.extras || {};
+        s.body.innerHTML = `
+          ${history.length ? `<div class="version-row">${history.map((h, i) => `<button class="chip-btn${version === i ? ' on' : ''}" data-ver="${i}">v${i + 1}</button>`).join('')}<button class="chip-btn${version === 'current' ? ' on' : ''}" data-ver="current">v${history.length + 1} · latest</button></div>` : ''}
+          <div class="btn-pair" style="margin-bottom:16px">
+            <button class="wide-btn soft" data-act="copy">Copy</button>
+            <button class="wide-btn soft" data-act="share">Share</button>
+            ${prev ? `<button class="wide-btn ${showDiff ? 'accent' : 'soft'}" data-act="diff">${showDiff ? 'Hide changes' : 'What changed'}</button>` : ''}
+          </div>
+          ${showDiff && prev ? diffHtml(prev, brief) : `<div class="md a-body">${md(brief)}</div>`}
+          ${version === 'current' ? `
+          <div class="sb-label" style="padding:22px 6px 8px">From this brief</div>
+          ${EXTRA_KINDS.map(([k, name, sub]) => `<button class="row" data-extra="${k}">${ic('doc')}<span class="row-label">${name}<span class="row-sub">${extras[k] ? `Ready · ${new Date(extras[k].ts).toLocaleDateString([], { month: 'short', day: 'numeric' })}` : sub}</span></span><span class="row-value">${extras[k] ? 'Open' : 'Write'}</span><span class="row-chev">${ic('chevR')}</span></button>`).join('')}
+          <button class="row" data-act="names">${ic('globe')}<span class="row-label">Check the name<span class="row-sub">Domains and handles for “${esc(briefTitle(current.brief))}”</span></span><span class="row-chev">${ic('chevR')}</span></button>` : ''}`;
+      };
+      draw();
       s.body.onclick = async (e) => {
+        const ver = e.target.closest('[data-ver]');
+        if (ver) { version = ver.dataset.ver === 'current' ? 'current' : Number(ver.dataset.ver); showDiff = false; draw(); return; }
+        const ex = e.target.closest('[data-extra]');
+        if (ex) {
+          const kind = ex.dataset.extra;
+          if (current.extras?.[kind]) return openExtraViewer(kind);
+          ex.querySelector('.row-value').textContent = 'Writing…';
+          ex.disabled = true;
+          try {
+            await api(`/api/ideas/${current.id}/extras`, { method: 'POST', body: JSON.stringify({ kind }) });
+            await openIdea(current.id, { silent: true });
+            draw();
+            openExtraViewer(kind);
+          } catch (err) { toast(err.message); draw(); }
+          return;
+        }
         const act = e.target.closest('[data-act]')?.dataset.act;
+        const brief = version === 'current' ? current.brief : (current.briefHistory || [])[version]?.content;
+        if (act === 'diff') { showDiff = !showDiff; draw(); }
+        if (act === 'names') openNamesSheet();
         if (act === 'copy' && await copyText(brief)) toast('Brief copied');
         if (act === 'share') {
           if (navigator.share) { try { await navigator.share({ title, text: brief }); } catch {} }
           else if (await copyText(brief)) toast('Brief copied');
         }
       };
+    },
+  });
+}
+
+function openExtraViewer(kind) {
+  const x = current?.extras?.[kind];
+  if (!x) return;
+  const a = agentOf(x.agentId);
+  openSheet({
+    title: x.title,
+    tall: true,
+    render(s) {
+      s.body.innerHTML = `
+        <div class="doc-by" style="--agent-color:${esc(a.color)}"><span class="a-avatar">${a.emoji}</span><span>${esc(a.name)} · ${new Date(x.ts).toLocaleDateString([], { month: 'short', day: 'numeric' })}${x.briefRound && current.briefRound && x.briefRound !== current.briefRound ? ' · written for an earlier brief' : ''}</span></div>
+        <div class="btn-pair" style="margin-bottom:16px">
+          <button class="wide-btn soft" data-act="copy">Copy</button>
+          <button class="wide-btn soft" data-act="share">Share</button>
+          <button class="wide-btn soft" data-act="redo">Rewrite</button>
+        </div>
+        <div class="md a-body">${md(x.content)}</div>`;
+      s.body.onclick = async (e) => {
+        const act = e.target.closest('[data-act]')?.dataset.act;
+        if (act === 'copy' && await copyText(x.content)) toast('Copied');
+        if (act === 'share') {
+          if (navigator.share) { try { await navigator.share({ title: `${current.title} — ${x.title}`, text: x.content }); } catch {} }
+          else if (await copyText(x.content)) toast('Copied');
+        }
+        if (act === 'redo') {
+          toast('Rewriting…');
+          try { await api(`/api/ideas/${current.id}/extras`, { method: 'POST', body: JSON.stringify({ kind }) }); await openIdea(current.id, { silent: true }); s.close(); openExtraViewer(kind); } catch (err) { toast(err.message); }
+        }
+      };
+    },
+  });
+}
+
+function openNamesSheet() {
+  if (!current) return;
+  openSheet({
+    title: 'Name check',
+    tall: true,
+    render(s) {
+      const run = async (name) => {
+        s.body.innerHTML = `<label class="field"><span>Name</span><input id="name-q" type="text" value="${esc(name)}" maxlength="40"></label><p class="sheet-intro">Checking domains…</p>`;
+        $('name-q').addEventListener('keydown', (e) => { if (e.key === 'Enter') run($('name-q').value.trim()); });
+        let r;
+        try { r = await api(`/api/ideas/${current.id}/names?name=${encodeURIComponent(name)}`); } catch (e) { s.body.insertAdjacentHTML('beforeend', `<p class="sheet-intro">${esc(e.message)}</p>`); return; }
+        s.body.querySelector('.sheet-intro').outerHTML = `
+          ${r.names.map((n) => `<div class="sb-label" style="padding:10px 6px 6px">${esc(n.name)}</div><div class="domain-grid">${n.domains.map((d) => `<span class="domain ${d.status}">${esc(d.domain)}<em>${d.status}</em></span>`).join('')}</div>`).join('')}
+          <div class="sb-label" style="padding:14px 6px 6px">Handles to check</div>
+          ${r.handles.map((h) => `<a class="row" href="${esc(h.url)}" target="_blank" rel="noopener">${ic('link')}<span class="row-label">${esc(h.site)}</span><span class="row-chev">${ic('chevR')}</span></a>`).join('')}
+          <p class="sheet-intro" style="margin-top:10px">${esc(r.note)}</p>`;
+      };
+      run(briefTitle(current.brief || '') || current.title);
     },
   });
 }
@@ -1543,7 +2003,21 @@ function openSettingsSheet() {
           ${['system', 'dark', 'light'].map((t) => `<button class="row check" data-theme="${t}"><span class="row-label">${t[0].toUpperCase() + t.slice(1)}</span><span class="row-value">${settings.theme === t ? ic('check') : ''}</span></button>`).join('')}
           <div class="sb-label" style="padding:14px 6px 8px">Notifications</div>
           <button class="row" data-push="toggle" id="push-row"><span class="row-label">Phone notifications<span class="row-sub" id="push-sub">Checking…</span></span><span class="row-value" id="push-val"></span></button>
+          <div class="sb-label" style="padding:14px 6px 8px">Agent time</div>
+          <div class="row" style="cursor:default" id="usage-row"><span class="row-label">This month<span class="row-sub" id="usage-sub">Loading…</span></span><span class="row-value" id="usage-val"></span></div>
+          <label class="field" style="margin-top:8px"><span>Monthly cap (hours of agent time; 0 = no cap). Box warns at 80 percent.</span><input id="set-cap" type="number" min="0" max="999" step="1" value="${Number(settings.capHours || 0)}"></label>
+          <div class="sb-label" style="padding:14px 6px 8px">Library</div>
+          <button class="row" data-open="sources">${ic('link')}<span class="row-label">Source library<span class="row-sub">Every link the researchers cited</span></span><span class="row-chev">${ic('chevR')}</span></button>
+          <a class="row" href="/api/export" download>${ic('download')}<span class="row-label">Export everything<span class="row-sub">A zip with every idea, transcript, brief, document and prototype</span></span><span class="row-chev">${ic('chevR')}</span></a>
           <p class="sheet-intro" style="margin-top:10px">Box runs every agent through your Claude subscription on your server. ${AGENTS.length} agents in the room.</p>`;
+        $('set-cap').addEventListener('change', (e) => { settings.capHours = Math.max(0, Number(e.target.value) || 0); saveSettings(); checkSpending(); });
+        api('/api/overview').then((o) => {
+          const u = o.usage;
+          const sub = $('usage-sub'); const val = $('usage-val');
+          if (!sub) return;
+          val.textContent = fmtDuration(u.monthMs);
+          sub.textContent = `${u.monthTurns} agent turns · ${fmtDuration(u.totalMs)} all time${u.byIdea[0] ? ` · most: ${u.byIdea[0].title} (${fmtDuration(u.byIdea[0].ms)})` : ''}`;
+        }).catch(() => {});
         $('set-name').addEventListener('input', (e) => {
           settings.name = e.target.value.trim();
           saveSettings(); renderAvatar();
@@ -1565,6 +2039,7 @@ function openSettingsSheet() {
       };
       draw();
       s.body.onclick = async (e) => {
+        if (e.target.closest('[data-open="sources"]')) { s.close(); openSourcesSheet(); return; }
         const pr = e.target.closest('[data-push]');
         if (pr) {
           const st = pr.dataset.state;
@@ -1593,12 +2068,15 @@ async function loadAgents() {
   if (current) renderThread();
 }
 
-function openAgentsSheet() {
+function openAgentsSheet(opts = {}) {
   let draft = null;
+  let editing = null; // id of an added agent being edited
+  let presets = null;
   openSheet({
     title: 'Agents',
     tall: true,
     render(s) {
+      const modelName = (m) => ({ sonnet: 'Sonnet — balanced', opus: 'Opus — deepest', haiku: 'Haiku — fastest' }[m] || m);
       const list = () => {
         s.setTitle('Agents');
         s.setBack(null);
@@ -1610,8 +2088,11 @@ function openAgentsSheet() {
               <span class="ag-main">
                 <span class="ag-top"><span class="a-name">${esc(a.name)}</span><span class="ag-tag">${a.id === 'orchestrator' ? 'chair' : a.research ? 'web research' : a.builtin ? (a.core ? 'core' : 'specialist') : 'added · always joins'} · ${esc(a.model)}</span></span>
                 <span class="ag-desc">${esc(a.description || '')}</span>
+                <span class="ag-actions">
+                  ${a.builtin && a.id !== 'orchestrator' ? `<button class="chip-btn" data-clone="${a.id}">Clone & edit</button>` : ''}
+                  ${a.builtin ? '' : `<button class="chip-btn" data-edit="${a.id}">Edit</button><button class="chip-btn" data-remove="${a.id}">Remove</button>`}
+                </span>
               </span>
-              ${a.builtin ? '' : `<button class="icon-btn" data-remove="${a.id}" aria-label="Remove ${esc(a.name)}">${ic('trash')}</button>`}
             </div>`;
             const chair = AGENTS.filter((a) => a.id === 'orchestrator');
             const research = AGENTS.filter((a) => a.research);
@@ -1620,12 +2101,32 @@ function openAgentsSheet() {
             const grp = (t, arr) => arr.length ? `<div class="sb-label" style="padding:12px 6px 8px">${t}</div>${arr.map(row).join('')}` : '';
             return grp('Chair', chair) + grp('Research, before every debate', research) + grp('Specialist pool', pool) + grp('Your agents', custom);
           })()}
-          <button class="wide-btn accent" data-act="add" style="margin-top:6px">Add an agent</button>`;
+          <div class="btn-pair" style="margin-top:6px">
+            <button class="wide-btn soft" data-act="market">Marketplace</button>
+            <button class="wide-btn accent" data-act="add">Add an agent</button>
+          </div>`;
+      };
+      const market = async () => {
+        s.setTitle('Marketplace');
+        s.setBack(list);
+        s.body.innerHTML = '<p class="sheet-intro">Loading…</p>';
+        try { presets = (await api('/api/agents/presets')).presets; } catch (e) { s.body.innerHTML = `<p class="sheet-intro">${esc(e.message)}</p>`; return; }
+        s.body.innerHTML = `<p class="sheet-intro">Ready-made specialists. Install one and it joins every debate like an agent you wrote yourself; you can edit it afterwards.</p>
+          ${presets.map((p) => `<div class="ag-row"><span class="a-avatar">${p.emoji}</span><span class="ag-main">
+              <span class="ag-top"><span class="a-name">${esc(p.name)}</span></span>
+              <span class="ag-desc">${esc(p.instructions.slice(0, 160))}…</span>
+              <span class="ag-actions">${p.installed ? '<span class="ag-tag">installed</span>' : `<button class="chip-btn" data-install="${p.id}">Install</button>`}<button class="chip-btn" data-preset-edit="${p.id}">Edit first</button></span>
+            </span></div>`).join('')}`;
       };
       const form = (err = '') => {
-        s.setTitle('New agent');
+        s.setTitle(editing ? 'Edit agent' : 'New agent');
         s.setBack(list);
-        const d = draft || { name: '', emoji: '', model: 'sonnet', instructions: '' };
+        const d = draft || { name: '', emoji: '', model: 'sonnet', instructions: '', traits: {} };
+        const sel = (k, label) => `<label class="field"><span>${label}</span><select data-trait="${k}">
+            <option value="low"${d.traits?.[k] === 'low' ? ' selected' : ''}>${{ optimism: 'Skeptical', risk: 'Cautious', verbosity: 'Terse' }[k]}</option>
+            <option value="mid"${!d.traits?.[k] || d.traits[k] === 'mid' ? ' selected' : ''}>Balanced</option>
+            <option value="high"${d.traits?.[k] === 'high' ? ' selected' : ''}>${{ optimism: 'Optimistic', risk: 'Bold', verbosity: 'Thorough' }[k]}</option>
+          </select></label>`;
         s.body.innerHTML = `
           <label class="field"><span>Name</span><input id="ag-name" type="text" maxlength="40" placeholder="e.g. Legal Advisor" value="${esc(d.name)}"></label>
           <div class="field-row">
@@ -1638,8 +2139,10 @@ function openAgentsSheet() {
           </div>
           <label class="field"><span>Instructions</span><textarea id="ag-instructions" rows="8" maxlength="3000" placeholder="Who is this agent and what should it push on? For example: You are a startup lawyer. Flag regulatory, privacy and IP risks, rate each one, and propose the cheapest way to stay compliant at MVP stage.">${esc(d.instructions)}</textarea></label>
           <div class="hint"><span id="ag-count">${d.instructions.length}</span> / 3000 · at least 30 characters: the role, what it focuses on, and how it argues.</div>
+          <div class="sb-label" style="padding:10px 4px 6px">Temperament</div>
+          <div class="field-row three">${sel('optimism', 'Outlook')}${sel('risk', 'Risk appetite')}${sel('verbosity', 'Length')}</div>
           ${err ? `<div class="form-error">${esc(err)}</div>` : ''}
-          <button class="wide-btn" data-act="review">Review</button>`;
+          <button class="wide-btn" data-act="review">${editing ? 'Save changes' : 'Review'}</button>`;
         $('ag-model').value = d.model;
         $('ag-instructions').addEventListener('input', (e) => { $('ag-count').textContent = e.target.value.length; });
         if (!d.name) setTimeout(() => $('ag-name')?.focus(), 60);
@@ -1649,23 +2152,23 @@ function openAgentsSheet() {
         emoji: $('ag-emoji').value.trim() || '🤖',
         model: $('ag-model').value,
         instructions: $('ag-instructions').value.trim(),
+        traits: Object.fromEntries([...s.body.querySelectorAll('[data-trait]')].map((el) => [el.dataset.trait, el.value])),
       });
       const confirmView = (err = '') => {
         s.setTitle('Confirm new agent');
         s.setBack(() => form());
-        const modelName = { sonnet: 'Sonnet — balanced', opus: 'Opus — deepest', haiku: 'Haiku — fastest' }[draft.model];
         s.body.innerHTML = `
           <p class="sheet-intro">Check this before adding. Nothing is saved until you confirm.</p>
           <div class="preview-card">
             <div class="pv-head"><span class="pv-emoji">${esc(draft.emoji)}</span><span class="pv-name">${esc(draft.name)}</span></div>
-            <div class="pv-model">Model: ${modelName}</div>
+            <div class="pv-model">Model: ${modelName(draft.model)}</div>
             <div class="pv-label">Instructions</div>
             <div class="pv-text">${esc(draft.instructions)}</div>
           </div>
           <ul class="notes">
             <li>Speaks once per round in every idea: new ones right away, running ones from their next round.</li>
             <li>Each round costs one more Claude call per debate, which counts toward your Claude limits.</li>
-            <li>You can remove it any time from this screen.</li>
+            <li>You can edit or remove it any time from this screen.</li>
           </ul>
           ${err ? `<div class="form-error">${esc(err)}</div>` : ''}
           <div class="btn-pair">
@@ -1673,7 +2176,21 @@ function openAgentsSheet() {
             <button class="wide-btn accent" data-act="confirm">Confirm &amp; add</button>
           </div>`;
       };
-      list();
+      const startEdit = (id) => {
+        const a = AGENT_MAP[id];
+        if (!a) return;
+        editing = id;
+        draft = { name: a.name, emoji: a.emoji, model: a.model, instructions: a.instructions || '', traits: a.traits || {} };
+        form();
+      };
+      const startClone = (id) => {
+        const a = AGENT_MAP[id];
+        if (!a) return;
+        editing = null;
+        draft = { name: `${a.name} (mine)`, emoji: a.emoji, model: a.model, instructions: a.description ? `${a.description}\n\nYou are a variant of the built-in ${a.name}. ` : '', traits: {} };
+        form();
+      };
+      if (opts.edit) startEdit(opts.edit); else list();
       s.body.onclick = async (e) => {
         const rm = e.target.closest('[data-remove]');
         if (rm) {
@@ -1687,15 +2204,36 @@ function openAgentsSheet() {
           } catch (err) { toast(err.message); }
           return;
         }
+        const inst = e.target.closest('[data-install]');
+        if (inst) {
+          inst.disabled = true; inst.textContent = 'Installing…';
+          try { const a = await api(`/api/agents/presets/${inst.dataset.install}`, { method: 'POST', body: '{}' }); await loadAgents(); toast(`${a.emoji} ${a.name} joined the room`); market(); } catch (err) { toast(err.message); market(); }
+          return;
+        }
+        const pe = e.target.closest('[data-preset-edit]');
+        if (pe) {
+          const p = presets.find((x) => x.id === pe.dataset.presetEdit);
+          editing = null; draft = { name: p.name, emoji: p.emoji, model: 'sonnet', instructions: p.instructions, traits: {} }; form();
+          return;
+        }
+        const cl = e.target.closest('[data-clone]');
+        if (cl) { startClone(cl.dataset.clone); return; }
+        const ed = e.target.closest('[data-edit]');
+        if (ed) { startEdit(ed.dataset.edit); return; }
         const act = e.target.closest('[data-act]')?.dataset.act;
-        if (act === 'add') { draft = null; form(); }
+        if (act === 'market') market();
+        if (act === 'add') { draft = null; editing = null; form(); }
         if (act === 'review') {
           const d = read();
           draft = d;
           if (d.name.length < 2) return form('Give the agent a name (at least 2 characters).');
-          if (AGENTS.some((a) => a.name.toLowerCase() === d.name.toLowerCase())) return form(`An agent named “${d.name}” is already in the room.`);
+          if (!editing && AGENTS.some((a) => a.name.toLowerCase() === d.name.toLowerCase())) return form(`An agent named “${d.name}” is already in the room.`);
           if ([...d.emoji].length > 4) return form('Use a single emoji for the icon.');
           if (d.instructions.length < 30) return form('Instructions need at least 30 characters.');
+          if (editing) {
+            try { await api(`/api/agents/${editing}`, { method: 'PATCH', body: JSON.stringify(d) }); await loadAgents(); toast('Agent updated'); editing = null; draft = null; list(); } catch (err) { form(err.message); }
+            return;
+          }
           confirmView();
         }
         if (act === 'edit') form();
@@ -1744,10 +2282,26 @@ function handleEvent(ev) {
         current.status = ev.status;
         current.error = ev.error || null;
         thinking = null;
-        if (ev.status === 'done') openIdea(current.id, { silent: true });
+        lastActivity = null;
+        if (ev.status === 'done' || ev.status === 'paused' || ev.status === 'idle') openIdea(current.id, { silent: true });
         else { renderThread(); renderTop(); renderDock(); }
       }
       refreshIdeasSoon();
+      break;
+    case 'activity':
+      if (mine && current.project) {
+        lastActivity = { tool: ev.tool, text: ev.text, agentId: ev.agentId };
+        current.project.activity = [...(current.project.activity || []), lastActivity].slice(-40);
+        const line = document.querySelector('.act-line');
+        if (line && !expanded.has('activity')) {
+          line.querySelector('.act-tool').textContent = ACT_LABEL[ev.tool] || ev.tool;
+          line.querySelector('.act-tool').className = `act-tool ${ev.tool}`;
+          line.querySelector('.act-text').textContent = ev.text;
+        } else renderThread();
+      }
+      break;
+    case 'extras':
+      if (mine) openIdea(current.id, { silent: true });
       break;
     case 'promoted':
     case 'docs':
@@ -1766,6 +2320,8 @@ function handleEvent(ev) {
       if (mine && current.project) {
         current.project.tasks = ev.tasks;
         renderThread();
+        const open = $('layer').querySelector('.sheet');
+        if (open && open.parentElement._redraw) open.parentElement._redraw();
       }
       break;
     case 'round':
@@ -1836,9 +2392,26 @@ function showLogin() {
   const session = await fetch('/api/session').then((r) => r.json()).catch(() => ({}));
   if (session.loginRequired && !session.authed) return showLogin();
   registerSW();
+  api('/api/templates').then((t) => { TEMPLATES = t; if (route.view === 'new') renderTemplates(); }).catch(() => {});
   await loadAgents();
   await refreshIdeas();
   await onRoute();
   connectEvents();
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshIdeasSoon(); });
+  setTimeout(checkSpending, 3000);
+  setInterval(checkSpending, 30 * 60 * 1000);
 })();
+
+/** Spending guard: warn once a day when agent time passes 80 percent of the cap. */
+async function checkSpending() {
+  const cap = Number(settings.capHours || 0);
+  if (!cap) return;
+  let o;
+  try { o = await api('/api/overview'); } catch { return; }
+  const hours = o.usage.monthMs / 3600000;
+  const pct = Math.round((hours / cap) * 100);
+  if (pct < 80) return;
+  const key = `box-cap-warned-${new Date().toISOString().slice(0, 10)}-${pct >= 100 ? 'over' : 'near'}`;
+  try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch {}
+  toast(pct >= 100 ? `Agent time is over your ${cap} h monthly cap (${hours.toFixed(1)} h used)` : `Agent time at ${pct}% of your ${cap} h monthly cap`);
+}
