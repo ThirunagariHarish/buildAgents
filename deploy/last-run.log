@@ -1,9 +1,9 @@
-run: 32  commit: b27ed25  ssh step: success  at: 2026-10-02T02:44:03Z
+run: 33  commit: 529bb7e  ssh step: success  at: 2026-10-04T00:36:24Z
 
-HEAD: 6beb53e   domain: box.cashflowus.com
+HEAD: 529bb7e   domain: box.cashflowus.com
 == env file ==
 claude token: looks valid (length 108)
-keys in /etc/box.env: CLAUDE_CODE_OAUTH_TOKEN 
+keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN 
 == box service ==
 ==> Installing Node.js 22 (if missing)
 ==> Installing Claude Code CLI (if missing)
@@ -13,13 +13,123 @@ keys in /etc/box.env: CLAUDE_CODE_OAUTH_TOKEN
     ⚠ If you expose Box publicly, protect it (Caddy basic_auth, VPN, or
 service: active
 local /: HTTP 200
+api without sign-in: HTTP 401 (401 = sign-in enforced)
 agent pool: 6 agents — Orchestrator, Entrepreneur, Marketer, Solution Architect, Visionary, Critic
+== wildcard DNS (*.cashflowus.com) ==
+dns-check-1791074177.cashflowus.com -> does not resolve (wildcard record not added yet)
+box login: on
 == latest layout reports from phones ==
-(none yet)
+[
+ {
+  "at": "2026-10-03T23:43:43.386Z",
+  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
+  "standalone": true,
+  "innerHeight": 894,
+  "outerHeight": 956,
+  "clientHeight": 894,
+  "screen": [
+   440,
+   956
+  ],
+  "vv": [
+   894,
+   0
+  ],
+  "safeTop": "62px",
+  "safeBottom": "62px",
+  "mainBottom": 956,
+  "composerBottom": 912,
+  "appH": "956px"
+ },
+ {
+  "at": "2026-10-03T23:36:28.502Z",
+  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
+  "standalone": true,
+  "innerHeight": 894,
+  "outerHeight": 956,
+  "clientHeight": 894,
+  "screen": [
+   440,
+   956
+  ],
+  "vv": [
+   894,
+   0
+  ],
+  "safeTop": "62px",
+  "safeBottom": "62px",
+  "mainBottom": 956,
+  "composerBottom": 912,
+  "appH": "956px"
+ },
+ {
+  "at": "2026-10-03T18:12:57.420Z",
+  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
+  "standalone": true,
+  "innerHeight": 894,
+  "outerHeight": 956,
+  "clientHeight": 894,
+  "screen": [
+   440,
+   956
+  ],
+  "vv": [
+   894,
+   0
+  ],
+  "safeTop": "62px",
+  "safeBottom": "62px",
+  "mainBottom": 956,
+  "composerBottom": 912,
+  "appH": "956px"
+ },
+ {
+  "at": "2026-10-03T18:12:45.887Z",
+  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0.1 Mobile/15E148 Safari/604.1",
+  "standalone": true,
+  "innerHeight": 797,
+  "outerHeight": 844,
+  "clientHeight": 797,
+  "screen": [
+   390,
+   844
+  ],
+  "vv": [
+   797,
+   0
+  ],
+  "safeTop": "47px",
+  "safeBottom": "47px",
+  "mainBottom": 844,
+  "composerBottom": 800,
+  "appH": "844px"
+ },
+ {
+  "at": "2026-10-03T18:12:06.235Z",
+  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 27_0_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/155.0.8059.24 Mobile/15E148 Safari/604.1",
+  "standalone": false,
+  "innerHeight": 669,
+  "outerHeight": 844,
+  "clientHeight": 669,
+  "screen": [
+   390,
+   844
+  ],
+  "vv": [
+   669,
+   0
+  ],
+  "safeTop": "0px",
+  "safeBottom": "0px",
+  "mainBottom": 669,
+  "composerBottom": 659,
+  "appH": null
+ }
+]
 == claude login ==
 haiku: OK (2s) -> OK
 sonnet: OK (2s) -> OK
-opus: OK (3s) -> OK
+opus: OK (2s) -> OK
 == remove earlier Coolify routing attempts ==
 removed relay container box-web
 removed Coolify route file
