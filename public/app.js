@@ -119,7 +119,7 @@ function saveSettings() {
   try { localStorage.setItem('box-settings', JSON.stringify(settings)); } catch {}
 }
 
-const KIND_LABEL = { kickoff: 'Kickoff', research: 'Web research', synthesis: 'Synthesis', brief: 'Final brief' };
+const KIND_LABEL = { kickoff: 'Kickoff', research: 'Web research', synthesis: 'Synthesis', brief: 'Final brief', doc: 'Document', approved: 'Approved' };
 const STATUS_LABEL = { running: 'Debating', paused: 'Paused', done: 'Concluded', error: 'Stopped', idle: 'Not started' };
 const ROUND_LABEL = { 1: 'Quick pass', 2: 'Standard', 3: 'Deep', 4: 'Exhaustive' };
 const SUGGESTIONS = [
@@ -384,13 +384,17 @@ const STAGES = [
   ['deploying', 'Deploy'], ['review', 'Review'], ['live', 'Live'],
 ];
 const STAGE_LABEL = {
-  planning: 'Planning', design: 'Designing', building: 'Building', testing: 'Testing',
+  planning: 'Planning', design: 'Designing', plan_review: 'Plan ready — approve it', building: 'Building', testing: 'Testing',
   deploying: 'Deploying', review: 'Site ready for review', live: 'Live', maintenance: 'Maintenance',
 };
+const NEEDS_YOU = new Set(['plan_review', 'review']);
 /** Where an idea sits in the sidebar, and how it's labelled. */
 function placeOf(i) {
   if ((i.phase || 'idea') === 'project') {
-    if (i.stage === 'review') return { group: 'needs', label: STAGE_LABEL.review, icon: 'cube', cls: 'project needs' };
+    if (NEEDS_YOU.has(i.stage)) return { group: 'needs', label: STAGE_LABEL[i.stage], icon: 'cube', cls: 'project needs' };
+    if (i.status === 'running') return { group: 'projects', label: `${STAGE_LABEL[i.stage] || 'Working'}…`, icon: 'cube', cls: 'project running' };
+    if (i.status === 'error') return { group: 'projects', label: 'Stopped', icon: 'alert', cls: 'error' };
+    if (i.status === 'paused') return { group: 'projects', label: `${STAGE_LABEL[i.stage] || 'Project'} · paused`, icon: 'cube', cls: 'project' };
     return { group: 'projects', label: STAGE_LABEL[i.stage] || 'Project', icon: 'cube', cls: 'project' };
   }
   if (i.status === 'running') return { group: 'ideas', label: 'Debating', icon: 'spark', cls: 'running' };
@@ -445,7 +449,9 @@ function renderTop() {
   document.body.classList.toggle('mode-project', isProject());
   renderStageBar();
   if (isProject()) {
-    $('subtitle-text').textContent = `Project · ${STAGE_LABEL[current.project.stage] || ''}`;
+    $('subtitle-text').textContent = current.status === 'running' && thinking?.label
+      ? `${thinking.label}…`
+      : `Project · ${STAGE_LABEL[current.project.stage] || ''}`;
     document.title = `${current.title} · Box`;
     return;
   }
@@ -457,10 +463,13 @@ function renderTop() {
 }
 function isProject() { return !!(current && current.phase === 'project' && current.project); }
 function canPromote() { return !!(current && !isProject() && current.status === 'done' && current.brief); }
+function canApprove() { return !!(isProject() && current.project.stage === 'plan_review' && current.status !== 'running'); }
+function projectDocs() { return isProject() ? Object.values(current.project.docs || {}) : []; }
 function renderStageBar() {
   const bar = $('stage-bar');
   if (!isProject()) { bar.classList.add('hidden'); return; }
-  const idx = STAGES.findIndex(([k]) => k === current.project.stage);
+  const stage = current.project.stage === 'plan_review' ? 'design' : current.project.stage;
+  const idx = STAGES.findIndex(([k]) => k === stage);
   const at = current.project.stage === 'maintenance' ? STAGES.length : idx;
   bar.classList.remove('hidden');
   bar.innerHTML = STAGES.map(([, label], n) =>
@@ -478,7 +487,22 @@ async function promoteCurrent() {
     await api(`/api/ideas/${current.id}/promote`, { method: 'POST', body: '{}' });
     await openIdea(current.id, { silent: true });
     refreshIdeasSoon();
-    toast('Promoted to a project');
+    toast('Promoted — the planning crew is on it');
+  } catch (e) { toast(e.message); }
+}
+async function approveCurrent() {
+  if (!canApprove()) return;
+  const ok = await dialog({
+    title: 'Approve the plan?',
+    text: 'The requirements, architecture, data model and design direction become the spec. The build crew takes it from here. To change anything first, reply below instead.',
+    confirm: 'Approve',
+  });
+  if (!ok) return;
+  try {
+    await api(`/api/ideas/${current.id}/approve`, { method: 'POST', body: '{}' });
+    await openIdea(current.id, { silent: true });
+    refreshIdeasSoon();
+    toast('Plan approved');
   } catch (e) { toast(e.message); }
 }
 $('top-title').onclick = () => (route.view === 'idea' && current ? openRoomSheet() : openAgentsSheet());
@@ -501,6 +525,11 @@ $('more-btn').onclick = () => {
   if (canPromote()) items.unshift({ icon: 'rocket', label: 'Promote to project', run: promoteCurrent });
   if (current.brief) items.push({ icon: 'doc', label: 'Idea Brief', run: openBriefViewer });
   if (isProject()) {
+    if (canApprove()) items.unshift({ icon: 'check', label: 'Approve plan', run: approveCurrent });
+    if (projectDocs().length) items.push({ icon: 'stack', label: 'Project documents', run: openDocsSheet });
+    if (current.project.prototype) items.push({ icon: 'image', label: 'Prototype', run: openPrototype });
+    if (s === 'running') items.push({ icon: 'pause', label: 'Pause the crew', run: pauseCurrent });
+    else if ((s === 'paused' || s === 'error') && ['planning', 'design'].includes(current.project.stage)) items.push({ icon: 'play', label: 'Resume planning', run: runCurrent });
     items.push('-', { icon: 'trash', label: 'Delete', danger: true, run: deleteCurrent });
     openPopover($('more-btn'), items);
     return;
@@ -584,16 +613,31 @@ $('jump-btn').onclick = () => scrollToBottom(true);
 function agentMsgHtml(m) {
   const a = agentOf(m.agentId, m.agentName);
   const open = expanded.has(m.id);
-  const label = KIND_LABEL[m.kind] || '';
+  const label = m.kind === 'doc' ? (m.docTitle || 'Document') : (KIND_LABEL[m.kind] || '');
   const meta = [timeOf(m.ts), m.durationMs ? `${Math.round(m.durationMs / 1000)}s` : ''].filter(Boolean).join(' · ');
+  const compact = m.kind === 'brief' || m.kind === 'doc';
+  let extra = '';
+  if (m.kind === 'doc') {
+    const d = current?.project?.docs?.[m.docKey];
+    extra = `<button class="brief-card doc-card" data-doc="${esc(m.docKey)}">
+        <span class="brief-ico">${ic('doc')}</span>
+        <span style="min-width:0"><div class="brief-title">${esc(m.docTitle)}</div><div class="brief-sub">${d && d.version > 1 ? `Version ${d.version} · ` : ''}Tap to read</div></span>
+      </button>`;
+    const proto = (m.attachments || []).find((x) => x.kind === 'html');
+    if (proto) extra += `<button class="brief-card proto-card" data-proto="${esc(proto.id)}">
+        <span class="brief-ico">${ic('image')}</span>
+        <span style="min-width:0"><div class="brief-title">Clickable prototype</div><div class="brief-sub">Tap to try it on your phone</div></span>
+      </button>`;
+  }
   return `<div class="a-msg" style="--agent-color:${esc(a.color)}" data-mid="${m.id}" data-kind="${esc(m.kind)}">
       <div class="a-head">
         <span class="a-avatar" data-agent="${esc(m.agentId)}">${a.emoji}</span>
         <span class="a-name" data-agent="${esc(m.agentId)}">${esc(a.name)}</span>
-        ${label ? `<span class="a-kind">${label}</span>` : ''}
+        ${label ? `<span class="a-kind">${esc(label)}</span>` : ''}
       </div>
       <div class="a-body">${mdInline(esc(m.summary))}</div>
-      ${m.kind === 'brief' ? '' : `
+      ${extra}
+      ${compact ? '' : `
         <button class="a-more${open ? ' open' : ''}" data-toggle="${m.id}">${open ? 'Hide' : 'Full'} argument <span data-icon="chevR">${ic('chevR')}</span></button>
         ${open ? `<div class="a-full a-body md">${md(m.content)}</div>` : ''}`}
       <div class="a-actions">
@@ -646,17 +690,113 @@ function projectHtml() {
       ${current.brief ? `<button class="proj-link" data-brief="1">${ic('doc')}Open the brief</button>` : ''}
     </div>
     <button class="debate-toggle${open ? ' open' : ''}" data-toggle="debate">${ic('bulb')}<span>Idea debate · ${debate.filter((m) => m.kind !== 'user').length} messages</span>${ic('chevR')}</button>
-    ${open ? `<div class="debate-box">${debateHtml(debate)}</div>` : ''}
-    <div class="next-card">
+    ${open ? `<div class="debate-box">${debateHtml(debate)}</div>` : ''}`;
+  const docs = projectDocs();
+  if (docs.length) {
+    html += `<div class="doc-grid">${docs.map((d) => {
+      const a = agentOf(d.agentId, d.agentName);
+      return `<button class="doc-tile" data-doc="${esc(d.key)}" style="--agent-color:${esc(a.color)}">
+          <span class="doc-tile-emoji">${a.emoji}</span>
+          <span class="doc-tile-title">${esc(d.title)}</span>
+          <span class="doc-tile-sub">${esc(a.name)}${d.version > 1 ? ` · v${d.version}` : ''}</span>
+        </button>`;
+    }).join('')}${p.prototype ? `<button class="doc-tile proto" data-proto="${esc(p.prototype.id)}">
+          <span class="doc-tile-emoji">${ic('image')}</span>
+          <span class="doc-tile-title">Prototype</span>
+          <span class="doc-tile-sub">Clickable · ${p.prototype.name ? 'tap to try' : ''}</span>
+        </button>` : ''}</div>`;
+  }
+  if (!docs.length && current.status !== 'running') {
+    html += `<div class="next-card">
       <span class="next-ico">${ic('users')}</span>
-      <div><strong>Next: the planning crew</strong>
-      The Project Manager, Architect, Database Architect and UX Designer will turn the brief into a plan and a design direction for you to approve. They arrive in the next Box update — anything you write below is saved for them.</div>
+      <div><strong>The planning crew is up next</strong>
+      The Project Manager, Lead Architect, Database Architect and UX Designer turn the brief into a plan, a design direction and a prototype for you to approve.</div>
     </div>`;
+  }
   for (const m of after) {
-    if (m.kind === 'user') html += `<div class="u-msg"><div class="u-label">You · note for the team</div>${attachmentsHtml(m.attachments)}<div class="u-bubble">${esc(m.content)}</div></div>`;
+    if (m.kind === 'user') html += `<div class="u-msg"><div class="u-label">You · to the crew</div>${attachmentsHtml(m.attachments)}<div class="u-bubble">${esc(m.content)}</div></div>`;
+    else if (m.kind === 'approved') html += `<div class="system-mark">${ic('check')}${esc(m.summary)}</div>`;
     else html += agentMsgHtml(m);
   }
+  if (current.status === 'error' && current.error) {
+    html += `<div class="error-card"><strong>The crew stopped</strong>${esc(current.error)}</div>`;
+  }
+  if (canApprove()) {
+    html += `<div class="review-card">
+        <span class="next-ico">${ic('inbox')}</span>
+        <div><strong>Your approval</strong>
+        Read the four documents and try the prototype. If anything is off, reply below and the crew revises the affected documents. When it’s right, approve the plan.</div>
+      </div>`;
+  } else if (p.stage === 'building' && current.status !== 'running') {
+    html += `<div class="next-card">
+        <span class="next-ico">${ic('cube')}</span>
+        <div><strong>Next: the build crew</strong>
+        The Tech Lead and developers build from the approved plan, QA tests it, and DevOps puts it live at the project’s address. The build crew arrives in the next Box update — notes you leave below are saved for them.</div>
+      </div>`;
+  }
   return html;
+}
+
+function openDocViewer(key) {
+  const d = current?.project?.docs?.[key];
+  if (!d) return;
+  const a = agentOf(d.agentId, d.agentName);
+  openSheet({
+    title: d.title,
+    tall: true,
+    render(s) {
+      s.body.innerHTML = `
+        <div class="doc-by" style="--agent-color:${esc(a.color)}"><span class="a-avatar">${a.emoji}</span><span>${esc(a.name)}${d.version > 1 ? ` · version ${d.version}` : ''} · ${new Date(d.updatedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span></div>
+        <div class="btn-pair" style="margin-bottom:16px">
+          <button class="wide-btn soft" data-act="copy">Copy</button>
+          <button class="wide-btn soft" data-act="share">Share</button>
+        </div>
+        <div class="md a-body">${md(d.content)}</div>`;
+      s.body.onclick = async (e) => {
+        const act = e.target.closest('[data-act]')?.dataset.act;
+        if (act === 'copy' && await copyText(d.content)) toast('Document copied');
+        if (act === 'share') {
+          if (navigator.share) { try { await navigator.share({ title: `${current.title} — ${d.title}`, text: d.content }); } catch {} }
+          else if (await copyText(d.content)) toast('Document copied');
+        }
+      };
+    },
+  });
+}
+
+function openDocsSheet() {
+  const docs = projectDocs();
+  openSheet({
+    title: 'Project documents',
+    render(s) {
+      s.body.innerHTML = docs.map((d) => {
+        const a = agentOf(d.agentId, d.agentName);
+        return `<button class="row" data-doc="${esc(d.key)}">${ic('doc')}<span class="row-label">${esc(d.title)}<span class="row-sub">${a.emoji} ${esc(a.name)}${d.version > 1 ? ` · v${d.version}` : ''}</span></span><span class="row-chev">${ic('chevR')}</span></button>`;
+      }).join('') + (current.project.prototype ? `<button class="row" data-proto="${esc(current.project.prototype.id)}">${ic('image')}<span class="row-label">Prototype<span class="row-sub">Clickable, by the UX Designer</span></span><span class="row-chev">${ic('chevR')}</span></button>` : '');
+      s.body.onclick = (e) => {
+        const d = e.target.closest('[data-doc]');
+        const pr = e.target.closest('[data-proto]');
+        if (d) { s.close(); openDocViewer(d.dataset.doc); }
+        if (pr) { s.close(); openPrototype(); }
+      };
+    },
+  });
+}
+
+function openPrototype() {
+  const proto = current?.project?.prototype;
+  if (!proto) return;
+  const src = `/api/uploads/${proto.id}`;
+  openSheet({
+    title: 'Prototype',
+    tall: true,
+    render(s) {
+      s.body.classList.add('proto-body');
+      s.body.innerHTML = `
+        <div class="proto-bar"><span>By the UX Designer · sample content, nothing is saved</span><a class="proto-open" href="${src}" target="_blank" rel="noopener">Full screen ${ic('chevR')}</a></div>
+        <iframe class="proto-frame" src="${src}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" title="Prototype"></iframe>`;
+    },
+  });
 }
 
 function renderThread(forceBottom = false) {
@@ -693,9 +833,13 @@ function tickBrew() {
 setInterval(tickBrew, 1000);
 
 $('messages').addEventListener('click', async (e) => {
-  const t = e.target.closest('[data-toggle],[data-copy],[data-brief],[data-zoom],[data-agent]');
+  const t = e.target.closest('[data-toggle],[data-copy],[data-brief],[data-zoom],[data-agent],[data-doc],[data-proto]');
   if (!t) return;
-  if (t.dataset.toggle) {
+  if (t.dataset.doc) {
+    openDocViewer(t.dataset.doc);
+  } else if (t.dataset.proto) {
+    openPrototype();
+  } else if (t.dataset.toggle) {
     const id = t.dataset.toggle;
     expanded.has(id) ? expanded.delete(id) : expanded.add(id);
     renderThread();
@@ -739,12 +883,17 @@ function renderDock() {
   } else {
     $('rounds-chip').classList.add('hidden');
     const s = current.status;
-    input.placeholder = isProject() ? 'Note for the project team…'
+    input.placeholder = isProject()
+      ? (canApprove() ? 'Ask the crew for changes…' : s === 'running' ? 'Note for the crew (read on their next turn)…' : 'Note for the crew…')
       : s === 'running' ? 'Steer the room…'
       : canPromote() ? 'Feedback to refine the idea…' : 'Reply to the room…';
     const pills = [];
     if (isProject()) {
-      $('state-actions').innerHTML = '';
+      if (canApprove()) pills.push(['primary', 'check', 'Approve plan', 'approve']);
+      if (current.project.prototype && s !== 'running') pills.push(['', 'image', 'Prototype', 'proto']);
+      if ((s === 'paused' || s === 'error') && ['planning', 'design'].includes(current.project.stage)) pills.push(['primary', 'play', 'Resume planning', 'run']);
+      $('state-actions').innerHTML = pills.map(([cls, icon, label, act]) =>
+        `<button class="state-pill ${cls}" data-act="${act}">${ic(icon)}${label}</button>`).join('');
       updateSendState();
       return;
     }
@@ -765,6 +914,8 @@ $('state-actions').addEventListener('click', (e) => {
   if (b.dataset.act === 'run') runCurrent();
   if (b.dataset.act === 'brief') openBriefViewer();
   if (b.dataset.act === 'promote') promoteCurrent();
+  if (b.dataset.act === 'approve') approveCurrent();
+  if (b.dataset.act === 'proto') openPrototype();
 });
 $('input').addEventListener('input', () => { autosize(); updateSendState(); });
 $('input').addEventListener('keydown', (e) => {
@@ -1211,8 +1362,9 @@ function openSettingsSheet() {
 // ---------- agents sheet ----------
 async function loadAgents() {
   try {
-    AGENTS = await api('/api/agents');
-    AGENT_MAP = Object.fromEntries(AGENTS.map((a) => [a.id, a]));
+    const [agents, crew] = await Promise.all([api('/api/agents'), api('/api/crew').catch(() => [])]);
+    AGENTS = agents;
+    AGENT_MAP = Object.fromEntries([...crew, ...AGENTS].map((a) => [a.id, a]));
   } catch {}
   renderTop();
   if (current) renderThread();
@@ -1358,7 +1510,7 @@ function handleEvent(ev) {
       break;
     case 'agent_thinking':
       if (mine) {
-        thinking = { agentId: ev.agentId, since: Date.now() };
+        thinking = { agentId: ev.agentId, label: ev.label || null, since: Date.now() };
         if (ev.round) current.round = ev.round;
         current.status = 'running';
         renderThread(); renderTop(); renderDock();
@@ -1375,7 +1527,15 @@ function handleEvent(ev) {
       refreshIdeasSoon();
       break;
     case 'promoted':
+    case 'docs':
       if (mine) openIdea(current.id, { silent: true });
+      refreshIdeasSoon();
+      break;
+    case 'stage':
+      if (mine && current.project) {
+        current.project.stage = ev.stage;
+        renderTop(); renderThread(); renderDock();
+      }
       refreshIdeasSoon();
       break;
     case 'round':

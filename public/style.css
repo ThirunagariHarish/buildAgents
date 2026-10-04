@@ -610,4 +610,31 @@ body.mode-project #subtitle-text { color: var(--proj); }
   background: color-mix(in srgb, var(--agent-color, #888) 10%, transparent);
 }
 .roster-chip:active { background: color-mix(in srgb, var(--agent-color, #888) 24%, transparent); }
+/* ---------- Project documents & prototype ---------- */
+.sb-item .sb-ico.project.running svg { animation: brew 2.4s ease-in-out infinite; }
+.doc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 18px; }
+.doc-tile {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+  padding: 14px 14px 12px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface);
+  border-top: 3px solid var(--agent-color, var(--proj));
+}
+.doc-tile:active { background: var(--surface-2); }
+.doc-tile.proto { border-top-color: var(--proj); }
+.doc-tile-emoji { font-size: 22px; line-height: 1; margin-bottom: 8px; }
+.doc-tile-emoji svg { width: 22px; height: 22px; color: var(--proj); }
+.doc-tile-title { font-weight: 650; font-size: 14.5px; line-height: 1.25; }
+.doc-tile-sub { font-size: 12.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.doc-card, .proto-card { margin-top: 10px; }
+.doc-by { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--text-2); margin: 4px 0 14px; }
+.doc-by .a-avatar { background: color-mix(in srgb, var(--agent-color, #888) 18%, transparent); }
+.system-mark {
+  display: flex; align-items: center; justify-content: center; gap: 8px; margin: 6px 0 22px;
+  font-size: 13.5px; color: var(--proj); font-weight: 600;
+}
+.system-mark svg { width: 16px; height: 16px; stroke-width: 2.4; }
+.proto-body { display: flex; flex-direction: column; padding-bottom: var(--sab) !important; }
+.proto-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; color: var(--text-3); padding: 2px 0 10px; }
+.proto-open { display: inline-flex; align-items: center; gap: 2px; color: var(--proj); font-weight: 600; font-size: 13.5px; white-space: nowrap; }
+.proto-open svg { width: 15px; height: 15px; }
+.proto-frame { flex: 1; width: 100%; min-height: 60vh; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
 .a-msg[data-kind="research"] .a-body a { color: var(--blue); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--blue) 40%, transparent); }

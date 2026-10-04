@@ -35,6 +35,17 @@ That's it — no `npm install`.
 
 The interface follows the Claude mobile app: a slide-out sidebar of recent ideas, a centered thread with a "brewing" indicator while an agent thinks, a composer with **+** (camera, photos, files, rounds, agents), dictation, and send/stop. Reply at any time — your message goes into the transcript and the room picks it up (a finished debate starts a new round). **⋯** has Share, Rename, Room & agents, the Idea Brief, pause/resume, and Delete. **Agents** lets you add your own agents with instructions; they join every debate.
 
+## From brief to project
+
+When a brief is ready, **Promote to project**. The planning crew starts at once, each writing one project document that you can read in the app:
+
+1. 📋 **Project Manager** — requirements, user stories, milestones, task list, risks.
+2. 🏗️ **Lead Architect** — stack, components, API, deployment shape (follows the house standards in `lib/platform-context.md`).
+3. 🗄️ **Database Architect** — entities, schema, key queries, migrations.
+4. 🎨 **UX Designer** — researches comparable products on the web, sets the design direction for *this* product, and writes a clickable `prototype.html` you can try on your phone.
+
+The project then waits in **Needs you** as *Plan ready — approve it*. Reply with changes and the Project Manager routes your feedback to the documents it affects, which get revised; or **Approve plan** to hand it to the build crew (next update: build, test, deploy to `<name>.cashflowus.com`, your review, then maintenance).
+
 ## Configuration
 
 | What | How |
@@ -70,6 +81,9 @@ server.js          HTTP server, REST API, SSE event stream (zero dependencies)
 lib/agents.js      the six agent personas and their models
 lib/claude.js      headless `claude -p` subprocess wrapper
 lib/engine.js      the debate orchestration loop
+lib/crew.js        the build crew personas (planning crew for now)
+lib/project.js     the project engine: planning run, feedback triage, plan approval
+lib/platform-context.md  house standards the crew follows (snapshot of the dev-platform registry)
 lib/store.js       JSON persistence
 public/            the dashboard UI (vanilla HTML/CSS/JS)
 ```

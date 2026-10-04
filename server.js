@@ -8,6 +8,8 @@ const path = require('path');
 const crypto = require('crypto');
 const { listIdeas, loadIdea, saveIdea, createIdea, deleteIdea, addMessage, renameIdea, promoteIdea } = require('./lib/store');
 const { runIdea, pauseIdea, isRunning, currentSpeaker } = require('./lib/engine');
+const { runPlanning, approvePlan, pauseProject, projectRunning, projectSpeaker } = require('./lib/project');
+const { getCrew } = require('./lib/crew');
 const { getAgents, getDebateOrder, addAgent, removeAgent } = require('./lib/agents');
 const { saveUpload, getUpload, resolveIds, removeUploads } = require('./lib/uploads');
 const { generateTitle } = require('./lib/title');
@@ -64,9 +66,12 @@ function serveStatic(res, urlPath) {
   fs.createReadStream(file).pipe(res);
 }
 
+const running = (id) => isRunning(id) || projectRunning(id);
+const speaker = (id) => currentSpeaker(id) || projectSpeaker(id);
+
 function ideaSummary(i) {
   return {
-    id: i.id, title: i.title, status: isRunning(i.id) ? 'running' : i.status,
+    id: i.id, title: i.title, status: running(i.id) ? 'running' : i.status,
     phase: i.phase || 'idea', stage: i.project?.stage || null,
     round: i.round, maxRounds: i.maxRounds, createdAt: i.createdAt, messageCount: i.messages.length,
     hasBrief: !!i.brief,
@@ -167,6 +172,7 @@ const server = http.createServer(async (req, res) => {
 
     // ---- agents ----
     if (p === '/api/agents' && req.method === 'GET') return json(res, 200, agentList());
+    if (p === '/api/crew' && req.method === 'GET') return json(res, 200, getCrew());
     if (p === '/api/agents' && req.method === 'POST') {
       const body = await readBody(req);
       try {
@@ -235,7 +241,7 @@ const server = http.createServer(async (req, res) => {
       const action = m[2];
 
       if (!action && req.method === 'GET') {
-        return json(res, 200, { ...idea, status: isRunning(idea.id) ? 'running' : idea.status, speaker: currentSpeaker(idea.id) });
+        return json(res, 200, { ...idea, status: running(idea.id) ? 'running' : idea.status, speaker: speaker(idea.id) });
       }
       if (!action && req.method === 'PATCH') {
         const body = await readBody(req);
@@ -247,6 +253,7 @@ const server = http.createServer(async (req, res) => {
       }
       if (!action && req.method === 'DELETE') {
         pauseIdea(idea);
+        pauseProject(idea);
         removeUploads([...(idea.attachments || []), ...idea.messages.flatMap((x) => x.attachments || [])]);
         deleteIdea(idea.id);
         bus.broadcast({ event: 'ideas_changed', deleted: idea.id });
@@ -259,17 +266,37 @@ const server = http.createServer(async (req, res) => {
         const msg = promoteIdea(idea);
         bus.publish(idea.id, { event: 'promoted', message: msg });
         bus.broadcast({ event: 'ideas_changed' });
+        runPlanning(bus, idea); // the planning crew starts right away
         return json(res, 200, { ok: true, project: idea.project });
       }
+      if (action === 'approve' && req.method === 'POST') {
+        if (idea.phase !== 'project') return json(res, 409, { error: 'Only projects have a plan to approve.' });
+        if (running(idea.id)) return json(res, 409, { error: 'Wait for the crew to finish first.' });
+        try {
+          const msg = approvePlan(bus, idea);
+          bus.broadcast({ event: 'ideas_changed' });
+          return json(res, 200, { ok: true, message: msg, stage: idea.project.stage });
+        } catch (e) {
+          return json(res, 409, { error: e.message });
+        }
+      }
       if (action === 'run' && req.method === 'POST') {
-        if (idea.phase === 'project') return json(res, 409, { error: 'The build crew isn’t available yet — it arrives in the next Box update.' });
         const body = await readBody(req);
-        if (isRunning(idea.id)) return json(res, 409, { error: 'already running' });
+        if (running(idea.id)) return json(res, 409, { error: 'already running' });
+        if (idea.phase === 'project') {
+          const stage = idea.project.stage;
+          if (!['planning', 'design', 'plan_review'].includes(stage)) {
+            return json(res, 409, { error: 'The build crew isn’t available yet — it arrives in the next Box update.' });
+          }
+          runPlanning(bus, idea);
+          return json(res, 202, { ok: true });
+        }
         runIdea(bus, idea, { maxRounds: body.maxRounds, models: body.models }); // fire and forget
         return json(res, 202, { ok: true });
       }
       if (action === 'pause' && req.method === 'POST') {
         pauseIdea(idea);
+        pauseProject(idea);
         return json(res, 202, { ok: true });
       }
       if (action === 'message' && req.method === 'POST') {
@@ -284,6 +311,10 @@ const server = http.createServer(async (req, res) => {
           attachments,
         });
         bus.publish(idea.id, { event: 'message', message: msg });
+        // Feedback on a finished plan sends the crew back to revise it.
+        if (idea.phase === 'project' && idea.project.stage === 'plan_review' && !running(idea.id)) {
+          runPlanning(bus, idea, { feedback: text || 'See the attached files.' });
+        }
         return json(res, 201, msg);
       }
     }
