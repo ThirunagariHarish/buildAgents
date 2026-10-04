@@ -13,6 +13,8 @@ const { getCrew } = require('./lib/crew');
 const { getAgents, getDebateOrder, addAgent, removeAgent } = require('./lib/agents');
 const { saveUpload, getUpload, resolveIds, removeUploads } = require('./lib/uploads');
 const { generateTitle } = require('./lib/title');
+const push = require('./lib/push');
+const { needsYouCount } = require('./lib/notify');
 
 const PORT = Number(process.env.BOX_PORT || 3400);
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -168,6 +170,29 @@ const server = http.createServer(async (req, res) => {
       list = [{ at: new Date().toISOString(), ...body }, ...list].slice(0, 5);
       fs.writeFileSync(file, JSON.stringify(list, null, 1).slice(0, 20000));
       return json(res, 200, { ok: true });
+    }
+
+    // ---- push notifications (home-screen app) ----
+    if (p === '/api/push/key' && req.method === 'GET') {
+      return json(res, 200, { publicKey: push.publicKey(), devices: push.count(), needsYou: needsYouCount() });
+    }
+    if (p === '/api/push/subscribe' && req.method === 'POST') {
+      const body = await readBody(req);
+      try {
+        const devices = push.subscribe(body.subscription, { ua: req.headers['user-agent'] });
+        return json(res, 201, { ok: true, devices });
+      } catch (e) {
+        return json(res, 400, { error: e.message });
+      }
+    }
+    if (p === '/api/push/unsubscribe' && req.method === 'POST') {
+      const body = await readBody(req);
+      push.unsubscribe(String(body.endpoint || ''));
+      return json(res, 200, { ok: true, devices: push.count() });
+    }
+    if (p === '/api/push/test' && req.method === 'POST') {
+      const r = await push.broadcast({ title: 'Box notifications are on', body: 'You’ll hear when something needs you or finishes.', tag: 'test', url: '/', badge: needsYouCount() });
+      return json(res, 200, { ok: true, ...r });
     }
 
     // ---- agents ----

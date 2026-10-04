@@ -62,6 +62,9 @@ if [ -f /etc/box-kubeconfig ]; then
 fi
 echo "claude as build user: $(set -a; . /etc/box.env 2>/dev/null; set +a; timeout 120 sudo -u boxbuild -H --preserve-env=CLAUDE_CODE_OAUTH_TOKEN claude -p 'Reply with exactly: OK' --model haiku 2>&1 | tail -1)"
 
+echo "== notifications =="
+echo "push: $(curl -s --max-time 8 -H "Cookie: $COOKIE" http://localhost:3400/api/push/key | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const j=JSON.parse(d);console.log('vapid key '+(j.publicKey?'ready':'missing')+', devices subscribed: '+j.devices+', needs you: '+j.needsYou)}catch(e){console.log('unreadable')}})")"
+
 echo "== wildcard DNS (*.cashflowus.com) =="
 probe="dns-check-$(date +%s).cashflowus.com"
 ip=$(getent hosts "$probe" | awk '{print $1}' | head -1)

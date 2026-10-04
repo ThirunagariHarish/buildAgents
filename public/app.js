@@ -376,6 +376,88 @@ async function refreshIdeas() {
   ideas.sort((a, b) => b.lastActivity - a.lastActivity);
   renderSidebar();
   renderTop();
+  syncBadge();
+}
+
+// ---------- notifications & home-screen badge ----------
+const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+let swReg = null;
+async function registerSW() {
+  if (!('serviceWorker' in navigator)) return null;
+  try { swReg = await navigator.serviceWorker.register('/sw.js'); } catch { swReg = null; }
+  return swReg;
+}
+function syncBadge() {
+  const n = ideas.filter((i) => placeOf(i).group === 'needs').length;
+  try {
+    if ('setAppBadge' in navigator) (n > 0 ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {});
+    swReg?.active?.postMessage({ type: 'badge', count: n });
+  } catch {}
+}
+function pushSupported() {
+  return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+}
+/** 'unsupported' | 'homescreen' (iOS needs Add to Home Screen) | 'denied' | 'on' | 'off' */
+async function pushState() {
+  if (!pushSupported()) return iOS && !standalone ? 'homescreen' : 'unsupported';
+  if (Notification.permission === 'denied') return 'denied';
+  const reg = swReg || await registerSW();
+  if (!reg) return 'unsupported';
+  const sub = await reg.pushManager.getSubscription().catch(() => null);
+  return sub && Notification.permission === 'granted' ? 'on' : 'off';
+}
+function keyBytes(b64u) {
+  const s = (b64u + '='.repeat((4 - (b64u.length % 4)) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(s);
+  return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+}
+async function enablePush() {
+  if (!pushSupported()) { toast(iOS ? 'Add Box to your Home Screen first, then turn this on from the app icon.' : 'This browser can’t receive notifications.'); return false; }
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') { toast('Notifications were not allowed.'); return false; }
+  const reg = swReg || await registerSW();
+  if (!reg) { toast('Could not start the notification service.'); return false; }
+  await navigator.serviceWorker.ready;
+  try {
+    const { publicKey } = await api('/api/push/key');
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(publicKey) });
+    await api('/api/push/subscribe', { method: 'POST', body: JSON.stringify({ subscription: sub.toJSON() }) });
+    api('/api/push/test', { method: 'POST', body: '{}' }).catch(() => {});
+    toast('Notifications on');
+    return true;
+  } catch (e) {
+    toast(`Could not turn on notifications: ${e.message}`);
+    return false;
+  }
+}
+async function disablePush() {
+  const reg = swReg || await registerSW();
+  const sub = reg && await reg.pushManager.getSubscription().catch(() => null);
+  if (sub) {
+    api('/api/push/unsubscribe', { method: 'POST', body: JSON.stringify({ endpoint: sub.endpoint }) }).catch(() => {});
+    await sub.unsubscribe().catch(() => {});
+  }
+  toast('Notifications off');
+}
+function notifyBannerHtml() {
+  if (!standalone || localStorage.getItem('box-notify-dismissed')) return '';
+  return `<div class="notify-banner" id="notify-banner">
+      <span class="next-ico">${ic('alert')}</span>
+      <div><strong>Get told when something needs you</strong>Briefs, plans to approve and finished sites, as iPhone notifications with a badge on the icon.</div>
+      <div class="nb-actions"><button class="wide-btn soft" data-nb="later">Later</button><button class="wide-btn accent" data-nb="on">Turn on</button></div>
+    </div>`;
+}
+async function maybeShowNotifyBanner() {
+  const slot = $('notify-slot');
+  if (!slot) return;
+  const state = await pushState();
+  slot.innerHTML = state === 'off' ? notifyBannerHtml() : '';
+  slot.onclick = async (e) => {
+    const b = e.target.closest('[data-nb]');
+    if (!b) return;
+    if (b.dataset.nb === 'on' && await enablePush()) slot.innerHTML = '';
+    if (b.dataset.nb === 'later') { try { localStorage.setItem('box-notify-dismissed', '1'); } catch {} slot.innerHTML = ''; }
+  };
 }
 function refreshIdeasSoon() {
   clearTimeout(refreshIdeasSoon.t);
@@ -597,6 +679,7 @@ function showNew() {
   renderTop();
   renderSidebar();
   renderDock();
+  maybeShowNotifyBanner();
 }
 $('suggestions').addEventListener('click', (e) => {
   const b = e.target.closest('.suggestion');
@@ -1448,15 +1531,38 @@ function openSettingsSheet() {
           <label class="field"><span>Your name</span><input id="set-name" type="text" maxlength="40" placeholder="Used in your greeting" value="${esc(settings.name)}"></label>
           <div class="sb-label" style="padding:6px 6px 8px">Appearance</div>
           ${['system', 'dark', 'light'].map((t) => `<button class="row check" data-theme="${t}"><span class="row-label">${t[0].toUpperCase() + t.slice(1)}</span><span class="row-value">${settings.theme === t ? ic('check') : ''}</span></button>`).join('')}
+          <div class="sb-label" style="padding:14px 6px 8px">Notifications</div>
+          <button class="row" data-push="toggle" id="push-row"><span class="row-label">Phone notifications<span class="row-sub" id="push-sub">Checking…</span></span><span class="row-value" id="push-val"></span></button>
           <p class="sheet-intro" style="margin-top:10px">Box runs every agent through your Claude subscription on your server. ${AGENTS.length} agents in the room.</p>`;
         $('set-name').addEventListener('input', (e) => {
           settings.name = e.target.value.trim();
           saveSettings(); renderAvatar();
           if (route.view === 'new') $('greeting').textContent = greeting();
         });
+        pushState().then((st) => {
+          const sub = $('push-sub'); const val = $('push-val');
+          if (!sub) return;
+          const text = {
+            on: ['On — briefs, approvals, finished sites, and a badge on the icon', 'On'],
+            off: ['Off — tap to turn on', 'Off'],
+            denied: ['Blocked in iPhone Settings → Notifications → Box', '—'],
+            homescreen: ['Add Box to your Home Screen (Share → Add to Home Screen), then open it from the icon', '—'],
+            unsupported: ['Not available in this browser', '—'],
+          }[st];
+          sub.textContent = text[0]; val.textContent = text[1];
+          $('push-row').dataset.state = st;
+        });
       };
       draw();
-      s.body.onclick = (e) => {
+      s.body.onclick = async (e) => {
+        const pr = e.target.closest('[data-push]');
+        if (pr) {
+          const st = pr.dataset.state;
+          if (st === 'on') { await disablePush(); draw(); }
+          else if (st === 'off') { await enablePush(); draw(); }
+          else if (st === 'homescreen') toast('Open Box from its Home Screen icon to turn on notifications.');
+          return;
+        }
         const b = e.target.closest('[data-theme]');
         if (!b) return;
         settings.theme = b.dataset.theme;
@@ -1719,8 +1825,10 @@ function showLogin() {
   renderAvatar();
   const session = await fetch('/api/session').then((r) => r.json()).catch(() => ({}));
   if (session.loginRequired && !session.authed) return showLogin();
+  registerSW();
   await loadAgents();
   await refreshIdeas();
   await onRoute();
   connectEvents();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshIdeasSoon(); });
 })();

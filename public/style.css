@@ -639,6 +639,18 @@ body.mode-project #subtitle-text { color: var(--proj); }
 .proto-open { display: inline-flex; align-items: center; gap: 2px; color: var(--proj); font-weight: 600; font-size: 13.5px; white-space: nowrap; }
 .proto-open svg { width: 15px; height: 15px; }
 .proto-frame { flex: 1; width: 100%; min-height: 60vh; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
+/* ---------- Notifications banner ---------- */
+.notify-banner {
+  display: grid; grid-template-columns: auto 1fr; gap: 10px 12px; align-items: start; text-align: left;
+  width: 100%; max-width: 420px; margin: 0 auto 18px; padding: 14px 16px; border-radius: 18px;
+  border: 1px solid var(--line-strong); background: var(--surface); font-size: 14px; color: var(--text-2); line-height: 1.45;
+}
+.notify-banner .next-ico { color: var(--accent); }
+.notify-banner strong { display: block; color: var(--text); font-size: 15px; margin-bottom: 2px; }
+.notify-banner .nb-actions { grid-column: 1 / -1; display: flex; gap: 8px; }
+.notify-banner .nb-actions .wide-btn { flex: 1; height: 42px; font-size: 14.5px; margin: 0; }
+#push-row .row-sub { white-space: normal; }
+
 /* ---------- Build crew: tasks, notes, site ---------- */
 .task-board {
   width: 100%; text-align: left; padding: 14px 16px; border-radius: 18px; margin: 0 0 18px;
