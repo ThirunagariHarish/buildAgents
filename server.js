@@ -96,6 +96,14 @@ function serveStatic(res, urlPath) {
     'Cache-Control': html ? 'no-store' : 'no-cache',
     'X-Box-Version': APP_VERSION,
   });
+  if (html) {
+    // Stamp the script and stylesheet URLs so no cache anywhere can hand a
+    // new page an old app.js.
+    const page = fs.readFileSync(file, 'utf8')
+      .replace('href="style.css"', `href="style.css?v=${APP_VERSION}"`)
+      .replace('src="app.js"', `src="app.js?v=${APP_VERSION}"`);
+    return res.end(page);
+  }
   fs.createReadStream(file).pipe(res);
 }
 
@@ -250,7 +258,7 @@ function nameIdea(idea) {
 // Every API call needs a signed-in, approved user (cookie box_session: a
 // random token, HttpOnly, SameSite=Strict, Secure behind TLS). Only the page
 // itself and the sign-in / sign-up / reset endpoints are public.
-const PUBLIC_API = new Set(['/api/session', '/api/login', '/api/logout', '/api/signup', '/api/forgot', '/api/reset']);
+const PUBLIC_API = new Set(['/api/session', '/api/login', '/api/logout', '/api/signup', '/api/forgot', '/api/reset', '/api/diag']);
 const BASE_URL = process.env.BOX_PUBLIC_URL || `https://${process.env.BOX_DOMAIN || 'box.cashflowus.com'}`;
 
 function cookies(req) {
@@ -374,7 +382,7 @@ const server = http.createServer(async (req, res) => {
 
     // ---- everything else needs an approved, signed-in user ----
     const user = p.startsWith('/api/') ? currentUser(req) : null;
-    if (p.startsWith('/api/') && !user) return json(res, 401, { error: 'Sign in to continue.', login: true });
+    if (p.startsWith('/api/') && !user && !PUBLIC_API.has(p)) return json(res, 401, { error: 'Sign in to continue.', login: true });
 
     if (p === '/api/password' && req.method === 'POST') {
       const body = await readBody(req).catch(() => ({}));
@@ -423,12 +431,17 @@ const server = http.createServer(async (req, res) => {
     }
 
     // Layout report from the client, read back by the deploy script.
+    // Public (it runs before sign-in, so a phone stuck on the sign-in screen
+    // can still be diagnosed), small, and rate limited per address.
     if (p === '/api/diag' && req.method === 'POST') {
+      if (auth.limited(`diag:${ip}`, 20, 10 * 60 * 1000)) return json(res, 429, { error: 'Too many reports.' });
       const body = await readBody(req).catch(() => ({}));
       const file = path.join(__dirname, 'data', 'diag.json');
       let list = [];
       try { list = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
-      list = [{ at: new Date().toISOString(), ...body }, ...list].slice(0, 5);
+      const safe = {};
+      for (const [k, v] of Object.entries(body || {}).slice(0, 30)) safe[String(k).slice(0, 40)] = typeof v === 'string' ? v.slice(0, 300) : v;
+      list = [{ at: new Date().toISOString(), authed: !!user, ...safe }, ...list].slice(0, 5);
       fs.writeFileSync(file, JSON.stringify(list, null, 1).slice(0, 20000));
       return json(res, 200, { ok: true });
     }

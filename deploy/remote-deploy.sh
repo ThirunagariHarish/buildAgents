@@ -92,7 +92,7 @@ echo "${probe} -> ${ip:-does not resolve (wildcard record not added yet)}"
 echo "box login: $([ -n "$(grep -s '^BOX_PASSWORD=' /etc/box.env)" ] && echo on || echo 'off (no BOX_PASSWORD secret)')"
 
 echo "== latest layout reports from phones =="
-cat data/diag.json 2>/dev/null | head -c 3000 || echo "(none yet)"
+cat data/diag.json 2>/dev/null | head -c 9000 || echo "(none yet)"
 echo
 echo "== claude login =="
 (set -a; . /etc/box.env 2>/dev/null; set +a; timeout 300 node deploy/check-claude.js 2>&1)

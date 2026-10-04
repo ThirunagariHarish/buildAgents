@@ -8,10 +8,14 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
 self.addEventListener('activate', (e) => {
-  e.waitUntil(Promise.all([
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))),
-    self.clients.claim(),
-  ]));
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+    await self.clients.claim();
+    // Pages that were open through the update get asked to reload.
+    const pages = await self.clients.matchAll({ type: 'window' });
+    for (const c of pages) c.postMessage({ type: 'updated' });
+  })());
 });
 
 // Network first, cache as the fallback: the shell, and GET reads of ideas,
@@ -24,9 +28,12 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname === '/api/events') return;
   const cacheable = SHELL.includes(url.pathname) || /^\/api\/(ideas|agents|crew|templates)(\/|$)/.test(url.pathname) || /^\/api\/uploads\//.test(url.pathname);
   if (!cacheable) return;
+  const shell = SHELL.includes(url.pathname);
   event.respondWith((async () => {
     try {
-      const res = await fetch(req);
+      // The app shell always comes from the server, never from the browser's
+      // own HTTP cache, so a deploy is picked up on the next open.
+      const res = await fetch(shell ? req.url : req, shell ? { cache: 'no-store', credentials: 'same-origin' } : undefined);
       if (res.ok) { const c = await caches.open(CACHE); c.put(req, res.clone()).catch(() => {}); }
       return res;
     } catch {

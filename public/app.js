@@ -279,13 +279,20 @@ window.visualViewport?.addEventListener('resize', fitApp);
 window.visualViewport?.addEventListener('scroll', fitApp);
 fitApp();
 
-// One-off layout report so screen-size problems on a real phone can be diagnosed.
-setTimeout(() => {
+// Layout and version report so problems on a real phone can be diagnosed
+// from the deploy log: which copy of the app it runs and what screen it shows.
+setTimeout(async () => {
   const probe = document.createElement('div');
   probe.style.cssText = 'position:fixed;bottom:0;box-sizing:content-box;height:env(safe-area-inset-bottom);padding-top:env(safe-area-inset-top)';
   document.body.appendChild(probe);
   const cs = getComputedStyle(probe);
+  let cacheNames = null;
+  try { cacheNames = await caches.keys(); } catch {}
+  const loginEl = $('login');
   const report = {
+    version: APP_VERSION, href: location.href.slice(0, 120),
+    screenShown: loginEl ? ($('lg-email') ? 'sign-in with email' : 'legacy password-only sign-in') : (ME ? 'app' : 'nothing'),
+    sw: !!(navigator.serviceWorker && navigator.serviceWorker.controller), caches: cacheNames,
     ua: navigator.userAgent, standalone,
     innerHeight: window.innerHeight, outerHeight: window.outerHeight,
     clientHeight: document.documentElement.clientHeight,
@@ -297,7 +304,7 @@ setTimeout(() => {
   };
   probe.remove();
   fetch('/api/diag', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(report) }).catch(() => {});
-}, 1500);
+}, 2500);
 
 // ---------- layers: sheets, popovers, dialogs ----------
 function closeTopLayer() {
@@ -2838,7 +2845,14 @@ function openPeopleSheet() {
     if (document.hidden) return;
     refreshIdeasSoon();
     fetch('/api/session').then((r) => r.json()).then((s) => checkVersion(s.version)).catch(() => {});
+    if (swReg) swReg.update().catch(() => {});
   });
+  // A newly installed service worker (after a deploy) asks open pages to reload.
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'updated' && performance.now() > 10000) location.reload();
+    });
+  }
   setTimeout(checkSpending, 3000);
   setInterval(checkSpending, 30 * 60 * 1000);
 })();
