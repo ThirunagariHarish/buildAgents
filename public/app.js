@@ -119,7 +119,7 @@ function saveSettings() {
   try { localStorage.setItem('box-settings', JSON.stringify(settings)); } catch {}
 }
 
-const KIND_LABEL = { kickoff: 'Kickoff', synthesis: 'Synthesis', brief: 'Final brief' };
+const KIND_LABEL = { kickoff: 'Kickoff', research: 'Web research', synthesis: 'Synthesis', brief: 'Final brief' };
 const STATUS_LABEL = { running: 'Debating', paused: 'Paused', done: 'Concluded', error: 'Stopped', idle: 'Not started' };
 const ROUND_LABEL = { 1: 'Quick pass', 2: 'Standard', 3: 'Deep', 4: 'Exhaustive' };
 const SUGGESTIONS = [
@@ -438,7 +438,7 @@ function renderTop() {
     document.body.classList.remove('mode-project');
     renderStageBar();
     $('title-text').textContent = 'New idea';
-    $('subtitle-text').textContent = `${AGENTS.length} agents ready · ${settings.rounds} ${settings.rounds === 1 ? 'round' : 'rounds'}`;
+    $('subtitle-text').textContent = `${Math.max(AGENTS.length - 1, 0)} specialists on call · ${settings.rounds} ${settings.rounds === 1 ? 'round' : 'rounds'}`;
     return;
   }
   $('title-text').textContent = current.title;
@@ -450,7 +450,7 @@ function renderTop() {
     return;
   }
   let sub = `Round ${Math.max(current.round, 1)} of ${current.maxRounds}`;
-  if (current.status === 'running' && thinking) sub = `${agentOf(thinking.agentId).name} is thinking…`;
+  if (current.status === 'running' && thinking) sub = thinking.label ? `${thinking.label}…` : `${agentOf(thinking.agentId).name} is thinking…`;
   else sub += ` · ${STATUS_LABEL[current.status] || current.status}`;
   $('subtitle-text').textContent = sub;
   document.title = `${current.title} · Box`;
@@ -558,7 +558,7 @@ async function openIdea(id, { silent = false } = {}) {
   const switching = !current || current.id !== idea.id;
   current = idea;
   if (switching) expanded.clear();
-  thinking = idea.speaker ? { agentId: idea.speaker.agentId, since: Date.now() - idea.speaker.elapsedMs } : null;
+  thinking = idea.speaker ? { agentId: idea.speaker.agentId, label: idea.speaker.label, since: Date.now() - idea.speaker.elapsedMs } : null;
   $('welcome').classList.add('hidden');
   renderTop();
   renderSidebar();
@@ -586,7 +586,7 @@ function agentMsgHtml(m) {
   const open = expanded.has(m.id);
   const label = KIND_LABEL[m.kind] || '';
   const meta = [timeOf(m.ts), m.durationMs ? `${Math.round(m.durationMs / 1000)}s` : ''].filter(Boolean).join(' · ');
-  return `<div class="a-msg" style="--agent-color:${esc(a.color)}" data-mid="${m.id}">
+  return `<div class="a-msg" style="--agent-color:${esc(a.color)}" data-mid="${m.id}" data-kind="${esc(m.kind)}">
       <div class="a-head">
         <span class="a-avatar" data-agent="${esc(m.agentId)}">${a.emoji}</span>
         <span class="a-name" data-agent="${esc(m.agentId)}">${esc(a.name)}</span>
@@ -616,6 +616,12 @@ function debateHtml(messages) {
       html += `<div class="round-mark">Round ${m.round}</div>`;
     }
     html += agentMsgHtml(m);
+    if (m.kind === 'kickoff' && current.roster?.length) {
+      html += `<div class="roster-card"><span class="roster-label">${ic('users')}In the room</span>${current.roster.map((id) => {
+        const a = agentOf(id);
+        return `<button class="roster-chip" data-agent="${esc(id)}" style="--agent-color:${esc(a.color)}">${a.emoji} ${esc(a.name)}</button>`;
+      }).join('')}</div>`;
+    }
     if (m.kind === 'brief') {
       html += `<button class="brief-card" data-brief="1">
           <span class="brief-ico">${ic('doc')}</span>
@@ -671,7 +677,7 @@ function renderThread(forceBottom = false) {
     const who = thinking ? agentOf(thinking.agentId) : null;
     html += `<div class="brewing">
         <span class="brew-mark">${ic('spark')}</span>
-        <span class="shimmer">${who ? `${who.emoji} ${esc(who.name)} is thinking` : 'Gathering the room'}</span>
+        <span class="shimmer">${thinking?.label ? esc(thinking.label) : who ? `${who.emoji} ${esc(who.name)} is thinking` : 'Gathering the room'}</span>
         <span class="brew-time" id="brew-time"></span>
       </div>`;
   }
@@ -1083,12 +1089,18 @@ function openRoomSheet() {
         <button class="row" data-act="rename">${ic('pencil')}<span class="row-label">${esc(current.title)}</span><span class="row-chev">${ic('chevR')}</span></button>
         <div class="row" style="cursor:default">${ic('rounds')}<span class="row-label">Round ${Math.max(current.round, 1)} of ${current.maxRounds}</span><span class="row-value">${STATUS_LABEL[current.status] || ''}</span></div>
         ${current.brief ? `<button class="row" data-act="brief">${ic('doc')}<span class="row-label">Idea Brief</span><span class="row-chev">${ic('chevR')}</span></button>` : ''}
-        <div class="sb-label" style="padding:14px 6px 8px">In this room</div>
-        ${AGENTS.map((a) => `<button class="ag-row tap" data-agent="${a.id}" style="--agent-color:${esc(a.color)}">
+        ${(() => {
+          const inRoom = new Set(['orchestrator', ...(current.roster || []), ...Object.keys(counts).filter((id) => AGENT_MAP[id])]);
+          const row = (a) => `<button class="ag-row tap" data-agent="${a.id}" style="--agent-color:${esc(a.color)}">
             <span class="a-avatar">${a.emoji}</span>
-            <span class="ag-main"><span class="ag-top"><span class="a-name">${esc(a.name)}</span></span><span class="ag-desc">${esc(a.description || '')}</span></span>
+            <span class="ag-main"><span class="ag-top"><span class="a-name">${esc(a.name)}</span>${a.research ? '<span class="ag-tag">web research</span>' : ''}</span><span class="ag-desc">${esc(a.description || '')}</span></span>
             <span class="ag-count">${counts[a.id] || 0}</span>
-          </button>`).join('')}
+          </button>`;
+          const here = AGENTS.filter((a) => inRoom.has(a.id));
+          const bench = AGENTS.filter((a) => !inRoom.has(a.id));
+          return `<div class="sb-label" style="padding:14px 6px 8px">In this room</div>${here.map(row).join('')}`
+            + (bench.length ? `<div class="sb-label" style="padding:14px 6px 8px">Not picked for this idea</div><p class="sheet-intro">The Orchestrator chooses who joins each idea. Ask for one of these in a reply and it can re-pick next round.</p>${bench.map(row).join('')}` : '');
+        })()}
         <button class="wide-btn soft" data-act="agents" style="margin-top:6px">Manage agents</button>`;
       s.body.onclick = (e) => {
         const ag = e.target.closest('[data-agent]');
@@ -1216,15 +1228,23 @@ function openAgentsSheet() {
         s.setTitle('Agents');
         s.setBack(null);
         s.body.innerHTML = `
-          <p class="sheet-intro">Everyone here speaks in every debate. New agents join new ideas right away, and ideas already running from their next round.</p>
-          ${AGENTS.map((a) => `<div class="ag-row" style="--agent-color:${esc(a.color)}">
+          <p class="sheet-intro">The Orchestrator reads each idea and picks 4–7 specialists for it. The two researchers search the web before every debate. Agents you add always take part.</p>
+          ${(() => {
+            const row = (a) => `<div class="ag-row" style="--agent-color:${esc(a.color)}">
               <span class="a-avatar">${a.emoji}</span>
               <span class="ag-main">
-                <span class="ag-top"><span class="a-name">${esc(a.name)}</span><span class="ag-tag">${a.builtin ? 'built-in' : 'added'} · ${esc(a.model)}</span></span>
+                <span class="ag-top"><span class="a-name">${esc(a.name)}</span><span class="ag-tag">${a.id === 'orchestrator' ? 'chair' : a.research ? 'web research' : a.builtin ? (a.core ? 'core' : 'specialist') : 'added · always joins'} · ${esc(a.model)}</span></span>
                 <span class="ag-desc">${esc(a.description || '')}</span>
               </span>
               ${a.builtin ? '' : `<button class="icon-btn" data-remove="${a.id}" aria-label="Remove ${esc(a.name)}">${ic('trash')}</button>`}
-            </div>`).join('')}
+            </div>`;
+            const chair = AGENTS.filter((a) => a.id === 'orchestrator');
+            const research = AGENTS.filter((a) => a.research);
+            const pool = AGENTS.filter((a) => a.builtin && !a.research && a.id !== 'orchestrator');
+            const custom = AGENTS.filter((a) => !a.builtin);
+            const grp = (t, arr) => arr.length ? `<div class="sb-label" style="padding:12px 6px 8px">${t}</div>${arr.map(row).join('')}` : '';
+            return grp('Chair', chair) + grp('Research, before every debate', research) + grp('Specialist pool', pool) + grp('Your agents', custom);
+          })()}
           <button class="wide-btn accent" data-act="add" style="margin-top:6px">Add an agent</button>`;
       };
       const form = (err = '') => {
@@ -1360,6 +1380,9 @@ function handleEvent(ev) {
       break;
     case 'round':
       if (mine) { current.round = ev.round; renderTop(); }
+      break;
+    case 'roster':
+      if (mine) { current.roster = ev.roster; renderThread(); }
       break;
     case 'renamed': {
       const i = ideas.find((x) => x.id === ev.ideaId);

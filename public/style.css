@@ -597,3 +597,17 @@ body.mode-project #subtitle-text { color: var(--proj); }
 
 .login-box .welcome-mark { display: flex; justify-content: center; }
 .sb-list .sb-label { padding: 16px 14px 6px; }
+
+/* ---------- Roster (who the Orchestrator picked) ---------- */
+.roster-card {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: -8px 0 26px;
+}
+.roster-label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-3); margin-right: 2px; }
+.roster-label svg { width: 16px; height: 16px; }
+.roster-chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 6px 11px; border-radius: 999px;
+  border: 1px solid var(--agent-color, var(--line-strong)); font-size: 13.5px; color: var(--text);
+  background: color-mix(in srgb, var(--agent-color, #888) 10%, transparent);
+}
+.roster-chip:active { background: color-mix(in srgb, var(--agent-color, #888) 24%, transparent); }
+.a-msg[data-kind="research"] .a-body a { color: var(--blue); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--blue) 40%, transparent); }
