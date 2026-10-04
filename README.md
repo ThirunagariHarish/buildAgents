@@ -66,7 +66,7 @@ Deploying needs two more repository secrets for Box's own deploy workflow: `BOX_
 - **From the brief**: pitch deck, one-pager, elevator pitches, landing-page copy, pre-mortem, and a domain/handle **name check**.
 - **Agents**: a marketplace of ready-made specialists, clone-and-edit any built-in, edit your own, temperament settings, and how often the chair cited each one.
 - **Build crew**: a Code Reviewer (correctness + security) runs before QA; QA checks accessibility; the task board lets you edit, reorder, delete, add, redo with a note, and pause before a task; live activity shows each file edit and command; crew time per task; browse the repository in the app; "what changed" on every revised document; comment on the prototype.
-- **Operate**: uptime checks every five minutes with a push when a site goes down or recovers, a weekly digest, a projects board, search across everything, tags and archive, a source library, export everything as a zip, a monthly agent-time cap, and offline reading of what you opened last.
+- **Operate**: uptime checks every five minutes with a push when a site goes down or recovers, a weekly digest, a projects board, search across everything, tags and archive, a source library, export everything as a zip, a monthly agent-time cap, and offline reading of what you opened last. After a deploy, open copies of the app reload themselves, so a phone never keeps an old version.
 
 ## Accounts and security
 
