@@ -1,4 +1,4 @@
-run: 53  commit: 983698a  ssh step: success  at: 2026-10-04T05:08:41Z
+run: 54  commit: 44c3b18  ssh step: success  at: 2026-10-04T05:23:42Z
 
 == secrets GitHub passed to this run ==
 BOX_PASSWORD: set (6 chars)
@@ -6,7 +6,7 @@ CLAUDE_CODE_OAUTH_TOKEN: set (108 chars)
 BOX_GITHUB_TOKEN: MISSING
 BOX_KUBECONFIG: MISSING
 
-HEAD: 983698a   domain: box.cashflowus.com
+HEAD: 44c3b18   domain: box.cashflowus.com
 == env file ==
 claude token: looks valid (length 108)
 keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN BOX_DOMAIN BOX_KUBECONFIG_FILE 
@@ -35,7 +35,7 @@ claude as build user: OK
 == notifications ==
 push: vapid key ready, devices subscribed: 1, needs you: 0
 == wildcard DNS (*.cashflowus.com) ==
-dns-check-1791090511.cashflowus.com -> 2.25.157.104
+dns-check-1791091414.cashflowus.com -> 2.25.157.104
 box login: on
 == latest layout reports from phones ==
 [
@@ -146,9 +146,9 @@ box login: on
  }
 ]
 == claude login ==
-haiku: OK (3s) -> OK
-sonnet: OK (3s) -> OK
-opus: OK (4s) -> OK
+haiku: OK (2s) -> OK
+sonnet: OK (2s) -> OK
+opus: OK (2s) -> OK
 == remove earlier Coolify routing attempts ==
 removed relay container box-web
 removed Coolify route file
