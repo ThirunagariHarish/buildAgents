@@ -2224,6 +2224,7 @@ function openSettingsSheet() {
           ${['system', 'dark', 'light'].map((t) => `<button class="row check" data-theme="${t}"><span class="row-label">${t[0].toUpperCase() + t.slice(1)}</span><span class="row-value">${settings.theme === t ? ic('check') : ''}</span></button>`).join('')}
           <div class="sb-label" style="padding:14px 6px 8px">Notifications</div>
           <button class="row" data-push="toggle" id="push-row"><span class="row-label">Phone notifications<span class="row-sub" id="push-sub">Checking…</span></span><span class="row-value" id="push-val"></span></button>
+          <button class="row" id="progress-row" data-progress="1"><span class="row-label">Progress on the lock screen<span class="row-sub">One quiet notification per project that updates in place as each agent or task finishes.</span></span><span class="row-value" id="progress-val">…</span></button>
           <div class="sb-label" style="padding:14px 6px 8px">Agent time</div>
           <div class="row" style="cursor:default" id="usage-row"><span class="row-label">This month<span class="row-sub" id="usage-sub">Loading…</span></span><span class="row-value" id="usage-val"></span></div>
           <label class="field" style="margin-top:8px"><span>Monthly cap (hours of agent time; 0 = no cap). Box warns at 80 percent.</span><input id="set-cap" type="number" min="0" max="999" step="1" value="${Number(settings.capHours || 0)}"></label>
@@ -2239,12 +2240,16 @@ function openSettingsSheet() {
         $('set-cap').addEventListener('change', (e) => { settings.capHours = Math.max(0, Number(e.target.value) || 0); saveSettings(); checkSpending(); });
         const drawKnowledge = (p) => {
           $('set-about').value = p.about || '';
+          $('progress-val').textContent = p.progressPush === false ? 'Off' : 'On';
+          $('progress-row').dataset.on = p.progressPush === false ? '0' : '1';
           $('knowledge-list').innerHTML = (p.knowledge || []).map((k) => `<div class="row" style="cursor:default">${ic('doc')}<span class="row-label">${esc(k.name)}<span class="row-sub">${fileLabel(k)}</span></span><button class="icon-btn" data-kdel="${k.id}" aria-label="Remove">${ic('trash')}</button></div>`).join('');
         };
         api('/api/prefs').then(drawKnowledge).catch(() => {});
         let aboutTimer;
         $('set-about').addEventListener('input', () => { clearTimeout(aboutTimer); aboutTimer = setTimeout(() => api('/api/prefs', { method: 'POST', body: JSON.stringify({ about: $('set-about').value }) }).catch(() => {}), 600); });
         s.body.addEventListener('click', async (e) => {
+          const pr = e.target.closest('[data-progress]');
+          if (pr) { try { drawKnowledge(await api('/api/prefs', { method: 'POST', body: JSON.stringify({ progressPush: pr.dataset.on !== '1' }) })); } catch (err) { toast(err.message); } return; }
           const del = e.target.closest('[data-kdel]');
           if (del) { try { drawKnowledge(await api(`/api/prefs/knowledge/${del.dataset.kdel}`, { method: 'DELETE' })); } catch (err) { toast(err.message); } return; }
           if (e.target.closest('[data-open="knowledge"]')) {

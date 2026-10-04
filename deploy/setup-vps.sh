@@ -38,6 +38,19 @@ fi
 command -v uv >/dev/null || (curl -LsSf https://astral.sh/uv/install.sh | sudo env UV_INSTALL_DIR=/usr/local/bin sh >/dev/null 2>&1 || true)
 echo "   build user: $(id boxbuild 2>/dev/null | cut -d' ' -f1); kubectl: $(command -v kubectl || echo missing); pnpm: $(command -v pnpm || echo 'via corepack'); uv: $(command -v uv || echo missing)"
 
+echo "==> Local Postgres for builds and tests"
+# Developers and QA get a real database: role boxbuild (peer auth, can create
+# databases), DATABASE_URL=postgresql://boxbuild@localhost:5432/<project>_dev
+if ! command -v psql >/dev/null; then
+  sudo apt-get install -y -qq postgresql >/dev/null 2>&1 || echo "   postgres install skipped"
+fi
+if command -v psql >/dev/null; then
+  sudo systemctl enable --now postgresql >/dev/null 2>&1 || true
+  sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='boxbuild'" 2>/dev/null | grep -q 1 || sudo -u postgres psql -c "CREATE ROLE boxbuild LOGIN CREATEDB" >/dev/null 2>&1
+  echo "   postgres: $(psql --version 2>/dev/null | head -1), role boxbuild: $(sudo -u postgres psql -tAc "SELECT rolcreatedb FROM pg_roles WHERE rolname='boxbuild'" 2>/dev/null)"
+fi
+command -v redis-server >/dev/null || sudo apt-get install -y -qq redis-server >/dev/null 2>&1 || true
+
 echo "==> Checking Claude login"
 if (set -a; [ -f /etc/box.env ] && . /etc/box.env; set +a; claude -p "Reply with exactly: OK" --model haiku >/dev/null 2>&1); then
   echo "   Claude login OK"
@@ -67,6 +80,9 @@ Environment=BOX_PORT=${BOX_PORT}
 EnvironmentFile=-/etc/box.env
 ExecStart=$(command -v node) ${BOX_DIR}/server.js
 Restart=on-failure
+# Box finishes the agents' current turns before stopping (up to 15 min).
+KillSignal=SIGTERM
+TimeoutStopSec=960
 RestartSec=3
 
 [Install]

@@ -45,7 +45,8 @@ self.addEventListener('push', (event) => {
   const options = {
     body: data.body || '',
     tag: data.tag || 'box',
-    renotify: true,
+    renotify: !data.silent,   // progress updates replace quietly; alerts re-buzz
+    silent: !!data.silent,
     icon: '/icon.svg',
     badge: '/icon.svg',
     data: { url: data.url || '/' },

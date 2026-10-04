@@ -344,7 +344,9 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/prefs' && req.method === 'GET') return json(res, 200, prefs.load());
     if (p === '/api/prefs' && req.method === 'POST') {
       const body = await readBody(req);
-      return json(res, 200, prefs.setAbout(body.about));
+      if (body.about !== undefined) prefs.setAbout(body.about);
+      if (body.progressPush !== undefined) prefs.setOption('progressPush', body.progressPush);
+      return json(res, 200, prefs.load());
     }
     if (p === '/api/prefs/knowledge' && req.method === 'POST') {
       const body = await readBody(req);
@@ -693,10 +695,41 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-// Recover ideas stuck in "running" from a previous process.
+// Restarts (deploys, crashes) must not strand a working crew. On SIGTERM we
+// ask every run to stop after its current turn, wait for that, and mark the
+// idea to resume; on startup, anything marked (or left "running" by a crash)
+// is resumed automatically.
 for (const i of listIdeas()) {
-  if (i.status === 'running') { i.status = 'paused'; saveIdea(i); }
+  if (i.status === 'running') { i.status = 'paused'; i.autoResume = true; saveIdea(i); }
 }
+setTimeout(() => {
+  for (const i of listIdeas()) {
+    if (!i.autoResume) continue;
+    i.autoResume = false;
+    saveIdea(i);
+    try {
+      if (i.phase === 'project') resumeProject(bus, i);
+      else if (i.messages.some((m) => m.kind === 'kickoff') && !i.brief) runIdea(bus, i);
+      else if (i.brief && i.messages[i.messages.length - 1]?.kind === 'user') runIdea(bus, i);
+      console.log(`  resumed ${i.title}`);
+    } catch (e) { console.error(`resume ${i.id}: ${e.message}`); }
+  }
+}, 8000);
+
+let shuttingDown = false;
+async function gracefulStop(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  const active = listIdeas().filter((i) => running(i.id));
+  for (const i of active) { i.autoResume = true; saveIdea(i); pauseIdea(i); pauseProject(i); }
+  console.log(`\n  ${signal}: ${active.length} run(s) finishing their current turn before restart…`);
+  const deadline = Date.now() + 14 * 60 * 1000;
+  while (Date.now() < deadline && listIdeas().some((i) => running(i.id))) await new Promise((r) => setTimeout(r, 2000));
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 3000);
+}
+process.on('SIGTERM', () => gracefulStop('SIGTERM'));
+process.on('SIGINT', () => gracefulStop('SIGINT'));
 
 monitor.start(bus);
 

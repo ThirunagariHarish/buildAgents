@@ -59,6 +59,7 @@ echo "== build crew =="
 echo "crew: $(curl -s --max-time 8 -H "Cookie: $COOKIE" http://localhost:3400/api/crew | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const l=JSON.parse(d);console.log(l.map(a=>a.name).join(', '))}catch(e){console.log('unreadable')}})")"
 echo "build user: $(id boxbuild 2>/dev/null || echo missing)"
 echo "work dir: $(stat -c "%U %a" data/work 2>/dev/null); ideas dir: $(stat -c "%U %a" data/ideas 2>/dev/null) (700 = private to Box)"
+echo "postgres: $(sudo -u boxbuild psql -h localhost -U boxbuild -d postgres -tAc "select version()" 2>&1 | head -c 60 || echo missing)"
 echo "tools: node $(node -v 2>/dev/null), pnpm $(sudo -u boxbuild -H bash -lc 'pnpm -v' 2>/dev/null || echo missing), kubectl $(kubectl version --client 2>/dev/null | head -1 || echo missing), uv $(uv --version 2>/dev/null || echo missing), docker $(docker --version 2>/dev/null | cut -d, -f1 || echo missing)"
 if [ -f /etc/box-kubeconfig ]; then
   echo "cluster: $(timeout 20 kubectl --kubeconfig /etc/box-kubeconfig get nodes --no-headers 2>&1 | awk '{print $1":"$2}' | tr '\n' ' ')"
