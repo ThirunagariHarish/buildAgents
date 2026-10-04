@@ -38,6 +38,18 @@ fi
 command -v uv >/dev/null || (curl -LsSf https://astral.sh/uv/install.sh | sudo env UV_INSTALL_DIR=/usr/local/bin sh >/dev/null 2>&1 || true)
 # bubblewrap: build-crew agents see a read-only system, their own repository and nothing else of Box.
 command -v bwrap >/dev/null || sudo apt-get install -y -qq bubblewrap >/dev/null 2>&1 || echo "   bubblewrap install skipped"
+# Ubuntu 24.04 blocks unprivileged user namespaces unless the binary has an
+# AppArmor profile that allows them; this is the documented way to grant it.
+if command -v bwrap >/dev/null && [ "$(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>/dev/null)" = "1" ] && [ ! -f /etc/apparmor.d/bwrap ]; then
+  sudo tee /etc/apparmor.d/bwrap >/dev/null <<'EOP'
+abi <abi/4.0>,
+include <tunables/global>
+profile bwrap /usr/bin/bwrap flags=(unconfined) {
+  userns,
+}
+EOP
+  sudo apparmor_parser -r /etc/apparmor.d/bwrap 2>/dev/null && echo "   bubblewrap: AppArmor profile loaded" || echo "   bubblewrap: could not load AppArmor profile"
+fi
 echo "   build user: $(id boxbuild 2>/dev/null | cut -d' ' -f1); kubectl: $(command -v kubectl || echo missing); pnpm: $(command -v pnpm || echo 'via corepack'); uv: $(command -v uv || echo missing)"
 
 echo "==> Local Postgres for builds and tests"
