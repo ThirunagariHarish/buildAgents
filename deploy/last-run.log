@@ -1,4 +1,4 @@
-run: 66  commit: 292314f  ssh step: success  at: 2026-10-04T07:33:45Z
+run: 67  commit: 883bc1a  ssh step: success  at: 2026-10-04T07:38:10Z
 
 == secrets GitHub passed to this run ==
 BOX_PASSWORD: set (6 chars)
@@ -6,7 +6,7 @@ CLAUDE_CODE_OAUTH_TOKEN: set (108 chars)
 BOX_GITHUB_TOKEN: MISSING
 BOX_KUBECONFIG: MISSING
 
-HEAD: 292314f   domain: box.cashflowus.com
+HEAD: 883bc1a   domain: box.cashflowus.com
 == env file ==
 claude token: looks valid (length 108)
 keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN BOX_DOMAIN BOX_KUBECONFIG_FILE 
@@ -40,10 +40,39 @@ claude as build user: OK
 == notifications ==
 push: vapid key ready, devices subscribed: 1, needs you: 0
 == wildcard DNS (*.cashflowus.com) ==
-dns-check-1791099217.cashflowus.com -> 2.25.157.104
+dns-check-1791099481.cashflowus.com -> 2.25.157.104
 box login: on
 == latest layout reports from phones ==
 [
+ {
+  "at": "2026-10-04T07:37:45.162Z",
+  "authed": true,
+  "version": "2a1a50eaaf17",
+  "href": "https://box.cashflowus.com/",
+  "screenShown": "app",
+  "sw": true,
+  "caches": [
+   "box-v2"
+  ],
+  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
+  "standalone": true,
+  "innerHeight": 894,
+  "outerHeight": 956,
+  "clientHeight": 894,
+  "screen": [
+   440,
+   956
+  ],
+  "vv": [
+   894,
+   0
+  ],
+  "safeTop": "62px",
+  "safeBottom": "34px",
+  "mainBottom": 894,
+  "composerBottom": 884,
+  "appH": "894px"
+ },
  {
   "at": "2026-10-04T07:26:47.142Z",
   "authed": true,
@@ -135,32 +164,11 @@ box login: on
   "mainBottom": 894,
   "composerBottom": 884,
   "appH": "894px"
- },
- {
-  "at": "2026-10-04T03:56:32.234Z",
-  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
-  "standalone": true,
-  "innerHeight": 894,
-  "outerHeight": 956,
-  "clientHeight": 894,
-  "screen": [
-   440,
-   956
-  ],
-  "vv": [
-   894,
-   0
-  ],
-  "safeTop": "62px",
-  "safeBottom": "34px",
-  "mainBottom": 956,
-  "composerBottom": 934,
-  "appH": "956px"
  }
 ]
 == claude login ==
 haiku: OK (2s) -> OK
-sonnet: OK (2s) -> OK
+sonnet: OK (3s) -> OK
 opus: OK (2s) -> OK
 == remove earlier Coolify routing attempts ==
 removed relay container box-web
