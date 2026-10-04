@@ -1,4 +1,4 @@
-run: 63  commit: 6e03d45  ssh step: success  at: 2026-10-04T07:19:26Z
+run: 64  commit: e7ef333  ssh step: success  at: 2026-10-04T07:26:53Z
 
 == secrets GitHub passed to this run ==
 BOX_PASSWORD: set (6 chars)
@@ -6,7 +6,7 @@ CLAUDE_CODE_OAUTH_TOKEN: set (108 chars)
 BOX_GITHUB_TOKEN: MISSING
 BOX_KUBECONFIG: MISSING
 
-HEAD: 6e03d45   domain: box.cashflowus.com
+HEAD: e7ef333   domain: box.cashflowus.com
 == env file ==
 claude token: looks valid (length 108)
 keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN BOX_DOMAIN BOX_KUBECONFIG_FILE 
@@ -38,12 +38,54 @@ sandbox: bubblewrap on (read-only system, own repo only)
 claude inside the sandbox: OK
 claude as build user: OK
 == notifications ==
-push: vapid key ready, devices subscribed: 0, needs you: 1
+push: vapid key ready, devices subscribed: 1, needs you: 0
 == wildcard DNS (*.cashflowus.com) ==
-dns-check-1791098358.cashflowus.com -> 2.25.157.104
+dns-check-1791098805.cashflowus.com -> 2.25.157.104
 box login: on
 == latest layout reports from phones ==
 [
+ {
+  "at": "2026-10-04T07:23:17.997Z",
+  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
+  "standalone": true,
+  "innerHeight": 894,
+  "outerHeight": 956,
+  "clientHeight": 894,
+  "screen": [
+   440,
+   956
+  ],
+  "vv": [
+   894,
+   0
+  ],
+  "safeTop": "62px",
+  "safeBottom": "34px",
+  "mainBottom": 894,
+  "composerBottom": 884,
+  "appH": "894px"
+ },
+ {
+  "at": "2026-10-04T07:22:56.438Z",
+  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
+  "standalone": false,
+  "innerHeight": 796,
+  "outerHeight": 956,
+  "clientHeight": 796,
+  "screen": [
+   440,
+   956
+  ],
+  "vv": [
+   796,
+   0
+  ],
+  "safeTop": "0px",
+  "safeBottom": "0px",
+  "mainBottom": 796,
+  "composerBottom": 786,
+  "appH": null
+ },
  {
   "at": "2026-10-04T04:02:11.577Z",
   "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
@@ -106,52 +148,10 @@ box login: on
   "mainBottom": 484,
   "composerBottom": 474,
   "appH": null
- },
- {
-  "at": "2026-10-04T02:51:50.141Z",
-  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
-  "standalone": true,
-  "innerHeight": 894,
-  "outerHeight": 956,
-  "clientHeight": 894,
-  "screen": [
-   440,
-   956
-  ],
-  "vv": [
-   894,
-   0
-  ],
-  "safeTop": "62px",
-  "safeBottom": "62px",
-  "mainBottom": 956,
-  "composerBottom": 912,
-  "appH": "956px"
- },
- {
-  "at": "2026-10-03T23:43:43.386Z",
-  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
-  "standalone": true,
-  "innerHeight": 894,
-  "outerHeight": 956,
-  "clientHeight": 894,
-  "screen": [
-   440,
-   956
-  ],
-  "vv": [
-   894,
-   0
-  ],
-  "safeTop": "62px",
-  "safeBottom": "62px",
-  "mainBottom": 956,
-  "composerBottom": 912,
-  "appH": "956px"
  }
 ]
 == claude login ==
-haiku: OK (2s) -> OK
+haiku: OK (3s) -> OK
 sonnet: OK (2s) -> OK
 opus: OK (2s) -> OK
 == remove earlier Coolify routing attempts ==
