@@ -1,4 +1,4 @@
-run: 68  commit: 5cd5468  ssh step: success  at: 2026-10-04T10:40:06Z
+run: 69  commit: 4ce0ef9  ssh step: success  at: 2026-10-04T10:46:13Z
 
 == secrets GitHub passed to this run ==
 BOX_PASSWORD: set (6 chars)
@@ -6,12 +6,13 @@ CLAUDE_CODE_OAUTH_TOKEN: set (108 chars)
 BOX_GITHUB_TOKEN: set (93 chars)
 BOX_KUBECONFIG: set (2955 chars)
 
-HEAD: 5cd5468   domain: box.cashflowus.com
+HEAD: 4ce0ef9   domain: box.cashflowus.com
 == env file ==
 claude token: looks valid (length 108)
 keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN BOX_GITHUB_TOKEN BOX_DOMAIN BOX_KUBECONFIG_FILE 
 kubeconfig: written (2956 bytes)
 github token: set (length 93)
+github token check: fine-grained token for ThirunagariHarish — must have Administration, Contents and Workflows write on ALL repositories, or deploys fail with 403; a classic token with repo, workflow, read:packages is simpler
 == box service ==
 ==> Installing Node.js 22 (if missing)
 ==> Installing Claude Code CLI (if missing)
@@ -39,9 +40,9 @@ claude inside the sandbox: OK
 postgres inside the sandbox: OK
 claude as build user: OK
 == notifications ==
-push: vapid key ready, devices subscribed: 2, needs you: 2
+push: vapid key ready, devices subscribed: 2, needs you: 0
 == wildcard DNS (*.cashflowus.com) ==
-dns-check-1791110396.cashflowus.com -> 2.25.157.104
+dns-check-1791110764.cashflowus.com -> 2.25.157.104
 box login: on
 == latest layout reports from phones ==
 [
@@ -190,7 +191,7 @@ box login: on
 == claude login ==
 haiku: OK (2s) -> OK
 sonnet: OK (2s) -> OK
-opus: OK (4s) -> OK
+opus: OK (2s) -> OK
 == remove earlier Coolify routing attempts ==
 removed relay container box-web
 removed Coolify route file
