@@ -1,18 +1,18 @@
-run: 69  commit: 4ce0ef9  ssh step: success  at: 2026-10-04T10:46:13Z
+run: 70  commit: 6b21a66  ssh step: success  at: 2026-10-04T19:27:09Z
 
 == secrets GitHub passed to this run ==
 BOX_PASSWORD: set (6 chars)
 CLAUDE_CODE_OAUTH_TOKEN: set (108 chars)
-BOX_GITHUB_TOKEN: set (93 chars)
+BOX_GITHUB_TOKEN: set (40 chars)
 BOX_KUBECONFIG: set (2955 chars)
 
-HEAD: 4ce0ef9   domain: box.cashflowus.com
+HEAD: 6b21a66   domain: box.cashflowus.com
 == env file ==
 claude token: looks valid (length 108)
 keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN BOX_GITHUB_TOKEN BOX_DOMAIN BOX_KUBECONFIG_FILE 
 kubeconfig: written (2956 bytes)
-github token: set (length 93)
-github token check: fine-grained token for ThirunagariHarish — must have Administration, Contents and Workflows write on ALL repositories, or deploys fail with 403; a classic token with repo, workflow, read:packages is simpler
+github token: set (length 40)
+github token check: classic token for ThirunagariHarish, scopes: admin:enterprise, admin:gpg_key, admin:org, admin:org_hook, admin:public_key, admin:repo_hook, admin:ssh_signing_key, audit_log, codespace, copilot, delete:packages, delete_repo, gist, notifications, project, repo, user, workflow, write:discussion, write:network_configurations, write:packages — MISSING: read:packages (deploys will fail until added)
 == box service ==
 ==> Installing Node.js 22 (if missing)
 ==> Installing Claude Code CLI (if missing)
@@ -21,6 +21,7 @@ github token check: fine-grained token for ThirunagariHarish — must have Admin
 ==> Checking Claude login
    Claude login OK
 ==> Installing systemd service (port 3400)
+    ⚠ If you expose Box publicly, protect it (Caddy basic_auth, VPN, or
 service: active
 local /: HTTP 200
 api without sign-in: HTTP 401 (401 = sign-in enforced)
@@ -42,7 +43,7 @@ claude as build user: OK
 == notifications ==
 push: vapid key ready, devices subscribed: 2, needs you: 0
 == wildcard DNS (*.cashflowus.com) ==
-dns-check-1791110764.cashflowus.com -> 2.25.157.104
+dns-check-1791142021.cashflowus.com -> 2.25.157.104
 box login: on
 == latest layout reports from phones ==
 [
@@ -189,7 +190,7 @@ box login: on
  }
 ]
 == claude login ==
-haiku: OK (2s) -> OK
+haiku: OK (3s) -> OK
 sonnet: OK (2s) -> OK
 opus: OK (2s) -> OK
 == remove earlier Coolify routing attempts ==
