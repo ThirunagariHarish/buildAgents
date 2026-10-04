@@ -366,10 +366,17 @@ const server = http.createServer(async (req, res) => {
     if (p.startsWith('/api/admin/')) {
       if (!isAdmin(user)) return json(res, 403, { error: 'Administrators only.' });
       if (p === '/api/admin/users' && req.method === 'GET') return json(res, 200, { users: auth.listUsers(), mailConfigured: mail.configured() });
-      const um2 = p.match(/^\/api\/admin\/users\/([a-f0-9]+)\/(approve|decline|disable|enable|resend)$/);
+      const um2 = p.match(/^\/api\/admin\/users\/([a-f0-9]+)\/(approve|decline|disable|enable|resend|make-admin|remove-admin)$/);
       if (um2 && req.method === 'POST') {
         try {
           const [, id, act] = um2;
+          if (act === 'make-admin' || act === 'remove-admin') {
+            if (!user.primary) return json(res, 403, { error: 'Only the primary administrator can change roles.' });
+            auth.setRole(id, act === 'make-admin' ? 'admin' : 'user');
+            bus.broadcast({ event: 'users_changed' });
+            return json(res, 200, { ok: true });
+          }
+          if (id === user.id) return json(res, 400, { error: 'You cannot change your own account here.' });
           if (act === 'approve' || act === 'resend') {
             const { user: u, token } = auth.approve(id); // (re)issues a one-time set-password link
             const r = await sendSetPasswordMail(u, token, { reason: 'approved' });

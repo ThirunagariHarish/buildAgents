@@ -2761,13 +2761,13 @@ function openPeopleSheet() {
         const pending = r.users.filter((u) => u.status === 'pending');
         const members = r.users.filter((u) => u.status !== 'pending');
         const row = (u) => `<div class="ag-row"><span class="a-avatar">${esc((u.firstName || '?')[0].toUpperCase())}</span><span class="ag-main">
-            <span class="ag-top"><span class="a-name">${esc(u.name)}</span><span class="ag-tag">${u.role === 'admin' ? 'administrator' : u.status}</span></span>
+            <span class="ag-top"><span class="a-name">${esc(u.name)}</span><span class="ag-tag">${u.primary ? 'primary administrator' : u.role === 'admin' ? `administrator · ${u.status}` : u.status}</span></span>
             <span class="ag-desc">${esc(u.email)}${u.phone ? ` · ${esc(u.phone)}` : ''} · ${u.status === 'pending' ? `asked ${new Date(u.createdAt).toLocaleDateString()}` : u.lastLoginAt ? `last sign-in ${new Date(u.lastLoginAt).toLocaleDateString()}` : 'never signed in'}</span>
             <span class="ag-actions">${u.status === 'pending'
               ? `<button class="chip-btn on" data-u="${u.id}" data-act="approve">Approve</button><button class="chip-btn" data-u="${u.id}" data-act="decline">Decline</button>`
-              : u.role === 'admin' ? '' : `<button class="chip-btn" data-u="${u.id}" data-act="resend">Send set-password link</button>${u.status === 'disabled' ? `<button class="chip-btn" data-u="${u.id}" data-act="enable">Enable</button>` : `<button class="chip-btn" data-u="${u.id}" data-act="disable">Disable</button>`}<button class="chip-btn" data-u="${u.id}" data-act="decline">Remove</button>`}</span>
+              : u.primary || u.id === ME.id ? '' : `${ME.primary ? (u.role === 'admin' ? `<button class="chip-btn" data-u="${u.id}" data-act="remove-admin">Remove admin</button>` : `<button class="chip-btn on" data-u="${u.id}" data-act="make-admin">Make admin</button>`) : ''}<button class="chip-btn" data-u="${u.id}" data-act="resend">Send set-password link</button>${u.status === 'disabled' ? `<button class="chip-btn" data-u="${u.id}" data-act="enable">Enable</button>` : `<button class="chip-btn" data-u="${u.id}" data-act="disable">Disable</button>`}<button class="chip-btn" data-u="${u.id}" data-act="decline">Remove</button>`}</span>
           </span></div>`;
-        s.body.innerHTML = `${r.mailConfigured ? '' : '<div class="system-note"><strong>Email is not set up</strong>Approvals still work: the set-password link is shown here for you to send by hand. Add the SMTP secrets to send it automatically.</div>'}
+        s.body.innerHTML = `<p class="sheet-intro">Members see only their own ideas and projects. Administrators see everyone's and can approve people.${ME.primary ? ' Only you can make or remove administrators.' : ''}</p>${r.mailConfigured ? '' : '<div class="system-note"><strong>Email is not set up</strong>Approvals still work: the set-password link is shown here for you to send by hand. Add the SMTP secrets to send it automatically.</div>'}
           <div class="sb-label" style="padding:6px 6px 8px">Access requests${pending.length ? ` <span class="sb-count">${pending.length}</span>` : ''}</div>
           ${pending.map(row).join('') || '<p class="sheet-intro">No requests waiting.</p>'}
           <div class="sb-label" style="padding:14px 6px 8px">Members</div>${members.map(row).join('')}`;

@@ -36,6 +36,8 @@ if ! command -v kubectl >/dev/null; then
     && sudo install -m 0755 /tmp/kubectl /usr/local/bin/kubectl && rm -f /tmp/kubectl || echo "   kubectl install skipped"
 fi
 command -v uv >/dev/null || (curl -LsSf https://astral.sh/uv/install.sh | sudo env UV_INSTALL_DIR=/usr/local/bin sh >/dev/null 2>&1 || true)
+# bubblewrap: build-crew agents see a read-only system, their own repository and nothing else of Box.
+command -v bwrap >/dev/null || sudo apt-get install -y -qq bubblewrap >/dev/null 2>&1 || echo "   bubblewrap install skipped"
 echo "   build user: $(id boxbuild 2>/dev/null | cut -d' ' -f1); kubectl: $(command -v kubectl || echo missing); pnpm: $(command -v pnpm || echo 'via corepack'); uv: $(command -v uv || echo missing)"
 
 echo "==> Local Postgres for builds and tests"
@@ -47,6 +49,8 @@ fi
 if command -v psql >/dev/null; then
   sudo systemctl enable --now postgresql >/dev/null 2>&1 || true
   sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='boxbuild'" 2>/dev/null | grep -q 1 || sudo -u postgres psql -c "CREATE ROLE boxbuild LOGIN CREATEDB" >/dev/null 2>&1
+  # Projects get their own role + database (created by Box as postgres); the shared role is only a fallback.
+  sudo -u postgres psql -c "REVOKE CONNECT ON DATABASE postgres FROM PUBLIC" >/dev/null 2>&1 || true
   # Local-only sandbox database; apps connect over TCP, so the role needs a password.
   sudo -u postgres psql -c "ALTER ROLE boxbuild PASSWORD 'boxbuild'" >/dev/null 2>&1
   echo "   postgres: $(psql --version 2>/dev/null | head -1), role boxbuild: $(sudo -u postgres psql -tAc "SELECT rolcreatedb FROM pg_roles WHERE rolname='boxbuild'" 2>/dev/null)"

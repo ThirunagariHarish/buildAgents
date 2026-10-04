@@ -29,6 +29,10 @@ BOX_GITHUB_TOKEN=$(printf '%s' "${BOX_GITHUB_TOKEN:-}" | tr -d '[:space:]')
     v=$(printf '%s' "${!k:-}" | tr -d '\r\n'); [ -n "$v" ] && printf '%s=%s\n' "$k" "$v"
   done
   printf 'BOX_DOMAIN=%s\n' "$DOMAIN"
+  # Enable the bubblewrap sandbox only if it works for the build user here.
+  if command -v bwrap >/dev/null && sudo -u boxbuild -H bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --tmpfs /opt/box/data --unshare-pid --die-with-parent -- /bin/sh -c '[ -z "$(ls -A /opt/box/data)" ] && ! touch /usr/box-sandbox-test 2>/dev/null' >/dev/null 2>&1; then
+    printf 'BOX_BWRAP=1\n'
+  fi
   printf 'BOX_KUBECONFIG_FILE=/etc/box-kubeconfig\n'
 } > /etc/box.env
 chmod 600 /etc/box.env
@@ -72,6 +76,7 @@ echo "tools: node $(node -v 2>/dev/null), pnpm $(sudo -u boxbuild -H bash -lc 'p
 if [ -f /etc/box-kubeconfig ]; then
   echo "cluster: $(timeout 20 kubectl --kubeconfig /etc/box-kubeconfig get nodes --no-headers 2>&1 | awk '{print $1":"$2}' | tr '\n' ' ')"
 fi
+echo "sandbox: $(grep -q '^BOX_BWRAP=1' /etc/box.env && echo 'bubblewrap on (read-only system, own repo only)' || echo 'bubblewrap OFF — agents are isolated by user permissions only')"
 echo "claude as build user: $(set -a; . /etc/box.env 2>/dev/null; set +a; timeout 120 sudo -u boxbuild -H --preserve-env=CLAUDE_CODE_OAUTH_TOKEN claude -p 'Reply with exactly: OK' --model haiku 2>&1 | tail -1)"
 
 echo "== notifications =="
