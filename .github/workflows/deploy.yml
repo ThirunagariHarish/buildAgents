@@ -16,6 +16,21 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Which secrets GitHub is passing (lengths only)
+        id: secrets
+        env:
+          BOX_PASSWORD: ${{ secrets.BOX_PASSWORD }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          BOX_GITHUB_TOKEN: ${{ secrets.BOX_GITHUB_TOKEN }}
+          BOX_KUBECONFIG: ${{ secrets.BOX_KUBECONFIG }}
+        run: |
+          {
+            for k in BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN BOX_GITHUB_TOKEN BOX_KUBECONFIG; do
+              v="${!k}"; printf '%s: %s\n' "$k" "$([ -n "$v" ] && echo "set (${#v} chars)" || echo MISSING)"
+            done
+          } | tee secrets.txt
+          echo "report<<EOF" >> "$GITHUB_OUTPUT"; cat secrets.txt >> "$GITHUB_OUTPUT"; echo "EOF" >> "$GITHUB_OUTPUT"
+
       - name: Deploy to VPS via SSH
         id: ssh
         uses: appleboy/ssh-action@v1
@@ -58,9 +73,13 @@ jobs:
         env:
           OUT: ${{ steps.ssh.outputs.stdout }}
           OUTCOME: ${{ steps.ssh.outcome }}
+          SECRETS: ${{ steps.secrets.outputs.report }}
         run: |
           {
             echo "run: ${{ github.run_number }}  commit: ${GITHUB_SHA::7}  ssh step: $OUTCOME  at: $(date -u +%FT%TZ)"
+            echo
+            echo "== secrets GitHub passed to this run =="
+            printf '%s\n' "$SECRETS"
             echo
             printf '%s\n' "$OUT"
           } > deploy/last-run.log
