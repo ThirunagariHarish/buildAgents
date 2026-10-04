@@ -68,6 +68,22 @@ Deploying needs two more repository secrets for Box's own deploy workflow: `BOX_
 - **Build crew**: a Code Reviewer (correctness + security) runs before QA; QA checks accessibility; the task board lets you edit, reorder, delete, add, redo with a note, and pause before a task; live activity shows each file edit and command; crew time per task; browse the repository in the app; "what changed" on every revised document; comment on the prototype.
 - **Operate**: uptime checks every five minutes with a push when a site goes down or recovers, a weekly digest, a projects board, search across everything, tags and archive, a source library, export everything as a zip, a monthly agent-time cap, and offline reading of what you opened last.
 
+## Accounts and security
+
+Box has one administrator and any number of members. Members **request access** (first name, last name, contact number, email); the administrator approves them under Settings → People, which emails a one-time **set-password link** (24 h). "Forgot password" works the same way. Members get every feature on their own ideas and projects; only the administrator sees everyone's work and manages people. The administrator's email is set by `BOX_ADMIN_EMAIL`; its initial password by `BOX_ADMIN_PASSWORD` (change it from Settings after the first sign-in).
+
+Email goes out over SMTPS with no dependencies: set `BOX_SMTP_HOST`, `BOX_SMTP_PORT` (465), `BOX_SMTP_USER`, `BOX_SMTP_PASS` and optionally `BOX_MAIL_FROM` (Gmail works with an App Password). Without them, approval links are shown to the administrator in the app to send by hand.
+
+What keeps it safe:
+
+- Passwords are scrypt-hashed with a per-user salt; sessions are random 32-byte tokens stored only as hashes, in `HttpOnly; SameSite=Strict; Secure` cookies, 30-day sliding expiry.
+- Sign-in, sign-up and reset are rate-limited per IP and per account, with a temporary lockout after repeated failures, and the same reply whether or not an email exists.
+- Every response carries a strict Content-Security-Policy (scripts only from Box, no inline scripts, no framing), `nosniff`, no-referrer and HSTS. State-changing requests from another origin are refused.
+- Agent-written HTML (prototypes) is served in a sandboxed, opaque origin, so it can never read Box's cookies or call its API.
+- Ideas, documents, notifications and the live event stream are scoped to their owner; members never see each other's work.
+- Build-crew agents run as the unprivileged `boxbuild` user with a shell limited to build commands and no access to Box's data, the password file or the server; the key file and `/etc/box.env` are root-only, mode 600.
+- Secrets live only in GitHub Actions secrets and `/etc/box.env`; nothing is in the repository. Box never exposes a terminal, shell or card data to the browser.
+
 ## Configuration
 
 | What | How |

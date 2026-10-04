@@ -15,6 +15,9 @@ const { saveUpload, getUpload, resolveIds, removeUploads, saveGenerated } = requ
 const prefs = require('./lib/prefs');
 const deployOps = require('./lib/deploy');
 const { askClaude } = require('./lib/claude');
+const auth = require('./lib/auth');
+const mail = require('./lib/mail');
+const { tellAdmins } = require('./lib/notify');
 const { generateTitle } = require('./lib/title');
 const push = require('./lib/push');
 const { needsYouCount } = require('./lib/notify');
@@ -27,13 +30,17 @@ const PORT = Number(process.env.BOX_PORT || 3400);
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // ---- SSE bus: one stream per open page, carrying events for every idea ----
-const clients = new Set();
-function send(payload) {
+const clients = new Map(); // res -> user
+function send(payload, filter) {
   const data = `data: ${JSON.stringify(payload)}\n\n`;
-  for (const res of clients) res.write(data);
+  for (const [res, u] of clients) if (!filter || filter(u)) res.write(data);
 }
 const bus = {
-  publish(ideaId, payload) { send({ ...payload, ideaId }); },
+  // Events about an idea go only to people who may see it.
+  publish(ideaId, payload) {
+    const idea = loadIdea(ideaId);
+    send({ ...payload, ideaId }, (u) => u.role === 'admin' || (idea && idea.ownerId === u.id));
+  },
   broadcast(payload) { send(payload); },
 };
 
@@ -92,12 +99,12 @@ function ideaSummary(i) {
 }
 
 /** Agent time used, this calendar month and in total, from message durations. */
-function usageStats() {
+function usageStats(ideas) {
   const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
   const t0 = monthStart.getTime();
   let monthMs = 0, totalMs = 0, monthTurns = 0;
   const byIdea = [];
-  for (const i of listIdeas()) {
+  for (const i of ideas) {
     let m = 0, all = 0;
     for (const msg of i.messages) {
       const d = msg.durationMs || 0;
@@ -113,10 +120,10 @@ function usageStats() {
 }
 
 /** Links the researchers cited, across every idea. */
-function sourceLibrary() {
+function sourceLibrary(ideas) {
   const out = [];
   const seen = new Set();
-  for (const i of listIdeas()) {
+  for (const i of ideas) {
     for (const m of i.messages) {
       if (m.kind !== 'research' && m.kind !== 'doc') continue;
       const re = /\[([^\]]{1,120})\]\((https?:\/\/[^\s)]+)\)/g;
@@ -134,7 +141,7 @@ function sourceLibrary() {
   return out.sort((a, b) => b.ts - a.ts);
 }
 
-function searchAll(q) {
+function searchAll(ideas, q) {
   const needle = q.toLowerCase();
   const hits = [];
   const snip = (text) => {
@@ -142,7 +149,7 @@ function searchAll(q) {
     if (i < 0) return null;
     return text.slice(Math.max(0, i - 60), i + needle.length + 80).replace(/\s+/g, ' ');
   };
-  for (const i of listIdeas()) {
+  for (const i of ideas) {
     if (i.title.toLowerCase().includes(needle) || (i.text || '').toLowerCase().includes(needle)) hits.push({ ideaId: i.id, ideaTitle: i.title, where: 'idea', snippet: snip(i.title) || snip(i.text) });
     if (i.brief && i.brief.toLowerCase().includes(needle)) hits.push({ ideaId: i.id, ideaTitle: i.title, where: 'brief', snippet: snip(i.brief) });
     for (const d of Object.values(i.project?.docs || {})) if ((d.content || '').toLowerCase().includes(needle)) hits.push({ ideaId: i.id, ideaTitle: i.title, where: d.title, docKey: d.key, snippet: snip(d.content) });
@@ -155,9 +162,9 @@ function searchAll(q) {
   return hits.slice(0, 60);
 }
 
-function exportAll() {
+function exportAll(ideas) {
   const entries = [];
-  for (const i of listIdeas()) {
+  for (const i of ideas) {
     const dir = `${i.project?.slug || i.id}`;
     entries.push({ name: `${dir}/idea.json`, data: JSON.stringify(i, null, 2), mtime: i.createdAt });
     if (i.brief) entries.push({ name: `${dir}/brief.md`, data: i.brief });
@@ -222,12 +229,12 @@ function nameIdea(idea) {
     .catch(() => {}); // keep the provisional title
 }
 
-// Sign-in: when BOX_PASSWORD is set, the API requires a session cookie,
-// obtained once per device from POST /api/login. The page itself is public
-// so it can show the sign-in screen.
-const BOX_PASSWORD = process.env.BOX_PASSWORD || '';
-const SESSION = BOX_PASSWORD ? crypto.createHmac('sha256', BOX_PASSWORD).update('box-session-v1').digest('hex') : '';
-const loginAttempts = new Map(); // ip -> [timestamps]
+// ---- accounts & sessions ----------------------------------------------------
+// Every API call needs a signed-in, approved user (cookie box_session: a
+// random token, HttpOnly, SameSite=Strict, Secure behind TLS). Only the page
+// itself and the sign-in / sign-up / reset endpoints are public.
+const PUBLIC_API = new Set(['/api/session', '/api/login', '/api/logout', '/api/signup', '/api/forgot', '/api/reset']);
+const BASE_URL = process.env.BOX_PUBLIC_URL || `https://${process.env.BOX_DOMAIN || 'box.cashflowus.com'}`;
 
 function cookies(req) {
   return Object.fromEntries(String(req.headers.cookie || '').split(';').map((c) => {
@@ -235,58 +242,152 @@ function cookies(req) {
     return i < 0 ? [c.trim(), ''] : [c.slice(0, i).trim(), decodeURIComponent(c.slice(i + 1).trim())];
   }));
 }
-function sameSecret(a, b) {
-  const ha = crypto.createHash('sha256').update(String(a)).digest();
-  const hb = crypto.createHash('sha256').update(String(b)).digest();
-  return crypto.timingSafeEqual(ha, hb);
-}
-function isAuthed(req) {
-  if (!BOX_PASSWORD) return true;
-  const c = cookies(req).box_session;
-  return !!c && sameSecret(c, SESSION);
-}
+function isHttps(req) { return req.headers['x-forwarded-proto'] === 'https'; }
 function sessionCookie(req, value, maxAge) {
-  const secure = req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : '';
-  return `box_session=${value}; Path=/; Max-Age=${maxAge}; HttpOnly; SameSite=Lax${secure}`;
+  return `box_session=${value}; Path=/; Max-Age=${maxAge}; HttpOnly; SameSite=Strict${isHttps(req) ? '; Secure' : ''}`;
 }
 function clientIp(req) {
   return String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+}
+function currentUser(req) {
+  return auth.userForSession(cookies(req).box_session);
+}
+function isAdmin(u) { return !!u && u.role === 'admin'; }
+/** Ideas this user may see: their own (admins: everyone's). */
+function canSee(u, idea) { return !!idea && (isAdmin(u) || idea.ownerId === u.id); }
+function myIdeas(u) { return listIdeas().filter((i) => canSee(u, i)); }
+
+/** Browser-side hardening on every response. */
+function securityHeaders(req, res) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=(), payment=(), usb=()');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; frame-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
+  if (isHttps(req)) res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+}
+/** State-changing requests must come from this site (defence in depth next to SameSite). */
+function crossSiteWrite(req) {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return false;
+  const origin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : '');
+  if (!origin) return false; // same-origin fetches from older browsers omit it; cookies are SameSite=Strict anyway
+  const host = req.headers['x-forwarded-host'] || req.headers.host || '';
+  try { return new URL(origin).host !== host; } catch { return true; }
+}
+
+const RESET_PATH = (token) => `${BASE_URL}/#/reset/${token}`;
+async function sendSetPasswordMail(user, token, { reason }) {
+  const link = RESET_PATH(token);
+  const text = reason === 'approved'
+    ? `Hi ${user.firstName},\n\nYour access to Box was approved. Set your password here (the link works once, for 24 hours):\n\n${link}\n\nThen sign in at ${BASE_URL} with ${user.email}.\n`
+    : `Hi ${user.firstName},\n\nUse this link to set a new Box password (it works once, for 24 hours):\n\n${link}\n\nIf you did not ask for this, ignore this email; nothing changes.\n`;
+  const r = await mail.send({ to: user.email, subject: reason === 'approved' ? 'Your Box access is approved' : 'Reset your Box password', text });
+  return { ...r, link };
 }
 
 // ---- server --------------------------------------------------------------
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
   const p = url.pathname;
+  securityHeaders(req, res);
 
   try {
+    if (p.startsWith('/api/') && crossSiteWrite(req)) return json(res, 403, { error: 'Cross-site request refused.' });
+    const ip = clientIp(req);
+
+    // ---- public: session, sign in, sign up, reset ----
     if (p === '/api/session' && req.method === 'GET') {
-      return json(res, 200, { loginRequired: !!BOX_PASSWORD, authed: isAuthed(req) });
+      const u = currentUser(req);
+      return json(res, 200, { loginRequired: true, authed: !!u, user: auth.publicUser(u), mailConfigured: mail.configured() });
     }
     if (p === '/api/login' && req.method === 'POST') {
-      const ip = clientIp(req);
-      const recent = (loginAttempts.get(ip) || []).filter((t) => Date.now() - t < 10 * 60 * 1000);
-      if (recent.length >= 10) return json(res, 429, { error: 'Too many attempts. Try again in a few minutes.' });
       const body = await readBody(req).catch(() => ({}));
-      if (!BOX_PASSWORD || sameSecret(body.password || '', BOX_PASSWORD)) {
-        loginAttempts.delete(ip);
-        res.setHeader('Set-Cookie', sessionCookie(req, SESSION, 365 * 24 * 3600));
-        return json(res, 200, { ok: true });
-      }
-      loginAttempts.set(ip, [...recent, Date.now()]);
-      return json(res, 401, { error: 'That password isn’t right.' });
+      try {
+        const u = auth.login({ email: body.email, password: body.password, ip });
+        const token = auth.createSession(u, req.headers['user-agent']);
+        if (isAdmin(u)) push.claimOrphans(u.id);
+        res.setHeader('Set-Cookie', sessionCookie(req, token, 30 * 24 * 3600));
+        return json(res, 200, { ok: true, user: auth.publicUser(u) });
+      } catch (e) { return json(res, e.status || 500, { error: e.status ? e.message : 'Sign-in failed.' }); }
     }
     if (p === '/api/logout' && req.method === 'POST') {
+      auth.destroySession(cookies(req).box_session);
       res.setHeader('Set-Cookie', sessionCookie(req, '', 0));
       return json(res, 200, { ok: true });
     }
-    if (p.startsWith('/api/') && !isAuthed(req)) {
-      return json(res, 401, { error: 'Sign in to continue.', login: true });
+    if (p === '/api/signup' && req.method === 'POST') {
+      const body = await readBody(req).catch(() => ({}));
+      try {
+        const { user, duplicate } = auth.signup({ ...body, ip });
+        if (!duplicate) {
+          tellAdmins({ title: 'Access request', body: `${user.firstName} ${user.lastName} (${user.email}) asked to join Box.`, tag: `signup:${user.id}`, url: '/#/people' });
+          for (const a of auth.admins()) {
+            mail.send({ to: a.email, subject: `Box access request: ${user.firstName} ${user.lastName}`, text: `${user.firstName} ${user.lastName} asked for access to Box.\n\nEmail: ${user.email}\nPhone: ${user.phone}\n\nApprove or decline in Box → People: ${BASE_URL}/#/people\n` }).catch(() => {});
+          }
+        }
+        return json(res, 200, { ok: true, message: 'Thanks. Your request is with the administrator; you will get an email with a link to set your password once it is approved.' });
+      } catch (e) { return json(res, e.status || 500, { error: e.status ? e.message : 'Could not send the request.' }); }
+    }
+    if (p === '/api/forgot' && req.method === 'POST') {
+      const body = await readBody(req).catch(() => ({}));
+      try {
+        const r = auth.forgot({ email: body.email, ip });
+        if (r) sendSetPasswordMail(r.user, r.token, { reason: 'reset' }).catch(() => {});
+        return json(res, 200, { ok: true, message: 'If that address has an approved account, a reset link is on its way.' });
+      } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+    }
+    if (p === '/api/reset' && req.method === 'GET') {
+      const u = auth.tokenUser(url.searchParams.get('token'));
+      return json(res, 200, { valid: !!u, email: u?.email || null, firstName: u?.firstName || null });
+    }
+    if (p === '/api/reset' && req.method === 'POST') {
+      const body = await readBody(req).catch(() => ({}));
+      if (auth.limited(`reset:ip:${ip}`, 10, 3600 * 1000)) return json(res, 429, { error: 'Too many attempts.' });
+      try {
+        const u = auth.resetPassword({ token: body.token, password: body.password });
+        return json(res, 200, { ok: true, email: u.email });
+      } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+    }
+
+    // ---- everything else needs an approved, signed-in user ----
+    const user = p.startsWith('/api/') ? currentUser(req) : null;
+    if (p.startsWith('/api/') && !user) return json(res, 401, { error: 'Sign in to continue.', login: true });
+
+    if (p === '/api/password' && req.method === 'POST') {
+      const body = await readBody(req).catch(() => ({}));
+      try {
+        auth.changePassword(user, { current: body.current, next: body.next, sessionToken: cookies(req).box_session });
+        return json(res, 200, { ok: true });
+      } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+    }
+
+    // ---- administration ----
+    if (p.startsWith('/api/admin/')) {
+      if (!isAdmin(user)) return json(res, 403, { error: 'Administrators only.' });
+      if (p === '/api/admin/users' && req.method === 'GET') return json(res, 200, { users: auth.listUsers(), mailConfigured: mail.configured() });
+      const um2 = p.match(/^\/api\/admin\/users\/([a-f0-9]+)\/(approve|decline|disable|enable|resend)$/);
+      if (um2 && req.method === 'POST') {
+        try {
+          const [, id, act] = um2;
+          if (act === 'approve' || act === 'resend') {
+            const { user: u, token } = auth.approve(id); // (re)issues a one-time set-password link
+            const r = await sendSetPasswordMail(u, token, { reason: 'approved' });
+            bus.broadcast({ event: 'users_changed' });
+            return json(res, 200, { ok: true, user: auth.publicUser(u), emailed: r.sent, link: r.sent ? null : r.link, error: r.sent ? null : r.error });
+          }
+          if (act === 'decline') { auth.decline(id); bus.broadcast({ event: 'users_changed' }); return json(res, 200, { ok: true }); }
+          if (act === 'disable') { auth.setStatus(id, 'disabled'); bus.broadcast({ event: 'users_changed' }); return json(res, 200, { ok: true }); }
+          if (act === 'enable') { auth.setStatus(id, 'approved'); bus.broadcast({ event: 'users_changed' }); return json(res, 200, { ok: true }); }
+        } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+      }
+      return json(res, 404, { error: 'not found' });
     }
 
     if (p === '/api/events' && req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
       res.write(`data: ${JSON.stringify({ event: 'hello' })}\n\n`);
-      clients.add(res);
+      clients.set(res, user);
       const ping = setInterval(() => res.write(': ping\n\n'), 25000);
       req.on('close', () => { clearInterval(ping); clients.delete(res); });
       return;
@@ -305,12 +406,12 @@ const server = http.createServer(async (req, res) => {
 
     // ---- push notifications (home-screen app) ----
     if (p === '/api/push/key' && req.method === 'GET') {
-      return json(res, 200, { publicKey: push.publicKey(), devices: push.count(), needsYou: needsYouCount() });
+      return json(res, 200, { publicKey: push.publicKey(), devices: push.count(user.id), needsYou: needsYouCount(user.id) });
     }
     if (p === '/api/push/subscribe' && req.method === 'POST') {
       const body = await readBody(req);
       try {
-        const devices = push.subscribe(body.subscription, { ua: req.headers['user-agent'] });
+        const devices = push.subscribe(body.subscription, { ua: req.headers['user-agent'], userId: user.id });
         return json(res, 201, { ok: true, devices });
       } catch (e) {
         return json(res, 400, { error: e.message });
@@ -318,53 +419,55 @@ const server = http.createServer(async (req, res) => {
     }
     if (p === '/api/push/unsubscribe' && req.method === 'POST') {
       const body = await readBody(req);
-      push.unsubscribe(String(body.endpoint || ''));
-      return json(res, 200, { ok: true, devices: push.count() });
+      push.unsubscribe(String(body.endpoint || ''), user.id);
+      return json(res, 200, { ok: true, devices: push.count(user.id) });
     }
     if (p === '/api/push/test' && req.method === 'POST') {
-      const r = await push.broadcast({ title: 'Box notifications are on', body: 'You’ll hear when something needs you or finishes.', tag: 'test', url: '/', badge: needsYouCount() });
+      const r = await push.broadcast({ title: 'Box notifications are on', body: 'You’ll hear when something needs you or finishes.', tag: 'test', url: '/', badge: needsYouCount(user.id), telegram: false }, [user.id]);
       return json(res, 200, { ok: true, ...r });
     }
 
     // ---- library, search, overview, export ----
     if (p === '/api/templates' && req.method === 'GET') return json(res, 200, Object.entries(TEMPLATES).map(([id, t]) => ({ id, name: t.name, emoji: t.emoji, hint: t.hint })));
-    if (p === '/api/sources' && req.method === 'GET') return json(res, 200, sourceLibrary());
+    if (p === '/api/sources' && req.method === 'GET') return json(res, 200, sourceLibrary(myIdeas(user)));
     if (p === '/api/search' && req.method === 'GET') {
       const q = String(url.searchParams.get('q') || '').trim();
-      return json(res, 200, q.length < 2 ? [] : searchAll(q));
+      return json(res, 200, q.length < 2 ? [] : searchAll(myIdeas(user), q));
     }
     if (p === '/api/overview' && req.method === 'GET') {
-      const ideas = listIdeas();
+      const ideas = myIdeas(user);
       return json(res, 200, {
-        needsYou: needsYouCount(), running: ideas.filter((i) => running(i.id)).length,
+        needsYou: needsYouCount(user.id), running: ideas.filter((i) => running(i.id)).length,
         live: ideas.filter((i) => i.project?.url).length, projects: ideas.filter((i) => i.phase === 'project').length,
-        ideas: ideas.filter((i) => (i.phase || 'idea') === 'idea').length, usage: usageStats(),
+        ideas: ideas.filter((i) => (i.phase || 'idea') === 'idea').length, usage: usageStats(ideas),
+        pendingUsers: isAdmin(user) ? auth.listUsers().filter((x) => x.status === 'pending').length : 0,
       });
     }
-    if (p === '/api/prefs' && req.method === 'GET') return json(res, 200, prefs.load());
+    if (p === '/api/prefs' && req.method === 'GET') return json(res, 200, prefs.load(user.id));
     if (p === '/api/prefs' && req.method === 'POST') {
       const body = await readBody(req);
-      if (body.about !== undefined) prefs.setAbout(body.about);
-      if (body.progressPush !== undefined) prefs.setOption('progressPush', body.progressPush);
-      return json(res, 200, prefs.load());
+      if (body.about !== undefined) prefs.setAbout(user.id, body.about);
+      if (body.progressPush !== undefined) prefs.setOption(user.id, 'progressPush', body.progressPush);
+      return json(res, 200, prefs.load(user.id));
     }
     if (p === '/api/prefs/knowledge' && req.method === 'POST') {
       const body = await readBody(req);
-      return json(res, 200, prefs.addKnowledge(body.attachments || []));
+      return json(res, 200, prefs.addKnowledge(user.id, body.attachments || []));
     }
     const km = p.match(/^\/api\/prefs\/knowledge\/([a-f0-9]{16})$/);
-    if (km && req.method === 'DELETE') return json(res, 200, prefs.removeKnowledge(km[1]));
+    if (km && req.method === 'DELETE') return json(res, 200, prefs.removeKnowledge(user.id, km[1]));
     if (p === '/api/compare' && req.method === 'POST') {
       const body = await readBody(req);
       const a = loadIdea(String(body.a || '')), b = loadIdea(String(body.b || ''));
-      if (!a || !b || a.id === b.id) return json(res, 400, { error: 'Pick two different ideas.' });
+      if (!a || !b || a.id === b.id || !canSee(user, a) || !canSee(user, b)) return json(res, 400, { error: 'Pick two different ideas.' });
       try { return json(res, 201, await compareIdeas(bus, a, b)); } catch (e) { return json(res, 500, { error: e.message }); }
     }
     if (p === '/api/merge' && req.method === 'POST') {
       const body = await readBody(req);
       const a = loadIdea(String(body.a || '')), b = loadIdea(String(body.b || ''));
-      if (!a || !b || a.id === b.id) return json(res, 400, { error: 'Pick two different ideas.' });
+      if (!a || !b || a.id === b.id || !canSee(user, a) || !canSee(user, b)) return json(res, 400, { error: 'Pick two different ideas.' });
       const idea = mergeIdeas(a, b, { title: body.title });
+      idea.ownerId = user.id; saveIdea(idea);
       runIdea(bus, idea, { maxRounds: idea.maxRounds });
       bus.broadcast({ event: 'ideas_changed' });
       return json(res, 201, idea);
@@ -379,7 +482,7 @@ const server = http.createServer(async (req, res) => {
       } catch (e) { return json(res, 500, { error: e.message }); }
     }
     if (p === '/api/export' && req.method === 'GET') {
-      const body = exportAll();
+      const body = exportAll(myIdeas(user));
       res.writeHead(200, { 'Content-Type': 'application/zip', 'Content-Length': body.length, 'Content-Disposition': `attachment; filename="box-export-${new Date().toISOString().slice(0, 10)}.zip"` });
       return res.end(body);
     }
@@ -454,13 +557,15 @@ const server = http.createServer(async (req, res) => {
         'Content-Type': u.meta.type,
         'Cache-Control': 'private, max-age=31536000, immutable',
         'Content-Disposition': `inline; filename="${encodeURIComponent(u.meta.name)}"`,
+        // Prototypes are agent-written HTML: run them in an opaque origin with no access to Box.
+        ...(u.meta.type === 'text/html' ? { 'Content-Security-Policy': "sandbox allow-scripts allow-forms allow-popups allow-modals; default-src 'none'; img-src data: blob:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; font-src data:" } : {}),
       });
       return fs.createReadStream(u.path).pipe(res);
     }
 
     // ---- ideas ----
     if (p === '/api/ideas' && req.method === 'GET') {
-      return json(res, 200, listIdeas().map(ideaSummary));
+      return json(res, 200, myIdeas(user).map(ideaSummary));
     }
     if (p === '/api/ideas' && req.method === 'POST') {
       const body = await readBody(req);
@@ -474,6 +579,7 @@ const server = http.createServer(async (req, res) => {
         template: TEMPLATES[body.template] ? body.template : null,
         tags: Array.isArray(body.tags) ? body.tags.map((t) => String(t).trim().slice(0, 30)).filter(Boolean).slice(0, 8) : [],
       });
+      idea.ownerId = user.id; saveIdea(idea);
       if (idea.titleSource === 'auto') nameIdea(idea);
       if (body.autostart !== false) runIdea(bus, idea, { maxRounds });
       bus.broadcast({ event: 'ideas_changed' });
@@ -483,7 +589,7 @@ const server = http.createServer(async (req, res) => {
     const m = p.match(/^\/api\/ideas\/([a-f0-9]+)(?:\/([a-z]+))?$/);
     if (m) {
       const idea = loadIdea(m[1]);
-      if (!idea) return json(res, 404, { error: 'idea not found' });
+      if (!idea || !canSee(user, idea)) return json(res, 404, { error: 'idea not found' });
       const action = m[2];
 
       if (!action && req.method === 'GET') {
@@ -557,6 +663,7 @@ const server = http.createServer(async (req, res) => {
       if (action === 'fork' && req.method === 'POST') {
         const body = await readBody(req).catch(() => ({}));
         const fork = forkIdea(idea, body.messageId, { title: body.title });
+        fork.ownerId = user.id; saveIdea(fork);
         bus.broadcast({ event: 'ideas_changed' });
         return json(res, 201, fork);
       }
@@ -691,7 +798,8 @@ const server = http.createServer(async (req, res) => {
     if (p.startsWith('/api/')) return json(res, 404, { error: 'not found' });
     return serveStatic(res, p);
   } catch (err) {
-    return json(res, 500, { error: err.message });
+    console.error(`${req.method} ${p}: ${err.stack || err.message}`);
+    return json(res, 500, { error: 'Something went wrong on the server.' });
   }
 });
 
@@ -699,8 +807,14 @@ const server = http.createServer(async (req, res) => {
 // ask every run to stop after its current turn, wait for that, and mark the
 // idea to resume; on startup, anything marked (or left "running" by a crash)
 // is resumed automatically.
-for (const i of listIdeas()) {
-  if (i.status === 'running') { i.status = 'paused'; i.autoResume = true; saveIdea(i); }
+auth.ensureAdmin();
+{
+  const admin = auth.admins()[0];
+  for (const i of listIdeas()) {
+    if (!i.ownerId && admin) i.ownerId = admin.id;
+    if (i.status === 'running') { i.status = 'paused'; i.autoResume = true; }
+    saveIdea(i);
+  }
 }
 setTimeout(() => {
   for (const i of listIdeas()) {

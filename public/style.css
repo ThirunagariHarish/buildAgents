@@ -598,6 +598,15 @@ body.mode-project #subtitle-text { color: var(--proj); }
 .login-box .form-error { text-align: left; }
 
 .login-box .welcome-mark { display: flex; justify-content: center; }
+.login-box .field { text-align: left; margin-bottom: 10px; }
+.login-box .field > span { margin: 0 4px 5px; }
+.login-box .field input { margin-bottom: 0; }
+.login-box .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.login-links { display: flex; justify-content: space-between; margin-top: 16px; }
+.login-links button { color: var(--text-2); font-size: 14.5px; padding: 6px 2px; }
+.login-links button:active { color: var(--accent); }
+.account-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 18px; background: var(--surface); margin-bottom: 12px; }
+.account-card .avatar-btn { flex: none; }
 .sb-list .sb-label { padding: 16px 14px 6px; }
 
 /* ---------- Roster (who the Orchestrator picked) ---------- */

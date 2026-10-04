@@ -25,6 +25,9 @@ BOX_GITHUB_TOKEN=$(printf '%s' "${BOX_GITHUB_TOKEN:-}" | tr -d '[:space:]')
   [ -n "$BOX_GITHUB_TOKEN" ] && printf 'BOX_GITHUB_TOKEN=%s\n' "$BOX_GITHUB_TOKEN"
   [ -n "${BOX_TELEGRAM_TOKEN:-}" ] && printf 'BOX_TELEGRAM_TOKEN=%s\n' "$(printf '%s' "$BOX_TELEGRAM_TOKEN" | tr -d '[:space:]')"
   [ -n "${BOX_TELEGRAM_CHAT_ID:-}" ] && printf 'BOX_TELEGRAM_CHAT_ID=%s\n' "$(printf '%s' "$BOX_TELEGRAM_CHAT_ID" | tr -d '[:space:]')"
+  for k in BOX_SMTP_HOST BOX_SMTP_PORT BOX_SMTP_USER BOX_SMTP_PASS BOX_MAIL_FROM BOX_ADMIN_PASSWORD; do
+    v=$(printf '%s' "${!k:-}" | tr -d '\r\n'); [ -n "$v" ] && printf '%s=%s\n' "$k" "$v"
+  done
   printf 'BOX_DOMAIN=%s\n' "$DOMAIN"
   printf 'BOX_KUBECONFIG_FILE=/etc/box-kubeconfig\n'
 } > /etc/box.env
@@ -51,8 +54,13 @@ systemctl restart box
 sleep 2
 echo "service: $(systemctl is-active box)"
 echo "local /: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:3400/)"
-COOKIE="box_session=$(set -a; . /etc/box.env 2>/dev/null; set +a; node -e "const p=process.env.BOX_PASSWORD; console.log(p ? require('crypto').createHmac('sha256', p).update('box-session-v1').digest('hex') : '')")"
+# A short-lived administrator session for the checks below (removed at the end).
+CHECK_TOKEN=$(node -e "const a=require('./lib/auth');a.ensureAdmin();const u=a.admins()[0];console.log(a.createSession(u,'deploy-check'))" 2>/dev/null)
+COOKIE="box_session=${CHECK_TOKEN}"
 echo "api without sign-in: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:3400/api/ideas) (401 = sign-in enforced)"
+echo "accounts: $(node -e "try{const u=JSON.parse(require('fs').readFileSync('data/users.json'));console.log(u.length+' user(s): '+u.map(x=>x.email+' ('+x.role+', '+x.status+')').join(', '))}catch(e){console.log('none yet')}")"
+echo "mail: $([ -n "${BOX_SMTP_HOST:-}" ] && echo "SMTP via ${BOX_SMTP_HOST}" || echo 'not configured (approval links shown in the app instead)')"
+echo "security headers: $(curl -s -D - -o /dev/null --max-time 8 http://localhost:3400/ | grep -ciE 'content-security-policy|x-frame-options|x-content-type') of 3"
 echo "agent pool: $(curl -s --max-time 8 -H "Cookie: $COOKIE" http://localhost:3400/api/agents | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const l=JSON.parse(d);console.log(l.length+' agents — '+l.map(a=>a.name+(a.builtin?'':' (added)')).join(', '))}catch(e){console.log('unreadable: '+d.slice(0,120))}})")"
 
 echo "== build crew =="
@@ -91,4 +99,5 @@ echo "http  -> HTTP $(curl -s  -o /dev/null -w '%{http_code}' --max-time 10 --re
 echo "https -> HTTP $(curl -sk -o /dev/null -w '%{http_code}' --max-time 10 --resolve "$DOMAIN:443:$PUB" "https://$DOMAIN/" || true)"
 echo "cert  -> $(echo | openssl s_client -connect "$PUB:443" -servername "$DOMAIN" 2>/dev/null | openssl x509 -noout -subject -issuer 2>/dev/null | tr '\n' ' ')"
 echo "(401 = Box login prompt = working; 404 = k8s route not applied yet)"
+node -e "require('./lib/auth').destroySession(process.argv[1])" "$CHECK_TOKEN" 2>/dev/null
 echo "== done =="

@@ -44,13 +44,19 @@ jobs:
           BOX_KUBECONFIG: ${{ secrets.BOX_KUBECONFIG }}
           BOX_TELEGRAM_TOKEN: ${{ secrets.BOX_TELEGRAM_TOKEN }}
           BOX_TELEGRAM_CHAT_ID: ${{ secrets.BOX_TELEGRAM_CHAT_ID }}
+          BOX_SMTP_HOST: ${{ secrets.BOX_SMTP_HOST }}
+          BOX_SMTP_PORT: ${{ secrets.BOX_SMTP_PORT }}
+          BOX_SMTP_USER: ${{ secrets.BOX_SMTP_USER }}
+          BOX_SMTP_PASS: ${{ secrets.BOX_SMTP_PASS }}
+          BOX_MAIL_FROM: ${{ secrets.BOX_MAIL_FROM }}
+          BOX_ADMIN_PASSWORD: ${{ secrets.BOX_ADMIN_PASSWORD }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           # Key auth when VPS_SSH_KEY is set; falls back to password otherwise
           key: ${{ secrets.VPS_SSH_KEY }}
           password: ${{ secrets.VPS_PASSWORD }}
-          envs: BOX_PASSWORD,BOX_DOMAIN,CLAUDE_CODE_OAUTH_TOKEN,BOX_GITHUB_TOKEN,BOX_KUBECONFIG,BOX_TELEGRAM_TOKEN,BOX_TELEGRAM_CHAT_ID
+          envs: BOX_PASSWORD,BOX_DOMAIN,CLAUDE_CODE_OAUTH_TOKEN,BOX_GITHUB_TOKEN,BOX_KUBECONFIG,BOX_TELEGRAM_TOKEN,BOX_TELEGRAM_CHAT_ID,BOX_SMTP_HOST,BOX_SMTP_PORT,BOX_SMTP_USER,BOX_SMTP_PASS,BOX_MAIL_FROM,BOX_ADMIN_PASSWORD
           capture_stdout: true
           command_timeout: 25m
           script: |

@@ -133,6 +133,8 @@ function saveSettings() {
 
 const KIND_LABEL = { kickoff: 'Kickoff', research: 'Web research', synthesis: 'Synthesis', brief: 'Final brief', doc: 'Document', approved: 'Approved', answer: 'Answer', scorecard: 'Room score' };
 let TEMPLATES = [];
+let ME = null;             // the signed-in user { id, firstName, lastName, email, role, weakPassword }
+const isAdminUser = () => ME?.role === 'admin';
 let quickMode = null;      // null | { agentId: string|null, name: string } — next message is a quick question
 let sidebarQuery = '';
 let showArchived = false;
@@ -206,10 +208,11 @@ darkQuery.addEventListener?.('change', applyTheme);
 function greeting() {
   const h = new Date().getHours();
   const part = h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
-  return settings.name ? `${part}, ${settings.name}` : part;
+  const name = settings.name || ME?.firstName || '';
+  return name ? `${part}, ${name}` : part;
 }
 function renderAvatar() {
-  $('avatar-btn').textContent = (settings.name.trim()[0] || 'B').toUpperCase();
+  $('avatar-btn').textContent = ((settings.name || ME?.firstName || 'B').trim()[0] || 'B').toUpperCase();
 }
 
 // ---------- drawer ----------
@@ -413,7 +416,7 @@ async function registerSW() {
   return swReg;
 }
 function syncBadge() {
-  const n = ideas.filter((i) => placeOf(i).group === 'needs').length;
+  const n = ideas.filter((i) => placeOf(i).group === 'needs').length + (pendingUsers || 0);
   try {
     if ('setAppBadge' in navigator) (n > 0 ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {});
     swReg?.active?.postMessage({ type: 'badge', count: n });
@@ -894,13 +897,16 @@ async function toggleArchive() {
 // ---------- routing ----------
 function parseHash() {
   const m = location.hash.match(/^#\/idea\/([a-f0-9]+)/);
-  return m ? { view: 'idea', id: m[1] } : { view: 'new' };
+  if (m) return { view: 'idea', id: m[1] };
+  if (/^#\/people/.test(location.hash)) return { view: 'people' };
+  return { view: 'new' };
 }
 async function onRoute() {
   closeAllLayers();
   closeDrawer();
   route = parseHash();
   if (route.view === 'idea') await openIdea(route.id);
+  else if (route.view === 'people') { showNew(); if (isAdminUser()) openPeopleSheet(); }
   else showNew();
 }
 window.addEventListener('hashchange', onRoute);
@@ -938,8 +944,10 @@ function renderHomeStrip() {
   const running = ideas.filter((i) => i.status === 'running').length;
   const live = ideas.filter((i) => i.url).length;
   const el = $('home-strip');
-  if (!needs && !running && !live) { el.innerHTML = ''; return; }
+  const pend = pendingUsers;
+  if (!needs && !running && !live && !pend) { el.innerHTML = ''; return; }
   el.innerHTML = `<div class="strip">
+      ${pend ? `<button class="strip-item needs" data-strip="people"><b>${pend}</b>${pend === 1 ? 'access request' : 'access requests'}</button>` : ''}
       ${needs ? `<button class="strip-item needs" data-strip="needs"><b>${needs}</b>${needs === 1 ? 'needs you' : 'need you'}</button>` : ''}
       ${running ? `<button class="strip-item" data-strip="running"><b>${running}</b>working</button>` : ''}
       ${live ? `<button class="strip-item live" data-strip="live"><b>${live}</b>live</button>` : ''}
@@ -949,8 +957,14 @@ $('home-strip').addEventListener('click', (e) => {
   const b = e.target.closest('[data-strip]');
   if (!b) return;
   if (b.dataset.strip === 'live') return openBoardSheet();
+  if (b.dataset.strip === 'people') return openPeopleSheet();
   openDrawer();
 });
+let pendingUsers = 0;
+async function refreshPending() {
+  if (!isAdminUser()) return;
+  try { const o = await api('/api/overview'); pendingUsers = o.pendingUsers || 0; if (route.view === 'new') renderHomeStrip(); syncBadge(); } catch {}
+}
 $('suggestions').addEventListener('click', (e) => {
   const b = e.target.closest('.suggestion');
   if (!b) return;
@@ -2219,7 +2233,11 @@ function openSettingsSheet() {
     render(s) {
       const draw = () => {
         s.body.innerHTML = `
-          <label class="field"><span>Your name</span><input id="set-name" type="text" maxlength="40" placeholder="Used in your greeting" value="${esc(settings.name)}"></label>
+          <div class="account-card"><span class="avatar-btn" style="width:40px;height:40px;font-size:16px">${esc(((ME?.firstName || 'B')[0] || 'B').toUpperCase())}</span><span style="min-width:0"><div class="brief-title">${esc(`${ME?.firstName || ''} ${ME?.lastName || ''}`.trim() || 'You')}</div><div class="brief-sub">${esc(ME?.email || '')}${isAdminUser() ? ' · administrator' : ''}</div></span></div>
+          ${ME?.weakPassword ? '<div class="form-error" style="margin-bottom:10px">Your password is the initial one. Change it now.</div>' : ''}
+          <div class="btn-pair" style="margin-bottom:14px"><button class="wide-btn soft" data-open="password">Change password</button><button class="wide-btn soft" data-open="signout">Sign out</button></div>
+          ${isAdminUser() ? `<button class="row" data-open="people">${ic('users')}<span class="row-label">People<span class="row-sub">Access requests and members</span></span><span class="row-value">${pendingUsers ? `${pendingUsers} waiting` : ''}</span><span class="row-chev">${ic('chevR')}</span></button>` : ''}
+          <label class="field" style="margin-top:14px"><span>Greeting name</span><input id="set-name" type="text" maxlength="40" placeholder="${esc(ME?.firstName || 'Used in your greeting')}" value="${esc(settings.name)}"></label>
           <div class="sb-label" style="padding:6px 6px 8px">Appearance</div>
           ${['system', 'dark', 'light'].map((t) => `<button class="row check" data-theme="${t}"><span class="row-label">${t[0].toUpperCase() + t.slice(1)}</span><span class="row-value">${settings.theme === t ? ic('check') : ''}</span></button>`).join('')}
           <div class="sb-label" style="padding:14px 6px 8px">Notifications</div>
@@ -2294,6 +2312,16 @@ function openSettingsSheet() {
       draw();
       s.body.onclick = async (e) => {
         if (e.target.closest('[data-open="sources"]')) { s.close(); openSourcesSheet(); return; }
+        if (e.target.closest('[data-open="people"]')) { s.close(); openPeopleSheet(); return; }
+        if (e.target.closest('[data-open="password"]')) { s.close(); openPasswordSheet(); return; }
+        if (e.target.closest('[data-open="signout"]')) {
+          const ok = await dialog({ title: 'Sign out?', text: 'Notifications stay on for this device.', confirm: 'Sign out' });
+          if (!ok) return;
+          try { await api('/api/logout', { method: 'POST', body: '{}' }); } catch {}
+          try { const ks = await caches.keys(); await Promise.all(ks.map((k) => caches.delete(k))); } catch {}
+          location.reload();
+          return;
+        }
         const pr = e.target.closest('[data-push]');
         if (pr) {
           const st = pr.dataset.state;
@@ -2619,6 +2647,10 @@ function handleEvent(ev) {
     case 'agents_changed':
       loadAgents();
       break;
+    case 'users_changed':
+      refreshPending();
+      { const open = $('layer').querySelector('.backdrop'); if (open && open._redraw) open._redraw(); }
+      break;
   }
 }
 function connectEvents() {
@@ -2628,45 +2660,156 @@ function connectEvents() {
 
 // ---------- boot ----------
 // ---------- sign-in ----------
-function showLogin() {
-  if ($('login')) return;
+function showLogin(view = 'login', ctx = {}) {
+  $('login')?.remove();
   const el = document.createElement('div');
   el.id = 'login';
-  el.innerHTML = `<form class="login-box">
-      <div class="welcome-mark">${ic('spark')}</div>
-      <h1>Welcome back</h1>
-      <p>Enter your Box password. This device stays signed in.</p>
-      <input type="password" id="login-pw" autocomplete="current-password" placeholder="Password" required>
+  const field = (id, label, type, extra = '') => `<label class="field"><span>${label}</span><input id="${id}" type="${type}" ${extra}></label>`;
+  const views = {
+    login: `<h1>Welcome back</h1><p>Sign in to Box.</p>
+      ${field('lg-email', 'Email', 'email', 'autocomplete="username" inputmode="email" required')}
+      ${field('lg-pw', 'Password', 'password', 'autocomplete="current-password" required')}
       <div class="form-error hidden" id="login-err"></div>
-      <button class="wide-btn" type="submit">Continue</button>
-    </form>`;
+      <button class="wide-btn" type="submit">Sign in</button>
+      <div class="login-links"><button type="button" data-view="forgot">Forgot password</button><button type="button" data-view="signup">Request access</button></div>`,
+    signup: `<h1>Request access</h1><p>The administrator approves requests. You get an email with a link to set your password.</p>
+      <div class="field-row">${field('su-first', 'First name', 'text', 'autocomplete="given-name" maxlength="60" required')}${field('su-last', 'Last name', 'text', 'autocomplete="family-name" maxlength="60" required')}</div>
+      ${field('su-phone', 'Contact number', 'tel', 'autocomplete="tel" inputmode="tel" required')}
+      ${field('su-email', 'Email', 'email', 'autocomplete="email" inputmode="email" required')}
+      <div class="form-error hidden" id="login-err"></div>
+      <button class="wide-btn" type="submit">Send request</button>
+      <div class="login-links"><button type="button" data-view="login">Back to sign in</button></div>`,
+    forgot: `<h1>Reset password</h1><p>Enter your email. If it has an approved account, a reset link follows.</p>
+      ${field('fg-email', 'Email', 'email', 'autocomplete="username" inputmode="email" required')}
+      <div class="form-error hidden" id="login-err"></div>
+      <button class="wide-btn" type="submit">Send link</button>
+      <div class="login-links"><button type="button" data-view="login">Back to sign in</button></div>`,
+    reset: `<h1>Set your password</h1><p>${ctx.email ? `For ${esc(ctx.email)}. ` : ''}At least 8 characters; a few words you will remember work best.</p>
+      ${field('rs-pw', 'New password', 'password', 'autocomplete="new-password" minlength="8" required')}
+      ${field('rs-pw2', 'Repeat it', 'password', 'autocomplete="new-password" minlength="8" required')}
+      <div class="form-error hidden" id="login-err"></div>
+      <button class="wide-btn" type="submit">Save password</button>`,
+    done: `<h1>${esc(ctx.title || 'Done')}</h1><p>${esc(ctx.text || '')}</p><button class="wide-btn" type="submit">Sign in</button>`,
+  };
+  el.innerHTML = `<form class="login-box"><div class="welcome-mark">${ic('spark')}</div>${views[view]}</form>`;
   document.body.appendChild(el);
   const form = el.querySelector('form');
+  const err = (m) => { const e = $('login-err'); if (e) { e.textContent = m; e.classList.remove('hidden'); } };
+  el.addEventListener('click', (e) => { const b = e.target.closest('[data-view]'); if (b) showLogin(b.dataset.view); });
   form.onsubmit = async (e) => {
     e.preventDefault();
-    const btn = form.querySelector('button');
+    const btn = form.querySelector('button[type="submit"]');
     btn.disabled = true;
-    try {
-      const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: $('login-pw').value }) });
+    const post = async (path, body) => {
+      const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(data.error || 'Sign-in failed');
-      location.reload();
-    } catch (err) {
-      $('login-err').textContent = err.message;
-      $('login-err').classList.remove('hidden');
-      btn.disabled = false;
-    }
+      if (!r.ok) throw new Error(data.error || 'Something went wrong.');
+      return data;
+    };
+    try {
+      if (view === 'login') { await post('/api/login', { email: $('lg-email').value, password: $('lg-pw').value }); location.hash = location.hash.startsWith('#/reset') ? '#/' : location.hash; location.reload(); }
+      else if (view === 'signup') { const r = await post('/api/signup', { firstName: $('su-first').value, lastName: $('su-last').value, phone: $('su-phone').value, email: $('su-email').value }); showLogin('done', { title: 'Request sent', text: r.message }); }
+      else if (view === 'forgot') { const r = await post('/api/forgot', { email: $('fg-email').value }); showLogin('done', { title: 'Check your email', text: r.message }); }
+      else if (view === 'reset') {
+        if ($('rs-pw').value !== $('rs-pw2').value) throw new Error('The two passwords differ.');
+        await post('/api/reset', { token: ctx.token, password: $('rs-pw').value });
+        history.replaceState(null, '', '/#/');
+        showLogin('done', { title: 'Password saved', text: 'Sign in with your email and new password.' });
+      } else if (view === 'done') { showLogin('login'); }
+    } catch (ex) { err(ex.message); btn.disabled = false; }
   };
-  setTimeout(() => $('login-pw')?.focus(), 100);
+  setTimeout(() => form.querySelector('input')?.focus(), 100);
+}
+
+/** Change password (signed in). */
+function openPasswordSheet() {
+  openSheet({
+    title: 'Change password',
+    render(s) {
+      s.body.innerHTML = `
+        <label class="field"><span>Current password</span><input id="cp-cur" type="password" autocomplete="current-password"></label>
+        <label class="field"><span>New password</span><input id="cp-new" type="password" autocomplete="new-password" minlength="8"></label>
+        <label class="field"><span>Repeat it</span><input id="cp-new2" type="password" autocomplete="new-password" minlength="8"></label>
+        <div class="hint">At least 8 characters. Other devices are signed out; this one stays signed in.</div>
+        <div class="form-error hidden" id="cp-err"></div>
+        <button class="wide-btn accent" data-act="save">Save</button>`;
+      s.body.onclick = async (e) => {
+        if (e.target.closest('[data-act]')?.dataset.act !== 'save') return;
+        const err = $('cp-err');
+        if ($('cp-new').value !== $('cp-new2').value) { err.textContent = 'The two passwords differ.'; err.classList.remove('hidden'); return; }
+        try {
+          await api('/api/password', { method: 'POST', body: JSON.stringify({ current: $('cp-cur').value, next: $('cp-new').value }) });
+          if (ME) ME.weakPassword = false;
+          s.close(); toast('Password changed');
+        } catch (ex) { err.textContent = ex.message; err.classList.remove('hidden'); }
+      };
+    },
+  });
+}
+
+/** Administrator: access requests and members. */
+function openPeopleSheet() {
+  if (!isAdminUser()) return;
+  openSheet({
+    title: 'People',
+    tall: true,
+    render(s) {
+      const draw = async () => {
+        s.body.innerHTML = '<p class="sheet-intro">Loading…</p>';
+        let r;
+        try { r = await api('/api/admin/users'); } catch (e) { s.body.innerHTML = `<p class="sheet-intro">${esc(e.message)}</p>`; return; }
+        const pending = r.users.filter((u) => u.status === 'pending');
+        const members = r.users.filter((u) => u.status !== 'pending');
+        const row = (u) => `<div class="ag-row"><span class="a-avatar">${esc((u.firstName || '?')[0].toUpperCase())}</span><span class="ag-main">
+            <span class="ag-top"><span class="a-name">${esc(u.name)}</span><span class="ag-tag">${u.role === 'admin' ? 'administrator' : u.status}</span></span>
+            <span class="ag-desc">${esc(u.email)}${u.phone ? ` · ${esc(u.phone)}` : ''} · ${u.status === 'pending' ? `asked ${new Date(u.createdAt).toLocaleDateString()}` : u.lastLoginAt ? `last sign-in ${new Date(u.lastLoginAt).toLocaleDateString()}` : 'never signed in'}</span>
+            <span class="ag-actions">${u.status === 'pending'
+              ? `<button class="chip-btn on" data-u="${u.id}" data-act="approve">Approve</button><button class="chip-btn" data-u="${u.id}" data-act="decline">Decline</button>`
+              : u.role === 'admin' ? '' : `<button class="chip-btn" data-u="${u.id}" data-act="resend">Send set-password link</button>${u.status === 'disabled' ? `<button class="chip-btn" data-u="${u.id}" data-act="enable">Enable</button>` : `<button class="chip-btn" data-u="${u.id}" data-act="disable">Disable</button>`}<button class="chip-btn" data-u="${u.id}" data-act="decline">Remove</button>`}</span>
+          </span></div>`;
+        s.body.innerHTML = `${r.mailConfigured ? '' : '<div class="system-note"><strong>Email is not set up</strong>Approvals still work: the set-password link is shown here for you to send by hand. Add the SMTP secrets to send it automatically.</div>'}
+          <div class="sb-label" style="padding:6px 6px 8px">Access requests${pending.length ? ` <span class="sb-count">${pending.length}</span>` : ''}</div>
+          ${pending.map(row).join('') || '<p class="sheet-intro">No requests waiting.</p>'}
+          <div class="sb-label" style="padding:14px 6px 8px">Members</div>${members.map(row).join('')}`;
+      };
+      draw();
+      s.body.closest('.backdrop')._redraw = draw;
+      s.body.onclick = async (e) => {
+        const b = e.target.closest('[data-act][data-u]');
+        if (!b) return;
+        const act = b.dataset.act;
+        if (act === 'decline') { const ok = await dialog({ title: 'Remove this person?', text: 'They lose access and the request is deleted. Their ideas stay.', confirm: 'Remove', danger: true }); if (!ok) return; }
+        b.disabled = true;
+        try {
+          const r = await api(`/api/admin/users/${b.dataset.u}/${act}`, { method: 'POST', body: '{}' });
+          if ((act === 'approve' || act === 'resend') && !r.emailed && r.link) {
+            await dialog({ title: 'Send this link yourself', text: `Email could not be sent (${r.error || 'SMTP not configured'}). Copy the link and send it to ${r.user.email}. It works once, for 24 hours.`, input: r.link, confirm: 'Done' });
+          } else if (act === 'approve') toast(`Approved · set-password email sent to ${r.user.email}`);
+          else toast('Done');
+          refreshPending();
+          draw();
+        } catch (ex) { toast(ex.message); b.disabled = false; }
+      };
+    },
+  });
 }
 
 (async function boot() {
   applyTheme();
   hydrateIcons();
   renderAvatar();
+  const resetMatch = location.hash.match(/^#\/reset\/([A-Za-z0-9_-]{20,})/);
+  if (resetMatch) {
+    const r = await fetch(`/api/reset?token=${encodeURIComponent(resetMatch[1])}`).then((x) => x.json()).catch(() => ({}));
+    if (r.valid) return showLogin('reset', { token: resetMatch[1], email: r.email });
+    return showLogin('done', { title: 'Link expired', text: 'This link is no longer valid. Use “Forgot password” to get a new one.' });
+  }
   const session = await fetch('/api/session').then((r) => r.json()).catch(() => ({}));
-  if (session.loginRequired && !session.authed) return showLogin();
+  if (!session.authed) return showLogin();
+  ME = session.user;
+  renderAvatar();
   registerSW();
+  refreshPending();
   api('/api/templates').then((t) => { TEMPLATES = t; if (route.view === 'new') renderTemplates(); }).catch(() => {});
   await loadAgents();
   await refreshIdeas();
