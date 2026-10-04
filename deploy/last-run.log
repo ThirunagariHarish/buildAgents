@@ -1,4 +1,4 @@
-run: 70  commit: 6b21a66  ssh step: success  at: 2026-10-04T19:27:09Z
+run: 71  commit: 23a168c  ssh step: success  at: 2026-10-04T19:28:35Z
 
 == secrets GitHub passed to this run ==
 BOX_PASSWORD: set (6 chars)
@@ -6,13 +6,13 @@ CLAUDE_CODE_OAUTH_TOKEN: set (108 chars)
 BOX_GITHUB_TOKEN: set (40 chars)
 BOX_KUBECONFIG: set (2955 chars)
 
-HEAD: 6b21a66   domain: box.cashflowus.com
+HEAD: 23a168c   domain: box.cashflowus.com
 == env file ==
 claude token: looks valid (length 108)
 keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN BOX_GITHUB_TOKEN BOX_DOMAIN BOX_KUBECONFIG_FILE 
 kubeconfig: written (2956 bytes)
 github token: set (length 40)
-github token check: classic token for ThirunagariHarish, scopes: admin:enterprise, admin:gpg_key, admin:org, admin:org_hook, admin:public_key, admin:repo_hook, admin:ssh_signing_key, audit_log, codespace, copilot, delete:packages, delete_repo, gist, notifications, project, repo, user, workflow, write:discussion, write:network_configurations, write:packages — MISSING: read:packages (deploys will fail until added)
+github token check: classic token for ThirunagariHarish, scopes: admin:enterprise, admin:gpg_key, admin:org, admin:org_hook, admin:public_key, admin:repo_hook, admin:ssh_signing_key, audit_log, codespace, copilot, delete:packages, delete_repo, gist, notifications, project, repo, user, workflow, write:discussion, write:network_configurations, write:packages — OK
 == box service ==
 ==> Installing Node.js 22 (if missing)
 ==> Installing Claude Code CLI (if missing)
@@ -43,7 +43,7 @@ claude as build user: OK
 == notifications ==
 push: vapid key ready, devices subscribed: 2, needs you: 0
 == wildcard DNS (*.cashflowus.com) ==
-dns-check-1791142021.cashflowus.com -> 2.25.157.104
+dns-check-1791142107.cashflowus.com -> 2.25.157.104
 box login: on
 == latest layout reports from phones ==
 [
@@ -190,7 +190,7 @@ box login: on
  }
 ]
 == claude login ==
-haiku: OK (3s) -> OK
+haiku: OK (2s) -> OK
 sonnet: OK (2s) -> OK
 opus: OK (2s) -> OK
 == remove earlier Coolify routing attempts ==
