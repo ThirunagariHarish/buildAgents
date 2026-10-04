@@ -1,6 +1,6 @@
 // Box service worker: push notifications, the home-screen badge, and an
 // offline copy of the app shell plus the last ideas you opened.
-const CACHE = 'box-v1';
+const CACHE = 'box-v2';
 const SHELL = ['/', '/index.html', '/app.js', '/style.css', '/icon.svg', '/manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {

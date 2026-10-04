@@ -72,13 +72,30 @@ const MIME = {
   '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json',
 };
 
+// A stamp of the app shell. Clients compare it with what they loaded and
+// reload themselves after a deploy, so a phone that keeps Box open for days
+// never talks to the server with an old copy of the app.
+const APP_VERSION = (() => {
+  const h = crypto.createHash('sha256');
+  for (const f of ['index.html', 'app.js', 'style.css', 'sw.js']) {
+    try { h.update(fs.readFileSync(path.join(PUBLIC_DIR, f))); } catch {}
+  }
+  return h.digest('hex').slice(0, 12);
+})();
+
 function serveStatic(res, urlPath) {
   const rel = urlPath === '/' ? '/index.html' : urlPath;
   const file = path.join(PUBLIC_DIR, path.normalize(rel));
   if (!file.startsWith(PUBLIC_DIR) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
     res.writeHead(404); return res.end('not found');
   }
-  res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
+  const html = path.extname(file) === '.html';
+  res.writeHead(200, {
+    'Content-Type': MIME[path.extname(file)] || 'application/octet-stream',
+    // The page itself is never kept; scripts and styles are revalidated every time.
+    'Cache-Control': html ? 'no-store' : 'no-cache',
+    'X-Box-Version': APP_VERSION,
+  });
   fs.createReadStream(file).pipe(res);
 }
 
@@ -299,10 +316,15 @@ const server = http.createServer(async (req, res) => {
     // ---- public: session, sign in, sign up, reset ----
     if (p === '/api/session' && req.method === 'GET') {
       const u = currentUser(req);
-      return json(res, 200, { loginRequired: true, authed: !!u, user: auth.publicUser(u), mailConfigured: mail.configured() });
+      return json(res, 200, { loginRequired: true, authed: !!u, user: auth.publicUser(u), mailConfigured: mail.configured(), version: APP_VERSION });
     }
     if (p === '/api/login' && req.method === 'POST') {
       const body = await readBody(req).catch(() => ({}));
+      // A copy of Box from before accounts sends only a password. Tell that
+      // device to fetch the new app instead of calling its password wrong.
+      if (!body.email && body.password) {
+        return json(res, 426, { error: 'Box was updated with accounts. Close the app completely, open it again, then sign in with your email and password.', reload: true });
+      }
       try {
         const u = auth.login({ email: body.email, password: body.password, ip });
         const token = auth.createSession(u, req.headers['user-agent']);
@@ -393,7 +415,7 @@ const server = http.createServer(async (req, res) => {
 
     if (p === '/api/events' && req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
-      res.write(`data: ${JSON.stringify({ event: 'hello' })}\n\n`);
+      res.write(`data: ${JSON.stringify({ event: 'hello', version: APP_VERSION })}\n\n`);
       clients.set(res, user);
       const ping = setInterval(() => res.write(': ping\n\n'), 25000);
       req.on('close', () => { clearInterval(ping); clients.delete(res); });

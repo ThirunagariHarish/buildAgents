@@ -2556,10 +2556,24 @@ function openAgentsSheet(opts = {}) {
 }
 
 // ---------- live events ----------
+// The version of the app shell this page loaded with. When the server reports
+// a different one (after a deploy), the page reloads itself so a phone never
+// keeps using an old copy of Box.
+let APP_VERSION = null;
+function checkVersion(v) {
+  if (!v) return;
+  if (!APP_VERSION) { APP_VERSION = v; return; }
+  if (v !== APP_VERSION) {
+    try { caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))); } catch {}
+    location.reload();
+  }
+}
+
 function handleEvent(ev) {
   const mine = current && ev.ideaId === current.id;
   switch (ev.event) {
     case 'hello':
+      checkVersion(ev.version);
       refreshIdeas();
       if (current) openIdea(current.id, { silent: true });
       break;
@@ -2805,7 +2819,12 @@ function openPeopleSheet() {
     return showLogin('done', { title: 'Link expired', text: 'This link is no longer valid. Use “Forgot password” to get a new one.' });
   }
   const session = await fetch('/api/session').then((r) => r.json()).catch(() => ({}));
-  if (!session.authed) return showLogin();
+  checkVersion(session.version);
+  if (!session.authed) {
+    // Keep checking for updates while the sign-in screen is up.
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) fetch('/api/session').then((r) => r.json()).then((s) => checkVersion(s.version)).catch(() => {}); });
+    return showLogin();
+  }
   ME = session.user;
   renderAvatar();
   registerSW();
@@ -2815,7 +2834,11 @@ function openPeopleSheet() {
   await refreshIdeas();
   await onRoute();
   connectEvents();
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshIdeasSoon(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    refreshIdeasSoon();
+    fetch('/api/session').then((r) => r.json()).then((s) => checkVersion(s.version)).catch(() => {});
+  });
   setTimeout(checkSpending, 3000);
   setInterval(checkSpending, 30 * 60 * 1000);
 })();
