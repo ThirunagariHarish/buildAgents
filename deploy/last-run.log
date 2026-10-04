@@ -1,4 +1,4 @@
-run: 74  commit: 3b3186f  ssh step: success  at: 2026-10-04T19:56:56Z
+run: 75  commit: c995005  ssh step: success  at: 2026-10-04T20:55:41Z
 
 == secrets GitHub passed to this run ==
 BOX_PASSWORD: set (6 chars)
@@ -6,7 +6,7 @@ CLAUDE_CODE_OAUTH_TOKEN: set (108 chars)
 BOX_GITHUB_TOKEN: set (40 chars)
 BOX_KUBECONFIG: set (2955 chars)
 
-HEAD: 3b3186f   domain: box.cashflowus.com
+HEAD: c995005   domain: box.cashflowus.com
 == env file ==
 claude token: looks valid (length 108)
 keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN BOX_GITHUB_TOKEN BOX_DOMAIN BOX_KUBECONFIG_FILE 
@@ -21,7 +21,6 @@ github token check: classic token for ThirunagariHarish, scopes: admin:enterpris
 ==> Checking Claude login
    Claude login OK
 ==> Installing systemd service (port 3400)
-    ⚠ If you expose Box publicly, protect it (Caddy basic_auth, VPN, or
 service: active
 local /: HTTP 200
 api without sign-in: HTTP 401 (401 = sign-in enforced)
@@ -41,12 +40,41 @@ claude inside the sandbox: OK
 postgres inside the sandbox: OK
 claude as build user: OK
 == notifications ==
-push: vapid key ready, devices subscribed: 2, needs you: 0
+push: vapid key ready, devices subscribed: 2, needs you: 1
 == wildcard DNS (*.cashflowus.com) ==
-dns-check-1791143807.cashflowus.com -> 2.25.157.104
+dns-check-1791147333.cashflowus.com -> 2.25.157.104
 box login: on
 == latest layout reports from phones ==
 [
+ {
+  "at": "2026-10-04T20:25:41.466Z",
+  "authed": true,
+  "version": "52fb7d134eef",
+  "href": "https://box.cashflowus.com/",
+  "screenShown": "app",
+  "sw": true,
+  "caches": [
+   "box-v2"
+  ],
+  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1",
+  "standalone": true,
+  "innerHeight": 812,
+  "outerHeight": 874,
+  "clientHeight": 812,
+  "screen": [
+   402,
+   874
+  ],
+  "vv": [
+   812,
+   0
+  ],
+  "safeTop": "62px",
+  "safeBottom": "34px",
+  "mainBottom": 812,
+  "composerBottom": 802,
+  "appH": "812px"
+ },
  {
   "at": "2026-10-04T19:28:42.375Z",
   "authed": true,
@@ -160,40 +188,11 @@ box login: on
   "mainBottom": 812,
   "composerBottom": 802,
   "appH": "812px"
- },
- {
-  "at": "2026-10-04T07:53:39.420Z",
-  "authed": true,
-  "version": "52fb7d134eef",
-  "href": "https://box.cashflowus.com/#/idea/28725ec667a7",
-  "screenShown": "app",
-  "sw": true,
-  "caches": [
-   "box-v2"
-  ],
-  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
-  "standalone": false,
-  "innerHeight": 796,
-  "outerHeight": 956,
-  "clientHeight": 796,
-  "screen": [
-   440,
-   956
-  ],
-  "vv": [
-   508,
-   0
-  ],
-  "safeTop": "0px",
-  "safeBottom": "0px",
-  "mainBottom": 508,
-  "composerBottom": 498,
-  "appH": null
  }
 ]
 == claude login ==
 haiku: OK (2s) -> OK
-sonnet: OK (3s) -> OK
+sonnet: OK (2s) -> OK
 opus: OK (2s) -> OK
 == remove earlier Coolify routing attempts ==
 removed relay container box-web
