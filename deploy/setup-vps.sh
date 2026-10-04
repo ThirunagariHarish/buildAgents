@@ -40,13 +40,15 @@ echo "   build user: $(id boxbuild 2>/dev/null | cut -d' ' -f1); kubectl: $(comm
 
 echo "==> Local Postgres for builds and tests"
 # Developers and QA get a real database: role boxbuild (peer auth, can create
-# databases), DATABASE_URL=postgresql://boxbuild@localhost:5432/<project>_dev
+# databases), DATABASE_URL=postgresql://boxbuild:boxbuild@localhost:5432/<project>_dev
 if ! command -v psql >/dev/null; then
   sudo apt-get install -y -qq postgresql >/dev/null 2>&1 || echo "   postgres install skipped"
 fi
 if command -v psql >/dev/null; then
   sudo systemctl enable --now postgresql >/dev/null 2>&1 || true
   sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='boxbuild'" 2>/dev/null | grep -q 1 || sudo -u postgres psql -c "CREATE ROLE boxbuild LOGIN CREATEDB" >/dev/null 2>&1
+  # Local-only sandbox database; apps connect over TCP, so the role needs a password.
+  sudo -u postgres psql -c "ALTER ROLE boxbuild PASSWORD 'boxbuild'" >/dev/null 2>&1
   echo "   postgres: $(psql --version 2>/dev/null | head -1), role boxbuild: $(sudo -u postgres psql -tAc "SELECT rolcreatedb FROM pg_roles WHERE rolname='boxbuild'" 2>/dev/null)"
 fi
 command -v redis-server >/dev/null || sudo apt-get install -y -qq redis-server >/dev/null 2>&1 || true
