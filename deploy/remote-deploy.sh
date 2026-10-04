@@ -29,6 +29,7 @@ BOX_GITHUB_TOKEN=$(printf '%s' "${BOX_GITHUB_TOKEN:-}" | tr -d '[:space:]')
     v=$(printf '%s' "${!k:-}" | tr -d '\r\n'); [ -n "$v" ] && printf '%s=%s\n' "$k" "$v"
   done
   printf 'BOX_DOMAIN=%s\n' "$DOMAIN"
+  printf 'BOX_KUBECONFIG_FILE=/etc/box-kubeconfig\n'
 } > /etc/box.env
 chmod 600 /etc/box.env
 echo "keys in /etc/box.env: $(cut -d= -f1 /etc/box.env 2>/dev/null | tr '\n' ' ')"
@@ -76,6 +77,9 @@ if [ -f /etc/box-kubeconfig ]; then
   echo "cluster: $(timeout 20 kubectl --kubeconfig /etc/box-kubeconfig get nodes --no-headers 2>&1 | awk '{print $1":"$2}' | tr '\n' ' ')"
 fi
 echo "sandbox: $(grep -q '^BOX_BWRAP=1' /etc/box.env && echo 'bubblewrap on (read-only system, own repo only)' || echo "bubblewrap OFF — agents are isolated by user permissions only; bwrap: $(command -v bwrap || echo 'not installed'); test said: $(sudo -u boxbuild -H bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --tmpfs /opt/box/data --unshare-pid --die-with-parent -- /bin/sh -c 'ls -A /opt/box/data | wc -l' 2>&1 | head -2 | tr '\n' ' ')")"
+if grep -q '^BOX_BWRAP=1' /etc/box.env; then
+  echo "claude inside the sandbox: $(set -a; . /etc/box.env 2>/dev/null; set +a; mkdir -p /opt/box/data/work/_check && chown boxbuild:boxbuild /opt/box/data/work/_check && timeout 180 sudo -u boxbuild -H --preserve-env=CLAUDE_CODE_OAUTH_TOKEN bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --tmpfs /run/user --tmpfs /opt/box/data --bind /opt/box/data/work/_check /opt/box/data/work/_check --bind /home/boxbuild /home/boxbuild --unshare-pid --die-with-parent --chdir /opt/box/data/work/_check -- claude -p 'Reply with exactly: OK' --model haiku 2>&1 | tail -1; rm -rf /opt/box/data/work/_check)"
+fi
 echo "claude as build user: $(set -a; . /etc/box.env 2>/dev/null; set +a; timeout 120 sudo -u boxbuild -H --preserve-env=CLAUDE_CODE_OAUTH_TOKEN claude -p 'Reply with exactly: OK' --model haiku 2>&1 | tail -1)"
 
 echo "== notifications =="
