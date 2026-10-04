@@ -52,7 +52,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           envs: BOX_PASSWORD,BOX_DOMAIN,CLAUDE_CODE_OAUTH_TOKEN,BOX_GITHUB_TOKEN,BOX_KUBECONFIG,BOX_TELEGRAM_TOKEN,BOX_TELEGRAM_CHAT_ID
           capture_stdout: true
-          command_timeout: 15m
+          command_timeout: 25m
           script: |
             set -e
             APP_DIR=/opt/box
