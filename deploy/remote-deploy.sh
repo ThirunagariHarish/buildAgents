@@ -18,12 +18,29 @@ if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
   esac
 fi
 REQUIRE_LOGIN=true   # false turns the sign-in screen off
+BOX_GITHUB_TOKEN=$(printf '%s' "${BOX_GITHUB_TOKEN:-}" | tr -d '[:space:]')
 {
   [ "$REQUIRE_LOGIN" = true ] && [ -n "${BOX_PASSWORD:-}" ] && printf 'BOX_PASSWORD=%s\n' "$BOX_PASSWORD"
   [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] && printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "$CLAUDE_CODE_OAUTH_TOKEN"
+  [ -n "$BOX_GITHUB_TOKEN" ] && printf 'BOX_GITHUB_TOKEN=%s\n' "$BOX_GITHUB_TOKEN"
+  printf 'BOX_KUBECONFIG_FILE=/etc/box-kubeconfig\n'
 } > /etc/box.env
 chmod 600 /etc/box.env
 echo "keys in /etc/box.env: $(cut -d= -f1 /etc/box.env 2>/dev/null | tr '\n' ' ')"
+# Cluster access for deploying projects: the BOX_KUBECONFIG secret holds the
+# kubeconfig, raw or base64-encoded.
+if [ -n "${BOX_KUBECONFIG:-}" ]; then
+  if printf '%s' "$BOX_KUBECONFIG" | grep -q 'apiVersion'; then
+    printf '%s\n' "$BOX_KUBECONFIG" > /etc/box-kubeconfig
+  else
+    printf '%s' "$BOX_KUBECONFIG" | tr -d '[:space:]' | base64 -d > /etc/box-kubeconfig 2>/dev/null || echo "kubeconfig: could not decode BOX_KUBECONFIG"
+  fi
+  chmod 600 /etc/box-kubeconfig
+  echo "kubeconfig: written ($(wc -c < /etc/box-kubeconfig) bytes)"
+else
+  echo "kubeconfig: no BOX_KUBECONFIG secret (projects can be built but not deployed)"
+fi
+echo "github token: $([ -n "$BOX_GITHUB_TOKEN" ] && echo "set (length ${#BOX_GITHUB_TOKEN})" || echo 'none (projects can be built but not deployed)')"
 
 echo "== box service =="
 bash deploy/setup-vps.sh 2>&1 | grep -E '==>|⚠|OK' || true
@@ -34,6 +51,16 @@ echo "local /: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http:/
 COOKIE="box_session=$(set -a; . /etc/box.env 2>/dev/null; set +a; node -e "const p=process.env.BOX_PASSWORD; console.log(p ? require('crypto').createHmac('sha256', p).update('box-session-v1').digest('hex') : '')")"
 echo "api without sign-in: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:3400/api/ideas) (401 = sign-in enforced)"
 echo "agent pool: $(curl -s --max-time 8 -H "Cookie: $COOKIE" http://localhost:3400/api/agents | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const l=JSON.parse(d);console.log(l.length+' agents — '+l.map(a=>a.name+(a.builtin?'':' (added)')).join(', '))}catch(e){console.log('unreadable: '+d.slice(0,120))}})")"
+
+echo "== build crew =="
+echo "crew: $(curl -s --max-time 8 -H "Cookie: $COOKIE" http://localhost:3400/api/crew | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const l=JSON.parse(d);console.log(l.map(a=>a.name).join(', '))}catch(e){console.log('unreadable')}})")"
+echo "build user: $(id boxbuild 2>/dev/null || echo missing)"
+echo "work dir: $(stat -c '%U %a' data/work 2>/dev/null || echo missing)"
+echo "tools: node $(node -v 2>/dev/null), pnpm $(sudo -u boxbuild -H bash -lc 'pnpm -v' 2>/dev/null || echo missing), kubectl $(kubectl version --client 2>/dev/null | head -1 || echo missing), uv $(uv --version 2>/dev/null || echo missing), docker $(docker --version 2>/dev/null | cut -d, -f1 || echo missing)"
+if [ -f /etc/box-kubeconfig ]; then
+  echo "cluster: $(timeout 20 kubectl --kubeconfig /etc/box-kubeconfig get nodes --no-headers 2>&1 | awk '{print $1":"$2}' | tr '\n' ' ')"
+fi
+echo "claude as build user: $(set -a; . /etc/box.env 2>/dev/null; set +a; timeout 120 sudo -u boxbuild -H --preserve-env=CLAUDE_CODE_OAUTH_TOKEN claude -p 'Reply with exactly: OK' --model haiku 2>&1 | tail -1)"
 
 echo "== wildcard DNS (*.cashflowus.com) =="
 probe="dns-check-$(date +%s).cashflowus.com"

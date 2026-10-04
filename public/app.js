@@ -39,6 +39,8 @@ const PATHS = {
   cube: '<path d="M20.5 7.5L12 3 3.5 7.5v9L12 21l8.5-4.5z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/>',
   rocket: '<path d="M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2c.9-.9.9-2.2 0-3s-2.1-.9-3 0z"/><path d="M12 15l-3-3a19 19 0 0 1 9-8c1.3-.5 2.6.8 2.1 2.1A19 19 0 0 1 12 15z"/><path d="M9 12H5l2-3.5h4.5M12 15v4l3.5-2v-4.5"/>',
   inbox: '<path d="M3.5 13.5h5l1.5 2.5h4l1.5-2.5h5"/><path d="M5.5 5h13l2 8.5V18a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-4.5z"/>',
+  list: '<path d="M8 6.5h12M8 12h12M8 17.5h12"/><path d="M4 6.5h.01M4 12h.01M4 17.5h.01"/>',
+  globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.7 5.4 3.7 8.5s-1.2 5.9-3.7 8.5c-2.5-2.6-3.7-5.4-3.7-8.5S9.5 6.1 12 3.5z"/>',
   spark: '<path d="M12 2.5C12.8 8 16 11.2 21.5 12 16 12.8 12.8 16 12 21.5 11.2 16 8 12.8 2.5 12 8 11.2 11.2 8 12 2.5Z" fill="currentColor" stroke="none"/>',
 };
 function ic(name) {
@@ -252,7 +254,7 @@ fitApp();
 // One-off layout report so screen-size problems on a real phone can be diagnosed.
 setTimeout(() => {
   const probe = document.createElement('div');
-  probe.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom);padding-top:env(safe-area-inset-top)';
+  probe.style.cssText = 'position:fixed;bottom:0;box-sizing:content-box;height:env(safe-area-inset-bottom);padding-top:env(safe-area-inset-top)';
   document.body.appendChild(probe);
   const cs = getComputedStyle(probe);
   const report = {
@@ -385,14 +387,16 @@ const STAGES = [
 ];
 const STAGE_LABEL = {
   planning: 'Planning', design: 'Designing', plan_review: 'Plan ready — approve it', building: 'Building', testing: 'Testing',
-  deploying: 'Deploying', review: 'Site ready for review', live: 'Live', maintenance: 'Maintenance',
+  deploy_setup: 'Built — deploy needs setup', deploying: 'Deploying', review: 'Site ready — review it', live: 'Live', maintenance: 'Live · maintenance',
 };
-const NEEDS_YOU = new Set(['plan_review', 'review']);
+// Where a stage sits on the progress bar.
+const STAGE_POS = { planning: 0, design: 1, plan_review: 1, building: 2, testing: 3, deploy_setup: 4, deploying: 4, review: 5, live: 6, maintenance: 7 };
+const NEEDS_YOU = new Set(['plan_review', 'deploy_setup', 'review']);
 /** Where an idea sits in the sidebar, and how it's labelled. */
 function placeOf(i) {
   if ((i.phase || 'idea') === 'project') {
-    if (NEEDS_YOU.has(i.stage)) return { group: 'needs', label: STAGE_LABEL[i.stage], icon: 'cube', cls: 'project needs' };
     if (i.status === 'running') return { group: 'projects', label: `${STAGE_LABEL[i.stage] || 'Working'}…`, icon: 'cube', cls: 'project running' };
+    if (NEEDS_YOU.has(i.stage)) return { group: 'needs', label: STAGE_LABEL[i.stage], icon: 'cube', cls: 'project needs' };
     if (i.status === 'error') return { group: 'projects', label: 'Stopped', icon: 'alert', cls: 'error' };
     if (i.status === 'paused') return { group: 'projects', label: `${STAGE_LABEL[i.stage] || 'Project'} · paused`, icon: 'cube', cls: 'project' };
     return { group: 'projects', label: STAGE_LABEL[i.stage] || 'Project', icon: 'cube', cls: 'project' };
@@ -464,13 +468,16 @@ function renderTop() {
 function isProject() { return !!(current && current.phase === 'project' && current.project); }
 function canPromote() { return !!(current && !isProject() && current.status === 'done' && current.brief); }
 function canApprove() { return !!(isProject() && current.project.stage === 'plan_review' && current.status !== 'running'); }
+function canComplete() { return !!(isProject() && current.project.stage === 'review' && current.status !== 'running'); }
+function canDeploy() { return !!(isProject() && current.project.stage === 'deploy_setup' && current.status !== 'running'); }
+function canResumeBuild() {
+  return !!(isProject() && (current.status === 'paused' || current.status === 'error') && ['building', 'testing', 'deploying'].includes(current.project.stage));
+}
 function projectDocs() { return isProject() ? Object.values(current.project.docs || {}) : []; }
 function renderStageBar() {
   const bar = $('stage-bar');
   if (!isProject()) { bar.classList.add('hidden'); return; }
-  const stage = current.project.stage === 'plan_review' ? 'design' : current.project.stage;
-  const idx = STAGES.findIndex(([k]) => k === stage);
-  const at = current.project.stage === 'maintenance' ? STAGES.length : idx;
+  const at = STAGE_POS[current.project.stage] ?? 0;
   bar.classList.remove('hidden');
   bar.innerHTML = STAGES.map(([, label], n) =>
     `<span class="stage ${n < at ? 'done' : n === at ? 'now' : ''}">${n < at ? ic('check') : '<i></i>'}${label}</span>`).join('<span class="stage-sep"></span>');
@@ -502,8 +509,26 @@ async function approveCurrent() {
     await api(`/api/ideas/${current.id}/approve`, { method: 'POST', body: '{}' });
     await openIdea(current.id, { silent: true });
     refreshIdeasSoon();
-    toast('Plan approved');
+    toast('Plan approved — the build crew is on it');
   } catch (e) { toast(e.message); }
+}
+async function completeCurrent() {
+  if (!canComplete()) return;
+  const ok = await dialog({
+    title: 'Mark complete?',
+    text: 'The project moves to maintenance. It stays live; anything you write here later becomes a fix or a feature the crew builds, tests and redeploys.',
+    confirm: 'Mark complete',
+  });
+  if (!ok) return;
+  try {
+    await api(`/api/ideas/${current.id}/complete`, { method: 'POST', body: '{}' });
+    await openIdea(current.id, { silent: true });
+    refreshIdeasSoon();
+    toast('Marked complete');
+  } catch (e) { toast(e.message); }
+}
+function openSite() {
+  if (current?.project?.url) window.open(current.project.url, '_blank', 'noopener');
 }
 $('top-title').onclick = () => (route.view === 'idea' && current ? openRoomSheet() : openAgentsSheet());
 $('more-btn').onclick = () => {
@@ -526,10 +551,15 @@ $('more-btn').onclick = () => {
   if (current.brief) items.push({ icon: 'doc', label: 'Idea Brief', run: openBriefViewer });
   if (isProject()) {
     if (canApprove()) items.unshift({ icon: 'check', label: 'Approve plan', run: approveCurrent });
+    if (canComplete()) items.unshift({ icon: 'check', label: 'Mark complete', run: completeCurrent });
+    if (current.project.url) items.unshift({ icon: 'globe', label: 'Open the site', run: openSite });
     if (projectDocs().length) items.push({ icon: 'stack', label: 'Project documents', run: openDocsSheet });
     if (current.project.prototype) items.push({ icon: 'image', label: 'Prototype', run: openPrototype });
+    if (current.project.tasks?.length) items.push({ icon: 'list', label: 'Task board', run: openTasksSheet });
     if (s === 'running') items.push({ icon: 'pause', label: 'Pause the crew', run: pauseCurrent });
     else if ((s === 'paused' || s === 'error') && ['planning', 'design'].includes(current.project.stage)) items.push({ icon: 'play', label: 'Resume planning', run: runCurrent });
+    else if (canResumeBuild()) items.push({ icon: 'play', label: 'Resume the crew', run: runCurrent });
+    else if (canDeploy()) items.push({ icon: 'rocket', label: 'Deploy', run: runCurrent });
     items.push('-', { icon: 'trash', label: 'Delete', danger: true, run: deleteCurrent });
     openPopover($('more-btn'), items);
     return;
@@ -613,13 +643,20 @@ $('jump-btn').onclick = () => scrollToBottom(true);
 function agentMsgHtml(m) {
   const a = agentOf(m.agentId, m.agentName);
   const open = expanded.has(m.id);
-  const label = m.kind === 'doc' ? (m.docTitle || 'Document') : (KIND_LABEL[m.kind] || '');
-  const meta = [timeOf(m.ts), m.durationMs ? `${Math.round(m.durationMs / 1000)}s` : ''].filter(Boolean).join(' · ');
+  const label = m.kind === 'doc' ? (m.docTitle || 'Document') : m.kind === 'task' ? `${m.taskId}` : (KIND_LABEL[m.kind] || '');
+  const meta = [timeOf(m.ts), m.durationMs ? `${Math.round(m.durationMs / 1000)}s` : '', m.commit ? `commit ${m.commit}` : ''].filter(Boolean).join(' · ');
   const compact = m.kind === 'brief' || m.kind === 'doc';
+  const moreLabel = m.kind === 'task' ? 'report' : 'argument';
   let extra = '';
+  if (m.kind === 'task') {
+    extra = `<div class="task-line ${esc(m.taskStatus || 'done')}">${ic(m.taskStatus === 'blocked' ? 'alert' : 'check')}<span>${esc(m.taskTitle || '')}</span><em>${m.taskStatus === 'blocked' ? 'blocked' : 'done'}</em></div>`;
+  }
+  if (m.kind === 'doc' && m.verdict) {
+    extra = `<div class="task-line ${m.verdict === 'pass' ? 'done' : 'blocked'}">${ic(m.verdict === 'pass' ? 'check' : 'alert')}<span>Verdict</span><em>${m.verdict === 'pass' ? 'pass' : 'needs fixes'}</em></div>`;
+  }
   if (m.kind === 'doc') {
     const d = current?.project?.docs?.[m.docKey];
-    extra = `<button class="brief-card doc-card" data-doc="${esc(m.docKey)}">
+    extra += `<button class="brief-card doc-card" data-doc="${esc(m.docKey)}">
         <span class="brief-ico">${ic('doc')}</span>
         <span style="min-width:0"><div class="brief-title">${esc(m.docTitle)}</div><div class="brief-sub">${d && d.version > 1 ? `Version ${d.version} · ` : ''}Tap to read</div></span>
       </button>`;
@@ -638,7 +675,7 @@ function agentMsgHtml(m) {
       <div class="a-body">${mdInline(esc(m.summary))}</div>
       ${extra}
       ${compact ? '' : `
-        <button class="a-more${open ? ' open' : ''}" data-toggle="${m.id}">${open ? 'Hide' : 'Full'} argument <span data-icon="chevR">${ic('chevR')}</span></button>
+        <button class="a-more${open ? ' open' : ''}" data-toggle="${m.id}">${open ? 'Hide' : 'Full'} ${moreLabel} <span data-icon="chevR">${ic('chevR')}</span></button>
         ${open ? `<div class="a-full a-body md">${md(m.content)}</div>` : ''}`}
       <div class="a-actions">
         <button class="icon-btn" data-copy="${m.id}" aria-label="Copy">${ic('copy')}</button>
@@ -686,7 +723,7 @@ function projectHtml() {
   let html = `<div class="proj-card">
       <div class="proj-top"><span class="proj-badge">${ic('cube')}Project</span><span class="proj-stage">${esc(STAGE_LABEL[p.stage] || p.stage)}</span></div>
       <div class="proj-title">${esc(current.brief ? briefTitle(current.brief) : current.title)}</div>
-      <div class="proj-meta">Promoted ${esc(when)} · will go live at <strong>${esc(p.slug)}.cashflowus.com</strong></div>
+      <div class="proj-meta">Promoted ${esc(when)} · ${p.url ? 'live at' : 'will go live at'} <strong>${esc(p.slug)}.cashflowus.com</strong></div>
       ${current.brief ? `<button class="proj-link" data-brief="1">${ic('doc')}Open the brief</button>` : ''}
     </div>
     <button class="debate-toggle${open ? ' open' : ''}" data-toggle="debate">${ic('bulb')}<span>Idea debate · ${debate.filter((m) => m.kind !== 'user').length} messages</span>${ic('chevR')}</button>
@@ -713,9 +750,18 @@ function projectHtml() {
       The Project Manager, Lead Architect, Database Architect and UX Designer turn the brief into a plan, a design direction and a prototype for you to approve.</div>
     </div>`;
   }
+  if (p.tasks?.length) html += taskBoardHtml(p);
+  if (p.url) {
+    html += `<a class="site-card" href="${esc(p.url)}" target="_blank" rel="noopener">
+        <span class="brief-ico">${ic('globe')}</span>
+        <span style="min-width:0"><div class="brief-title">${esc(p.url.replace(/^https?:\/\//, ''))}</div><div class="brief-sub">${p.stage === 'maintenance' ? 'Live · in maintenance' : 'Live · tap to open'}${p.repoUrl ? ' · code on GitHub' : ''}</div></span>
+      </a>`;
+  }
   for (const m of after) {
     if (m.kind === 'user') html += `<div class="u-msg"><div class="u-label">You · to the crew</div>${attachmentsHtml(m.attachments)}<div class="u-bubble">${esc(m.content)}</div></div>`;
-    else if (m.kind === 'approved') html += `<div class="system-mark">${ic('check')}${esc(m.summary)}</div>`;
+    else if (m.kind === 'approved' || m.kind === 'completed') html += `<div class="system-mark">${ic('check')}${esc(m.summary)}</div>`;
+    else if (m.kind === 'system') html += `<div class="system-note"><strong>${esc(m.summary)}</strong>${m.content && m.content !== m.summary ? `<div class="md">${md(m.content)}</div>` : ''}</div>`;
+    else if (m.kind === 'deployed') html += `<div class="system-note live"><strong>${ic('globe')}${esc(m.summary)}</strong><div class="md">${md(m.content)}</div></div>`;
     else html += agentMsgHtml(m);
   }
   if (current.status === 'error' && current.error) {
@@ -727,14 +773,63 @@ function projectHtml() {
         <div><strong>Your approval</strong>
         Read the four documents and try the prototype. If anything is off, reply below and the crew revises the affected documents. When it’s right, approve the plan.</div>
       </div>`;
-  } else if (p.stage === 'building' && current.status !== 'running') {
+  } else if (canDeploy()) {
+    html += `<div class="review-card">
+        <span class="next-ico">${ic('inbox')}</span>
+        <div><strong>Deployment needs setup</strong>
+        The build passed QA. ${current.deployReady?.github && current.deployReady?.kube ? 'Box now has its credentials — tap Deploy.' : `Box still needs ${!current.deployReady?.github ? 'a GitHub token (BOX_GITHUB_TOKEN)' : ''}${!current.deployReady?.github && !current.deployReady?.kube ? ' and ' : ''}${!current.deployReady?.kube ? 'the cluster kubeconfig (BOX_KUBECONFIG)' : ''} as repository secrets, then a redeploy of Box. After that, tap Deploy.`}</div>
+      </div>`;
+  } else if (canComplete()) {
+    html += `<div class="review-card">
+        <span class="next-ico">${ic('inbox')}</span>
+        <div><strong>Your review</strong>
+        Open the site and try it on your phone. Anything wrong or missing: reply below and the crew fixes, tests and redeploys. Happy with it? Mark it complete.</div>
+      </div>`;
+  } else if (p.stage === 'maintenance' && current.status !== 'running') {
     html += `<div class="next-card">
         <span class="next-ico">${ic('cube')}</span>
-        <div><strong>Next: the build crew</strong>
-        The Tech Lead and developers build from the approved plan, QA tests it, and DevOps puts it live at the project’s address. The build crew arrives in the next Box update — notes you leave below are saved for them.</div>
+        <div><strong>In maintenance</strong>
+        Write a fix or a feature below. The Tech Lead turns it into tasks; the crew builds, tests and redeploys.</div>
       </div>`;
   }
   return html;
+}
+
+function taskBoardHtml(p) {
+  const tasks = p.tasks || [];
+  const done = tasks.filter((t) => t.status === 'done').length;
+  const doing = tasks.find((t) => t.status === 'doing');
+  const blocked = tasks.filter((t) => t.status === 'blocked').length;
+  const pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
+  return `<button class="task-board" data-tasks="1">
+      <div class="tb-head"><span class="tb-title">${ic('list')}Task board</span><span class="tb-count">${done} / ${tasks.length} done${blocked ? ` · ${blocked} blocked` : ''}</span></div>
+      <div class="tb-bar"><i style="width:${pct}%"></i></div>
+      ${doing ? `<div class="tb-now"><span class="shimmer">${esc(doing.id)} · ${esc(doing.title)}</span></div>` : ''}
+    </button>`;
+}
+
+function openTasksSheet() {
+  if (!current?.project?.tasks?.length) return;
+  openSheet({
+    title: 'Task board',
+    tall: true,
+    render(s) {
+      const tasks = current.project.tasks;
+      const icon = { done: 'check', doing: 'spark', blocked: 'alert', todo: 'chevR' };
+      s.body.innerHTML = `<p class="sheet-intro">${tasks.filter((t) => t.status === 'done').length} of ${tasks.length} done. Tasks come from the Tech Lead’s build plan, then from QA and your feedback.</p>
+        ${tasks.map((t) => {
+          const a = agentOf(t.agentId || (t.role === 'frontend' ? 'frontend' : 'backend'));
+          return `<div class="task-row ${esc(t.status)}">
+            <span class="task-ico">${ic(icon[t.status] || 'chevR')}</span>
+            <span class="task-main">
+              <span class="task-title">${esc(t.id)} · ${esc(t.title)}</span>
+              <span class="task-sub">${a.emoji} ${esc(a.name)} · ${esc(t.size || 'M')}${t.source === 'qa' ? ' · fix from QA' : t.source === 'owner' ? ' · from you' : ''}${t.commit ? ` · ${esc(t.commit)}` : ''}</span>
+              ${t.report ? `<span class="task-report">${esc(t.report)}</span>` : ''}
+            </span>
+          </div>`;
+        }).join('')}`;
+    },
+  });
 }
 
 function openDocViewer(key) {
@@ -833,10 +928,12 @@ function tickBrew() {
 setInterval(tickBrew, 1000);
 
 $('messages').addEventListener('click', async (e) => {
-  const t = e.target.closest('[data-toggle],[data-copy],[data-brief],[data-zoom],[data-agent],[data-doc],[data-proto]');
+  const t = e.target.closest('[data-toggle],[data-copy],[data-brief],[data-zoom],[data-agent],[data-doc],[data-proto],[data-tasks]');
   if (!t) return;
   if (t.dataset.doc) {
     openDocViewer(t.dataset.doc);
+  } else if (t.dataset.tasks) {
+    openTasksSheet();
   } else if (t.dataset.proto) {
     openPrototype();
   } else if (t.dataset.toggle) {
@@ -883,14 +980,22 @@ function renderDock() {
   } else {
     $('rounds-chip').classList.add('hidden');
     const s = current.status;
+    const stage = isProject() ? current.project.stage : '';
     input.placeholder = isProject()
-      ? (canApprove() ? 'Ask the crew for changes…' : s === 'running' ? 'Note for the crew (read on their next turn)…' : 'Note for the crew…')
+      ? (canApprove() ? 'Ask the crew for changes…'
+        : canComplete() ? 'What should change on the site?…'
+        : stage === 'maintenance' ? 'A fix or a feature for the crew…'
+        : s === 'running' ? 'Note for the crew (read on their next turn)…' : 'Note for the crew…')
       : s === 'running' ? 'Steer the room…'
       : canPromote() ? 'Feedback to refine the idea…' : 'Reply to the room…';
     const pills = [];
     if (isProject()) {
       if (canApprove()) pills.push(['primary', 'check', 'Approve plan', 'approve']);
-      if (current.project.prototype && s !== 'running') pills.push(['', 'image', 'Prototype', 'proto']);
+      if (canComplete()) pills.push(['primary', 'check', 'Mark complete', 'complete']);
+      if (current.project.url && s !== 'running') pills.push(['', 'globe', 'Open the site', 'site']);
+      if (canDeploy()) pills.push(['primary', 'rocket', 'Deploy', 'run']);
+      if (canResumeBuild()) pills.push(['primary', 'play', 'Resume the crew', 'run']);
+      if (current.project.prototype && s !== 'running' && !current.project.url) pills.push(['', 'image', 'Prototype', 'proto']);
       if ((s === 'paused' || s === 'error') && ['planning', 'design'].includes(current.project.stage)) pills.push(['primary', 'play', 'Resume planning', 'run']);
       $('state-actions').innerHTML = pills.map(([cls, icon, label, act]) =>
         `<button class="state-pill ${cls}" data-act="${act}">${ic(icon)}${label}</button>`).join('');
@@ -915,6 +1020,8 @@ $('state-actions').addEventListener('click', (e) => {
   if (b.dataset.act === 'brief') openBriefViewer();
   if (b.dataset.act === 'promote') promoteCurrent();
   if (b.dataset.act === 'approve') approveCurrent();
+  if (b.dataset.act === 'complete') completeCurrent();
+  if (b.dataset.act === 'site') openSite();
   if (b.dataset.act === 'proto') openPrototype();
 });
 $('input').addEventListener('input', () => { autosize(); updateSendState(); });
@@ -1534,9 +1641,16 @@ function handleEvent(ev) {
     case 'stage':
       if (mine && current.project) {
         current.project.stage = ev.stage;
-        renderTop(); renderThread(); renderDock();
+        if (['review', 'deploy_setup', 'maintenance'].includes(ev.stage)) openIdea(current.id, { silent: true });
+        else { renderTop(); renderThread(); renderDock(); }
       }
       refreshIdeasSoon();
+      break;
+    case 'tasks':
+      if (mine && current.project) {
+        current.project.tasks = ev.tasks;
+        renderThread();
+      }
       break;
     case 'round':
       if (mine) { current.round = ev.round; renderTop(); }

@@ -44,7 +44,20 @@ When a brief is ready, **Promote to project**. The planning crew starts at once,
 3. 🗄️ **Database Architect** — entities, schema, key queries, migrations.
 4. 🎨 **UX Designer** — researches comparable products on the web, sets the design direction for *this* product, and writes a clickable `prototype.html` you can try on your phone.
 
-The project then waits in **Needs you** as *Plan ready — approve it*. Reply with changes and the Project Manager routes your feedback to the documents it affects, which get revised; or **Approve plan** to hand it to the build crew (next update: build, test, deploy to `<name>.cashflowus.com`, your review, then maintenance).
+The project then waits in **Needs you** as *Plan ready — approve it*. Reply with changes and the Project Manager routes your feedback to the documents it affects, which get revised; or **Approve plan** to hand it to the build crew.
+
+## The build crew
+
+After approval the build crew works in the project's own git repository (`data/work/<name>/repo`), as the unprivileged `boxbuild` user on the server, with a shell limited to build commands:
+
+1. 🧭 **Tech Lead** (opus) — writes the build plan and an ordered task list; later turns your feedback into tasks.
+2. 🧑‍💻 **Frontend Developer** / ⚙️ **Backend Developer** — take tasks one at a time; Box commits after each. The task board in the app shows progress live.
+3. 🧪 **QA Tester** — runs build, lint and tests, walks every user story, and files bugs. 🎨 The **UX Designer** reviews the UI against the design direction. Open issues become fix tasks (up to three cycles).
+4. 🚀 **DevOps** — Dockerfile, a GHCR image workflow and Kubernetes manifests. Box then creates the private GitHub repo, pushes, waits for the image, applies the manifests to the k3s cluster and waits for `https://<name>.cashflowus.com` to answer.
+
+You get the project back as *Site ready — review it*. Reply with what should change (fix → test → redeploy), or **Mark complete** to move it to maintenance, where any later note becomes a fix or a feature.
+
+Deploying needs two more repository secrets for Box's own deploy workflow: `BOX_GITHUB_TOKEN` (create private repos, read Actions) and `BOX_KUBECONFIG` (the cluster kubeconfig, raw or base64). Without them projects are built and tested, and wait in *Built — deploy needs setup* until you add them and redeploy Box.
 
 ## Configuration
 
@@ -81,8 +94,10 @@ server.js          HTTP server, REST API, SSE event stream (zero dependencies)
 lib/agents.js      the six agent personas and their models
 lib/claude.js      headless `claude -p` subprocess wrapper
 lib/engine.js      the debate orchestration loop
-lib/crew.js        the build crew personas (planning crew for now)
-lib/project.js     the project engine: planning run, feedback triage, plan approval
+lib/crew.js        the planning and build crew personas
+lib/project.js     the project engine: planning, build/test loop, deploy, review, maintenance
+lib/builder.js     the build sandbox: repo per project, unprivileged build user, allowed tools
+lib/deploy.js      GitHub repo + image build, kubectl rollout, site check
 lib/platform-context.md  house standards the crew follows (snapshot of the dev-platform registry)
 lib/store.js       JSON persistence
 public/            the dashboard UI (vanilla HTML/CSS/JS)

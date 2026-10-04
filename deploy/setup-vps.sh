@@ -18,6 +18,23 @@ if ! command -v claude >/dev/null; then
   sudo npm install -g @anthropic-ai/claude-code
 fi
 
+echo "==> Build sandbox user and tools"
+# Build-crew agents (developers, QA, DevOps) run as this unprivileged user,
+# which owns only the project work trees under data/work.
+if ! id boxbuild >/dev/null 2>&1; then
+  sudo useradd --system --create-home --home-dir /home/boxbuild --shell /bin/bash boxbuild
+fi
+sudo mkdir -p "$BOX_DIR/data/work"
+sudo chown boxbuild:boxbuild "$BOX_DIR/data/work"
+sudo chmod 755 "$BOX_DIR/data" "$BOX_DIR/data/work"
+sudo corepack enable 2>/dev/null || true
+if ! command -v kubectl >/dev/null; then
+  curl -fsSL -o /tmp/kubectl "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+    && sudo install -m 0755 /tmp/kubectl /usr/local/bin/kubectl && rm -f /tmp/kubectl || echo "   kubectl install skipped"
+fi
+command -v uv >/dev/null || (curl -LsSf https://astral.sh/uv/install.sh | sudo env UV_INSTALL_DIR=/usr/local/bin sh >/dev/null 2>&1 || true)
+echo "   build user: $(id boxbuild 2>/dev/null | cut -d' ' -f1); kubectl: $(command -v kubectl || echo missing); pnpm: $(command -v pnpm || echo 'via corepack'); uv: $(command -v uv || echo missing)"
+
 echo "==> Checking Claude login"
 if (set -a; [ -f /etc/box.env ] && . /etc/box.env; set +a; claude -p "Reply with exactly: OK" --model haiku >/dev/null 2>&1); then
   echo "   Claude login OK"

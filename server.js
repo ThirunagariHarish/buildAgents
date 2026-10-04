@@ -8,7 +8,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { listIdeas, loadIdea, saveIdea, createIdea, deleteIdea, addMessage, renameIdea, promoteIdea } = require('./lib/store');
 const { runIdea, pauseIdea, isRunning, currentSpeaker } = require('./lib/engine');
-const { runPlanning, approvePlan, pauseProject, projectRunning, projectSpeaker } = require('./lib/project');
+const { runPlanning, approvePlan, runBuild, completeProject, onOwnerMessage, resumeProject, pauseProject, projectRunning, projectSpeaker, deployStatus } = require('./lib/project');
 const { getCrew } = require('./lib/crew');
 const { getAgents, getDebateOrder, addAgent, removeAgent } = require('./lib/agents');
 const { saveUpload, getUpload, resolveIds, removeUploads } = require('./lib/uploads');
@@ -241,7 +241,7 @@ const server = http.createServer(async (req, res) => {
       const action = m[2];
 
       if (!action && req.method === 'GET') {
-        return json(res, 200, { ...idea, status: running(idea.id) ? 'running' : idea.status, speaker: speaker(idea.id) });
+        return json(res, 200, { ...idea, status: running(idea.id) ? 'running' : idea.status, speaker: speaker(idea.id), deployReady: deployStatus() });
       }
       if (!action && req.method === 'PATCH') {
         const body = await readBody(req);
@@ -275,6 +275,18 @@ const server = http.createServer(async (req, res) => {
         try {
           const msg = approvePlan(bus, idea);
           bus.broadcast({ event: 'ideas_changed' });
+          runBuild(bus, idea); // the build crew starts right away
+          return json(res, 200, { ok: true, message: msg, stage: idea.project.stage });
+        } catch (e) {
+          return json(res, 409, { error: e.message });
+        }
+      }
+      if (action === 'complete' && req.method === 'POST') {
+        if (idea.phase !== 'project') return json(res, 409, { error: 'Only projects can be marked complete.' });
+        if (running(idea.id)) return json(res, 409, { error: 'Wait for the crew to finish first.' });
+        try {
+          const msg = completeProject(bus, idea);
+          bus.broadcast({ event: 'ideas_changed' });
           return json(res, 200, { ok: true, message: msg, stage: idea.project.stage });
         } catch (e) {
           return json(res, 409, { error: e.message });
@@ -284,11 +296,7 @@ const server = http.createServer(async (req, res) => {
         const body = await readBody(req);
         if (running(idea.id)) return json(res, 409, { error: 'already running' });
         if (idea.phase === 'project') {
-          const stage = idea.project.stage;
-          if (!['planning', 'design', 'plan_review'].includes(stage)) {
-            return json(res, 409, { error: 'The build crew isn’t available yet — it arrives in the next Box update.' });
-          }
-          runPlanning(bus, idea);
+          try { resumeProject(bus, idea); } catch (e) { return json(res, 409, { error: e.message }); }
           return json(res, 202, { ok: true });
         }
         runIdea(bus, idea, { maxRounds: body.maxRounds, models: body.models }); // fire and forget
@@ -311,10 +319,9 @@ const server = http.createServer(async (req, res) => {
           attachments,
         });
         bus.publish(idea.id, { event: 'message', message: msg });
-        // Feedback on a finished plan sends the crew back to revise it.
-        if (idea.phase === 'project' && idea.project.stage === 'plan_review' && !running(idea.id)) {
-          runPlanning(bus, idea, { feedback: text || 'See the attached files.' });
-        }
+        // Feedback on a finished plan, a live site or a project in maintenance
+        // sends the crew back to work on it.
+        if (idea.phase === 'project') onOwnerMessage(bus, idea, text || 'See the attached files.');
         return json(res, 201, msg);
       }
     }
