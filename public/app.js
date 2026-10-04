@@ -559,6 +559,7 @@ $('idea-list').addEventListener('click', (e) => {
 $('sb-search').addEventListener('input', (e) => { sidebarQuery = e.target.value; renderSidebar(); });
 $('sb-search').addEventListener('keydown', (e) => { if (e.key === 'Enter' && sidebarQuery.trim().length >= 2) { closeDrawer(); openSearchSheet(sidebarQuery.trim()); } });
 $('nav-board').onclick = () => { closeDrawer(); openBoardSheet(); };
+$('nav-people').onclick = () => { closeDrawer(); openPeopleSheet(); };
 
 function openSearchSheet(q) {
   openSheet({
@@ -952,9 +953,12 @@ function renderHomeStrip() {
   const live = ideas.filter((i) => i.url).length;
   const el = $('home-strip');
   const pend = pendingUsers;
-  if (!needs && !running && !live && !pend) { el.innerHTML = ''; return; }
+  const admin = isAdminUser();
+  if (!needs && !running && !live && !pend && !admin) { el.innerHTML = ''; return; }
+  // Administrators always see the People control panel here, even when nothing is waiting.
   el.innerHTML = `<div class="strip">
-      ${pend ? `<button class="strip-item needs" data-strip="people"><b>${pend}</b>${pend === 1 ? 'access request' : 'access requests'}</button>` : ''}
+      ${pend ? `<button class="strip-item needs" data-strip="people"><b>${pend}</b>${pend === 1 ? 'access request' : 'access requests'}</button>`
+        : admin ? `<button class="strip-item" data-strip="people"><b>${memberCount || 1}</b>${(memberCount || 1) === 1 ? 'person · manage access' : 'people · manage access'}</button>` : ''}
       ${needs ? `<button class="strip-item needs" data-strip="needs"><b>${needs}</b>${needs === 1 ? 'needs you' : 'need you'}</button>` : ''}
       ${running ? `<button class="strip-item" data-strip="running"><b>${running}</b>working</button>` : ''}
       ${live ? `<button class="strip-item live" data-strip="live"><b>${live}</b>live</button>` : ''}
@@ -968,9 +972,18 @@ $('home-strip').addEventListener('click', (e) => {
   openDrawer();
 });
 let pendingUsers = 0;
+let memberCount = 0;
 async function refreshPending() {
   if (!isAdminUser()) return;
-  try { const o = await api('/api/overview'); pendingUsers = o.pendingUsers || 0; if (route.view === 'new') renderHomeStrip(); syncBadge(); } catch {}
+  // The People control panel is an administrator's: show it in the sidebar.
+  $('nav-people').classList.remove('hidden');
+  try {
+    const o = await api('/api/overview');
+    pendingUsers = o.pendingUsers || 0; memberCount = o.members || 0;
+    const c = $('nav-people-count'); c.textContent = pendingUsers || ''; c.classList.toggle('hidden', !pendingUsers);
+    if (route.view === 'new') renderHomeStrip();
+    syncBadge();
+  } catch {}
 }
 $('suggestions').addEventListener('click', (e) => {
   const b = e.target.closest('.suggestion');

@@ -483,6 +483,7 @@ const server = http.createServer(async (req, res) => {
         live: ideas.filter((i) => i.project?.url).length, projects: ideas.filter((i) => i.phase === 'project').length,
         ideas: ideas.filter((i) => (i.phase || 'idea') === 'idea').length, usage: usageStats(ideas),
         pendingUsers: isAdmin(user) ? auth.listUsers().filter((x) => x.status === 'pending').length : 0,
+        members: isAdmin(user) ? auth.listUsers().filter((x) => x.status === 'approved').length : 0,
       });
     }
     if (p === '/api/prefs' && req.method === 'GET') return json(res, 200, prefs.load(user.id));
