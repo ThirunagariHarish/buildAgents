@@ -720,6 +720,21 @@ body.mode-project #subtitle-text { color: var(--proj); }
 .a-msg[data-kind="answer"] { border-left: 2px solid var(--line-strong); padding-left: 12px; }
 @media (min-width: 900px) { .board-col { flex-basis: 48%; } }
 
+/* ---------- Confidence tags, screenshots, replay, design choice ---------- */
+.conf { display: inline-block; font-size: 10.5px; line-height: 1; padding: 3px 6px; border-radius: 999px; margin: 0 2px; vertical-align: 2px; letter-spacing: 0.3px; text-transform: uppercase; background: var(--surface-2); color: var(--text-3); }
+.conf.fact { background: color-mix(in srgb, var(--green) 18%, transparent); color: var(--green); }
+.conf.estimate { background: color-mix(in srgb, var(--blue) 18%, transparent); color: var(--blue); }
+.conf.guess { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+.shots { display: flex; gap: 8px; overflow-x: auto; padding: 8px 0 4px; scrollbar-width: none; }
+.shots::-webkit-scrollbar { display: none; }
+.shot { height: 180px; width: auto; border-radius: 12px; border: 1px solid var(--line); flex: none; background: #fff; }
+.replay-bar { display: flex; align-items: center; gap: 12px; margin: 4px 0 8px; font-size: 13.5px; color: var(--text-2); }
+.replay-bar input[type="range"] { flex: 1; accent-color: var(--accent); }
+.doc-tile.chosen { outline: 2px solid var(--proj); outline-offset: -2px; }
+.site-card.down { border-color: color-mix(in srgb, var(--red) 50%, transparent); background: color-mix(in srgb, var(--red) 8%, transparent); }
+a.row, a.row:visited { color: inherit; text-decoration: none; }
+.site-card.down .brief-ico { color: var(--red); }
+
 /* ---------- Notifications banner ---------- */
 .notify-banner {
   display: grid; grid-template-columns: auto 1fr; gap: 10px 12px; align-items: start; text-align: left;

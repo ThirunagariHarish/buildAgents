@@ -6,12 +6,15 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { listIdeas, loadIdea, saveIdea, createIdea, deleteIdea, addMessage, renameIdea, promoteIdea, forkIdea } = require('./lib/store');
-const { runIdea, runQuick, generateExtra, EXTRAS, pauseIdea, isRunning, currentSpeaker } = require('./lib/engine');
-const { runPlanning, approvePlan, runBuild, completeProject, onOwnerMessage, resumeProject, editTasks, pauseProject, projectRunning, projectSpeaker, deployStatus } = require('./lib/project');
+const { listIdeas, loadIdea, saveIdea, createIdea, deleteIdea, addMessage, renameIdea, promoteIdea, forkIdea, mergeIdeas } = require('./lib/store');
+const { runIdea, runQuick, generateExtra, compareIdeas, trendTurn, EXTRAS, pauseIdea, isRunning, currentSpeaker } = require('./lib/engine');
+const { runPlanning, approvePlan, runBuild, completeProject, onOwnerMessage, resumeProject, editTasks, revertTask, chooseDesign, pauseProject, projectRunning, projectSpeaker, deployStatus } = require('./lib/project');
 const { getCrew } = require('./lib/crew');
-const { getAgents, getDebateOrder, addAgent, removeAgent, updateAgent, installPreset, TEMPLATES, PRESETS, TRAITS } = require('./lib/agents');
-const { saveUpload, getUpload, resolveIds, removeUploads } = require('./lib/uploads');
+const { getAgents, getDebateOrder, addAgent, removeAgent, updateAgent, installPreset, agentFromText, TEMPLATES, PRESETS, TRAITS } = require('./lib/agents');
+const { saveUpload, getUpload, resolveIds, removeUploads, saveGenerated } = require('./lib/uploads');
+const prefs = require('./lib/prefs');
+const deployOps = require('./lib/deploy');
+const { askClaude } = require('./lib/claude');
 const { generateTitle } = require('./lib/title');
 const push = require('./lib/push');
 const { needsYouCount } = require('./lib/notify');
@@ -168,6 +171,28 @@ function exportAll() {
   return zip(entries);
 }
 
+/** Fetch the pages linked in an idea's text and attach their readable text. */
+async function ingestUrls(text) {
+  const urls = [...new Set((String(text).match(/https?:\/\/[^\s)>\]]+/g) || []).slice(0, 3))];
+  const out = [];
+  for (const u of urls) {
+    try {
+      const r = await fetch(u, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Box/1.0)' }, redirect: 'follow', signal: AbortSignal.timeout(12000) });
+      const ct = r.headers.get('content-type') || '';
+      if (!r.ok || !/text\/html|text\/plain/.test(ct)) continue;
+      let html = (await r.text()).slice(0, 2_000_000);
+      const title = (html.match(/<title[^>]*>([^<]*)<\/title>/i) || [])[1] || u;
+      const body = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<nav[\s\S]*?<\/nav>|<footer[\s\S]*?<\/footer>/gi, ' ')
+        .replace(/<br\s*\/?>|<\/p>|<\/h\d>|<\/li>|<\/div>/gi, '\n').replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+        .replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n\n').trim().slice(0, 30000);
+      if (body.length < 200) continue;
+      out.push(saveGenerated({ name: `${title.trim().slice(0, 60) || 'page'}.txt`, type: 'text/plain', content: `Source: ${u}\nTitle: ${title.trim()}\n\n${body}` }));
+    } catch {}
+  }
+  return out;
+}
+
 /** Browse a project's repository: a directory listing or a text file. */
 function repoBrowse(slug, rel) {
   const root = builder.repoDir(slug);
@@ -316,6 +341,41 @@ const server = http.createServer(async (req, res) => {
         ideas: ideas.filter((i) => (i.phase || 'idea') === 'idea').length, usage: usageStats(),
       });
     }
+    if (p === '/api/prefs' && req.method === 'GET') return json(res, 200, prefs.load());
+    if (p === '/api/prefs' && req.method === 'POST') {
+      const body = await readBody(req);
+      return json(res, 200, prefs.setAbout(body.about));
+    }
+    if (p === '/api/prefs/knowledge' && req.method === 'POST') {
+      const body = await readBody(req);
+      return json(res, 200, prefs.addKnowledge(body.attachments || []));
+    }
+    const km = p.match(/^\/api\/prefs\/knowledge\/([a-f0-9]{16})$/);
+    if (km && req.method === 'DELETE') return json(res, 200, prefs.removeKnowledge(km[1]));
+    if (p === '/api/compare' && req.method === 'POST') {
+      const body = await readBody(req);
+      const a = loadIdea(String(body.a || '')), b = loadIdea(String(body.b || ''));
+      if (!a || !b || a.id === b.id) return json(res, 400, { error: 'Pick two different ideas.' });
+      try { return json(res, 201, await compareIdeas(bus, a, b)); } catch (e) { return json(res, 500, { error: e.message }); }
+    }
+    if (p === '/api/merge' && req.method === 'POST') {
+      const body = await readBody(req);
+      const a = loadIdea(String(body.a || '')), b = loadIdea(String(body.b || ''));
+      if (!a || !b || a.id === b.id) return json(res, 400, { error: 'Pick two different ideas.' });
+      const idea = mergeIdeas(a, b, { title: body.title });
+      runIdea(bus, idea, { maxRounds: idea.maxRounds });
+      bus.broadcast({ event: 'ideas_changed' });
+      return json(res, 201, idea);
+    }
+    if (p === '/api/polish' && req.method === 'POST') {
+      const body = await readBody(req);
+      const text = String(body.text || '').trim();
+      if (text.length < 20) return json(res, 400, { error: 'Nothing to polish yet.' });
+      try {
+        const r = await askClaude({ model: 'haiku', system: 'You clean up dictated speech into clear written text. Keep every idea and detail; remove filler, false starts and repetition; fix punctuation; keep the speaker\'s voice and first person. Reply with the cleaned text only.', prompt: text, timeoutMs: 60000 });
+        return json(res, 200, { text: r.text.trim() });
+      } catch (e) { return json(res, 500, { error: e.message }); }
+    }
     if (p === '/api/export' && req.method === 'GET') {
       const body = exportAll();
       res.writeHead(200, { 'Content-Type': 'application/zip', 'Content-Length': body.length, 'Content-Disposition': `attachment; filename="box-export-${new Date().toISOString().slice(0, 10)}.zip"` });
@@ -327,6 +387,14 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/agents/presets' && req.method === 'GET') {
       const names = new Set(Object.values(getAgents()).map((a) => a.name.toLowerCase()));
       return json(res, 200, { presets: PRESETS.map((x) => ({ ...x, installed: names.has(x.name.toLowerCase()) })), traits: Object.keys(TRAITS) });
+    }
+    if (p === '/api/agents/from-text' && req.method === 'POST') {
+      const body = await readBody(req);
+      try {
+        const agent = await agentFromText(body);
+        bus.broadcast({ event: 'agents_changed' });
+        return json(res, 201, agent);
+      } catch (e) { return json(res, 400, { error: e.message }); }
     }
     const pm2 = p.match(/^\/api\/agents\/presets\/([a-z0-9-]+)$/);
     if (pm2 && req.method === 'POST') {
@@ -397,6 +465,7 @@ const server = http.createServer(async (req, res) => {
       const text = String(body.text || '').trim();
       const attachments = resolveIds(body.attachments);
       if (!text && !attachments.length) return json(res, 400, { error: 'Describe your idea first.' });
+      if (/https?:\/\//.test(text)) attachments.push(...await ingestUrls(text));
       const maxRounds = Math.min(4, Math.max(1, Number(body.maxRounds) || 2));
       const idea = createIdea({
         title: body.title, text: text || 'See the attached files.', attachments, maxRounds,
@@ -428,8 +497,60 @@ const server = http.createServer(async (req, res) => {
         }
         if (Array.isArray(body.tags)) { idea.tags = body.tags.map((t) => String(t).trim().slice(0, 30)).filter(Boolean).slice(0, 8); saveIdea(idea); }
         if (body.archived !== undefined) { idea.archived = !!body.archived; saveIdea(idea); }
+        if (body.watch !== undefined) { idea.watch = !!body.watch; saveIdea(idea); }
+        if (body.customDomain !== undefined && idea.project) {
+          const d = String(body.customDomain || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+          if (d && !/^([a-z0-9-]+\.)+[a-z]{2,}$/.test(d)) return json(res, 400, { error: 'That does not look like a domain name.' });
+          idea.project.customDomain = d || null;
+          if (idea.project.deploy) idea.project.deploy.preparedAt = null; // DevOps rewrites the manifests next deploy
+          saveIdea(idea);
+        }
         if (body.tags !== undefined || body.archived !== undefined) bus.broadcast({ event: 'ideas_changed' });
-        return json(res, 200, { ok: true, title: idea.title, tags: idea.tags || [], archived: !!idea.archived });
+        return json(res, 200, { ok: true, title: idea.title, tags: idea.tags || [], archived: !!idea.archived, watch: !!idea.watch, customDomain: idea.project?.customDomain || null });
+      }
+      if (action === 'design' && req.method === 'POST') {
+        const body = await readBody(req);
+        if (idea.phase !== 'project') return json(res, 409, { error: 'Not a project.' });
+        try { return json(res, 200, { ok: true, message: chooseDesign(bus, idea, String(body.choice || '').toUpperCase()) }); } catch (e) { return json(res, 400, { error: e.message }); }
+      }
+      if (action === 'env' && req.method === 'POST') {
+        const body = await readBody(req);
+        if (!idea.project?.deploy) return json(res, 409, { error: 'The project has not been prepared for deployment yet.' });
+        const name = String(body.name || '').trim();
+        if (!/^[A-Z][A-Z0-9_]{1,60}$/.test(name)) return json(res, 400, { error: 'Variable names are UPPER_CASE.' });
+        const d = idea.project.deploy;
+        d.env = d.env || {};
+        d.env[name] = String(body.value ?? '');
+        d.envJson = { ...(d.envJson || {}), [name]: d.envJson?.[name] ?? null };
+        d.missing = (d.missing || []).filter((k) => k !== name);
+        saveIdea(idea);
+        let applied = false;
+        if (idea.project.url && deployOps.ready()) {
+          try { await deployOps.updateEnv(idea.project.slug, d.env); applied = true; } catch (e) { return json(res, 500, { error: `Saved, but the cluster update failed: ${e.message}` }); }
+        }
+        return json(res, 200, { ok: true, applied, missing: d.missing, names: Object.keys(d.env).filter((k) => !k.startsWith('__')) });
+      }
+      if (action === 'logs' && req.method === 'GET') {
+        if (!idea.project?.url || !deployOps.ready()) return json(res, 409, { error: 'Logs are available once the project is live and Box has cluster access.' });
+        try { return json(res, 200, { logs: await deployOps.logs(idea.project.slug, Number(url.searchParams.get('lines')) || 200) }); } catch (e) { return json(res, 500, { error: e.message }); }
+      }
+      if (action === 'offline' && req.method === 'POST') {
+        const body = await readBody(req);
+        if (!idea.project?.url || !deployOps.ready()) return json(res, 409, { error: 'Available once the project is live and Box has cluster access.' });
+        try {
+          await deployOps.setOffline(idea.project.slug, !!body.offline);
+          idea.project.offline = !!body.offline;
+          saveIdea(idea);
+          const msg = addMessage(idea, { agentId: 'system', kind: 'system', round: idea.round, summary: body.offline ? 'Taken offline' : 'Back online', content: body.offline ? 'The site is scaled to zero; visitors get an error page until it is brought back.' : 'The site is running again.' });
+          bus.publish(idea.id, { event: 'message', message: msg });
+          return json(res, 200, { ok: true, offline: idea.project.offline });
+        } catch (e) { return json(res, 500, { error: e.message }); }
+      }
+      if (action === 'watch' && req.method === 'POST') {
+        if (!idea.brief) return json(res, 409, { error: 'Trend watch needs a finished brief.' });
+        if (running(idea.id)) return json(res, 409, { error: 'Wait for the room to finish first.' });
+        trendTurn(bus, idea).catch(() => {});
+        return json(res, 202, { ok: true });
       }
       if (action === 'fork' && req.method === 'POST') {
         const body = await readBody(req).catch(() => ({}));
@@ -469,11 +590,21 @@ const server = http.createServer(async (req, res) => {
       }
       if (action === 'tasks' && req.method === 'POST') {
         const body = await readBody(req);
+        if (body.action === 'revert') {
+          try { return json(res, 200, { ok: true, task: await revertTask(bus, idea, body.taskId, { requeue: !!body.requeue }), tasks: idea.project.tasks }); } catch (e) { return json(res, 400, { error: e.message }); }
+        }
         try { return json(res, 200, { ok: true, tasks: editTasks(bus, idea, body) }); } catch (e) { return json(res, 400, { error: e.message }); }
       }
       if (action === 'files' && req.method === 'GET') {
         if (!idea.project?.slug) return json(res, 404, { error: 'No repository yet.' });
-        try { return json(res, 200, repoBrowse(idea.project.slug, url.searchParams.get('path') || '')); } catch (e) { return json(res, 404, { error: e.message }); }
+        try {
+          const r = repoBrowse(idea.project.slug, url.searchParams.get('path') || '');
+          if (url.searchParams.get('explain') && r.content) {
+            const x = await askClaude({ model: 'sonnet', system: 'You explain source files to a non-engineer product owner: what the file does, how it fits the app, and anything risky or unfinished. Plain language, under 250 words, markdown with short headings.', prompt: `FILE ${r.path}:\n\n${r.content.slice(0, 60000)}`, timeoutMs: 2 * 60 * 1000 });
+            r.explanation = x.text.trim();
+          }
+          return json(res, 200, r);
+        } catch (e) { return json(res, 404, { error: e.message }); }
       }
       if (action === 'check' && req.method === 'POST') {
         if (!idea.project?.url) return json(res, 409, { error: 'Not live yet.' });

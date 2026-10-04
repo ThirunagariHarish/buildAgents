@@ -68,7 +68,8 @@ function mdInline(s) {
     .replace(/`([^`]+)`/g, (_, c) => `<code>${c}</code>`)
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
-    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+    .replace(/\[(fact|estimate|guess)\]/gi, (_, t) => `<span class="conf ${t.toLowerCase()}" title="${{ fact: 'Verified with a source', estimate: 'Reasoned from evidence', guess: 'Intuition' }[t.toLowerCase()]}">${t.toLowerCase()}</span>`);
 }
 function md(src) {
   const lines = esc(src).split('\n');
@@ -748,6 +749,12 @@ $('more-btn').onclick = () => {
   items.push({ icon: 'archive', label: current.archived ? 'Unarchive' : 'Archive', run: toggleArchive });
   if (isProject()) {
     if (current.project.slug && current.project.tasks?.length) items.push({ icon: 'folder', label: 'Browse the code', run: openFilesSheet });
+    if (current.project.deploy) items.push({ icon: 'list', label: 'Environment variables', run: openEnvSheet });
+    if (current.project.url) {
+      items.push({ icon: 'doc', label: 'Logs', run: openLogsSheet });
+      items.push({ icon: current.project.offline ? 'play' : 'pause', label: current.project.offline ? 'Bring the site back online' : 'Take the site offline', run: toggleOffline });
+    }
+    items.push({ icon: 'globe', label: current.project.customDomain ? `Custom domain: ${current.project.customDomain}` : 'Custom domain…', run: setCustomDomain });
     if (canApprove()) items.unshift({ icon: 'check', label: 'Approve plan', run: approveCurrent });
     if (canComplete()) items.unshift({ icon: 'check', label: 'Mark complete', run: completeCurrent });
     if (current.project.url) items.unshift({ icon: 'globe', label: 'Open the site', run: openSite });
@@ -770,11 +777,79 @@ $('more-btn').onclick = () => {
     items.push({ icon: 'question', label: 'Ask a quick question', run: () => startQuick(null) });
     items.push({ icon: 'flame', label: 'Devil’s advocate round', run: devilRound });
     items.push({ icon: 'fork', label: 'Fork this idea', run: forkCurrent });
+    items.push({ icon: 'rounds', label: 'Replay the debate', run: openReplaySheet });
+    if (ideas.filter((i) => i.id !== current.id && !i.archived).length) {
+      items.push({ icon: 'stack', label: 'Compare with another idea', run: () => pickIdeaSheet('compare') });
+      items.push({ icon: 'plus', label: 'Merge with another idea', run: () => pickIdeaSheet('merge') });
+    }
+    if (current.brief) items.push({ icon: 'search', label: current.watch ? 'Stop weekly trend watch' : 'Watch trends weekly', run: toggleWatch });
   }
   items.push('-', { icon: 'trash', label: 'Delete', danger: true, run: deleteCurrent });
   openPopover($('more-btn'), items);
 };
 
+async function toggleWatch() {
+  if (!current) return;
+  const on = !current.watch;
+  try {
+    await api(`/api/ideas/${current.id}`, { method: 'PATCH', body: JSON.stringify({ watch: on }) });
+    current.watch = on;
+    if (on) {
+      const now = await dialog({ title: 'Trend watch is on', text: 'Every Monday the Market Researcher searches for news that matters to this idea and posts it here. Run the first check now?', confirm: 'Check now' });
+      if (now) { await api(`/api/ideas/${current.id}/watch`, { method: 'POST', body: '{}' }); current.status = 'running'; renderTop(); renderThread(true); renderDock(); }
+    } else toast('Trend watch off');
+  } catch (e) { toast(e.message); }
+}
+function pickIdeaSheet(mode) {
+  openSheet({
+    title: mode === 'compare' ? 'Compare with…' : 'Merge with…',
+    tall: true,
+    render(s) {
+      const others = ideas.filter((i) => i.id !== current.id && !i.archived);
+      s.body.innerHTML = `<p class="sheet-intro">${mode === 'compare' ? 'The Orchestrator writes a side-by-side verdict, saved on both ideas.' : 'A new idea is created from both and the room debates the combination. The originals stay as they are.'}</p>` +
+        others.map((i) => `<button class="row" data-id="${i.id}">${ic(i.phase === 'project' ? 'cube' : 'bulb')}<span class="row-label">${esc(i.title)}<span class="row-sub">${esc(placeOf(i).label)}${i.score ? ` · ${i.score}/10` : ''}</span></span><span class="row-chev">${ic('chevR')}</span></button>`).join('');
+      s.body.onclick = async (e) => {
+        const b = e.target.closest('[data-id]');
+        if (!b) return;
+        b.querySelector('.row-chev').textContent = '…';
+        try {
+          if (mode === 'compare') {
+            await api('/api/compare', { method: 'POST', body: JSON.stringify({ a: current.id, b: b.dataset.id }) });
+            s.close(); await openIdea(current.id, { silent: true }); openExtraViewer(`compare_${b.dataset.id}`);
+          } else {
+            const idea = await api('/api/merge', { method: 'POST', body: JSON.stringify({ a: current.id, b: b.dataset.id }) });
+            s.close(); toast('Merged — the room is debating it'); location.hash = `#/idea/${idea.id}`;
+          }
+        } catch (err) { toast(err.message); }
+      };
+    },
+  });
+}
+/** Step through the debate one message at a time. */
+function openReplaySheet() {
+  if (!current) return;
+  const msgs = current.messages.filter((m) => !['promoted', 'approved', 'doc', 'task', 'system', 'deployed', 'completed', 'scorecard'].includes(m.kind));
+  if (!msgs.length) return;
+  let n = 1;
+  openSheet({
+    title: 'Replay',
+    tall: true,
+    render(s) {
+      const draw = () => {
+        const m = msgs[n - 1];
+        const a = agentOf(m.agentId, m.agentName);
+        s.body.innerHTML = `
+          <div class="replay-bar"><input type="range" min="1" max="${msgs.length}" value="${n}" id="replay-range"><span>${n} / ${msgs.length}</span></div>
+          <div class="btn-pair" style="margin:4px 0 14px"><button class="wide-btn soft" data-step="-1" ${n === 1 ? 'disabled' : ''}>Previous</button><button class="wide-btn soft" data-step="1" ${n === msgs.length ? 'disabled' : ''}>Next</button></div>
+          <div class="a-msg" style="--agent-color:${esc(a.color)}"><div class="a-head"><span class="a-avatar">${a.emoji}</span><span class="a-name">${esc(a.name)}</span><span class="a-kind">${esc(KIND_LABEL[m.kind] || `Round ${m.round}`)}</span></div>
+            <div class="a-body md">${md(m.content)}</div></div>`;
+        $('replay-range').addEventListener('input', (e) => { n = Number(e.target.value); draw(); });
+      };
+      draw();
+      s.body.onclick = (e) => { const b = e.target.closest('[data-step]'); if (b) { n = Math.max(1, Math.min(msgs.length, n + Number(b.dataset.step))); draw(); } };
+    },
+  });
+}
 async function devilRound() {
   if (!current) return;
   const ok = await dialog({ title: 'Devil’s advocate round?', text: 'Every agent in the room argues against the idea for one round, then the Orchestrator ranks the attacks and rewrites the brief with what survived. The room re-scores it afterwards.', confirm: 'Run it' });
@@ -938,11 +1013,14 @@ function agentMsgHtml(m) {
         <span class="brief-ico">${ic('doc')}</span>
         <span style="min-width:0"><div class="brief-title">${esc(m.docTitle)}</div><div class="brief-sub">${d && d.version > 1 ? `Version ${d.version} · ` : ''}Tap to read</div></span>
       </button>`;
-    const proto = (m.attachments || []).find((x) => x.kind === 'html');
-    if (proto) extra += `<button class="brief-card proto-card" data-proto="${esc(proto.id)}">
+    for (const proto of (m.attachments || []).filter((x) => x.kind === 'html')) {
+      extra += `<button class="brief-card proto-card" data-proto="${esc(proto.id)}">
         <span class="brief-ico">${ic('image')}</span>
-        <span style="min-width:0"><div class="brief-title">Clickable prototype</div><div class="brief-sub">Tap to try it on your phone</div></span>
+        <span style="min-width:0"><div class="brief-title">Clickable prototype${proto.direction ? ` ${esc(proto.direction)}` : ''}</div><div class="brief-sub">Tap to try it on your phone</div></span>
       </button>`;
+    }
+    const shots = (m.attachments || []).filter((x) => x.kind === 'image');
+    if (shots.length) extra += `<div class="shots">${shots.map((x) => `<img class="shot" src="/api/uploads/${x.id}" alt="${esc(x.name)}" loading="lazy" data-zoom="${x.id}">`).join('')}</div>`;
   }
   return `<div class="a-msg" style="--agent-color:${esc(a.color)}" data-mid="${m.id}" data-kind="${esc(m.kind)}">
       <div class="a-head">
@@ -1026,11 +1104,16 @@ function projectHtml() {
           <span class="doc-tile-title">${esc(d.title)}</span>
           <span class="doc-tile-sub">${esc(a.name)}${d.version > 1 ? ` · v${d.version}` : ''}</span>
         </button>`;
-    }).join('')}${p.prototype ? `<button class="doc-tile proto" data-proto="${esc(p.prototype.id)}">
+    }).join('')}${(p.prototypes && p.prototypes.length > 1 ? p.prototypes : p.prototype ? [{ ...p.prototype, direction: p.designChoice || 'A' }] : []).map((pr) => `<button class="doc-tile proto${p.designChoice === pr.direction ? ' chosen' : ''}" data-proto="${esc(pr.id)}">
           <span class="doc-tile-emoji">${ic('image')}</span>
-          <span class="doc-tile-title">Prototype</span>
-          <span class="doc-tile-sub">Clickable · ${p.prototype.name ? 'tap to try' : ''}</span>
-        </button>` : ''}</div>`;
+          <span class="doc-tile-title">Prototype${p.prototypes && p.prototypes.length > 1 ? ` ${esc(pr.direction)}` : ''}</span>
+          <span class="doc-tile-sub">${p.designChoice === pr.direction ? 'Chosen · tap to try' : p.prototypes && p.prototypes.length > 1 ? 'Tap to try, then choose' : 'Clickable · tap to try'}</span>
+        </button>`).join('')}</div>`;
+    if (p.prototypes && p.prototypes.length > 1 && !p.designChoice && current.status !== 'running') {
+      html += `<div class="review-card"><span class="next-ico">${ic('image')}</span><div><strong>Two design directions</strong>Try both prototypes, then pick the one the developers should build.
+        <div class="btn-pair" style="margin-top:10px">${p.prototypes.map((pr) => `<button class="wide-btn soft" data-choose="${esc(pr.direction)}" style="height:40px;font-size:14.5px">Build ${esc(pr.direction)}</button>`).join('')}</div></div></div>`;
+    }
+    if (p.screenshots?.length) html += `<div class="shots">${p.screenshots.map((s) => `<img class="shot" src="/api/uploads/${s.id}" alt="${esc(s.name)}" loading="lazy" data-zoom="${s.id}">`).join('')}</div>`;
   }
   if (!docs.length && current.status !== 'running') {
     html += `<div class="next-card">
@@ -1041,9 +1124,12 @@ function projectHtml() {
   }
   if (p.tasks?.length) html += taskBoardHtml(p);
   if (p.url) {
-    html += `<a class="site-card" href="${esc(p.url)}" target="_blank" rel="noopener">
+    const up = p.uptime;
+    const status = p.offline ? 'Offline (by you)' : up?.up === false ? 'Down' : up?.up ? `Up · ${up.ms} ms` : (p.stage === 'maintenance' ? 'Live · in maintenance' : 'Live · tap to open');
+    const cert = up?.certDaysLeft != null ? ` · cert ${up.certDaysLeft} d` : '';
+    html += `<a class="site-card${p.offline || up?.up === false ? ' down' : ''}" href="${esc(p.url)}" target="_blank" rel="noopener">
         <span class="brief-ico">${ic('globe')}</span>
-        <span style="min-width:0"><div class="brief-title">${esc(p.url.replace(/^https?:\/\//, ''))}</div><div class="brief-sub">${p.stage === 'maintenance' ? 'Live · in maintenance' : 'Live · tap to open'}${p.repoUrl ? ' · code on GitHub' : ''}</div></span>
+        <span style="min-width:0"><div class="brief-title">${esc(p.url.replace(/^https?:\/\//, ''))}${p.customDomain ? ` · ${esc(p.customDomain)}` : ''}</div><div class="brief-sub">${esc(status)}${cert}${p.repoUrl ? ' · code on GitHub' : ''}</div></span>
       </a>`;
   }
   for (const m of after) {
@@ -1115,7 +1201,7 @@ function openTasksSheet() {
       const draw = () => {
         const p = current.project;
         const tasks = p.tasks || [];
-        const icon = { done: 'check', doing: 'spark', blocked: 'alert', todo: 'chevR' };
+        const icon = { done: 'check', doing: 'spark', blocked: 'alert', todo: 'chevR', reverted: 'archive' };
         const running = current.status === 'running';
         const crewMs = p.crewMs || tasks.reduce((sum, t) => sum + (t.durationMs || 0), 0);
         s.body.innerHTML = `<p class="sheet-intro">${tasks.filter((t) => t.status === 'done').length} of ${tasks.length} done · ${fmtDuration(crewMs)} of crew time. Tap a task for actions.${running ? ' The crew is working; waiting tasks can still be edited.' : ''}</p>
@@ -1162,6 +1248,9 @@ function openTasksSheet() {
         if (t.status === 'done' || t.status === 'blocked') {
           items.push({ icon: 'refresh', label: 'Redo with a note', run: async () => { const v = await dialog({ title: `Redo ${t.id}`, text: 'What should be different this time?', input: '', confirm: 'Redo' }); if (v) call({ action: 'redo', note: v }, 'Queued for a redo'); } });
         }
+        if (t.status === 'done' && t.commit && current.status !== 'running') {
+          items.push({ icon: 'archive', label: 'Roll back this task', danger: true, run: async () => { const ok = await dialog({ title: `Roll back ${t.id}?`, text: `Reverts commit ${t.commit} ("${t.title}") in the repository. The task is marked reverted; QA runs again before the next deploy.`, confirm: 'Roll back', danger: true }); if (ok) call({ action: 'revert' }, 'Rolled back'); } });
+        }
         openPopover(row, items);
       };
     },
@@ -1184,6 +1273,7 @@ function openDocViewer(key) {
           <button class="wide-btn soft" data-act="copy">Copy</button>
           <button class="wide-btn soft" data-act="share">Share</button>
           ${d.previous ? `<button class="wide-btn ${showDiff ? 'accent' : 'soft'}" data-act="diff">${showDiff ? 'Hide changes' : 'What changed'}</button>` : ''}
+          ${key === 'ux_direction' && current.project.tokens ? `<a class="wide-btn soft" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none" href="data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(current.project.tokens, null, 2))}" download="${esc(current.project.slug)}-tokens.json">Tokens</a>` : ''}
         </div>
         ${showDiff ? diffHtml(d.previous, d.content) : `<div class="md a-body">${md(d.content)}</div>`}`;
       };
@@ -1246,21 +1336,34 @@ function openDocsSheet() {
   });
 }
 
-function openPrototype() {
-  const proto = current?.project?.prototype;
+function openPrototype(id) {
+  const p = current?.project;
+  const list = p?.prototypes?.length ? p.prototypes : p?.prototype ? [{ ...p.prototype, direction: 'A' }] : [];
+  const proto = (id && list.find((x) => x.id === id)) || p?.prototype || list[0];
   if (!proto) return;
   const src = `/api/uploads/${proto.id}`;
+  const two = list.length > 1;
   openSheet({
-    title: 'Prototype',
+    title: two ? `Prototype ${proto.direction}` : 'Prototype',
     tall: true,
     render(s) {
       s.body.classList.add('proto-body');
       s.body.innerHTML = `
         <div class="proto-bar"><span>By the UX Designer · sample content, nothing is saved</span><a class="proto-open" href="${src}" target="_blank" rel="noopener">Full screen ${ic('chevR')}</a></div>
         <iframe class="proto-frame" src="${src}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" title="Prototype"></iframe>
-        <button class="wide-btn soft" data-act="feedback" style="margin-top:10px">Comment on the prototype</button>`;
+        <div class="btn-pair" style="margin-top:10px">
+          ${two && !p.designChoice && current.status !== 'running' ? `<button class="wide-btn accent" data-act="choose">Build direction ${esc(proto.direction)}</button>` : ''}
+          ${two ? `<button class="wide-btn soft" data-act="other">See ${esc(list.find((x) => x.id !== proto.id)?.direction || '')}</button>` : ''}
+          <button class="wide-btn soft" data-act="feedback">Comment</button>
+        </div>`;
       s.body.onclick = async (e) => {
-        if (e.target.closest('[data-act]')?.dataset.act !== 'feedback') return;
+        const act = e.target.closest('[data-act]')?.dataset.act;
+        if (act === 'other') { s.close(); openPrototype(list.find((x) => x.id !== proto.id)?.id); return; }
+        if (act === 'choose') {
+          try { await api(`/api/ideas/${current.id}/design`, { method: 'POST', body: JSON.stringify({ choice: proto.direction }) }); s.close(); await openIdea(current.id, { silent: true }); toast(`Direction ${proto.direction} chosen`); } catch (err) { toast(err.message); }
+          return;
+        }
+        if (act !== 'feedback') return;
         const v = await dialog({ title: 'Prototype feedback', text: 'Say which screen or element and what should change. During plan review this revises the design; later it becomes a task for the developers.', input: '', confirm: 'Send' });
         if (!v) return;
         s.close();
@@ -1288,18 +1391,101 @@ function openFilesSheet() {
         s.setBack(r.path ? () => load(r.path.split('/').slice(0, -1).join('/')) : null);
         if (r.dir) {
           dir = r.path;
-          s.body.innerHTML = `<p class="sheet-intro">${r.path ? `/${esc(r.path)}` : current.project.slug}${current.project.repoUrl ? ` · <a href="${esc(current.project.repoUrl)}" target="_blank" rel="noopener">GitHub</a>` : ''}</p>` +
+          const gh = current.project.repoUrl;
+          s.body.innerHTML = `<p class="sheet-intro">${r.path ? `/${esc(r.path)}` : current.project.slug}${gh ? ` · <a href="${esc(gh)}" target="_blank" rel="noopener">GitHub</a> · <a href="https://github.com/codespaces/new?repo=${esc(gh.replace('https://github.com/', ''))}" target="_blank" rel="noopener">Codespaces</a>` : ''}</p>` +
             (r.items.map((it) => `<button class="row" data-path="${esc(r.path ? `${r.path}/${it.name}` : it.name)}">${ic(it.dir ? 'folder' : 'doc')}<span class="row-label">${esc(it.name)}</span><span class="row-value">${it.dir ? '' : fmtBytes(it.size)}</span><span class="row-chev">${ic('chevR')}</span></button>`).join('') || '<p class="sheet-intro">Empty.</p>');
         } else {
-          s.body.innerHTML = `<p class="sheet-intro">/${esc(r.path)} · ${fmtBytes(r.size)}</p>` + (r.tooBig ? '<p class="sheet-intro">Too large to show here.</p>' : r.binary ? '<p class="sheet-intro">Binary file.</p>' : `<pre class="code">${esc(r.content)}</pre>`);
+          s.body.innerHTML = `<p class="sheet-intro">/${esc(r.path)} · ${fmtBytes(r.size)}</p>` + (r.tooBig ? '<p class="sheet-intro">Too large to show here.</p>' : r.binary ? '<p class="sheet-intro">Binary file.</p>' : `<button class="wide-btn soft" data-explain="${esc(r.path)}" style="margin-bottom:10px">Explain this file</button><div id="explain-slot"></div><pre class="code">${esc(r.content)}</pre>`);
         }
       };
       load('');
-      s.body.onclick = (e) => { const b = e.target.closest('[data-path]'); if (b) load(b.dataset.path); };
+      s.body.onclick = async (e) => {
+        const ex = e.target.closest('[data-explain]');
+        if (ex) {
+          ex.disabled = true; ex.textContent = 'Reading…';
+          try { const r = await api(`/api/ideas/${current.id}/files?path=${encodeURIComponent(ex.dataset.explain)}&explain=1`); $('explain-slot').innerHTML = `<div class="system-note"><div class="md">${md(r.explanation || '')}</div></div>`; ex.remove(); } catch (err) { toast(err.message); ex.disabled = false; ex.textContent = 'Explain this file'; }
+          return;
+        }
+        const b = e.target.closest('[data-path]'); if (b) load(b.dataset.path);
+      };
     },
   });
 }
 function fmtBytes(n) { return n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1048576).toFixed(1)} MB`; }
+
+async function setCustomDomain() {
+  if (!current?.project) return;
+  const v = await dialog({ title: 'Custom domain', text: 'Point the domain’s DNS (an A record) at 2.25.157.104 at your registrar. DevOps adds it to the site on the next deploy, with its own certificate. Leave empty to remove.', input: current.project.customDomain || '', confirm: 'Save' });
+  if (v === null) return;
+  try {
+    const r = await api(`/api/ideas/${current.id}`, { method: 'PATCH', body: JSON.stringify({ customDomain: v }) });
+    current.project.customDomain = r.customDomain;
+    toast(r.customDomain ? `Custom domain set: ${r.customDomain}` : 'Custom domain removed');
+  } catch (e) { toast(e.message); }
+}
+async function toggleOffline() {
+  if (!current?.project) return;
+  const off = !current.project.offline;
+  const ok = await dialog({ title: off ? 'Take the site offline?' : 'Bring the site back?', text: off ? 'Visitors get an error page until you bring it back. Data is kept.' : 'The site starts again within a minute.', confirm: off ? 'Take offline' : 'Bring back', danger: off });
+  if (!ok) return;
+  try {
+    await api(`/api/ideas/${current.id}/offline`, { method: 'POST', body: JSON.stringify({ offline: off }) });
+    current.project.offline = off;
+    toast(off ? 'Site is going offline' : 'Site is coming back');
+    renderThread();
+  } catch (e) { toast(e.message); }
+}
+function openEnvSheet() {
+  const d = current?.project?.deploy;
+  if (!d) return;
+  openSheet({
+    title: 'Environment variables',
+    tall: true,
+    render(s) {
+      const draw = () => {
+        const names = Object.keys(d.envJson || {}).filter((k) => !k.startsWith('__'));
+        const set = new Set(Object.keys(d.env || {}));
+        const missing = new Set(d.missing || []);
+        s.body.innerHTML = `<p class="sheet-intro">What the app reads at runtime. Values are stored in the cluster secret, never shown here. ${current.project.url ? 'Changing one restarts the site.' : 'They are applied on the first deploy.'}</p>
+          ${names.map((k) => `<button class="row" data-env="${esc(k)}">${ic(missing.has(k) ? 'alert' : 'check')}<span class="row-label">${esc(k)}<span class="row-sub">${missing.has(k) ? 'Needed — tap to set' : set.has(k) ? 'Set' : 'Generated by Box'}</span></span><span class="row-chev">${ic('chevR')}</span></button>`).join('')}
+          <button class="wide-btn soft" data-env="" style="margin-top:10px">Add a variable</button>`;
+      };
+      draw();
+      s.body.onclick = async (e) => {
+        const b = e.target.closest('[data-env]');
+        if (!b) return;
+        let name = b.dataset.env;
+        if (!name) { name = await dialog({ title: 'Variable name', input: '', confirm: 'Next' }); if (!name) return; name = name.trim().toUpperCase(); }
+        const value = await dialog({ title: name, text: 'Paste the value. It goes straight to the server and is not kept in this app.', input: '', confirm: 'Save' });
+        if (value === null) return;
+        try {
+          const r = await api(`/api/ideas/${current.id}/env`, { method: 'POST', body: JSON.stringify({ name, value }) });
+          d.missing = r.missing; d.env = Object.fromEntries(r.names.map((n) => [n, true])); d.envJson = { ...(d.envJson || {}), [name]: d.envJson?.[name] ?? null };
+          toast(r.applied ? 'Saved and applied' : 'Saved');
+          draw();
+        } catch (err) { toast(err.message); }
+      };
+    },
+  });
+}
+function openLogsSheet() {
+  if (!current?.project?.url) return;
+  openSheet({
+    title: 'Logs',
+    tall: true,
+    render(s) {
+      const load = async () => {
+        s.body.innerHTML = '<p class="sheet-intro">Loading…</p>';
+        try {
+          const r = await api(`/api/ideas/${current.id}/logs?lines=200`);
+          s.body.innerHTML = `<div class="btn-pair" style="margin-bottom:10px"><button class="wide-btn soft" data-act="reload">Refresh</button></div><pre class="code">${esc(r.logs || '(no output)')}</pre>`;
+        } catch (e) { s.body.innerHTML = `<p class="sheet-intro">${esc(e.message)}</p>`; }
+      };
+      load();
+      s.body.onclick = (e) => { if (e.target.closest('[data-act="reload"]')) load(); };
+    },
+  });
+}
 
 function renderThread(forceBottom = false) {
   if (!current) return;
@@ -1345,14 +1531,20 @@ function tickBrew() {
 setInterval(tickBrew, 1000);
 
 $('messages').addEventListener('click', async (e) => {
-  const t = e.target.closest('[data-toggle],[data-copy],[data-brief],[data-zoom],[data-agent],[data-doc],[data-proto],[data-tasks]');
+  const t = e.target.closest('[data-toggle],[data-copy],[data-brief],[data-zoom],[data-agent],[data-doc],[data-proto],[data-tasks],[data-choose]');
   if (!t) return;
-  if (t.dataset.doc) {
+  if (t.dataset.choose) {
+    try {
+      await api(`/api/ideas/${current.id}/design`, { method: 'POST', body: JSON.stringify({ choice: t.dataset.choose }) });
+      await openIdea(current.id, { silent: true });
+      toast(`Direction ${t.dataset.choose} chosen`);
+    } catch (err) { toast(err.message); }
+  } else if (t.dataset.doc) {
     openDocViewer(t.dataset.doc);
   } else if (t.dataset.tasks) {
     openTasksSheet();
   } else if (t.dataset.proto) {
-    openPrototype();
+    openPrototype(t.dataset.proto);
   } else if (t.dataset.toggle) {
     const id = t.dataset.toggle;
     expanded.has(id) ? expanded.delete(id) : expanded.add(id);
@@ -1634,7 +1826,31 @@ function stopDictation(keep) {
   stopWave();
   autosize();
   updateSendState();
+  dictated = keep && $('input').value.trim().length > 60;
+  renderPolishChip();
 }
+let dictated = false;
+function renderPolishChip() {
+  let chip = $('polish-chip');
+  if (!dictated || !$('input').value.trim()) { chip?.remove(); return; }
+  if (!chip) {
+    chip = document.createElement('button');
+    chip.id = 'polish-chip';
+    chip.className = 'chip-btn';
+    chip.innerHTML = `${ic('spark')}Clean up dictation`;
+    chip.onclick = async () => {
+      chip.disabled = true; chip.textContent = 'Cleaning…';
+      try {
+        const r = await api('/api/polish', { method: 'POST', body: JSON.stringify({ text: $('input').value }) });
+        $('input').value = r.text; autosize(); updateSendState();
+        toast('Cleaned up');
+      } catch (e) { toast(e.message); }
+      dictated = false; renderPolishChip();
+    };
+    $('rounds-chip').insertAdjacentElement('afterend', chip);
+  }
+}
+$('input').addEventListener('input', () => { if (dictated && !$('input').value.trim()) { dictated = false; renderPolishChip(); } });
 function startWave() {
   const c = $('wave');
   const dpr = window.devicePixelRatio || 1;
@@ -1856,6 +2072,10 @@ const EXTRA_KINDS = [
   ['pitch', 'Pitch deck', '10 slides for investors'], ['onepager', 'One-pager', 'The idea on one page'],
   ['elevator', 'Elevator pitches', '10 s, 30 s and 2 min, spoken'], ['landing', 'Landing page copy', 'Headline to FAQ'],
   ['premortem', 'Pre-mortem', 'How it fails a year from now, by the Critic'],
+  ['tam', 'Market size model', 'TAM / SAM / SOM with editable assumptions'], ['pricing', 'Pricing options', 'Three models with revenue at scale'],
+  ['regulatory', 'Regulatory checklist', 'What the MVP must comply with'],
+  ['stores', 'App store scan', 'Competing apps, ratings, complaints · web'], ['forums', 'What people complain about', 'Reddit, forums, reviews · web'],
+  ['seo', 'Search demand & keywords', 'What people search for · web'],
 ];
 
 function openBriefViewer() {
@@ -1883,6 +2103,7 @@ function openBriefViewer() {
           ${version === 'current' ? `
           <div class="sb-label" style="padding:22px 6px 8px">From this brief</div>
           ${EXTRA_KINDS.map(([k, name, sub]) => `<button class="row" data-extra="${k}">${ic('doc')}<span class="row-label">${name}<span class="row-sub">${extras[k] ? `Ready · ${new Date(extras[k].ts).toLocaleDateString([], { month: 'short', day: 'numeric' })}` : sub}</span></span><span class="row-value">${extras[k] ? 'Open' : 'Write'}</span><span class="row-chev">${ic('chevR')}</span></button>`).join('')}
+          ${Object.values(extras).filter((x) => x.kind === 'comparison').map((x) => `<button class="row" data-extra="compare_${esc(x.otherId)}">${ic('fork')}<span class="row-label">${esc(x.title)}<span class="row-sub">Ready · ${new Date(x.ts).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span></span><span class="row-value">Open</span><span class="row-chev">${ic('chevR')}</span></button>`).join('')}
           <button class="row" data-act="names">${ic('globe')}<span class="row-label">Check the name<span class="row-sub">Domains and handles for “${esc(briefTitle(current.brief))}”</span></span><span class="row-chev">${ic('chevR')}</span></button>` : ''}`;
       };
       draw();
@@ -2006,11 +2227,39 @@ function openSettingsSheet() {
           <div class="sb-label" style="padding:14px 6px 8px">Agent time</div>
           <div class="row" style="cursor:default" id="usage-row"><span class="row-label">This month<span class="row-sub" id="usage-sub">Loading…</span></span><span class="row-value" id="usage-val"></span></div>
           <label class="field" style="margin-top:8px"><span>Monthly cap (hours of agent time; 0 = no cap). Box warns at 80 percent.</span><input id="set-cap" type="number" min="0" max="999" step="1" value="${Number(settings.capHours || 0)}"></label>
+          <div class="sb-label" style="padding:14px 6px 8px">What the room knows about you</div>
+          <label class="field"><span>Every agent reads this before every turn: your goals, constraints, preferences (e.g. “solo founder, no ads, prefer B2B, based in Texas”).</span><textarea id="set-about" rows="4" maxlength="2000" placeholder="About you and how you want ideas judged…"></textarea></label>
+          <div id="knowledge-list"></div>
+          <button class="wide-btn soft" data-open="knowledge">Add knowledge files</button>
+          <p class="hint" style="margin-top:6px">Text, PDF or images attached to every debate and crew turn: your resume, a market report, brand guidelines.</p>
           <div class="sb-label" style="padding:14px 6px 8px">Library</div>
           <button class="row" data-open="sources">${ic('link')}<span class="row-label">Source library<span class="row-sub">Every link the researchers cited</span></span><span class="row-chev">${ic('chevR')}</span></button>
           <a class="row" href="/api/export" download>${ic('download')}<span class="row-label">Export everything<span class="row-sub">A zip with every idea, transcript, brief, document and prototype</span></span><span class="row-chev">${ic('chevR')}</span></a>
           <p class="sheet-intro" style="margin-top:10px">Box runs every agent through your Claude subscription on your server. ${AGENTS.length} agents in the room.</p>`;
         $('set-cap').addEventListener('change', (e) => { settings.capHours = Math.max(0, Number(e.target.value) || 0); saveSettings(); checkSpending(); });
+        const drawKnowledge = (p) => {
+          $('set-about').value = p.about || '';
+          $('knowledge-list').innerHTML = (p.knowledge || []).map((k) => `<div class="row" style="cursor:default">${ic('doc')}<span class="row-label">${esc(k.name)}<span class="row-sub">${fileLabel(k)}</span></span><button class="icon-btn" data-kdel="${k.id}" aria-label="Remove">${ic('trash')}</button></div>`).join('');
+        };
+        api('/api/prefs').then(drawKnowledge).catch(() => {});
+        let aboutTimer;
+        $('set-about').addEventListener('input', () => { clearTimeout(aboutTimer); aboutTimer = setTimeout(() => api('/api/prefs', { method: 'POST', body: JSON.stringify({ about: $('set-about').value }) }).catch(() => {}), 600); });
+        s.body.addEventListener('click', async (e) => {
+          const del = e.target.closest('[data-kdel]');
+          if (del) { try { drawKnowledge(await api(`/api/prefs/knowledge/${del.dataset.kdel}`, { method: 'DELETE' })); } catch (err) { toast(err.message); } return; }
+          if (e.target.closest('[data-open="knowledge"]')) {
+            const input = document.createElement('input');
+            input.type = 'file'; input.multiple = true; input.accept = 'image/*,application/pdf,.pdf,.txt,.md,.csv,.json';
+            input.onchange = async () => {
+              const ids = [];
+              for (const f of [...input.files].slice(0, 6)) {
+                try { const meta = await api(`/api/uploads?name=${encodeURIComponent(f.name)}`, { method: 'POST', headers: { 'Content-Type': f.type || guessType(f.name) }, body: f }); ids.push(meta.id); } catch (err) { toast(`${f.name}: ${err.message}`); }
+              }
+              if (ids.length) { try { drawKnowledge(await api('/api/prefs/knowledge', { method: 'POST', body: JSON.stringify({ attachments: ids }) })); toast('Added'); } catch (err) { toast(err.message); } }
+            };
+            input.click();
+          }
+        });
         api('/api/overview').then((o) => {
           const u = o.usage;
           const sub = $('usage-sub'); const val = $('usage-val');
@@ -2104,7 +2353,18 @@ function openAgentsSheet(opts = {}) {
           <div class="btn-pair" style="margin-top:6px">
             <button class="wide-btn soft" data-act="market">Marketplace</button>
             <button class="wide-btn accent" data-act="add">Add an agent</button>
-          </div>`;
+          </div>
+          <button class="row" data-act="guest" style="margin-top:10px">${ic('mic')}<span class="row-label">Guest expert from a transcript<span class="row-sub">Paste an interview, talk or writing by someone; an agent speaks for them.</span></span><span class="row-chev">${ic('chevR')}</span></button>`;
+      };
+      const guestForm = (err = '') => {
+        s.setTitle('Guest expert');
+        s.setBack(list);
+        s.body.innerHTML = `
+          <label class="field"><span>Name</span><input id="gx-name" type="text" maxlength="40" placeholder="e.g. Maria Chen"></label>
+          <label class="field"><span>What they said or wrote</span><textarea id="gx-text" rows="10" maxlength="40000" placeholder="Paste a transcript, interview, blog posts or notes — at least a few paragraphs."></textarea></label>
+          <div class="hint">Box writes the agent's instructions from this material only; it never invents biography. You can edit the result.</div>
+          ${err ? `<div class="form-error">${esc(err)}</div>` : ''}
+          <button class="wide-btn accent" data-act="guest-create">Create the guest</button>`;
       };
       const market = async () => {
         s.setTitle('Marketplace');
@@ -2222,6 +2482,16 @@ function openAgentsSheet(opts = {}) {
         if (ed) { startEdit(ed.dataset.edit); return; }
         const act = e.target.closest('[data-act]')?.dataset.act;
         if (act === 'market') market();
+        if (act === 'guest') guestForm();
+        if (act === 'guest-create') {
+          const btn = e.target.closest('button');
+          btn.disabled = true; btn.textContent = 'Reading the material…';
+          try {
+            const a = await api('/api/agents/from-text', { method: 'POST', body: JSON.stringify({ name: $('gx-name').value, text: $('gx-text').value }) });
+            await loadAgents(); toast(`${a.emoji} ${a.name} joined the room`); list();
+          } catch (err) { guestForm(err.message); }
+          return;
+        }
         if (act === 'add') { draft = null; editing = null; form(); }
         if (act === 'review') {
           const d = read();

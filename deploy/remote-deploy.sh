@@ -23,6 +23,9 @@ BOX_GITHUB_TOKEN=$(printf '%s' "${BOX_GITHUB_TOKEN:-}" | tr -d '[:space:]')
   [ "$REQUIRE_LOGIN" = true ] && [ -n "${BOX_PASSWORD:-}" ] && printf 'BOX_PASSWORD=%s\n' "$BOX_PASSWORD"
   [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] && printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "$CLAUDE_CODE_OAUTH_TOKEN"
   [ -n "$BOX_GITHUB_TOKEN" ] && printf 'BOX_GITHUB_TOKEN=%s\n' "$BOX_GITHUB_TOKEN"
+  [ -n "${BOX_TELEGRAM_TOKEN:-}" ] && printf 'BOX_TELEGRAM_TOKEN=%s\n' "$(printf '%s' "$BOX_TELEGRAM_TOKEN" | tr -d '[:space:]')"
+  [ -n "${BOX_TELEGRAM_CHAT_ID:-}" ] && printf 'BOX_TELEGRAM_CHAT_ID=%s\n' "$(printf '%s' "$BOX_TELEGRAM_CHAT_ID" | tr -d '[:space:]')"
+  printf 'BOX_DOMAIN=%s\n' "$DOMAIN"
   printf 'BOX_KUBECONFIG_FILE=/etc/box-kubeconfig\n'
 } > /etc/box.env
 chmod 600 /etc/box.env
