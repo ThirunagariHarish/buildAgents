@@ -148,13 +148,26 @@ const SUGGESTIONS = [
 ];
 
 // ---------- api ----------
+// Reads retry quietly through a short outage (the server restarting after a
+// deploy, a dropped mobile connection) instead of failing on the first try.
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function api(path, opts) {
   const init = opts ? { headers: { 'Content-Type': 'application/json' }, ...opts } : undefined;
-  const r = await fetch(path, init);
-  const data = await r.json().catch(() => ({}));
-  if (r.status === 401 && data.login) showLogin();
-  if (!r.ok) throw new Error(data.error || `Request failed (${r.status})`);
-  return data;
+  const read = !opts || !opts.method || opts.method === 'GET';
+  const delays = read ? [700, 1500, 3000] : [];
+  for (let attempt = 0; ; attempt++) {
+    let r;
+    try { r = await fetch(path, init); } catch (e) {
+      if (attempt < delays.length) { await sleep(delays[attempt]); continue; }
+      throw Object.assign(new Error('Box is not reachable right now.'), { status: 0, transient: true });
+    }
+    const data = await r.json().catch(() => ({}));
+    const outage = r.status === 502 || r.status === 503 || r.status === 504;
+    if (outage && attempt < delays.length) { await sleep(delays[attempt]); continue; }
+    if (r.status === 401 && data.login) showLogin();
+    if (!r.ok) throw Object.assign(new Error(data.error || `Request failed (${r.status})`), { status: r.status, transient: outage });
+    return data;
+  }
 }
 
 // ---------- helpers ----------
@@ -995,10 +1008,27 @@ $('suggestions').addEventListener('click', (e) => {
 });
 
 async function openIdea(id, { silent = false } = {}) {
+  // Switch to the idea at once from what the sidebar already knows, so the
+  // tap feels instant; the full thread fills in when it arrives.
+  const known = ideas.find((i) => i.id === id);
+  if (known && (!current || current.id !== id)) {
+    $('welcome').classList.add('hidden');
+    $('title-text').textContent = known.title || 'Idea';
+    $('subtitle-text').textContent = 'Opening…';
+    $('messages').innerHTML = '';
+    document.querySelectorAll('.sb-item').forEach((el) => el.classList.toggle('active', el.dataset.id === id));
+  }
   let idea;
-  try { idea = await api(`/api/ideas/${id}`); } catch {
-    if (!silent) toast('That idea no longer exists.');
-    location.hash = '#/';
+  try { idea = await api(`/api/ideas/${id}`); } catch (e) {
+    // Only a missing idea sends you home. A blip in the connection keeps you
+    // where you are and tries again shortly.
+    if (e.status === 404 || e.status === 403) {
+      if (!silent) toast('That idea no longer exists.');
+      location.hash = '#/';
+      return;
+    }
+    if (!silent) toast(e.transient || e.status === 0 ? 'Reconnecting to Box…' : e.message);
+    if (parseHash().id === id) setTimeout(() => { if (parseHash().id === id && (!current || current.id !== id)) openIdea(id, { silent: true }); }, 4000);
     return;
   }
   const switching = !current || current.id !== idea.id;
