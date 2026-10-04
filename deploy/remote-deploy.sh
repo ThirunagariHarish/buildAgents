@@ -47,6 +47,19 @@ else
   echo "kubeconfig: no BOX_KUBECONFIG secret (projects can be built but not deployed)"
 fi
 echo "github token: $([ -n "$BOX_GITHUB_TOKEN" ] && echo "set (length ${#BOX_GITHUB_TOKEN})" || echo 'none (projects can be built but not deployed)')"
+if [ -n "$BOX_GITHUB_TOKEN" ]; then
+  # Who the token is, what kind it is, and whether it can do what deploys need.
+  GH_HDR=$(curl -s --max-time 15 -D - -o /tmp/gh-user.json -H "Authorization: Bearer $BOX_GITHUB_TOKEN" -H "Accept: application/vnd.github+json" https://api.github.com/user)
+  GH_LOGIN=$(node -e "try{console.log(JSON.parse(require('fs').readFileSync('/tmp/gh-user.json','utf8')).login||'?')}catch(e){console.log('?')}")
+  GH_SCOPES=$(printf '%s' "$GH_HDR" | tr -d '\r' | awk -F': ' 'tolower($1)=="x-oauth-scopes"{print $2}')
+  if [ -n "$GH_SCOPES" ]; then
+    MISSING=""; for s in repo workflow read:packages; do printf '%s' "$GH_SCOPES" | grep -qw "$s" || MISSING="$MISSING $s"; done
+    echo "github token check: classic token for $GH_LOGIN, scopes: $GH_SCOPES$([ -n "$MISSING" ] && echo " — MISSING:$MISSING (deploys will fail until added)" || echo ' — OK')"
+  else
+    echo "github token check: fine-grained token for $GH_LOGIN — must have Administration, Contents and Workflows write on ALL repositories, or deploys fail with 403; a classic token with repo, workflow, read:packages is simpler"
+  fi
+  rm -f /tmp/gh-user.json
+fi
 
 echo "== box service =="
 bash deploy/setup-vps.sh 2>&1 | grep -E '==>|⚠|OK|bubblewrap' || true
