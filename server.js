@@ -5,7 +5,8 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { listIdeas, loadIdea, saveIdea, createIdea, deleteIdea, addMessage, renameIdea } = require('./lib/store');
+const crypto = require('crypto');
+const { listIdeas, loadIdea, saveIdea, createIdea, deleteIdea, addMessage, renameIdea, promoteIdea } = require('./lib/store');
 const { runIdea, pauseIdea, isRunning, currentSpeaker } = require('./lib/engine');
 const { getAgents, getDebateOrder, addAgent, removeAgent } = require('./lib/agents');
 const { saveUpload, getUpload, resolveIds, removeUploads } = require('./lib/uploads');
@@ -66,6 +67,7 @@ function serveStatic(res, urlPath) {
 function ideaSummary(i) {
   return {
     id: i.id, title: i.title, status: isRunning(i.id) ? 'running' : i.status,
+    phase: i.phase || 'idea', stage: i.project?.stage || null,
     round: i.round, maxRounds: i.maxRounds, createdAt: i.createdAt, messageCount: i.messages.length,
     hasBrief: !!i.brief,
     lastActivity: i.messages.length ? i.messages[i.messages.length - 1].ts : i.createdAt,
@@ -82,31 +84,67 @@ function nameIdea(idea) {
     .catch(() => {}); // keep the provisional title
 }
 
-// Optional HTTP Basic auth (set BOX_PASSWORD to enable; any username works).
+// Sign-in: when BOX_PASSWORD is set, the API requires a session cookie,
+// obtained once per device from POST /api/login. The page itself is public
+// so it can show the sign-in screen.
 const BOX_PASSWORD = process.env.BOX_PASSWORD || '';
-function checkAuth(req, res) {
+const SESSION = BOX_PASSWORD ? crypto.createHmac('sha256', BOX_PASSWORD).update('box-session-v1').digest('hex') : '';
+const loginAttempts = new Map(); // ip -> [timestamps]
+
+function cookies(req) {
+  return Object.fromEntries(String(req.headers.cookie || '').split(';').map((c) => {
+    const i = c.indexOf('=');
+    return i < 0 ? [c.trim(), ''] : [c.slice(0, i).trim(), decodeURIComponent(c.slice(i + 1).trim())];
+  }));
+}
+function sameSecret(a, b) {
+  const ha = crypto.createHash('sha256').update(String(a)).digest();
+  const hb = crypto.createHash('sha256').update(String(b)).digest();
+  return crypto.timingSafeEqual(ha, hb);
+}
+function isAuthed(req) {
   if (!BOX_PASSWORD) return true;
-  const h = req.headers.authorization || '';
-  if (h.startsWith('Basic ')) {
-    const decoded = Buffer.from(h.slice(6), 'base64').toString();
-    const pass = decoded.slice(decoded.indexOf(':') + 1);
-    if (pass.length === BOX_PASSWORD.length &&
-        require('crypto').timingSafeEqual(Buffer.from(pass), Buffer.from(BOX_PASSWORD))) {
-      return true;
-    }
-  }
-  res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Box"', 'Content-Type': 'text/plain' });
-  res.end('Authentication required');
-  return false;
+  const c = cookies(req).box_session;
+  return !!c && sameSecret(c, SESSION);
+}
+function sessionCookie(req, value, maxAge) {
+  const secure = req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : '';
+  return `box_session=${value}; Path=/; Max-Age=${maxAge}; HttpOnly; SameSite=Lax${secure}`;
+}
+function clientIp(req) {
+  return String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 }
 
 // ---- server --------------------------------------------------------------
 const server = http.createServer(async (req, res) => {
-  if (!checkAuth(req, res)) return;
   const url = new URL(req.url, `http://localhost:${PORT}`);
   const p = url.pathname;
 
   try {
+    if (p === '/api/session' && req.method === 'GET') {
+      return json(res, 200, { loginRequired: !!BOX_PASSWORD, authed: isAuthed(req) });
+    }
+    if (p === '/api/login' && req.method === 'POST') {
+      const ip = clientIp(req);
+      const recent = (loginAttempts.get(ip) || []).filter((t) => Date.now() - t < 10 * 60 * 1000);
+      if (recent.length >= 10) return json(res, 429, { error: 'Too many attempts. Try again in a few minutes.' });
+      const body = await readBody(req).catch(() => ({}));
+      if (!BOX_PASSWORD || sameSecret(body.password || '', BOX_PASSWORD)) {
+        loginAttempts.delete(ip);
+        res.setHeader('Set-Cookie', sessionCookie(req, SESSION, 365 * 24 * 3600));
+        return json(res, 200, { ok: true });
+      }
+      loginAttempts.set(ip, [...recent, Date.now()]);
+      return json(res, 401, { error: 'That password isn’t right.' });
+    }
+    if (p === '/api/logout' && req.method === 'POST') {
+      res.setHeader('Set-Cookie', sessionCookie(req, '', 0));
+      return json(res, 200, { ok: true });
+    }
+    if (p.startsWith('/api/') && !isAuthed(req)) {
+      return json(res, 401, { error: 'Sign in to continue.', login: true });
+    }
+
     if (p === '/api/events' && req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
       res.write(`data: ${JSON.stringify({ event: 'hello' })}\n\n`);
@@ -214,7 +252,17 @@ const server = http.createServer(async (req, res) => {
         bus.broadcast({ event: 'ideas_changed', deleted: idea.id });
         return json(res, 200, { ok: true });
       }
+      if (action === 'promote' && req.method === 'POST') {
+        if (idea.phase === 'project') return json(res, 409, { error: 'Already a project.' });
+        if (isRunning(idea.id)) return json(res, 409, { error: 'Wait for the debate to finish first.' });
+        if (!idea.brief) return json(res, 409, { error: 'The idea needs a finished brief before it can be promoted.' });
+        const msg = promoteIdea(idea);
+        bus.publish(idea.id, { event: 'promoted', message: msg });
+        bus.broadcast({ event: 'ideas_changed' });
+        return json(res, 200, { ok: true, project: idea.project });
+      }
       if (action === 'run' && req.method === 'POST') {
+        if (idea.phase === 'project') return json(res, 409, { error: 'The build crew isn’t available yet — it arrives in the next Box update.' });
         const body = await readBody(req);
         if (isRunning(idea.id)) return json(res, 409, { error: 'already running' });
         runIdea(bus, idea, { maxRounds: body.maxRounds, models: body.models }); // fire and forget

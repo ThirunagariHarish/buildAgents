@@ -17,7 +17,7 @@ if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
        CLAUDE_CODE_OAUTH_TOKEN= ;;
   esac
 fi
-REQUIRE_LOGIN=false   # true puts the BOX_PASSWORD sign-in prompt back
+REQUIRE_LOGIN=true   # false turns the sign-in screen off
 {
   [ "$REQUIRE_LOGIN" = true ] && [ -n "${BOX_PASSWORD:-}" ] && printf 'BOX_PASSWORD=%s\n' "$BOX_PASSWORD"
   [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] && printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "$CLAUDE_CODE_OAUTH_TOKEN"
@@ -31,7 +31,15 @@ systemctl restart box
 sleep 2
 echo "service: $(systemctl is-active box)"
 echo "local /: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:3400/)"
-echo "agent pool: $(curl -s --max-time 8 http://localhost:3400/api/agents | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const l=JSON.parse(d);console.log(l.length+' agents — '+l.map(a=>a.name+(a.builtin?'':' (added)')).join(', '))}catch(e){console.log('unreadable: '+d.slice(0,120))}})")"
+COOKIE="box_session=$(set -a; . /etc/box.env 2>/dev/null; set +a; node -e "const p=process.env.BOX_PASSWORD; console.log(p ? require('crypto').createHmac('sha256', p).update('box-session-v1').digest('hex') : '')")"
+echo "api without sign-in: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:3400/api/ideas) (401 = sign-in enforced)"
+echo "agent pool: $(curl -s --max-time 8 -H "Cookie: $COOKIE" http://localhost:3400/api/agents | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const l=JSON.parse(d);console.log(l.length+' agents — '+l.map(a=>a.name+(a.builtin?'':' (added)')).join(', '))}catch(e){console.log('unreadable: '+d.slice(0,120))}})")"
+
+echo "== wildcard DNS (*.cashflowus.com) =="
+probe="dns-check-$(date +%s).cashflowus.com"
+ip=$(getent hosts "$probe" | awk '{print $1}' | head -1)
+echo "${probe} -> ${ip:-does not resolve (wildcard record not added yet)}"
+echo "box login: $([ -n "$(grep -s '^BOX_PASSWORD=' /etc/box.env)" ] && echo on || echo 'off (no BOX_PASSWORD secret)')"
 
 echo "== latest layout reports from phones =="
 cat data/diag.json 2>/dev/null | head -c 3000 || echo "(none yet)"

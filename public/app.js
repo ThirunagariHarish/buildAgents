@@ -35,6 +35,10 @@ const PATHS = {
   refresh: '<path d="M20 11.5a8 8 0 1 0-2.4 5.7"/><path d="M20 4.5v7h-7"/>',
   rounds: '<path d="M4.5 12a7.5 7.5 0 0 1 13.2-4.9M19.5 12a7.5 7.5 0 0 1-13.2 4.9"/><path d="M18.5 3.5v4h-4M5.5 20.5v-4h4"/>',
   alert: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16.5v.01"/>',
+  bulb: '<path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.7 10.7c.6.5 1 1.2 1 2V16h5.4v-.3c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',
+  cube: '<path d="M20.5 7.5L12 3 3.5 7.5v9L12 21l8.5-4.5z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/>',
+  rocket: '<path d="M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2c.9-.9.9-2.2 0-3s-2.1-.9-3 0z"/><path d="M12 15l-3-3a19 19 0 0 1 9-8c1.3-.5 2.6.8 2.1 2.1A19 19 0 0 1 12 15z"/><path d="M9 12H5l2-3.5h4.5M12 15v4l3.5-2v-4.5"/>',
+  inbox: '<path d="M3.5 13.5h5l1.5 2.5h4l1.5-2.5h5"/><path d="M5.5 5h13l2 8.5V18a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-4.5z"/>',
   spark: '<path d="M12 2.5C12.8 8 16 11.2 21.5 12 16 12.8 12.8 16 12 21.5 11.2 16 8 12.8 2.5 12 8 11.2 11.2 8 12 2.5Z" fill="currentColor" stroke="none"/>',
 };
 function ic(name) {
@@ -129,6 +133,7 @@ async function api(path, opts) {
   const init = opts ? { headers: { 'Content-Type': 'application/json' }, ...opts } : undefined;
   const r = await fetch(path, init);
   const data = await r.json().catch(() => ({}));
+  if (r.status === 401 && data.login) showLogin();
   if (!r.ok) throw new Error(data.error || `Request failed (${r.status})`);
   return data;
 }
@@ -374,20 +379,43 @@ function refreshIdeasSoon() {
   clearTimeout(refreshIdeasSoon.t);
   refreshIdeasSoon.t = setTimeout(refreshIdeas, 300);
 }
+const STAGES = [
+  ['planning', 'Plan'], ['design', 'Design'], ['building', 'Build'], ['testing', 'Test'],
+  ['deploying', 'Deploy'], ['review', 'Review'], ['live', 'Live'],
+];
+const STAGE_LABEL = {
+  planning: 'Planning', design: 'Designing', building: 'Building', testing: 'Testing',
+  deploying: 'Deploying', review: 'Site ready for review', live: 'Live', maintenance: 'Maintenance',
+};
+/** Where an idea sits in the sidebar, and how it's labelled. */
+function placeOf(i) {
+  if ((i.phase || 'idea') === 'project') {
+    if (i.stage === 'review') return { group: 'needs', label: STAGE_LABEL.review, icon: 'cube', cls: 'project needs' };
+    return { group: 'projects', label: STAGE_LABEL[i.stage] || 'Project', icon: 'cube', cls: 'project' };
+  }
+  if (i.status === 'running') return { group: 'ideas', label: 'Debating', icon: 'spark', cls: 'running' };
+  if (i.status === 'done' && i.hasBrief) return { group: 'needs', label: 'Brief ready — review it', icon: 'bulb', cls: 'needs' };
+  if (i.status === 'error') return { group: 'ideas', label: 'Stopped', icon: 'alert', cls: 'error' };
+  if (i.status === 'paused') return { group: 'ideas', label: 'Paused', icon: 'bulb', cls: '' };
+  return { group: 'ideas', label: 'Not started', icon: 'bulb', cls: '' };
+}
 function renderSidebar() {
   const list = $('idea-list');
-  if (!ideas.length) {
-    list.innerHTML = '<div class="sb-empty">Your ideas will show up here.</div>';
-    return;
-  }
-  list.innerHTML = ideas.map((i) => {
-    const cls = i.status === 'running' ? 'running' : i.status === 'error' ? 'error' : '';
-    const iconName = i.status === 'running' ? 'spark' : i.status === 'error' ? 'alert' : 'chat';
+  const groups = { needs: [], ideas: [], projects: [] };
+  for (const i of ideas) groups[placeOf(i).group].push(i);
+  const item = (i) => {
+    const pl = placeOf(i);
     return `<button class="sb-item${current && current.id === i.id ? ' active' : ''}" data-id="${i.id}">
-        <span class="sb-ico ${cls}">${ic(iconName)}</span>
-        <span class="sb-item-title">${esc(i.title)}</span>
+        <span class="sb-ico ${pl.cls}">${ic(pl.icon)}</span>
+        <span class="sb-item-text"><span class="sb-item-title">${esc(i.title)}</span><span class="sb-item-sub ${pl.cls}">${esc(pl.label)}</span></span>
       </button>`;
-  }).join('');
+  };
+  const section = (title, arr, empty) => (arr.length || empty)
+    ? `<div class="sb-label">${title}${arr.length ? ` <span class="sb-count">${arr.length}</span>` : ''}</div>${arr.length ? arr.map(item).join('') : `<div class="sb-empty">${empty}</div>`}`
+    : '';
+  list.innerHTML = section('Needs you', groups.needs, '')
+    + section('Ideas', groups.ideas, groups.needs.length || groups.projects.length ? '' : 'Your ideas will show up here.')
+    + section('Projects', groups.projects, 'Promote an idea with a finished brief to start a project.');
 }
 $('idea-list').addEventListener('click', (e) => {
   const b = e.target.closest('.sb-item');
@@ -407,16 +435,51 @@ function renderTop() {
   const others = ideas.some((i) => i.status === 'running' && (!current || i.id !== current.id));
   $('menu-dot').classList.toggle('hidden', !others);
   if (route.view === 'new' || !current) {
+    document.body.classList.remove('mode-project');
+    renderStageBar();
     $('title-text').textContent = 'New idea';
     $('subtitle-text').textContent = `${AGENTS.length} agents ready · ${settings.rounds} ${settings.rounds === 1 ? 'round' : 'rounds'}`;
     return;
   }
   $('title-text').textContent = current.title;
+  document.body.classList.toggle('mode-project', isProject());
+  renderStageBar();
+  if (isProject()) {
+    $('subtitle-text').textContent = `Project · ${STAGE_LABEL[current.project.stage] || ''}`;
+    document.title = `${current.title} · Box`;
+    return;
+  }
   let sub = `Round ${Math.max(current.round, 1)} of ${current.maxRounds}`;
   if (current.status === 'running' && thinking) sub = `${agentOf(thinking.agentId).name} is thinking…`;
   else sub += ` · ${STATUS_LABEL[current.status] || current.status}`;
   $('subtitle-text').textContent = sub;
   document.title = `${current.title} · Box`;
+}
+function isProject() { return !!(current && current.phase === 'project' && current.project); }
+function canPromote() { return !!(current && !isProject() && current.status === 'done' && current.brief); }
+function renderStageBar() {
+  const bar = $('stage-bar');
+  if (!isProject()) { bar.classList.add('hidden'); return; }
+  const idx = STAGES.findIndex(([k]) => k === current.project.stage);
+  const at = current.project.stage === 'maintenance' ? STAGES.length : idx;
+  bar.classList.remove('hidden');
+  bar.innerHTML = STAGES.map(([, label], n) =>
+    `<span class="stage ${n < at ? 'done' : n === at ? 'now' : ''}">${n < at ? ic('check') : '<i></i>'}${label}</span>`).join('<span class="stage-sep"></span>');
+}
+async function promoteCurrent() {
+  if (!canPromote()) return;
+  const ok = await dialog({
+    title: 'Promote to project?',
+    text: 'The brief becomes the project spec. The build crew will plan, design, build, test and deploy it, and you’ll review the plan and the finished site. The debate stays in the project’s history.',
+    confirm: 'Promote',
+  });
+  if (!ok) return;
+  try {
+    await api(`/api/ideas/${current.id}/promote`, { method: 'POST', body: '{}' });
+    await openIdea(current.id, { silent: true });
+    refreshIdeasSoon();
+    toast('Promoted to a project');
+  } catch (e) { toast(e.message); }
 }
 $('top-title').onclick = () => (route.view === 'idea' && current ? openRoomSheet() : openAgentsSheet());
 $('more-btn').onclick = () => {
@@ -435,9 +498,15 @@ $('more-btn').onclick = () => {
     { icon: 'pencil', label: 'Rename', run: renameCurrent },
     { icon: 'users', label: 'Room & agents', run: openRoomSheet },
   ];
+  if (canPromote()) items.unshift({ icon: 'rocket', label: 'Promote to project', run: promoteCurrent });
   if (current.brief) items.push({ icon: 'doc', label: 'Idea Brief', run: openBriefViewer });
+  if (isProject()) {
+    items.push('-', { icon: 'trash', label: 'Delete', danger: true, run: deleteCurrent });
+    openPopover($('more-btn'), items);
+    return;
+  }
   if (s === 'running') items.push({ icon: 'pause', label: 'Pause debate', run: pauseCurrent });
-  else if (s === 'done') items.push({ icon: 'refresh', label: 'Refine further', run: runCurrent });
+  else if (s === 'done') items.push({ icon: 'refresh', label: 'Run another round', run: runCurrent });
   else items.push({ icon: 'play', label: s === 'idle' ? 'Start debate' : 'Resume debate', run: runCurrent });
   items.push('-', { icon: 'trash', label: 'Delete', danger: true, run: deleteCurrent });
   openPopover($('more-btn'), items);
@@ -534,12 +603,10 @@ function agentMsgHtml(m) {
     </div>`;
 }
 
-function renderThread(forceBottom = false) {
-  if (!current) return;
-  const stick = forceBottom || nearBottom();
+function debateHtml(messages) {
   let html = `<div class="u-msg">${attachmentsHtml(current.attachments)}<div class="u-bubble">${esc(current.text)}</div></div>`;
   let lastRound = null;
-  for (const m of current.messages) {
+  for (const m of messages) {
     if (m.kind === 'user') {
       html += `<div class="u-msg"><div class="u-label">You · to the room</div>${attachmentsHtml(m.attachments)}<div class="u-bubble">${esc(m.content)}</div></div>`;
       continue;
@@ -556,8 +623,49 @@ function renderThread(forceBottom = false) {
         </button>`;
     }
   }
-  if (current.status === 'error' && current.error) {
+  return html;
+}
+
+function projectHtml() {
+  const p = current.project;
+  const cut = current.messages.findIndex((m) => m.kind === 'promoted');
+  const debate = cut < 0 ? current.messages : current.messages.slice(0, cut);
+  const after = cut < 0 ? [] : current.messages.slice(cut + 1);
+  const open = expanded.has('debate');
+  const when = new Date(p.promotedAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+  let html = `<div class="proj-card">
+      <div class="proj-top"><span class="proj-badge">${ic('cube')}Project</span><span class="proj-stage">${esc(STAGE_LABEL[p.stage] || p.stage)}</span></div>
+      <div class="proj-title">${esc(current.brief ? briefTitle(current.brief) : current.title)}</div>
+      <div class="proj-meta">Promoted ${esc(when)} · will go live at <strong>${esc(p.slug)}.cashflowus.com</strong></div>
+      ${current.brief ? `<button class="proj-link" data-brief="1">${ic('doc')}Open the brief</button>` : ''}
+    </div>
+    <button class="debate-toggle${open ? ' open' : ''}" data-toggle="debate">${ic('bulb')}<span>Idea debate · ${debate.filter((m) => m.kind !== 'user').length} messages</span>${ic('chevR')}</button>
+    ${open ? `<div class="debate-box">${debateHtml(debate)}</div>` : ''}
+    <div class="next-card">
+      <span class="next-ico">${ic('users')}</span>
+      <div><strong>Next: the planning crew</strong>
+      The Project Manager, Architect, Database Architect and UX Designer will turn the brief into a plan and a design direction for you to approve. They arrive in the next Box update — anything you write below is saved for them.</div>
+    </div>`;
+  for (const m of after) {
+    if (m.kind === 'user') html += `<div class="u-msg"><div class="u-label">You · note for the team</div>${attachmentsHtml(m.attachments)}<div class="u-bubble">${esc(m.content)}</div></div>`;
+    else html += agentMsgHtml(m);
+  }
+  return html;
+}
+
+function renderThread(forceBottom = false) {
+  if (!current) return;
+  const stick = forceBottom || nearBottom();
+  let html = isProject() ? projectHtml() : debateHtml(current.messages);
+  if (!isProject() && current.status === 'error' && current.error) {
     html += `<div class="error-card"><strong>The debate stopped</strong>${esc(current.error)}</div>`;
+  }
+  if (!isProject() && canPromote()) {
+    html += `<div class="review-card">
+        <span class="next-ico">${ic('inbox')}</span>
+        <div><strong>Your review</strong>
+        Read the brief. If something’s off, reply below with feedback and the room runs another round. When you’re happy, promote it to a project.</div>
+      </div>`;
   }
   if (current.status === 'running') {
     const who = thinking ? agentOf(thinking.agentId) : null;
@@ -625,13 +733,20 @@ function renderDock() {
   } else {
     $('rounds-chip').classList.add('hidden');
     const s = current.status;
-    input.placeholder = s === 'running' ? 'Steer the room…' : 'Reply to the room…';
+    input.placeholder = isProject() ? 'Note for the project team…'
+      : s === 'running' ? 'Steer the room…'
+      : canPromote() ? 'Feedback to refine the idea…' : 'Reply to the room…';
     const pills = [];
+    if (isProject()) {
+      $('state-actions').innerHTML = '';
+      updateSendState();
+      return;
+    }
     if (s === 'paused' || s === 'error') pills.push(['primary', 'play', 'Resume debate', 'run']);
     if (s === 'idle') pills.push(['primary', 'play', 'Start debate', 'run']);
-    if (s === 'done') {
+    if (s === 'done' && current.brief) {
+      pills.push(['primary', 'rocket', 'Promote to project', 'promote']);
       pills.push(['', 'doc', 'Idea Brief', 'brief']);
-      pills.push(['', 'refresh', 'Refine further', 'run']);
     }
     $('state-actions').innerHTML = pills.map(([cls, icon, label, act]) =>
       `<button class="state-pill ${cls}" data-act="${act}">${ic(icon)}${label}</button>`).join('');
@@ -643,6 +758,7 @@ $('state-actions').addEventListener('click', (e) => {
   if (!b) return;
   if (b.dataset.act === 'run') runCurrent();
   if (b.dataset.act === 'brief') openBriefViewer();
+  if (b.dataset.act === 'promote') promoteCurrent();
 });
 $('input').addEventListener('input', () => { autosize(); updateSendState(); });
 $('input').addEventListener('keydown', (e) => {
@@ -673,7 +789,7 @@ async function send() {
         current.messages.push(msg);
         renderThread(true);
       }
-      if (current && current.status !== 'running') await runCurrent();
+      if (current && !isProject() && current.status !== 'running') await runCurrent();
     }
   } catch (e) {
     toast(e.message);
@@ -1238,6 +1354,10 @@ function handleEvent(ev) {
       }
       refreshIdeasSoon();
       break;
+    case 'promoted':
+      if (mine) openIdea(current.id, { silent: true });
+      refreshIdeasSoon();
+      break;
     case 'round':
       if (mine) { current.round = ev.round; renderTop(); }
       break;
@@ -1263,10 +1383,45 @@ function connectEvents() {
 }
 
 // ---------- boot ----------
+// ---------- sign-in ----------
+function showLogin() {
+  if ($('login')) return;
+  const el = document.createElement('div');
+  el.id = 'login';
+  el.innerHTML = `<form class="login-box">
+      <div class="welcome-mark">${ic('spark')}</div>
+      <h1>Welcome back</h1>
+      <p>Enter your Box password. This device stays signed in.</p>
+      <input type="password" id="login-pw" autocomplete="current-password" placeholder="Password" required>
+      <div class="form-error hidden" id="login-err"></div>
+      <button class="wide-btn" type="submit">Continue</button>
+    </form>`;
+  document.body.appendChild(el);
+  const form = el.querySelector('form');
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const btn = form.querySelector('button');
+    btn.disabled = true;
+    try {
+      const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: $('login-pw').value }) });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || 'Sign-in failed');
+      location.reload();
+    } catch (err) {
+      $('login-err').textContent = err.message;
+      $('login-err').classList.remove('hidden');
+      btn.disabled = false;
+    }
+  };
+  setTimeout(() => $('login-pw')?.focus(), 100);
+}
+
 (async function boot() {
   applyTheme();
   hydrateIcons();
   renderAvatar();
+  const session = await fetch('/api/session').then((r) => r.json()).catch(() => ({}));
+  if (session.loginRequired && !session.authed) return showLogin();
   await loadAgents();
   await refreshIdeas();
   await onRoute();
