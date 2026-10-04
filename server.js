@@ -856,6 +856,9 @@ auth.ensureAdmin();
   for (const i of listIdeas()) {
     if (!i.ownerId && admin) i.ownerId = admin.id;
     if (i.status === 'running') { i.status = 'paused'; i.autoResume = true; }
+    // A crew that stopped because the sandbox itself failed to start (not the
+    // work) picks up again once the sandbox is fixed by a deploy.
+    if (i.status === 'error' && /^Claude call failed .*\bbwrap:/.test(i.error || '')) { i.status = 'paused'; i.error = null; i.autoResume = true; }
     saveIdea(i);
   }
 }

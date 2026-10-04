@@ -78,7 +78,13 @@ if [ -f /etc/box-kubeconfig ]; then
 fi
 echo "sandbox: $(grep -q '^BOX_BWRAP=1' /etc/box.env && echo 'bubblewrap on (read-only system, own repo only)' || echo "bubblewrap OFF — agents are isolated by user permissions only; bwrap: $(command -v bwrap || echo 'not installed'); test said: $(sudo -u boxbuild -H bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --tmpfs /opt/box/data --unshare-pid --die-with-parent -- /bin/sh -c 'ls -A /opt/box/data | wc -l' 2>&1 | head -2 | tr '\n' ' ')")"
 if grep -q '^BOX_BWRAP=1' /etc/box.env; then
-  echo "claude inside the sandbox: $(set -a; . /etc/box.env 2>/dev/null; set +a; mkdir -p /opt/box/data/work/_check && chown boxbuild:boxbuild /opt/box/data/work/_check && timeout 180 sudo -u boxbuild -H --preserve-env=CLAUDE_CODE_OAUTH_TOKEN bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --tmpfs /run/user --tmpfs /opt/box/data --bind /opt/box/data/work/_check /opt/box/data/work/_check --bind /home/boxbuild /home/boxbuild --unshare-pid --die-with-parent --chdir /opt/box/data/work/_check -- claude -p 'Reply with exactly: OK' --model haiku 2>&1 | tail -1; rm -rf /opt/box/data/work/_check)"
+  # Exactly the arguments Box uses for a build-crew turn (lib/claude.js), so
+  # this test fails whenever a real turn would.
+  SANDBOX_ARGS=$(node -e "console.log(require('./lib/claude').sandboxArgs('/opt/box/data/work/_check', '/home/boxbuild').join(' '))")
+  mkdir -p /opt/box/data/work/_check && chown boxbuild:boxbuild /opt/box/data/work/_check
+  echo "claude inside the sandbox: $(set -a; . /etc/box.env 2>/dev/null; set +a; timeout 180 sudo -u boxbuild -H --preserve-env=CLAUDE_CODE_OAUTH_TOKEN bwrap $SANDBOX_ARGS -- claude -p 'Reply with exactly: OK' --model haiku 2>&1 | tail -1)"
+  echo "postgres inside the sandbox: $(timeout 30 sudo -u boxbuild -H bwrap $SANDBOX_ARGS -- psql 'postgresql://boxbuild:boxbuild@127.0.0.1:5432/template1' -tAc 'select 1' 2>&1 | tail -1 | sed 's/^1$/OK/')"
+  rm -rf /opt/box/data/work/_check
 fi
 echo "claude as build user: $(set -a; . /etc/box.env 2>/dev/null; set +a; timeout 120 sudo -u boxbuild -H --preserve-env=CLAUDE_CODE_OAUTH_TOKEN claude -p 'Reply with exactly: OK' --model haiku 2>&1 | tail -1)"
 
