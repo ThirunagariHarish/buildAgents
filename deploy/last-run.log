@@ -1,4 +1,4 @@
-run: 59  commit: 2f13a1e  ssh step: success  at: 2026-10-04T06:46:10Z
+run: 60  commit: b768b91  ssh step: success  at: 2026-10-04T06:47:32Z
 
 == secrets GitHub passed to this run ==
 BOX_PASSWORD: set (6 chars)
@@ -6,10 +6,10 @@ CLAUDE_CODE_OAUTH_TOKEN: set (108 chars)
 BOX_GITHUB_TOKEN: MISSING
 BOX_KUBECONFIG: MISSING
 
-HEAD: 2f13a1e   domain: box.cashflowus.com
+HEAD: b768b91   domain: box.cashflowus.com
 == env file ==
 claude token: looks valid (length 108)
-keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN BOX_DOMAIN BOX_KUBECONFIG_FILE 
+keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN BOX_DOMAIN 
 kubeconfig: no BOX_KUBECONFIG secret (projects can be built but not deployed)
 github token: none (projects can be built but not deployed)
 == box service ==
@@ -20,6 +20,7 @@ github token: none (projects can be built but not deployed)
 ==> Checking Claude login
    Claude login OK
 ==> Installing systemd service (port 3400)
+    ⚠ If you expose Box publicly, protect it (Caddy basic_auth, VPN, or
 service: active
 local /: HTTP 200
 api without sign-in: HTTP 401 (401 = sign-in enforced)
@@ -33,12 +34,12 @@ build user: uid=999(boxbuild) gid=987(boxbuild) groups=987(boxbuild)
 work dir: boxbuild 755; ideas dir: root 700 (700 = private to Box)
 postgres: PostgreSQL 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1) on x86_64-p
 tools: node v22.23.3, pnpm 12.9.1, kubectl Client Version: v1.35.5+k3s1, uv uv 0.12.23 (x86_64-unknown-linux-gnu), docker Docker version 29.5.2
-sandbox: bubblewrap OFF — agents are isolated by user permissions only; bwrap: /usr/bin/bwrap; test said: 0 
+sandbox: bubblewrap on (read-only system, own repo only)
 claude as build user: OK
 == notifications ==
 push: vapid key ready, devices subscribed: 0, needs you: 1
 == wildcard DNS (*.cashflowus.com) ==
-dns-check-1791096362.cashflowus.com -> 2.25.157.104
+dns-check-1791096443.cashflowus.com -> 2.25.157.104
 box login: on
 == latest layout reports from phones ==
 [
@@ -149,7 +150,7 @@ box login: on
  }
 ]
 == claude login ==
-haiku: OK (2s) -> OK
+haiku: OK (3s) -> OK
 sonnet: OK (2s) -> OK
 opus: OK (2s) -> OK
 == remove earlier Coolify routing attempts ==
