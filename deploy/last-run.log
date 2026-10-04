@@ -1,6 +1,6 @@
-run: 34  commit: 529bb7e  ssh step: success  at: 2026-10-04T00:36:47Z
+run: 35  commit: 2aeb737  ssh step: success  at: 2026-10-04T01:18:58Z
 
-HEAD: eda1d42   domain: box.cashflowus.com
+HEAD: 2aeb737   domain: box.cashflowus.com
 == env file ==
 claude token: looks valid (length 108)
 keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN 
@@ -14,9 +14,9 @@ keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN
 service: active
 local /: HTTP 200
 api without sign-in: HTTP 401 (401 = sign-in enforced)
-agent pool: 6 agents — Orchestrator, Entrepreneur, Marketer, Solution Architect, Visionary, Critic
+agent pool: 12 agents — Orchestrator, Entrepreneur, Marketer, Solution Architect, Visionary, Critic, Customer Voice, Finance Analyst, Legal & Compliance, Product Manager, Market Researcher, Competitor Scout
 == wildcard DNS (*.cashflowus.com) ==
-dns-check-1791074200.cashflowus.com -> does not resolve (wildcard record not added yet)
+dns-check-1791076730.cashflowus.com -> does not resolve (wildcard record not added yet)
 box login: on
 == latest layout reports from phones ==
 [
