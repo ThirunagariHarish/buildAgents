@@ -89,6 +89,19 @@ echo "postgres: $(sudo -u postgres psql -tAc "select version()" 2>&1 | head -c 6
 echo "tools: node $(node -v 2>/dev/null), pnpm $(sudo -u boxbuild -H bash -lc 'pnpm -v' 2>/dev/null || echo missing), kubectl $(kubectl version --client 2>/dev/null | head -1 || echo missing), uv $(uv --version 2>/dev/null || echo missing), docker $(docker --version 2>/dev/null | cut -d, -f1 || echo missing)"
 if [ -f /etc/box-kubeconfig ]; then
   echo "cluster: $(timeout 20 kubectl --kubeconfig /etc/box-kubeconfig get nodes --no-headers 2>&1 | awk '{print $1":"$2}' | tr '\n' ' ')"
+  # Every project namespace: pods (with node), service endpoints, and the
+  # last lines from any pod that is not running cleanly.
+  K="kubectl --kubeconfig /etc/box-kubeconfig"
+  for ns in $(ls data/work 2>/dev/null); do
+    timeout 10 $K get ns "$ns" >/dev/null 2>&1 || continue
+    echo "-- site $ns"
+    timeout 20 $K get pods -o wide -n "$ns" --no-headers 2>&1 | awk '{print "   pod " $1 " " $2 " " $3 " restarts=" $4 " node=" $7}'
+    timeout 20 $K get endpoints -n "$ns" --no-headers 2>/dev/null | awk '{print "   endpoints " $1 " -> " $2}'
+    for pod in $(timeout 20 $K get pods -n "$ns" --no-headers 2>/dev/null | awk '$3 !~ /^(Running|Completed)$/ {print $1}' | head -3); do
+      echo "   $pod last lines:"
+      timeout 20 $K logs "$pod" -n "$ns" --all-containers --tail=4 2>&1 | sed 's/^/      /' | head -16
+    done
+  done
 fi
 echo "sandbox: $(grep -q '^BOX_BWRAP=1' /etc/box.env && echo 'bubblewrap on (read-only system, own repo only)' || echo "bubblewrap OFF — agents are isolated by user permissions only; bwrap: $(command -v bwrap || echo 'not installed'); test said: $(sudo -u boxbuild -H bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --tmpfs /opt/box/data --unshare-pid --die-with-parent -- /bin/sh -c 'ls -A /opt/box/data | wc -l' 2>&1 | head -2 | tr '\n' ' ')")"
 if grep -q '^BOX_BWRAP=1' /etc/box.env; then
