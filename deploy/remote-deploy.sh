@@ -97,6 +97,8 @@ if [ -f /etc/box-kubeconfig ]; then
     echo "-- site $ns"
     timeout 20 $K get pods -o wide -n "$ns" --no-headers 2>&1 | sed -E 's/ +/ /g; s/^/   pod /'
     timeout 20 $K get endpoints -n "$ns" --no-headers 2>/dev/null | awk '{print "   endpoints " $1 " -> " $2}'
+    timeout 20 $K get ingress -n "$ns" --no-headers 2>/dev/null | awk '{print "   ingress " $1 " class=" $2 " hosts=" $3}'
+    echo "   https://$ns.cashflowus.com -> HTTP $(curl -sk -o /dev/null -w '%{http_code}' --max-time 10 "https://$ns.cashflowus.com/" || echo 000)"
     for pod in $(timeout 20 $K get pods -n "$ns" --no-headers 2>/dev/null | awk '$3 !~ /^(Running|Completed)$/ {print $1}' | head -3); do
       echo "   $pod last lines:"
       timeout 20 $K logs "$pod" -n "$ns" --all-containers --tail=4 2>&1 | sed 's/^/      /' | head -16
