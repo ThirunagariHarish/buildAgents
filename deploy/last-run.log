@@ -1,4 +1,4 @@
-run: 76  commit: 46919eb  ssh step: success  at: 2026-10-04T21:18:59Z
+run: 77  commit: fcb2171  ssh step: success  at: 2026-10-05T05:26:09Z
 
 == secrets GitHub passed to this run ==
 BOX_PASSWORD: set (6 chars)
@@ -6,7 +6,7 @@ CLAUDE_CODE_OAUTH_TOKEN: set (108 chars)
 BOX_GITHUB_TOKEN: set (40 chars)
 BOX_KUBECONFIG: set (2955 chars)
 
-HEAD: 46919eb   domain: box.cashflowus.com
+HEAD: fcb2171   domain: box.cashflowus.com
 == env file ==
 claude token: looks valid (length 108)
 keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN BOX_GITHUB_TOKEN BOX_DOMAIN BOX_KUBECONFIG_FILE 
@@ -42,44 +42,15 @@ claude as build user: OK
 == notifications ==
 push: vapid key ready, devices subscribed: 2, needs you: 1
 == wildcard DNS (*.cashflowus.com) ==
-dns-check-1791148732.cashflowus.com -> 2.25.157.104
+dns-check-1791177962.cashflowus.com -> 2.25.157.104
 box login: on
 == latest layout reports from phones ==
 [
  {
-  "at": "2026-10-04T20:25:41.466Z",
+  "at": "2026-10-05T04:51:24.401Z",
   "authed": true,
   "version": "52fb7d134eef",
-  "href": "https://box.cashflowus.com/",
-  "screenShown": "app",
-  "sw": true,
-  "caches": [
-   "box-v2"
-  ],
-  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1",
-  "standalone": true,
-  "innerHeight": 812,
-  "outerHeight": 874,
-  "clientHeight": 812,
-  "screen": [
-   402,
-   874
-  ],
-  "vv": [
-   812,
-   0
-  ],
-  "safeTop": "62px",
-  "safeBottom": "34px",
-  "mainBottom": 812,
-  "composerBottom": 802,
-  "appH": "812px"
- },
- {
-  "at": "2026-10-04T19:28:42.375Z",
-  "authed": true,
-  "version": "52fb7d134eef",
-  "href": "https://box.cashflowus.com/",
+  "href": "https://box.cashflowus.com/#/idea/28725ec667a7",
   "screenShown": "app",
   "sw": true,
   "caches": [
@@ -105,7 +76,36 @@ box login: on
   "appH": "894px"
  },
  {
-  "at": "2026-10-04T08:08:33.656Z",
+  "at": "2026-10-05T04:20:08.406Z",
+  "authed": true,
+  "version": "52fb7d134eef",
+  "href": "https://box.cashflowus.com/#/idea/cf38d9fdeb04",
+  "screenShown": "app",
+  "sw": true,
+  "caches": [
+   "box-v2"
+  ],
+  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
+  "standalone": true,
+  "innerHeight": 894,
+  "outerHeight": 956,
+  "clientHeight": 894,
+  "screen": [
+   440,
+   956
+  ],
+  "vv": [
+   894,
+   0
+  ],
+  "safeTop": "62px",
+  "safeBottom": "34px",
+  "mainBottom": 894,
+  "composerBottom": 884,
+  "appH": "894px"
+ },
+ {
+  "at": "2026-10-05T03:53:57.323Z",
   "authed": true,
   "version": "52fb7d134eef",
   "href": "https://box.cashflowus.com/",
@@ -134,7 +134,7 @@ box login: on
   "appH": "812px"
  },
  {
-  "at": "2026-10-04T08:06:23.480Z",
+  "at": "2026-10-05T03:28:22.798Z",
   "authed": true,
   "version": "52fb7d134eef",
   "href": "https://box.cashflowus.com/",
@@ -145,49 +145,51 @@ box login: on
   ],
   "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1",
   "standalone": true,
-  "innerHeight": 812,
-  "outerHeight": 874,
-  "clientHeight": 812,
+  "innerHeight": 873,
+  "outerHeight": 932,
+  "clientHeight": 873,
   "screen": [
-   402,
-   874
+   430,
+   932
   ],
   "vv": [
-   812,
+   873,
    0
   ],
-  "safeTop": "62px",
+  "safeTop": "59px",
   "safeBottom": "34px",
-  "mainBottom": 812,
-  "composerBottom": 802,
-  "appH": "812px"
+  "mainBottom": 873,
+  "composerBottom": 863,
+  "appH": "873px"
  },
  {
-  "at": "2026-10-04T08:05:21.065Z",
-  "authed": false,
+  "at": "2026-10-05T03:25:09.238Z",
+  "authed": true,
   "version": "52fb7d134eef",
   "href": "https://box.cashflowus.com/",
-  "screenShown": "sign-in with email",
-  "sw": false,
-  "caches": [],
+  "screenShown": "app",
+  "sw": true,
+  "caches": [
+   "box-v2"
+  ],
   "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1",
   "standalone": true,
-  "innerHeight": 812,
-  "outerHeight": 874,
-  "clientHeight": 812,
+  "innerHeight": 873,
+  "outerHeight": 932,
+  "clientHeight": 873,
   "screen": [
-   402,
-   874
+   430,
+   932
   ],
   "vv": [
-   812,
+   873,
    0
   ],
-  "safeTop": "62px",
+  "safeTop": "59px",
   "safeBottom": "34px",
-  "mainBottom": 812,
-  "composerBottom": 802,
-  "appH": "812px"
+  "mainBottom": 873,
+  "composerBottom": 863,
+  "appH": "873px"
  }
 ]
 == claude login ==
