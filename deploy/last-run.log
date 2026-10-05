@@ -1,4 +1,4 @@
-run: 79  commit: 7373c66  ssh step: success  at: 2026-10-05T05:36:59Z
+run: 80  commit: 9c0b3ed  ssh step: success  at: 2026-10-05T05:54:07Z
 
 == secrets GitHub passed to this run ==
 BOX_PASSWORD: set (6 chars)
@@ -6,7 +6,7 @@ CLAUDE_CODE_OAUTH_TOKEN: set (108 chars)
 BOX_GITHUB_TOKEN: set (40 chars)
 BOX_KUBECONFIG: set (2955 chars)
 
-HEAD: 7373c66   domain: box.cashflowus.com
+HEAD: 9c0b3ed   domain: box.cashflowus.com
 == env file ==
 claude token: looks valid (length 108)
 keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN BOX_GITHUB_TOKEN BOX_DOMAIN BOX_KUBECONFIG_FILE 
@@ -42,7 +42,7 @@ claude as build user: OK
 == notifications ==
 push: vapid key ready, devices subscribed: 2, needs you: 1
 == wildcard DNS (*.cashflowus.com) ==
-dns-check-1791178611.cashflowus.com -> 2.25.157.104
+dns-check-1791179638.cashflowus.com -> 2.25.157.104
 box login: on
 == latest layout reports from phones ==
 [
