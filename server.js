@@ -653,8 +653,23 @@ const server = http.createServer(async (req, res) => {
           const d = String(body.customDomain || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
           if (d && !/^([a-z0-9-]+\.)+[a-z]{2,}$/.test(d)) return json(res, 400, { error: 'That does not look like a domain name.' });
           idea.project.customDomain = d || null;
-          if (idea.project.deploy) idea.project.deploy.preparedAt = null; // DevOps rewrites the manifests next deploy
+          idea.project.customDomainStatus = null;
           saveIdea(idea);
+          // A live site gets the domain on its Ingress right away; otherwise
+          // Box adds it during the next deploy. The crew is not involved.
+          let note = d ? 'It is added to the site on the next deploy.' : 'Removed on the next deploy.';
+          if (idea.project.url && deployOps.ready()) {
+            try {
+              await deployOps.applyCustomDomain(idea.project.slug, d);
+              const probe = d ? await deployOps.probeSite(`https://${d}`) : { up: false };
+              idea.project.customDomainStatus = !d ? null : probe.up ? 'live' : /ENOTFOUND|EAI_AGAIN/.test(probe.error || '') ? 'dns' : 'certificate';
+              saveIdea(idea);
+              note = !d ? 'Removed from the site.' : probe.up ? `Live at https://${d}.` : idea.project.customDomainStatus === 'dns'
+                ? `On the site; its DNS does not resolve yet (point an A record at 2.25.157.104).`
+                : 'On the site; the certificate usually arrives within a few minutes.';
+            } catch (e) { note = `Saved, but the cluster update failed: ${e.message}`; }
+          }
+          if (body.tags === undefined && body.archived === undefined) return json(res, 200, { ok: true, customDomain: idea.project.customDomain, customDomainStatus: idea.project.customDomainStatus, note });
         }
         if (body.tags !== undefined || body.archived !== undefined) bus.broadcast({ event: 'ideas_changed' });
         return json(res, 200, { ok: true, title: idea.title, tags: idea.tags || [], archived: !!idea.archived, watch: !!idea.watch, customDomain: idea.project?.customDomain || null });

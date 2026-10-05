@@ -747,8 +747,12 @@ async function completeCurrent() {
     toast('Marked complete');
   } catch (e) { toast(e.message); }
 }
+/** The address to open: the custom domain once it answers, else the cashflowus one. */
+function siteHref(p) {
+  return p?.customDomain && p.customDomainStatus === 'live' ? `https://${p.customDomain}` : p?.url;
+}
 function openSite() {
-  if (current?.project?.url) window.open(current.project.url, '_blank', 'noopener');
+  if (current?.project?.url) window.open(siteHref(current.project), '_blank', 'noopener');
 }
 $('top-title').onclick = () => (route.view === 'idea' && current ? openRoomSheet() : openAgentsSheet());
 $('more-btn').onclick = () => {
@@ -1191,9 +1195,12 @@ function projectHtml() {
     const up = p.uptime;
     const status = p.offline ? 'Offline (by you)' : up?.up === false ? 'Down' : up?.up ? `Up · ${up.ms} ms` : (p.stage === 'maintenance' ? 'Live · in maintenance' : 'Live · tap to open');
     const cert = up?.certDaysLeft != null ? ` · cert ${up.certDaysLeft} d` : '';
-    html += `<a class="site-card${p.offline || up?.up === false ? ' down' : ''}" href="${esc(p.url)}" target="_blank" rel="noopener">
+    const custom = p.customDomain
+      ? (p.customDomainStatus === 'live' ? ` · also ${esc(p.customDomain)}` : p.customDomainStatus === 'dns' ? ` · ${esc(p.customDomain)}: DNS not pointing here yet` : p.customDomainStatus === 'certificate' ? ` · ${esc(p.customDomain)}: waiting for its certificate` : ` · ${esc(p.customDomain)} on the next deploy`)
+      : '';
+    html += `<a class="site-card${p.offline || up?.up === false ? ' down' : ''}" href="${esc(siteHref(p))}" target="_blank" rel="noopener">
         <span class="brief-ico">${ic('globe')}</span>
-        <span style="min-width:0"><div class="brief-title">${esc(p.url.replace(/^https?:\/\//, ''))}${p.customDomain ? ` · ${esc(p.customDomain)}` : ''}</div><div class="brief-sub">${esc(status)}${cert}${p.repoUrl ? ' · code on GitHub' : ''}</div></span>
+        <span style="min-width:0"><div class="brief-title">${esc(siteHref(p).replace(/^https?:\/\//, ''))}</div><div class="brief-sub">${esc(status)}${cert}${custom}${p.repoUrl ? ' · code on GitHub' : ''}</div></span>
       </a>`;
   }
   for (const m of after) {
@@ -1479,12 +1486,14 @@ function fmtBytes(n) { return n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).
 
 async function setCustomDomain() {
   if (!current?.project) return;
-  const v = await dialog({ title: 'Custom domain', text: 'Point the domain’s DNS (an A record) at 2.25.157.104 at your registrar. DevOps adds it to the site on the next deploy, with its own certificate. Leave empty to remove.', input: current.project.customDomain || '', confirm: 'Save' });
+  const v = await dialog({ title: 'Custom domain', text: 'Any name under cashflowus.com works at once. For another domain, point its A record at 2.25.157.104 first. Box puts it on the site right away when the site is live, otherwise on the next deploy, with its own certificate. Leave empty to remove.', input: current.project.customDomain || '', confirm: 'Save' });
   if (v === null) return;
   try {
     const r = await api(`/api/ideas/${current.id}`, { method: 'PATCH', body: JSON.stringify({ customDomain: v }) });
     current.project.customDomain = r.customDomain;
-    toast(r.customDomain ? `Custom domain set: ${r.customDomain}` : 'Custom domain removed');
+    current.project.customDomainStatus = r.customDomainStatus || null;
+    toast(r.customDomain ? `Custom domain ${r.customDomain}: ${r.note || 'saved'}` : `Custom domain removed. ${r.note || ''}`);
+    renderThread(false);
   } catch (e) { toast(e.message); }
 }
 async function toggleOffline() {
