@@ -636,7 +636,12 @@ const server = http.createServer(async (req, res) => {
       const action = m[2];
 
       if (!action && req.method === 'GET') {
-        return json(res, 200, { ...idea, status: running(idea.id) ? 'running' : idea.status, speaker: speaker(idea.id), deployReady: deployStatus() });
+        // Secret values stay on the server: the client gets the variable
+        // names only (and asks for one value at a time when the owner taps Show).
+        const project = idea.project?.deploy
+          ? { ...idea.project, deploy: { ...idea.project.deploy, env: Object.fromEntries(Object.keys(idea.project.deploy.env || {}).filter((k) => !k.startsWith('__')).map((k) => [k, true])) } }
+          : idea.project;
+        return json(res, 200, { ...idea, project, status: running(idea.id) ? 'running' : idea.status, speaker: speaker(idea.id), deployReady: deployStatus() });
       }
       if (!action && req.method === 'PATCH') {
         const body = await readBody(req);
@@ -678,6 +683,14 @@ const server = http.createServer(async (req, res) => {
         const body = await readBody(req);
         if (idea.phase !== 'project') return json(res, 409, { error: 'Not a project.' });
         try { return json(res, 200, { ok: true, message: chooseDesign(bus, idea, String(body.choice || '').toUpperCase()) }); } catch (e) { return json(res, 400, { error: e.message }); }
+      }
+      if (action === 'env' && req.method === 'GET') {
+        // One value, on request, for the owner or an administrator: the
+        // setup codes and first passwords the site asks them to type in.
+        const name = String(url.searchParams.get('name') || '');
+        const env = idea.project?.deploy?.env || {};
+        if (!/^[A-Z][A-Z0-9_]{1,60}$/.test(name) || !(name in env)) return json(res, 404, { error: 'No such variable.' });
+        return json(res, 200, { name, value: String(env[name]) });
       }
       if (action === 'env' && req.method === 'POST') {
         const body = await readBody(req);
