@@ -95,7 +95,7 @@ if [ -f /etc/box-kubeconfig ]; then
   for ns in $(ls data/work 2>/dev/null); do
     timeout 10 $K get ns "$ns" >/dev/null 2>&1 || continue
     echo "-- site $ns"
-    timeout 20 $K get pods -o wide -n "$ns" --no-headers 2>&1 | awk '{print "   pod " $1 " " $2 " " $3 " restarts=" $4 " node=" $7}'
+    timeout 20 $K get pods -o wide -n "$ns" --no-headers 2>&1 | sed -E 's/ +/ /g; s/^/   pod /'
     timeout 20 $K get endpoints -n "$ns" --no-headers 2>/dev/null | awk '{print "   endpoints " $1 " -> " $2}'
     for pod in $(timeout 20 $K get pods -n "$ns" --no-headers 2>/dev/null | awk '$3 !~ /^(Running|Completed)$/ {print $1}' | head -3); do
       echo "   $pod last lines:"
@@ -123,6 +123,9 @@ probe="dns-check-$(date +%s).cashflowus.com"
 ip=$(getent hosts "$probe" | awk '{print $1}' | head -1)
 echo "${probe} -> ${ip:-does not resolve (wildcard record not added yet)}"
 echo "box login: $([ -n "$(grep -s '^BOX_PASSWORD=' /etc/box.env)" ] && echo on || echo 'off (no BOX_PASSWORD secret)')"
+
+echo "== where the time goes, per project =="
+timeout 60 node deploy/timings.js 2>&1 | head -60
 
 echo "== latest layout reports from phones =="
 cat data/diag.json 2>/dev/null | head -c 9000 || echo "(none yet)"
