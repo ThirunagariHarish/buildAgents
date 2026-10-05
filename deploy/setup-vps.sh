@@ -99,7 +99,10 @@ EnvironmentFile=-/etc/box.env
 ExecStart=$(command -v node) ${BOX_DIR}/server.js
 Restart=on-failure
 # Box finishes the agents' current turns before stopping (up to 15 min).
+# mixed: only Box gets SIGTERM; the agents' Claude processes keep running
+# until Box has let them finish (control-group would kill them at once).
 KillSignal=SIGTERM
+KillMode=mixed
 TimeoutStopSec=960
 RestartSec=3
 
