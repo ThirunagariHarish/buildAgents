@@ -25,6 +25,7 @@ const { checkNames } = require('./lib/names');
 const { zip } = require('./lib/zip');
 const monitor = require('./lib/monitor');
 const builder = require('./lib/builder');
+const sharedEnv = require('./lib/sharedenv');
 
 const PORT = Number(process.env.BOX_PORT || 3400);
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -396,6 +397,22 @@ const server = http.createServer(async (req, res) => {
     if (p.startsWith('/api/admin/')) {
       if (!isAdmin(user)) return json(res, 403, { error: 'Administrators only.' });
       if (p === '/api/admin/users' && req.method === 'GET') return json(res, 200, { users: auth.listUsers(), mailConfigured: mail.configured() });
+      // Shared keys: given once, filled into every project's deploy. Names
+      // are listed; values are never sent back.
+      if (p === '/api/admin/shared-env' && req.method === 'GET') return json(res, 200, { keys: sharedEnv.list(), wellKnown: sharedEnv.WELL_KNOWN });
+      if (p === '/api/admin/shared-env' && req.method === 'POST') {
+        const body = await readBody(req).catch(() => ({}));
+        const name = String(body.name || '').trim().toUpperCase();
+        const value = String(body.value || '');
+        if (!value.trim()) return json(res, 400, { error: 'Paste the value.' });
+        try { sharedEnv.set(name, value.trim(), { by: user.id, hint: String(body.hint || '').slice(0, 120) }); } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+        return json(res, 200, { ok: true, keys: sharedEnv.list() });
+      }
+      if (p === '/api/admin/shared-env' && req.method === 'DELETE') {
+        const body = await readBody(req).catch(() => ({}));
+        sharedEnv.remove(String(body.name || '').trim().toUpperCase());
+        return json(res, 200, { ok: true, keys: sharedEnv.list() });
+      }
       const um2 = p.match(/^\/api\/admin\/users\/([a-f0-9]+)\/(approve|decline|disable|enable|resend|make-admin|remove-admin)$/);
       if (um2 && req.method === 'POST') {
         try {

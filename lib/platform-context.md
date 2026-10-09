@@ -7,7 +7,7 @@ Follow these without asking. Deviate only with a stated reason in the architectu
 - **Full-stack web app** (accounts, data, server logic): Next.js App Router (Next 16 / React 19 / Tailwind 4), Better Auth for sign-in, Drizzle ORM + Postgres (pgvector when AI search is needed), zod at every boundary.
 - **Mobile**: Tier 1 is an installable PWA (manifest + icons, "Add to Home Screen") — the default for personal apps, ships with the web deploy. Tier 2 Capacitor wrap when push notifications or native APIs are required. Tier 3 Expo + EAS for full React Native.
 - **Bot / agent / background service**: Python 3.11–3.13, FastAPI + uvicorn for any HTTP surface, redis for queues/state, uv for dependencies, Docker image on python:3.X-slim.
-- **AI features**: Claude via the Claude API / claude-agent-sdk with tiered model routing (Haiku for cheap steps, Sonnet default, Opus for hard reasoning).
+- **AI features**: Claude via the Claude API (official Anthropic SDK) with tiered model routing (claude-haiku-5-5 for cheap steps, claude-sonnet-5-5 default, claude-opus-5-5 for hard reasoning). The key arrives as ANTHROPIC_API_KEY from Box's shared keys at deploy; products never ask the owner for an Anthropic key and never use a Claude subscription login.
 
 ## UI conventions (the house look)
 shadcn-style components, dark-first, card/grid layouts, sonner toasts, lucide icons, TanStack Query for all server state, zod everywhere data crosses a boundary. Mobile-first: every user-facing app must work well on a phone and be installable (PWA).

@@ -57,6 +57,8 @@ After approval the build crew works in the project's own git repository (`data/w
 
 You get the project back as *Site ready — review it*. Reply with what should change (fix → test → redeploy), or **Mark complete** to move it to maintenance, where any later note becomes a fix or a feature.
 
+**Shared keys** (Settings, administrators): API keys you give Box once, such as `ANTHROPIC_API_KEY` for the AI features in every product, `RESEND_API_KEY` for email. Any project whose app needs one gets it at deploy, and no crew asks for it again. Products call Claude through the Anthropic API with that key, billed per use on your Anthropic account; Box's own crews run on your Claude subscription through the Claude Code CLI, which is for Box alone.
+
 Deploying needs two more repository secrets for Box's own deploy workflow: `BOX_GITHUB_TOKEN` (create private repos, read Actions) and `BOX_KUBECONFIG` (the cluster kubeconfig, raw or base64). Without them projects are built and tested, and wait in *Built — deploy needs setup* until you add them and redeploy Box.
 
 ## More around the room and the crew

@@ -2305,6 +2305,7 @@ function openSettingsSheet() {
           ${ME?.weakPassword ? '<div class="form-error" style="margin-bottom:10px">Your password is the initial one. Change it now.</div>' : ''}
           <div class="btn-pair" style="margin-bottom:14px"><button class="wide-btn soft" data-open="password">Change password</button><button class="wide-btn soft" data-open="signout">Sign out</button></div>
           ${isAdminUser() ? `<button class="row" data-open="people">${ic('users')}<span class="row-label">People<span class="row-sub">Access requests and members</span></span><span class="row-value">${pendingUsers ? `${pendingUsers} waiting` : ''}</span><span class="row-chev">${ic('chevR')}</span></button>` : ''}
+          ${isAdminUser() ? `<button class="row" data-open="sharedkeys">${ic('list')}<span class="row-label">Shared keys<span class="row-sub">API keys every project gets automatically</span></span><span class="row-chev">${ic('chevR')}</span></button>` : ''}
           <label class="field" style="margin-top:14px"><span>Greeting name</span><input id="set-name" type="text" maxlength="40" placeholder="${esc(ME?.firstName || 'Used in your greeting')}" value="${esc(settings.name)}"></label>
           <div class="sb-label" style="padding:6px 6px 8px">Appearance</div>
           ${['system', 'dark', 'light'].map((t) => `<button class="row check" data-theme="${t}"><span class="row-label">${t[0].toUpperCase() + t.slice(1)}</span><span class="row-value">${settings.theme === t ? ic('check') : ''}</span></button>`).join('')}
@@ -2381,6 +2382,7 @@ function openSettingsSheet() {
       s.body.onclick = async (e) => {
         if (e.target.closest('[data-open="sources"]')) { s.close(); openSourcesSheet(); return; }
         if (e.target.closest('[data-open="people"]')) { s.close(); openPeopleSheet(); return; }
+        if (e.target.closest('[data-open="sharedkeys"]')) { s.close(); openSharedKeysSheet(); return; }
         if (e.target.closest('[data-open="password"]')) { s.close(); openPasswordSheet(); return; }
         if (e.target.closest('[data-open="signout"]')) {
           const ok = await dialog({ title: 'Sign out?', text: 'Notifications stay on for this device.', confirm: 'Sign out' });
@@ -2830,6 +2832,43 @@ function openPasswordSheet() {
 }
 
 /** Administrator: access requests and members. */
+/** Administrator control panel: API keys given once, filled into every project. */
+function openSharedKeysSheet() {
+  openSheet({
+    title: 'Shared keys',
+    tall: true,
+    async render(s) {
+      const draw = async () => {
+        let d;
+        try { d = await api('/api/admin/shared-env'); } catch (e) { s.body.innerHTML = `<p class="sheet-intro">${esc(e.message)}</p>`; return; }
+        const have = new Set(d.keys.map((k) => k.name));
+        const suggestions = Object.entries(d.wellKnown || {}).filter(([n]) => !have.has(n));
+        s.body.innerHTML = `<p class="sheet-intro">Keys you give Box once. Any project whose app needs one of these gets it on deploy, and no crew asks you for it again. Values stay on the server. AI features in every product use the Claude API through ANTHROPIC_API_KEY, billed per use on your Anthropic account.</p>
+          ${d.keys.length ? d.keys.map((k) => `<div class="row" style="padding-right:8px"><span class="row-label" style="flex:1">${esc(k.name)}<span class="row-sub">${esc(d.wellKnown?.[k.name] || k.hint || 'Set')} · ${new Date(k.setAt).toLocaleDateString()}</span></span><button class="pill-btn soft" data-replace="${esc(k.name)}">Replace</button><button class="pill-btn soft" data-remove="${esc(k.name)}">Remove</button></div>`).join('') : '<p class="sheet-intro">No shared keys yet.</p>'}
+          ${suggestions.length ? `<div class="tpl-label" style="margin-top:14px">Common ones</div>${suggestions.map(([n, h]) => `<button class="row" data-replace="${esc(n)}">${ic('plus')}<span class="row-label">${esc(n)}<span class="row-sub">${esc(h)}</span></span><span class="row-chev">${ic('chevR')}</span></button>`).join('')}` : ''}
+          <button class="wide-btn soft" data-replace="" style="margin-top:10px">Add another key</button>`;
+      };
+      await draw();
+      s.body.onclick = async (e) => {
+        const rm = e.target.closest('[data-remove]');
+        if (rm) {
+          const ok = await dialog({ title: `Remove ${rm.dataset.remove}?`, text: 'Projects already deployed keep their copy; new deploys will ask for it again.', confirm: 'Remove' });
+          if (ok === null) return;
+          try { await api('/api/admin/shared-env', { method: 'DELETE', body: JSON.stringify({ name: rm.dataset.remove }) }); toast('Removed'); await draw(); } catch (err) { toast(err.message); }
+          return;
+        }
+        const b = e.target.closest('[data-replace]');
+        if (!b) return;
+        let name = b.dataset.replace;
+        if (!name) { name = await dialog({ title: 'Variable name', text: 'As the apps read it, for example RESEND_API_KEY.', input: '', confirm: 'Next' }); if (!name) return; name = name.trim().toUpperCase(); }
+        const value = await dialog({ title: name, text: 'Paste the key. It goes straight to the server and is never shown again.', input: '', confirm: 'Save' });
+        if (value === null || !value.trim()) return;
+        try { await api('/api/admin/shared-env', { method: 'POST', body: JSON.stringify({ name, value }) }); toast(`${name} saved for every project`); await draw(); } catch (err) { toast(err.message); }
+      };
+    },
+  });
+}
+
 function openPeopleSheet() {
   if (!isAdminUser()) return;
   openSheet({
