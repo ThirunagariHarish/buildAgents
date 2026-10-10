@@ -496,14 +496,15 @@
     const unsupported = R.verified._unsupported;
     app.innerHTML = `<div class="shell">
       <header class="top">
-        <a class="brand" href="/runtime"><span class="mark"></span><span>Pocket</span></a>
+        <a class="brand" href="/runtime"><span class="mark"></span><span>Pocket Box</span></a>
         <span class="spacer"></span>
         ${R.offline ? '<span class="pill warn">Offline</span>' : ''}
-        <a class="btn ghost sm" href="/">Studio</a>
+        <a class="btn ghost sm" href="/">Studio ›</a>
       </header>
       <section style="padding:22px 0 18px" class="rise">
         <div class="eyebrow">${esc(R.pair.name)}${st?.owner ? ` · ${esc(st.owner.firstName)}` : ''}</div>
         <h1 class="display" style="margin-top:8px;font-size:clamp(38px,10vw,58px)">Your agents, <em>on you</em>.</h1>
+        <p class="small muted" style="margin:10px 0 0">This screen runs your agents on this phone and shows what they said. To make a new agent or change one, open the <a class="link" href="/">Studio</a>.</p>
       </section>
       ${R.problem ? `<div class="note bad rise" style="margin-bottom:14px">${esc(R.problem)}</div>` : ''}
       ${unsupported ? '<div class="note bad rise" style="margin-bottom:14px">This browser cannot check package signatures (Ed25519), so nothing runs here. Update iOS / your browser.</div>' : ''}
@@ -525,17 +526,20 @@
       const l = last[a.agentId] || {};
       const v = R.verified[a.agentId];
       const due = a.package && a.channel !== 'off' ? nextDue(a) : null;
-      const pill = a.runsOn === 'cloud' ? '<span class="pill accent">Cloud</span>' : a.channel === 'off' ? '<span class="pill">Off</span>' : v === false ? '<span class="pill bad">Bad signature</span>' : a.channel === 'live' ? '<span class="pill good"><span class="dot"></span>Live</span>' : '<span class="pill accent">Shadow</span>';
-      const line = a.runsOn === 'cloud' ? 'Runs in the cloud on its schedule; it notifies you here.' : (a.missingSettings || []).length ? `Needs settings in the Studio: ${a.missingSettings.join(', ')}`
+      const pill = (a.missingSettings || []).length && a.channel !== 'off' ? '<span class="pill warn">Needs you</span>' : a.runsOn === 'cloud' ? '<span class="pill accent">Cloud</span>' : a.channel === 'off' ? '<span class="pill">Off</span>' : v === false ? '<span class="pill bad">Bad signature</span>' : a.channel === 'live' ? '<span class="pill good"><span class="dot"></span>Live</span>' : '<span class="pill accent">Shadow</span>';
+      const miss = (a.missingSettings || []).length;
+      const line = miss ? `Can't run yet: it needs ${miss === 1 ? '1 value' : `${miss} values`} from you (${a.missingSettings.join(', ')}).`
+        : a.runsOn === 'cloud' ? 'Runs in Pocket Box\'s cloud on its schedule, not on this phone. You get its messages as notifications.'
         : R.running.has(a.agentId) ? 'Running…'
         : l.result ? `${l.result.ok ? 'Ran' : 'Failed'} ${ago(l.result.at)}${l.result.said ? ` · “${l.result.said}”` : ''}${due ? ` · next ${when(due)}` : ''}`
         : due ? `Next ${when(due)}` : 'Not run yet';
       return `<article class="glass card rise">
-        <div class="row" style="gap:14px">
+        <div class="row" style="gap:14px;align-items:flex-start">
           <div class="avatar">${esc(a.icon || '✳︎')}</div>
-          <div style="flex:1;min-width:0"><div class="h3" style="font-size:16.5px">${esc(a.title)}</div><div class="small muted" style="overflow:hidden;text-overflow:ellipsis">${esc(line)}</div></div>
+          <div style="flex:1;min-width:0"><div class="h3" style="font-size:16.5px">${esc(a.title)}</div><div class="small muted" style="overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical">${esc(line)}</div></div>
           ${pill}
         </div>
+        ${miss ? `<div class="row" style="margin-top:14px;justify-content:flex-end"><a class="btn accent sm" href="/#/a/${esc(a.agentId)}/settings">Fill them in</a></div>` : ''}
         ${runnable(a) ? `<div class="row" style="margin-top:14px;justify-content:space-between"><span class="tiny faint">v${esc(a.package.manifest.version)} · signed ✓</span><button class="btn sm" data-act="run" data-id="${esc(a.agentId)}" ${R.running.has(a.agentId) ? 'disabled' : ''}>${R.running.has(a.agentId) ? '<span class="spin"></span>' : 'Run now'}</button></div>` : ''}
       </article>`;
     }).join('')}</div>`;
@@ -551,8 +555,18 @@
 
   function phoneView(st) {
     const out = ls.get(K.outbox, []);
-    return `<div class="stack-lg"><section class="glass card">
-      <dl class="kv">
+    const notif = !!Native || ('Notification' in window && Notification.permission === 'granted');
+    const home = !!Native || standalone() || !isIOS();
+    const check = (ok, title, text, action = '') => `<div class="row" style="gap:12px;align-items:flex-start"><span style="font-size:18px;line-height:1.3">${ok ? '✅' : '⚠️'}</span><div style="flex:1;min-width:0"><div style="font-weight:600">${title}</div><div class="small muted">${text}</div>${action}</div></div>`;
+    return `<div class="stack-lg"><section class="glass card stack">
+      <div class="h3">Is this phone ready?</div>
+      ${check(true, `Paired as "${esc(R.pair.name)}"`, `Your agents can run here. Paired ${ago(R.pair.pairedAt)}.`)}
+      ${check(home, home ? 'Opened as an app' : 'Not added to the Home Screen yet', home ? 'Good: the phone treats Pocket Box like an app.' : 'On iPhone, notifications only work after you add Pocket Box to the Home Screen: Share → Add to Home Screen, then open it from there.')}
+      ${check(notif, notif ? 'Notifications are on' : 'Notifications are off', notif ? 'Scheduled agents can wake this phone, and you see what they say.' : 'Without them, agents only run while this screen is open.', notif ? '' : `<button class="btn sm" style="margin-top:8px" data-act="push">${isIOS() && !standalone() ? 'How to turn them on' : 'Turn them on'}</button>`)}
+      ${check(!out.length, out.length ? `${out.length} report${out.length === 1 ? '' : 's'} waiting to send` : 'Everything is sent to your Studio', out.length ? 'They go when the phone is back online.' : 'The Studio has every run from this phone.')}
+    </section>
+    <details class="glass card"><summary class="small" style="cursor:pointer">Technical details</summary>
+      <dl class="kv" style="margin-top:12px">
         <dt>Name</dt><dd>${esc(R.pair.name)}</dd>
         <dt>Time zone</dt><dd>${esc(tz())}</dd>
         <dt>Paired</dt><dd>${ago(R.pair.pairedAt)}</dd>
@@ -560,9 +574,9 @@
         <dt>Notifications</dt><dd>${'Notification' in window ? esc(Notification.permission) : 'not supported'}</dd>
         <dt>Hand-offs today</dt><dd>${st ? `${st.handoff.used} of ${st.handoff.cap}` : '—'}</dd>
         <dt>Unsent reports</dt><dd>${out.length}</dd>
-      </dl></section>
+      </dl></details>
       <section class="glass card stack"><div class="h3">How agents run here</div>
-        <p class="small muted" style="margin:0">Phones don't keep anything running in the background. At each scheduled time your Studio sends a notification; opening it (or opening Pocket) runs whatever is due, up to three hours late. Agents with an interval run whenever Pocket is open and their interval has passed.</p></section>
+        <p class="small muted" style="margin:0">Phones don't let apps run in the background. So at each scheduled time the Studio sends this phone a notification; opening it (or opening Pocket Box) runs whatever is due. Agents that check every so often run whenever Pocket Box is open and enough time has passed. Agents set to run in the cloud don't need this phone at all.</p></section>
       <div class="row wrap"><button class="btn soft sm" data-act="sync">Check for updates</button><button class="btn danger sm" data-act="unpair">Unpair this phone</button></div></div>`;
   }
 

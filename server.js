@@ -171,7 +171,68 @@ function agentView(a, user) {
     inputs: ((manifest?.triggers || []).find((t) => t.type === 'manual' && Array.isArray(t.inputs)) || {}).inputs || [],
     package: rec ? { version: manifest.version, channel: rec.channel, publishedAt: rec.publishedAt, permissions: manifest.permissions, triggers: manifest.triggers, http: manifest.http || null, evals: rec.package.evals, history: rec.history, commit: rec.package.commit } : null,
     settings: manifest ? settings.view(a.id, manifest) : [],
+    missingSettings: manifest ? settings.missing(a.id, manifest) : (a.missingSettings || []),
   };
+}
+
+/**
+ * What the person should do next, most important first: each item says what,
+ * why, and where to do it. For the primary administrator it also lists the
+ * parts of Pocket Box that wait on an account only they can create.
+ */
+function todoFor(user) {
+  const items = [];
+  const mine = store.listAgents().filter((a) => a.ownerId === user.id);
+  for (const a of mine) {
+    const rec = packages.load(a.id);
+    const miss = rec ? settings.missing(a.id, rec.package.manifest) : [];
+    const name = `${a.icon ? `${a.icon} ` : ''}${a.title}`;
+    if (a.status === 'running') continue;
+    if (a.status === 'error') items.push({ id: `err:${a.id}`, title: `${name} stopped`, why: 'Something went wrong while building it. Open it to see what, then reply to retry.', action: 'Open it', href: `#/a/${a.id}` });
+    else if (miss.length) items.push({ id: `set:${a.id}`, title: `${name} needs ${miss.length === 1 ? '1 value' : `${miss.length} values`} from you`, why: `It can't run until you fill in: ${miss.join(', ')}.`, action: 'Fill them in', href: `#/a/${a.id}/settings` });
+    else if (a.stage === 'brief') items.push({ id: `brief:${a.id}`, title: `${name}: the brief is ready`, why: 'Read what the room decided, then tap Build it (or reply to change it).', action: 'Read the brief', href: `#/a/${a.id}` });
+    else if (a.stage === 'plan_review') items.push({ id: `plan:${a.id}`, title: `${name}: the build plan is ready`, why: 'Approve the plan so the crew starts building.', action: 'Review the plan', href: `#/a/${a.id}` });
+    else if (a.stage === 'shadow') items.push({ id: `shadow:${a.id}`, title: `${name} is in shadow mode`, why: 'It runs but only records what it would say. Check its Runs tab; if it looks right, tap Go live.', action: 'Check it', href: `#/a/${a.id}/runs` });
+  }
+  const phones = devices.list(user.id);
+  if (mine.some((a) => a.release && (a.runsOn || 'phone') === 'phone') && !phones.length) {
+    items.push({ id: 'pair', title: 'Pair your phone', why: 'Some of your agents run on your phone, and no phone is paired yet.', action: 'Pair a phone', href: '#/phones' });
+  }
+  if (user.primary) {
+    const gh = 'https://github.com/ThirunagariHarish/buildAgents/settings/secrets/actions';
+    const rerun = 'https://github.com/ThirunagariHarish/buildAgents/actions';
+    if (!process.env.PB_ANTHROPIC_API_KEY) items.push({
+      id: 'setup:ai', owner: true, title: 'Let other people build agents', why: 'Right now only you can build: your Claude login is for you alone. Customers\' builds need an Anthropic API key that is billed to you.',
+      steps: [
+        'Go to console.anthropic.com → Settings → API keys → Create key. Copy it.',
+        'Under Billing → Limits, set a monthly spend limit you are comfortable with (for example USD 50).',
+        `Open your GitHub secrets (${gh}) → New repository secret. Name: POCKETBOX_ANTHROPIC_API_KEY. Value: the key.`,
+        `Re-run the latest deploy (${rerun} → the newest run → Re-run all jobs), or ask me to deploy.`,
+      ],
+    });
+    if (!billing.configured()) items.push({
+      id: 'setup:stripe', owner: true, title: 'Turn on payments', why: 'Plans are built (Free, Plus USD 5, Family USD 10, Business USD 25) but nobody can pay until Stripe is connected.',
+      steps: [
+        'Create or open your account at dashboard.stripe.com and finish activation (business details, bank account).',
+        'Product catalog → Add product, three times: "Pocket Box Plus" USD 5/month, "Pocket Box Family" USD 10/month, "Pocket Box Business" USD 25/month. Copy each price ID (starts with price_).',
+        'Developers → API keys: copy the Secret key (starts with sk_live_).',
+        'Developers → Webhooks → Add endpoint: https://agents.cashflowus.com/api/stripe/webhook with events checkout.session.completed, customer.subscription.created, customer.subscription.updated, customer.subscription.deleted. Copy the Signing secret (starts with whsec_).',
+        'Settings → Billing → Customer portal: turn it on, so people can cancel or change plan.',
+        `Add GitHub secrets (${gh}): POCKETBOX_STRIPE_SECRET_KEY, POCKETBOX_STRIPE_WEBHOOK_SECRET, POCKETBOX_STRIPE_PRICE_PLUS, POCKETBOX_STRIPE_PRICE_FAMILY, POCKETBOX_STRIPE_PRICE_BUSINESS.`,
+        'Re-run the latest deploy. The Plan section under You then shows Choose buttons.',
+      ],
+    });
+    if (!telegram.configured()) items.push({
+      id: 'setup:telegram', owner: true, optional: true, title: 'Optional: agents in Telegram', why: 'People who don\'t install the app can get their agents\' messages in Telegram instead.',
+      steps: [
+        'In Telegram, open @BotFather and send /newbot. Name it "Pocket Box"; pick a username ending in bot (for example PocketBoxAgentsBot).',
+        'BotFather replies with a token (numbers, a colon, letters). Copy it. Don\'t reuse Box\'s bot.',
+        `Add a GitHub secret (${gh}): POCKETBOX_TG_BOT_TOKEN = the token.`,
+        'Re-run the latest deploy. Then under You → How agents reach you, tap Connect next to Telegram.',
+      ],
+    });
+  }
+  return items;
 }
 
 // ---- server ------------------------------------------------------------------------
@@ -349,6 +410,7 @@ async function studioApi(req, res, p, url, user) {
     res.setHeader('Set-Cookie', sessionCookie(req, '', 0));
     return json(res, 200, { ok: true });
   }
+  if (p === '/api/me/todo' && req.method === 'GET') return json(res, 200, { items: todoFor(user) });
   if (p === '/api/me/telegram' && req.method === 'GET') return json(res, 200, telegram.status(user.id));
   if (p === '/api/me/telegram' && req.method === 'POST') {
     const url = telegram.linkFor(user.id);
@@ -474,7 +536,9 @@ async function studioApi(req, res, p, url, user) {
         });
       }
     }
-    return json(res, 200, { agents: store.listAgents().filter((a) => canSee(user, a)).map((a) => ({ ...store.summary(a), running: bus.running(a.id), mine: a.ownerId === user.id, shared: isMember(user, a) })) });
+    // What an agent still needs is worked out fresh, never from a remembered copy.
+    const fresh = (a) => { const rec = packages.load(a.id); if (rec) a.missingSettings = settings.missing(a.id, rec.package.manifest); return a; };
+    return json(res, 200, { agents: store.listAgents().filter((a) => canSee(user, a)).map(fresh).map((a) => ({ ...store.summary(a), running: bus.running(a.id), mine: a.ownerId === user.id, shared: isMember(user, a) })) });
   }
   if (p === '/api/agents' && req.method === 'POST') {
     const b = await readBody(req).catch(() => ({}));

@@ -232,7 +232,7 @@
       case 'signup': return signupView();
       case 'forgot': return forgotView();
       case 'reset': return resetView(r.id);
-      case 'a': return agentView(r.id);
+      case 'a': return agentView(r.id, r.rest[0]);
       case 'phones': return phonesView();
       case 'people': return peopleView();
       case 'me': return meView();
@@ -247,6 +247,7 @@
   }
 
   function after(r) {
+    document.body.dataset.tab = r.name === 'a' ? S.tab : 'thread';
     window.scrollTo({ top: r.name === 'a' && S.tab === 'thread' ? document.body.scrollHeight : 0, behavior: 'instant' });
     for (const ta of app.querySelectorAll('textarea[data-grow]')) grow(ta);
     centerStage();
@@ -429,6 +430,7 @@
       S.meta ? Promise.resolve(S.meta) : api('/api/meta'),
       S.devices ? Promise.resolve({ devices: S.devices }) : api('/api/devices').catch(() => ({ devices: [] })),
       api('/api/me/prefs').catch(() => ({})),
+      api('/api/me/todo').then((r) => { S.todo = r.items; }).catch(() => { S.todo = []; }),
     ]);
     S.agents = list.agents; S.meta = meta; S.devices = devs.devices; if (pr.prefs) S.prefs = pr.prefs;
     const name = S.session.user?.firstName || '';
@@ -442,6 +444,7 @@
         <p class="lede">Say it the way you'd ask a friend. The room turns it into a brief; the crew builds, tests and signs it; your phone runs it.</p>
       </section>
       ${pausedBanner()}
+      ${todoView()}
       <div data-install-slot="home" style="margin-bottom:16px">${installCard({ dismissible: true })}</div>
       <form data-form="new" class="composer glass rise">
         <textarea name="idea" data-grow rows="3" placeholder="Every weekday at 7:30, tell me if I need an umbrella and when to leave for my first meeting…" required></textarea>
@@ -462,10 +465,9 @@
       </section>
       ${S.devices.length ? '' : `<a href="#/phones" class="glass card row rise" style="margin-top:28px;text-decoration:none;gap:14px">
         <div class="avatar">📱</div><div class="grow" style="flex:1"><div class="h3">Put Pocket Box on your phone</div><div class="small muted">Agents run on your phone, not here. Pair it once; it takes a minute.</div></div><span class="faint">›</span></a>`}
-      ${waiting.length ? `<section style="margin-top:36px"><div class="eyebrow" style="margin:0 0 12px 4px">Waiting for you</div><div class="stack">${waiting.map(agentCard).join('')}</div></section>` : ''}
       <section style="margin-top:36px">
-        <div class="eyebrow" style="margin:0 0 12px 4px">${waiting.length ? 'Everything else' : 'Your agents'}</div>
-        ${rest.length ? `<div class="stack">${rest.map(agentCard).join('')}</div>` : (waiting.length ? '' : '<div class="glass empty">No agents yet. Describe one above; the room starts as soon as you send it.</div>')}
+        <div class="eyebrow" style="margin:0 0 12px 4px">Your agents</div>
+        ${S.agents.length ? `<div class="stack">${[...waiting, ...rest].map(agentCard).join('')}</div>` : '<div class="glass empty">No agents yet. Describe one above, or pick a ready-made one.</div>'}
       </section>
     </div>`;
   }
@@ -588,6 +590,21 @@
     </div>`;
   }
 
+  /** The person's to-do list: each item says what, why, and has one button to do it. */
+  function todoView() {
+    const items = S.todo || [];
+    if (!items.length) return '';
+    const card = (t) => `<article class="glass card stack" style="gap:8px">
+      <div class="row between" style="gap:10px;align-items:flex-start"><div class="h3" style="font-size:16.5px">${esc(t.title)}</div>${t.owner ? '<span class="pill accent" style="flex:none">Only you</span>' : ''}</div>
+      <p class="small muted" style="margin:0">${esc(t.why)}</p>
+      <div class="row">${t.href ? `<a class="btn accent sm" href="${esc(t.href)}">${esc(t.action)}</a>` : `<button class="btn ${t.optional ? 'soft' : 'accent'} sm" data-act="todo-steps" data-id="${esc(t.id)}">Show me how</button>`}</div>
+    </article>`;
+    return `<section class="rise" style="margin-bottom:20px">
+      <div class="row between" style="margin:0 4px 12px"><div class="eyebrow">To do · ${items.length}</div></div>
+      <div class="stack">${items.map(card).join('')}</div></section>`;
+  }
+  const linkify = (text) => esc(text).replace(/(https?:\/\/[^\s)]+)/g, (u) => `<a class="link" href="${u}" target="_blank" rel="noopener">${u.replace(/^https:\/\//, '')}</a>`);
+
   /** "Pause all": a banner while it's on, and the choices to turn it on. */
   const pausedUntil = () => (S.prefs?.pauseUntil && S.prefs.pauseUntil > Date.now() ? S.prefs.pauseUntil : null);
   const pauseWhen = (t) => { const d = new Date(t); const today = d.toDateString() === new Date().toDateString(); return `${today ? '' : `${d.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}, `}${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`; };
@@ -606,7 +623,7 @@
     const line = a.shared ? `Shared with you${a.lastRun ? ` · last run ${ago(a.lastRun.at)}` : ''}` : a.needsYou && a.mine ? a.needsYou
       : a.lastRun ? `${a.lastRun.ok ? 'Last run' : 'Last run failed'} ${ago(a.lastRun.at)} · ${a.lastRun.summary || ''}`
       : a.release ? `Version ${a.release.version} · ${a.release.channel}` : stageName(a);
-    return `<a class="glass agent-card rise" href="#/a/${a.id}">
+    return `<a class="glass agent-card rise" href="#/a/${a.id}${a.mine && a.needsYou && /settings/.test(a.needsYou) ? '/settings' : ''}">
       <div class="avatar">${esc(a.icon || '✳︎')}</div>
       <div class="meta"><div class="title">${esc(a.title)}</div><div class="sub">${esc(line)}</div></div>
       ${statusPill(a)}
@@ -614,8 +631,10 @@
   }
 
   // ---- an agent ------------------------------------------------------------------
-  async function agentView(id) {
+  async function agentView(id, tab) {
     if (!S.agent || S.agent.id !== id) { S.tab = 'thread'; S.runs = null; S.files = null; S.file = null; S.open = new Set(); }
+    // A link straight to a tab (#/a/<id>/settings) opens it once, then the address goes back to the agent.
+    if (['thread', 'runs', 'settings', 'code'].includes(tab)) { S.tab = tab; history.replaceState(null, '', `#/a/${id}`); }
     const [a, meta] = await Promise.all([api(`/api/agents/${id}`), S.meta ? S.meta : api('/api/meta')]);
     S.agent = a; S.meta = meta;
     if (S.tab === 'runs' && !S.runs) await loadRuns(false);
@@ -659,7 +678,10 @@
         ${STAGES.map(([, label], i) => `${i ? '<span class="stage-line"></span>' : ''}<span class="stage ${i < idx ? 'done' : i === idx ? 'now' : ''}">${label}</span>`).join('')}
       </nav>
       ${a.status === 'error' && a.error ? `<div class="note bad" style="margin-top:14px">${esc(a.error)}</div>` : ''}
-      ${a.missingSettings?.length && a.package ? `<div class="note warn" style="margin-top:14px">It needs ${a.missingSettings.length === 1 ? 'a setting' : 'settings'} from you: ${esc(a.missingSettings.join(', '))}. <button class="link" data-act="tab" data-tab="settings">Add ${a.missingSettings.length === 1 ? 'it' : 'them'}</button></div>` : ''}
+      ${a.missingSettings?.length && a.package && a.ownerId === S.session.user.id && S.tab !== 'settings' ? `<div class="glass card stack" style="margin-top:14px;border:1.5px solid var(--warn, #e0a030)">
+        <div class="h3">One step left: fill in ${a.missingSettings.length === 1 ? '1 value' : `${a.missingSettings.length} values`}</div>
+        <p class="small muted" style="margin:0">It can't run until you tell it: ${esc(a.missingSettings.join(', '))}.</p>
+        <div class="row"><button class="btn accent sm" data-act="tab" data-tab="settings">Fill them in</button></div></div>` : ''}
     </section>`;
   }
 
@@ -722,12 +744,14 @@
       if (a.stage === 'brief') b.push('<button class="btn accent" data-act="build">Build this agent</button>');
       if (a.stage === 'plan_review') b.push('<button class="btn accent" data-act="approve">Approve plan and build</button>');
       if (a.package && !mine && a.role === 'member') b.push('<button class="btn accent" data-act="run-cloud">Run it</button>');
+      if (a.package && mine && a.missingSettings?.length && S.tab !== 'settings') b.push('<button class="btn accent" data-act="tab" data-tab="settings">Fill in its settings</button>');
       if (a.package && mine) {
         if (a.package.channel === 'shadow') b.push('<button class="btn accent" data-act="channel" data-channel="live">Go live</button>');
         if (a.package.channel === 'live') b.push('<button class="btn soft sm" data-act="channel" data-channel="shadow">Back to shadow</button>');
         if (a.package.channel === 'off') b.push('<button class="btn sm" data-act="channel" data-channel="shadow">Turn on in shadow</button>');
       }
     }
+    if (mine) b.push('<button class="btn soft sm" data-act="to-thread">Message the crew</button>');
     return `<div id="cta" class="cta">${b.join('')}</div>`;
   }
 
@@ -753,6 +777,18 @@
   }
 
   // ---- settings ----
+  /** One setting: a short name, its explanation, and a box sized for what it holds. */
+  const settingField = (mine) => (s) => {
+    const type = s.type === 'secret' ? 'password' : s.type === 'number' ? 'number' : s.type === 'url' ? 'url' : s.type === 'time' ? 'time' : 'text';
+    const needed = !s.optional && !s.set;
+    const attrs = `name="${esc(s.key)}" ${!mine ? 'disabled' : ''} autocomplete="off" placeholder="${esc(s.type === 'secret' && s.set ? 'Saved — type to replace' : s.placeholder || '')}"`;
+    const box = s.multiline && s.type !== 'secret'
+      ? `<textarea class="input" ${attrs} rows="4" data-grow style="resize:vertical">${esc(s.value)}</textarea>`
+      : `<input class="input" ${attrs} type="${type}" value="${s.type === 'secret' ? '' : esc(s.value)}">`;
+    return `<label class="field"><span>${esc(s.label)}${needed ? ' <span class="pill warn" style="margin-left:6px">needed</span>' : s.optional ? ' <span class="faint">(optional)</span>' : ''}</span>
+      ${s.help ? `<span class="small muted" style="display:block;margin:2px 4px 8px;font-weight:400">${esc(s.help)}</span>` : ''}${box}</label>`;
+  };
+
   function settingsTab(a) {
     const mine = a.ownerId === S.session.user.id;
     const p = a.package;
@@ -760,6 +796,12 @@
     const trig = (t) => t.type === 'schedule' ? `Every ${t.days?.length ? t.days.join(', ') : 'day'} at ${t.at}` : t.type === 'interval' ? `Every ${t.minutes >= 60 ? `${t.minutes / 60} h` : `${t.minutes} min`} while it can` : t.type === 'manual' ? 'When you tap Run' : 'Each time the Runtime opens';
     const snoozed = a.snoozeUntil && a.snoozeUntil > Date.now();
     return `<div class="stack-lg">
+      ${a.settings.length ? `<form data-form="settings" class="glass card stack" id="values">
+        <div class="h3">${a.missingSettings?.length && mine ? `Fill these in to start it` : 'Your values'}</div>
+        <p class="small muted" style="margin:4px 0 0">${a.missingSettings?.length && mine ? `It can't run until the ones marked <span class="pill warn">needed</span> are filled in. ` : ''}Kept on your Studio and used only when this agent runs.${a.settings.some((s) => s.type === 'secret') ? ' Secrets are never shown again after saving.' : ''}</p>
+        ${a.settings.map(settingField(mine)).join('')}
+        ${mine ? '<div class="row"><button class="btn accent sm">Save</button></div>' : ''}
+      </form>` : ''}
       ${mine ? `<section class="glass card stack">
         <div class="row between wrap"><div class="h3">Where it runs</div>
           <div class="tabs" style="background:var(--line)">${[['phone', 'On my phone'], ['cloud', 'In the cloud']].map(([k, l]) => `<button class="tab ${a.runsOn === k ? 'on' : ''}" data-act="where" data-where="${k}">${l}</button>`).join('')}</div></div>
@@ -782,13 +824,7 @@
         ${(a.invites || []).map((e) => `<div class="row between"><span>${esc(e)} <span class="pill">invited</span></span><button class="btn ghost sm" data-act="uninvite" data-email="${esc(e)}">Remove</button></div>`).join('')}
         <form data-form="share" class="row" style="gap:8px"><input class="input" name="email" type="email" placeholder="their@email.com" required style="flex:1"><button class="btn sm">Share</button></form>
       </section>` : ''}
-      ${a.settings.length ? `<form data-form="settings" class="glass card stack">
-        <div class="h3">Your values</div>
-        <p class="small muted" style="margin:4px 0 0">Kept on your Studio and used only when this agent runs.${a.settings.some((s) => s.type === 'secret') ? ' Secrets are never shown again after saving.' : ''}</p>
-        ${a.settings.map((s) => `<label class="field"><span>${esc(s.label)}</span>
-          <input class="input" name="${esc(s.key)}" ${!mine ? 'disabled' : ''} type="${s.type === 'secret' ? 'password' : s.type === 'number' ? 'number' : s.type === 'url' ? 'url' : s.type === 'time' ? 'time' : 'text'}" value="${s.type === 'secret' ? '' : esc(s.value)}" placeholder="${s.type === 'secret' && s.set ? 'Saved — type to replace' : ''}" autocomplete="off"></label>`).join('')}
-        ${mine ? '<div class="row"><button class="btn sm">Save</button></div>' : ''}
-      </form>` : ''}
+
       <section class="glass card">
         <div class="h3">What it may do</div>
         <div class="stack" style="margin-top:12px">${(p.permissions || []).length ? p.permissions.map((x) => `<div class="row small"><span class="pill accent">${esc(x)}</span><span class="muted">${esc(perms[x] || '')}${x === 'http' && p.http?.allow ? `: ${esc(p.http.allow.join(', '))}` : ''}</span></div>`).join('') : '<div class="small muted">Nothing beyond running when triggered.</div>'}</div>
@@ -1077,8 +1113,8 @@
         for (const s of S.agent.settings) { const v = data[s.key]; if (s.type === 'secret' && !v) continue; values[s.key] = v; }
         const r = await api(`/api/agents/${S.agent.id}/settings`, { method: 'POST', body: { values } });
         S.agent.settings = r.settings; S.agent.missingSettings = r.missing;
-        toast('Saved. Your phones pick it up the next time the Runtime opens.');
-        patchAgent();
+        toast(r.missing.length ? `Saved. Still needed: ${r.missing.join(', ')}.` : 'All set. It can run now.');
+        render({ transition: false });
       } else if (kind === 'install') {
         const id = form.dataset.id;
         const values = {};
@@ -1160,10 +1196,13 @@
         if (t && ta && !ta.value.trim()) { ta.placeholder = t.hint; ta.focus(); }
         break;
       }
+      case 'to-thread':
       case 'tab':
-        S.tab = el.dataset.tab;
+        S.tab = act === 'to-thread' ? 'thread' : el.dataset.tab;
+        document.body.dataset.tab = S.tab;
         for (const t of document.querySelectorAll('.tab')) { t.classList.toggle('on', t.dataset.tab === S.tab); t.setAttribute('aria-selected', t.dataset.tab === S.tab); }
-        { const b = $('#tab-body'); if (b) { b.innerHTML = tabBody(a); b.classList.remove('rise'); void b.offsetWidth; b.classList.add('rise'); } }
+        { const b = $('#tab-body'); if (b) { b.innerHTML = tabBody(a); b.classList.remove('rise'); void b.offsetWidth; b.classList.add('rise'); for (const ta of b.querySelectorAll('textarea[data-grow]')) grow(ta); } }
+        if (S.tab === 'settings') $('#values')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         if (S.tab === 'runs') loadRuns();
         if (S.tab === 'code' && !S.files) loadFiles();
         if (S.tab === 'thread') window.scrollTo({ top: document.body.scrollHeight });
@@ -1253,6 +1292,15 @@
       case 'unshare': { try { S.agent = await api(`/api/agents/${a.id}/members/${el.dataset.user}`, { method: 'DELETE' }); const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(S.agent); } catch (err) { toast(err.message, 'bad'); } break; }
       case 'uninvite': { try { S.agent = await api(`/api/agents/${a.id}/invites?email=${encodeURIComponent(el.dataset.email)}`, { method: 'DELETE' }); const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(S.agent); } catch (err) { toast(err.message, 'bad'); } break; }
       case 'upgrade': { const r = await post('/api/billing/checkout', { plan: el.dataset.plan }); if (r && r.url) location.href = r.url; break; }
+      case 'todo-steps': {
+        const t = (S.todo || []).find((x) => x.id === el.dataset.id);
+        if (!t) break;
+        sheet(`<div class="stack"><div class="h3">${esc(t.title)}</div><p class="small muted" style="margin:0">${esc(t.why)}</p>
+          <ol class="stack small" style="margin:0;padding-left:20px;gap:10px">${t.steps.map((x) => `<li>${linkify(x)}</li>`).join('')}</ol>
+          <p class="tiny faint" style="margin:0">Never paste keys into a chat; GitHub secrets keep them off the screen and out of the code.</p>
+          <button class="btn ghost" style="width:100%" data-close>Done</button></div>`);
+        break;
+      }
       case 'pause-all': {
         const f = el.dataset.for;
         let until = null;
