@@ -1,0 +1,21 @@
+{
+ "name": "Does not repeat the same bill",
+ "trigger": {
+  "type": "schedule"
+ },
+ "now": "2026-10-13T03:30:00Z",
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "bills": "Phone 15"
+ },
+ "memory": {
+  "sent": {
+   "Phone:2026-10": "2026-10-12"
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

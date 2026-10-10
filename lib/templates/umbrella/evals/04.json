@@ -1,0 +1,17 @@
+{
+ "name": "No location asks once",
+ "trigger": {
+  "type": "schedule"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Where"
+   ]
+  },
+  "memory": {
+   "askedForPlace": true
+  }
+ }
+}

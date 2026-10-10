@@ -1,0 +1,21 @@
+{
+ "name": "Still bad does not repeat",
+ "trigger": {
+  "type": "interval"
+ },
+ "location": {
+  "lat": 28.6,
+  "lon": 77.2
+ },
+ "memory": {
+  "bad": true
+ },
+ "http": {
+  "https://air-quality-api.open-meteo.com/v1/air-quality*": "{\"current\":{\"us_aqi\":150}}"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

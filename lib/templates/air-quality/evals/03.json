@@ -1,0 +1,24 @@
+{
+ "name": "Clearing is announced",
+ "trigger": {
+  "type": "interval"
+ },
+ "location": {
+  "lat": 28.6,
+  "lon": 77.2
+ },
+ "memory": {
+  "bad": true
+ },
+ "http": {
+  "https://air-quality-api.open-meteo.com/v1/air-quality*": "{\"current\":{\"us_aqi\":60}}"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "clearer"
+   ]
+  }
+ }
+}

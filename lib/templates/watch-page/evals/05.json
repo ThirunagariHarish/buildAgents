@@ -1,0 +1,30 @@
+{
+ "name": "Three failed reads in a row says so once",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://example.gov/bulletin"
+ },
+ "memory": {
+  "fails": 2,
+  "hash": "h"
+ },
+ "http": {
+  "https://example.gov/bulletin": {
+   "status": 503,
+   "text": ""
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Can't read"
+   ]
+  },
+  "memory": {
+   "fails": 3
+  }
+ }
+}

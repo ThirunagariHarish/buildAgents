@@ -215,7 +215,7 @@
     if (ticket !== rendering) return;
     if (!S.session.authed && !publicRoutes.includes(r.name)) return go('#/login');
     if (S.session.authed && ['login', 'signup'].includes(r.name)) return go('#/');
-    if (S.session.authed) connect();
+    if (S.session.authed) { connect(); if (!S.tzSent) { S.tzSent = true; api('/api/me/prefs', { method: 'POST', body: { tz: Intl.DateTimeFormat().resolvedOptions().timeZone } }).catch(() => {}); } }
 
     let html;
     try { html = await view(r); } catch (e) { html = errorView(e); }
@@ -235,6 +235,9 @@
       case 'phones': return phonesView();
       case 'people': return peopleView();
       case 'me': return meView();
+      case 'templates': return templatesView(r.id);
+      case 't': return templateView(r.id);
+      case 'watch': return watchView();
       default: return homeView();
     }
   }
@@ -349,7 +352,7 @@
     return authShell(`
       <a class="btn ghost sm" href="#/login" style="margin:-8px 0 12px -10px">${icon.back} Back</a>
       <h1 class="display" style="font-size:40px">Create your <em>account</em></h1>
-      <p class="muted" style="margin:10px 0 22px">The administrator approves each new account. Once approved, you'll get a link to set your password.</p>
+      <p class="muted" style="margin:10px 0 22px">${S.session?.openSignup === false ? 'The administrator approves each new account. Once approved, you\'ll get a link to set your password.' : 'We\'ll email you a link to set your password. That\'s it.'}</p>
       <form data-form="signup" class="stack">
         <div class="row" style="gap:10px">
           <label class="field" style="flex:1"><span>First name</span><input class="input" name="firstName" autocomplete="given-name" required autofocus></label>
@@ -414,8 +417,9 @@
 
   // ---- home ----------------------------------------------------------------------
   async function homeView() {
-    const [list, meta, devs] = await Promise.all([
+    const [list, , meta, devs] = await Promise.all([
       api('/api/agents'),
+      loadTemplates(),
       S.meta ? Promise.resolve(S.meta) : api('/api/meta'),
       S.devices ? Promise.resolve({ devices: S.devices }) : api('/api/devices').catch(() => ({ devices: [] })),
     ]);
@@ -442,6 +446,12 @@
       <div class="row wrap rise" style="margin-top:14px;gap:8px">
         ${meta.templates.map((t) => `<button class="chip ${tpl === t.id ? 'on' : ''}" data-act="template" data-id="${esc(t.id)}" title="${esc(t.hint)}">${esc(t.emoji)} ${esc(t.name)}</button>`).join('')}
       </div>
+      <section style="margin-top:36px" class="rise">
+        <div class="row between" style="margin:0 4px 12px"><div class="eyebrow">Ready in one tap</div><a class="link small" href="#/templates">See all ${S.templates.length}</a></div>
+        <a href="#/watch" class="glass card row watch-hero" style="text-decoration:none;gap:14px;margin-bottom:12px">
+          <div class="avatar">👀</div><div style="flex:1;min-width:0"><div class="h3">Watch a page for me</div><div class="small muted">Visa bulletin, results, prices, restocks, any page. Paste a link; we tell you when it changes.</div></div><span class="faint">›</span></a>
+        <div class="tpl-grid">${S.templates.filter((t) => !['watch-page', 'price-drop', 'back-in-stock'].includes(t.id)).slice(0, 6).map(templateCard).join('')}</div>
+      </section>
       ${S.devices.length ? '' : `<a href="#/phones" class="glass card row rise" style="margin-top:28px;text-decoration:none;gap:14px">
         <div class="avatar">📱</div><div class="grow" style="flex:1"><div class="h3">Put Pocket Box on your phone</div><div class="small muted">Agents run on your phone, not here. Pair it once; it takes a minute.</div></div><span class="faint">›</span></a>`}
       ${waiting.length ? `<section style="margin-top:36px"><div class="eyebrow" style="margin:0 0 12px 4px">Waiting for you</div><div class="stack">${waiting.map(agentCard).join('')}</div></section>` : ''}
@@ -449,6 +459,90 @@
         <div class="eyebrow" style="margin:0 0 12px 4px">${waiting.length ? 'Everything else' : 'Your agents'}</div>
         ${rest.length ? `<div class="stack">${rest.map(agentCard).join('')}</div>` : (waiting.length ? '' : '<div class="glass empty">No agents yet. Describe one above; the room starts as soon as you send it.</div>')}
       </section>
+    </div>`;
+  }
+
+  // ---- ready-made agents ---------------------------------------------------------------------
+  async function loadTemplates() {
+    if (!S.templates) S.templates = (await api('/api/templates')).templates;
+    return S.templates;
+  }
+  const templateCard = (t) => `<a class="glass tpl-card" href="#/t/${esc(t.id)}"><div class="row" style="gap:10px"><div class="avatar sm">${esc(t.icon)}</div><div class="h3">${esc(t.name)}</div></div><div class="small muted" style="margin-top:8px">${esc(t.summary)}</div></a>`;
+
+  async function templatesView(cat) {
+    await loadTemplates();
+    const cats = [...new Set(S.templates.map((t) => t.category))];
+    const shown = cat ? S.templates.filter((t) => t.category === decodeURIComponent(cat)) : S.templates;
+    return `<div class="shell">${topBar()}
+      <section style="padding:28px 0 18px" class="rise"><h1 class="display" style="font-size:clamp(36px,8vw,52px)">Ready-made <em>agents</em></h1>
+        <p class="lede">Tested and signed already. Fill in a detail or two and it starts working: no build, no wait.</p></section>
+      <div class="row wrap rise" style="gap:8px;margin-bottom:16px"><a class="chip ${!cat ? 'on' : ''}" href="#/templates">All</a>${cats.map((c) => `<a class="chip ${cat && decodeURIComponent(cat) === c ? 'on' : ''}" href="#/templates/${encodeURIComponent(c)}">${esc(c)}</a>`).join('')}</div>
+      <div class="tpl-grid rise">${shown.map(templateCard).join('')}</div>
+      <p class="small muted rise" style="margin-top:24px;text-align:center">Want something else? <a class="link" href="#/">Describe it</a> and the room will design it.</p>
+    </div>`;
+  }
+
+  const DAY_NAMES = [['mon', 'M'], ['tue', 'T'], ['wed', 'W'], ['thu', 'T'], ['fri', 'F'], ['sat', 'S'], ['sun', 'S']];
+  function whenPicker(w) {
+    if (!w) return '';
+    if (w.type === 'schedule') {
+      const days = new Set(w.days || DAY_NAMES.map(([d]) => d));
+      return `<div class="field"><span>When</span><div class="row wrap" style="gap:10px"><input class="input" type="time" name="when_at" value="${esc(w.default)}" style="width:auto">
+        <div class="row" style="gap:4px" data-days>${DAY_NAMES.map(([d, l]) => `<button type="button" class="chip day ${days.has(d) ? 'on' : ''}" data-day="${d}" aria-label="${d}">${l}</button>`).join('')}</div></div></div>`;
+    }
+    const fmt = (m) => (m >= 60 ? `${m / 60} h` : `${m} min`);
+    return `<div class="field"><span>How often</span><div class="row wrap" style="gap:8px" data-every>${w.choices.map((m) => `<button type="button" class="chip ${m === w.default ? 'on' : ''}" data-min="${m}">Every ${fmt(m)}</button>`).join('')}</div></div>`;
+  }
+  function fieldInput(f) {
+    const type = f.type === 'number' ? 'number' : f.type === 'url' ? 'url' : f.type === 'secret' ? 'password' : f.type === 'time' ? 'time' : 'text';
+    return `<label class="field"><span>${esc(f.label)}${f.optional ? ' <span class="faint">(optional)</span>' : ''}</span>
+      <input class="input" name="v_${esc(f.key)}" type="${type}" ${type === 'number' ? 'inputmode="decimal" step="any"' : ''} value="${esc(f.default || '')}" placeholder="${esc(f.placeholder || '')}" ${f.optional ? '' : 'required'} autocomplete="off">
+      ${f.help ? `<p class="tiny faint" style="margin:6px 4px 0">${esc(f.help)}</p>` : ''}</label>`;
+  }
+  const runsOnPicker = () => `<div class="field"><span>Where it runs</span><div class="tabs" style="background:var(--line)" data-runs><button type="button" class="tab on" data-runs-on="cloud">In the cloud</button><button type="button" class="tab" data-runs-on="phone">On my phone</button></div>
+    <p class="tiny faint" style="margin:6px 4px 0">Cloud runs on time even when your phone is off; you get a notification, or an email if no device is set up.</p></div>`;
+
+  async function templateView(id) {
+    await loadTemplates();
+    const t = S.templates.find((x) => x.id === id);
+    if (!t) return errorView(new Error('No such ready-made agent.'));
+    return `<div class="shell">
+      <header class="top"><a class="btn ghost icon" href="#/templates" aria-label="Back">${icon.back}</a></header>
+      <section class="rise" style="padding:4px 0 18px"><div class="row" style="gap:16px"><div class="avatar xl">${esc(t.icon)}</div><div><h1 class="h2" style="font-size:26px">${esc(t.name)}</h1><div class="small muted" style="margin-top:4px">${esc(t.category)} · tested and signed</div></div></div>
+        <p class="lede" style="margin-top:16px">${esc(t.summary)}</p>
+        ${t.examples ? `<div class="row wrap" style="gap:6px;margin-top:12px">${t.examples.map((e) => `<span class="pill">${esc(e)}</span>`).join('')}</div>` : ''}</section>
+      <form data-form="install" data-id="${esc(t.id)}" class="glass card stack rise">
+        ${(t.fields || []).map(fieldInput).join('')}
+        ${whenPicker(t.when)}
+        ${runsOnPicker()}
+        <label class="row" style="gap:10px"><input type="checkbox" name="live" checked style="width:20px;height:20px"><span>Notify me for real right away <span class="small faint">(untick to watch it quietly first)</span></span></label>
+        <div class="small muted">It may: ${(t.permissions || []).map((x) => esc((S.meta?.permissions || {})[x] || x).toLowerCase()).join('; ')}.</div>
+        <div class="row"><button class="btn accent">Start ${esc(t.name)}</button></div>
+      </form>
+    </div>`;
+  }
+
+  // ---- the "watch a page" wizard -----------------------------------------------------------------
+  function watchView() {
+    const modes = [
+      ['change', '✨', 'Anything changes', 'A new date, a new notice, a new line.'],
+      ['words', '🔎', 'Certain words appear', 'e.g. "Results declared", "Final action date".'],
+      ['price', '🏷️', 'The price drops', 'To or below the price you want.'],
+      ['stock', '📦', 'It\'s back in stock', 'When "out of stock" disappears.'],
+    ];
+    return `<div class="shell">
+      <header class="top"><a class="btn ghost icon" href="#/" aria-label="Back">${icon.back}</a></header>
+      <section class="rise" style="padding:8px 0 20px"><h1 class="display" style="font-size:clamp(36px,8vw,52px)">Watch a page <em>for me</em></h1>
+        <p class="lede">Stop refreshing it. Paste the link and say what you're waiting for.</p></section>
+      <form data-form="watch" class="stack rise">
+        <div class="composer glass slim"><input class="input" name="url" type="url" required placeholder="https://… the page you keep checking" style="background:transparent;box-shadow:none;font-size:17px" autofocus></div>
+        <div class="field"><span>Tell me when…</span><div class="watch-modes" data-modes>${modes.map(([k, i, l, d], n) => `<button type="button" class="glass watch-mode ${n === 0 ? 'on' : ''}" data-mode="${k}"><span style="font-size:22px">${i}</span><span><span class="h3" style="display:block">${l}</span><span class="small muted">${d}</span></span></button>`).join('')}</div></div>
+        <label class="field" data-extra="words" hidden><span>Words to look for</span><input class="input" name="words" placeholder="e.g. Results declared"></label>
+        <label class="field" data-extra="price" hidden><span>Tell me at or below</span><input class="input" name="price" type="number" step="any" inputmode="decimal" placeholder="e.g. 799"></label>
+        <label class="field" data-extra="stock" hidden><span>Words the page shows when sold out</span><input class="input" name="soldOut" value="out of stock"></label>
+        <div class="field"><span>Check</span><div class="row wrap" style="gap:8px" data-every>${[[30, 'Every 30 min'], [60, 'Every hour'], [180, 'Every 3 h'], [720, 'Twice a day']].map(([m, l]) => `<button type="button" class="chip ${m === 60 ? 'on' : ''}" data-min="${m}">${l}</button>`).join('')}</div></div>
+        <div class="row"><button class="btn accent">Start watching</button></div>
+      </form>
     </div>`;
   }
 
@@ -470,7 +564,7 @@
     S.agent = a; S.meta = meta;
     if (S.tab === 'runs' && !S.runs) await loadRuns(false);
     if (S.tab === 'code' && !S.files) await loadFiles(false);
-    return `<div class="shell">
+    return `<div class="shell has-dock">
       <header class="top">
         <a class="btn ghost icon" href="#/" aria-label="Back">${icon.back}</a>
         <span class="spacer"></span>
@@ -607,10 +701,21 @@
     const p = a.package;
     const perms = S.meta?.permissions || {};
     const trig = (t) => t.type === 'schedule' ? `Every ${t.days?.length ? t.days.join(', ') : 'day'} at ${t.at}` : t.type === 'interval' ? `Every ${t.minutes >= 60 ? `${t.minutes / 60} h` : `${t.minutes} min`} while it can` : t.type === 'manual' ? 'When you tap Run' : 'Each time the Runtime opens';
+    const snoozed = a.snoozeUntil && a.snoozeUntil > Date.now();
     return `<div class="stack-lg">
+      ${mine ? `<section class="glass card stack">
+        <div class="row between wrap"><div class="h3">Where it runs</div>
+          <div class="tabs" style="background:var(--line)">${[['phone', 'On my phone'], ['cloud', 'In the cloud']].map(([k, l]) => `<button class="tab ${a.runsOn === k ? 'on' : ''}" data-act="where" data-where="${k}">${l}</button>`).join('')}</div></div>
+        <p class="small muted" style="margin:0">${a.runsOn === 'cloud' ? 'Pocket Box runs it on schedule even when your phone is off, in a sealed sandbox with no other access. It can\'t use your location.' : 'It runs on your paired phones, privately. Scheduled runs need the phone to get the wake-up notification.'}</p>
+        <div class="row wrap" style="gap:8px">
+          <button class="btn sm" data-act="run-cloud">${a.cloudRunning ? '<span class="spin"></span>' : 'Run now in the cloud'}</button>
+          ${snoozed ? `<span class="pill warn">Snoozed until ${new Date(a.snoozeUntil).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' })}</span><button class="btn ghost sm" data-act="snooze" data-until="off">Unsnooze</button>`
+            : '<button class="btn soft sm" data-act="snooze" data-minutes="60">Snooze 1 hour</button><button class="btn soft sm" data-act="snooze" data-until="today">Pause for today</button>'}
+        </div>
+      </section>` : ''}
       ${a.settings.length ? `<form data-form="settings" class="glass card stack">
         <div class="h3">Your values</div>
-        <p class="small muted" style="margin:4px 0 0">Kept on your Studio and sent only to your paired phones.${a.settings.some((s) => s.type === 'secret') ? ' Secrets are never shown again after saving.' : ''}</p>
+        <p class="small muted" style="margin:4px 0 0">Kept on your Studio and used only when this agent runs.${a.settings.some((s) => s.type === 'secret') ? ' Secrets are never shown again after saving.' : ''}</p>
         ${a.settings.map((s) => `<label class="field"><span>${esc(s.label)}</span>
           <input class="input" name="${esc(s.key)}" ${!mine ? 'disabled' : ''} type="${s.type === 'secret' ? 'password' : s.type === 'number' ? 'number' : s.type === 'url' ? 'url' : s.type === 'time' ? 'time' : 'text'}" value="${s.type === 'secret' ? '' : esc(s.value)}" placeholder="${s.type === 'secret' && s.set ? 'Saved — type to replace' : ''}" autocomplete="off"></label>`).join('')}
         ${mine ? '<div class="row"><button class="btn sm">Save</button></div>' : ''}
@@ -619,7 +724,7 @@
         <div class="h3">What it may do</div>
         <div class="stack" style="margin-top:12px">${(p.permissions || []).length ? p.permissions.map((x) => `<div class="row small"><span class="pill accent">${esc(x)}</span><span class="muted">${esc(perms[x] || '')}${x === 'http' && p.http?.allow ? `: ${esc(p.http.allow.join(', '))}` : ''}</span></div>`).join('') : '<div class="small muted">Nothing beyond running when triggered.</div>'}</div>
         <hr class="sep">
-        <div class="h3">When it runs</div>
+        <div class="row between"><div class="h3">When it runs</div>${mine && (p.triggers || []).some((t) => t.type === 'schedule' || t.type === 'interval') ? '<button class="btn soft sm" data-act="edit-when">Change</button>' : ''}</div>
         <div class="stack small" style="margin-top:10px">${(p.triggers || []).map((t) => `<div>• ${esc(trig(t))}</div>`).join('')}</div>
       </section>
       <section class="glass card">
@@ -681,7 +786,7 @@
   async function peopleView() {
     if (S.session.user.role !== 'admin') return go('#/');
     const { users, mailConfigured } = await api('/api/admin/users');
-    const order = { pending: 0, approved: 1, disabled: 2, declined: 3 };
+    const order = { pending: 0, unverified: 1, approved: 2, disabled: 3, declined: 4 };
     users.sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9) || (b.createdAt || 0) - (a.createdAt || 0));
     const me = S.session.user;
     const acts = (u) => {
@@ -689,6 +794,7 @@
       const x = [];
       if (u.status === 'pending') x.push(['approve', 'Approve', 'btn sm'], ['decline', 'Decline', 'btn ghost sm']);
       if (u.status === 'approved') x.push(['resend', 'Send link', 'btn ghost sm'], ['disable', 'Disable', 'btn ghost sm']);
+      if (u.status === 'unverified') x.push(['disable', 'Disable', 'btn ghost sm']);
       if (u.status === 'disabled' || u.status === 'declined') x.push(['enable', 'Enable', 'btn soft sm']);
       if (me.primary && u.status === 'approved') x.push(u.role === 'admin' ? ['remove-admin', 'Remove admin', 'btn ghost sm'] : ['make-admin', 'Make admin', 'btn ghost sm']);
       return x.map(([a, l, c]) => `<button class="${c}" data-act="user" data-op="${a}" data-id="${esc(u.id)}">${l}</button>`).join('');
@@ -698,14 +804,15 @@
       ${mailConfigured ? '' : '<div class="note warn" style="margin-top:14px">Email is not set up, so approval links are shown here for you to send yourself.</div>'}</section>
       <div class="glass list rise">${users.map((u) => `<div class="item" style="flex-wrap:wrap">
         <div class="avatar sm">${esc((u.firstName || '?')[0])}</div>
-        <div class="grow"><div class="h3">${esc(u.name)} ${u.role === 'admin' ? '<span class="pill accent">admin</span>' : ''}</div><div class="small muted">${esc(u.email)}${u.phone ? ` · ${esc(u.phone)}` : ''} · ${esc(u.status)}</div></div>
+        <div class="grow"><div class="h3">${esc(u.name)} ${u.role === 'admin' ? '<span class="pill accent">admin</span>' : ''}</div><div class="small muted">${esc(u.email)}${u.phone ? ` · ${esc(u.phone)}` : ''} · ${esc(u.status === 'unverified' ? 'email not confirmed yet' : u.status)}</div></div>
         <div class="row wrap" style="gap:6px">${acts(u)}</div></div>`).join('')}</div>
     </div>`;
   }
 
   // ---- you ------------------------------------------------------------------------
   async function meView() {
-    const [{ about }, pk] = await Promise.all([api('/api/me/about'), api('/api/push/key').catch(() => ({ devices: 0 }))]);
+    const [{ about }, pk, pr] = await Promise.all([api('/api/me/about'), api('/api/push/key').catch(() => ({ devices: 0 })), api('/api/me/prefs').catch(() => ({}))]);
+    S.prefs = pr.prefs; S.prefsMail = pr.mailConfigured;
     const u = S.session.user;
     const theme = store.get('pb.theme', 'system');
     return `<div class="shell">${topBar()}
@@ -715,6 +822,13 @@
           <div class="h3">About me</div>
           <p class="small muted" style="margin:0">The room's "Your Voice" speaks for you from this: your routine, where you live and work, what annoys you. Keep it short.</p>
           <textarea class="textarea input" name="about" data-grow rows="4" placeholder="I work 9–6 in Austin, commute by bike, hate notifications before 7…">${esc(about || '')}</textarea>
+          <div class="row"><button class="btn sm">Save</button></div>
+        </form>
+        <form data-form="prefs" class="glass card stack rise">
+          <div class="h3">How agents reach you</div>
+          <label class="row" style="gap:10px"><input type="checkbox" name="emailAgents" ${S.prefs?.emailAgents ? 'checked' : ''} style="width:20px;height:20px"><span>Also email me what my live agents say${S.prefsMail === false ? ' <span class="small faint">(email isn\'t set up on the server)</span>' : ''}</span></label>
+          <div class="row wrap" style="gap:10px"><span class="small muted">Quiet hours</span><input class="input" type="time" name="quietFrom" value="${esc(S.prefs?.quietFrom || '')}" style="width:auto"><span class="small muted">to</span><input class="input" type="time" name="quietTo" value="${esc(S.prefs?.quietTo || '')}" style="width:auto"></div>
+          <p class="small muted" style="margin:0">During quiet hours agents still run; nothing buzzes. Time zone: ${esc(S.prefs?.tz || Intl.DateTimeFormat().resolvedOptions().timeZone)}.</p>
           <div class="row"><button class="btn sm">Save</button></div>
         </form>
         <section class="glass card stack rise">
@@ -740,6 +854,25 @@
 
   function errorView(e) {
     return `<div class="shell">${S.session?.authed ? topBar() : ''}<div class="glass card rise" style="margin-top:40px"><div class="h3">That didn't load</div><p class="muted">${esc(e.message)}</p><div class="row"><button class="btn sm" data-act="reload">Try again</button><a class="btn ghost sm" href="#/">Home</a></div></div></div>`;
+  }
+
+  // ---- running an agent from the Studio (in the cloud) ---------------------------------------
+  function showRunResult(run) {
+    const said = run.notifications.map((n) => `<div class="feed-item"><div class="t">${esc(n.title)}</div><div class="b">${esc(n.body)}</div></div>`).join('');
+    sheet(`<div class="stack"><div class="row between"><div class="h3">${run.ok ? 'It ran' : 'It failed'}</div><span class="pill ${run.channel === 'live' ? 'good' : 'accent'}">${esc(run.channel)}</span></div>
+      ${said || `<p class="muted" style="margin:0">${run.ok ? 'Nothing to tell you this time.' : esc(run.error || '')}</p>`}
+      ${run.channel === 'shadow' && run.notifications.length ? '<p class="small muted" style="margin:0">Shadow mode: this was recorded, not sent. Go live to get it as a notification.</p>' : ''}
+      <div class="row" style="justify-content:flex-end"><button class="btn sm" data-close>Done</button></div></div>`);
+    S.runs = null;
+  }
+  function askRunInputs(a) {
+    const field = (i) => i.type === 'choice'
+      ? `<select class="input" name="${esc(i.key)}">${i.options.map((o) => `<option>${esc(o)}</option>`).join('')}</select>`
+      : `<input class="input" name="${esc(i.key)}" ${i.type === 'number' ? 'type="number" inputmode="decimal"' : ''} autocomplete="off">`;
+    sheet(`<form class="stack"><div class="h3">Run ${esc(a.title)}</div>
+      ${a.inputs.map((i) => `<label class="field"><span>${esc(i.label)}</span>${field(i)}</label>`).join('')}
+      <div class="row" style="justify-content:flex-end"><button type="button" class="btn ghost sm" data-close>Cancel</button><button class="btn sm">Run</button></div></form>`,
+    async (fd) => { const r = await api(`/api/agents/${a.id}/run`, { method: 'POST', body: { input: Object.fromEntries(fd) } }); setTimeout(() => showRunResult(r.run), 320); });
   }
 
   // ---- sheets --------------------------------------------------------------------
@@ -827,6 +960,36 @@
         S.agent.settings = r.settings; S.agent.missingSettings = r.missing;
         toast('Saved. Your phones pick it up the next time the Runtime opens.');
         patchAgent();
+      } else if (kind === 'install') {
+        const id = form.dataset.id;
+        const values = {};
+        for (const [k, v] of Object.entries(data)) if (k.startsWith('v_')) values[k.slice(2)] = v;
+        const when = {};
+        const at = form.querySelector('[name="when_at"]');
+        if (at) { when.at = at.value; when.days = [...form.querySelectorAll('[data-days] .on')].map((x) => x.dataset.day); if (when.days.length === 7) when.days = []; }
+        const ev = form.querySelector('[data-every] .on');
+        if (ev) when.minutes = Number(ev.dataset.min);
+        const runsOn = form.querySelector('[data-runs] .on')?.dataset.runsOn || 'cloud';
+        const a = await api(`/api/templates/${id}/install`, { method: 'POST', body: { values, when, live: !!data.live, runsOn } });
+        toast(`${a.title} is on. ${a.runsOn === 'cloud' ? 'It runs in the cloud.' : 'Open the Runtime on your phone to start it.'}`);
+        S.agent = null; go(`#/a/${a.id}`);
+      } else if (kind === 'watch') {
+        const mode = form.querySelector('[data-modes] .on')?.dataset.mode || 'change';
+        const minutes = Number(form.querySelector('[data-every] .on')?.dataset.min || 60);
+        const pick = { change: ['watch-page', {}], words: ['watch-page', { lookFor: data.words }], price: ['price-drop', { target: data.price }], stock: ['back-in-stock', { soldOutText: data.soldOut }] }[mode];
+        if (mode === 'words' && !String(data.words || '').trim()) throw new Error('Type the words to look for.');
+        if (mode === 'price' && !data.price) throw new Error('Type the price you want.');
+        const t = (S.templates || []).find((x) => x.id === pick[0]);
+        const allowed = t && t.when && t.when.choices ? t.when.choices : [minutes];
+        const nearest = allowed.reduce((b, m) => (Math.abs(m - minutes) < Math.abs(b - minutes) ? m : b), allowed[0]);
+        let host = 'page';
+        try { host = new URL(data.url).hostname.replace(/^www\./, ''); } catch {}
+        const a = await api(`/api/templates/${pick[0]}/install`, { method: 'POST', body: { values: { url: data.url, ...pick[1] }, when: { minutes: nearest }, live: true, runsOn: 'cloud', title: `Watch ${host}`.slice(0, 40) } });
+        toast('Watching. You\'ll hear from it when something changes.');
+        S.agent = null; go(`#/a/${a.id}`);
+      } else if (kind === 'prefs') {
+        const r = await api('/api/me/prefs', { method: 'POST', body: { emailAgents: !!data.emailAgents, quietFrom: data.quietFrom || null, quietTo: data.quietTo || null, tz: Intl.DateTimeFormat().resolvedOptions().timeZone } });
+        S.prefs = r.prefs; toast('Saved.');
       } else if (kind === 'about') {
         await api('/api/me/about', { method: 'POST', body: data });
         toast('Saved.');
@@ -835,6 +998,21 @@
         form.reset(); toast('Password changed. Other devices were signed out.');
       }
     } catch (err) { say(err.message); } finally { if (document.contains(btn)) busy(btn, false); }
+  });
+
+  document.addEventListener('click', (e) => {
+    const day = e.target.closest('[data-days] [data-day]');
+    if (day) { day.classList.toggle('on'); return; }
+    const every = e.target.closest('[data-every] [data-min]');
+    if (every) { for (const c of every.parentElement.children) c.classList.toggle('on', c === every); return; }
+    const ro = e.target.closest('[data-runs] [data-runs-on]');
+    if (ro) { for (const c of ro.parentElement.children) c.classList.toggle('on', c === ro); return; }
+    const mode = e.target.closest('[data-modes] [data-mode]');
+    if (mode) {
+      for (const c of mode.parentElement.children) c.classList.toggle('on', c === mode);
+      for (const x of document.querySelectorAll('[data-extra]')) x.hidden = x.dataset.extra !== mode.dataset.mode;
+      document.querySelector(`[data-extra="${mode.dataset.mode}"] input`)?.focus();
+    }
   });
 
   document.addEventListener('click', async (e) => {
@@ -923,6 +1101,34 @@
         break;
       }
       case 'install': await install(); break;
+      case 'where': { const r = await post(`/api/agents/${a.id}/where`, { runsOn: el.dataset.where }); if (r) { S.agent = r; const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(r); toast(r.runsOn === 'cloud' ? 'It now runs in the cloud.' : 'It now runs on your phone.'); } break; }
+      case 'snooze': { const r = await post(`/api/agents/${a.id}/snooze`, el.dataset.until ? { until: el.dataset.until } : { minutes: Number(el.dataset.minutes) }); if (r) { S.agent = r; const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(r); toast(r.snoozeUntil ? 'Snoozed. It still runs; you just won\'t be notified.' : 'Notifications are back on.'); } break; }
+      case 'edit-when': {
+        const ts = a.package.triggers || [];
+        const sch = ts.find((t) => t.type === 'schedule'), iv = ts.find((t) => t.type === 'interval');
+        const picker = sch ? whenPicker({ type: 'schedule', default: sch.at, days: sch.days })
+          : whenPicker({ type: 'interval', default: iv.minutes, choices: [...new Set([15, 30, 60, 120, 180, 360, 720, 1440, iv.minutes])].sort((x, y) => x - y) });
+        sheet(`<form class="stack"><div class="h3">When should ${esc(a.title)} run?</div>${picker}
+          <p class="small muted" style="margin:0">It's re-checked and re-signed in a few seconds. No rebuild.</p>
+          <div class="row" style="justify-content:flex-end"><button type="button" class="btn ghost sm" data-close>Cancel</button><button class="btn sm">Save</button></div></form>`,
+        async (fd) => {
+          const form = document.querySelector('.scrim:last-of-type form');
+          const body = {};
+          if (sch) { body.at = fd.get('when_at'); body.days = [...form.querySelectorAll('[data-days] .on')].map((x) => x.dataset.day); if (body.days.length === 7) body.days = []; }
+          else body.minutes = Number(form.querySelector('[data-every] .on')?.dataset.min);
+          const r = await api(`/api/agents/${a.id}/quick`, { method: 'POST', body });
+          S.agent = r; patchAgent();
+          const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(r);
+          toast(r.changed && r.changed.length ? r.changed.join(' ') : 'Nothing changed.');
+        });
+        break;
+      }
+      case 'run-cloud': {
+        if (a.inputs && a.inputs.length) { askRunInputs(a); break; }
+        const r = await post(`/api/agents/${a.id}/run`, {});
+        if (r) showRunResult(r.run);
+        break;
+      }
       case 'mic': toggleMic(el); break;
       case 'install-hide': store.set('pb.installHidden', true); refreshInstall(); break;
       case 'pair-code': {

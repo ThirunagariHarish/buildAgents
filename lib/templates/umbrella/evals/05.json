@@ -1,0 +1,21 @@
+{
+ "name": "Forecast down is quiet",
+ "trigger": {
+  "type": "schedule"
+ },
+ "location": {
+  "lat": 1,
+  "lon": 2
+ },
+ "http": {
+  "https://api.open-meteo.com/v1/forecast*": {
+   "status": 503,
+   "text": ""
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

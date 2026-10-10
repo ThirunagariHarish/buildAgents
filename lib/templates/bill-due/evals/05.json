@@ -1,0 +1,15 @@
+{
+ "name": "Nothing due is quiet",
+ "trigger": {
+  "type": "schedule"
+ },
+ "now": "2026-10-02T09:00:00Z",
+ "settings": {
+  "bills": "Rent 1"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

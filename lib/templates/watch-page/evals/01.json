@@ -1,0 +1,22 @@
+{
+ "name": "First look saves a baseline quietly",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://example.gov/bulletin"
+ },
+ "http": {
+  "https://example.gov/bulletin": "<html><body><h1>Bulletin</h1><p>Final action date is 01JAN20. Next update soon.</p></body></html>"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "hash": {
+    "exists": true
+   }
+  }
+ }
+}

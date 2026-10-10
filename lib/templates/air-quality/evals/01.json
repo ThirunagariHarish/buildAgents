@@ -1,0 +1,25 @@
+{
+ "name": "Crossing the limit warns",
+ "trigger": {
+  "type": "interval"
+ },
+ "location": {
+  "lat": 28.6,
+  "lon": 77.2
+ },
+ "http": {
+  "https://air-quality-api.open-meteo.com/v1/air-quality*": "{\"current\":{\"us_aqi\":168,\"pm2_5\":80}}"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Unhealthy",
+    "168"
+   ]
+  },
+  "memory": {
+   "bad": true
+  }
+ }
+}

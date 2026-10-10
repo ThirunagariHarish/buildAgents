@@ -1,0 +1,19 @@
+{
+ "name": "No nudge once logged",
+ "trigger": {
+  "type": "schedule"
+ },
+ "now": "2026-10-12T15:00:00Z",
+ "memory": {
+  "streak": {
+   "last": "2026-10-12",
+   "count": 1,
+   "best": 1
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

@@ -1,0 +1,35 @@
+{
+ "name": "Logging extends the streak",
+ "trigger": {
+  "type": "manual",
+  "input": {
+   "did": "Yes"
+  }
+ },
+ "now": "2026-10-12T15:00:00Z",
+ "settings": {
+  "habit": "walk"
+ },
+ "memory": {
+  "streak": {
+   "last": "2026-10-11",
+   "count": 4,
+   "best": 4
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "5-day"
+   ]
+  },
+  "memory": {
+   "streak": {
+    "last": "2026-10-12",
+    "count": 5,
+    "best": 5
+   }
+  }
+ }
+}

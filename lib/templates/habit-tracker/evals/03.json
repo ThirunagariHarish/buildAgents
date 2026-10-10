@@ -1,0 +1,29 @@
+{
+ "name": "Evening nudge when not logged",
+ "trigger": {
+  "type": "schedule"
+ },
+ "now": "2026-10-12T15:00:00Z",
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "habit": "read 10 pages"
+ },
+ "memory": {
+  "streak": {
+   "last": "2026-10-11",
+   "count": 3,
+   "best": 3
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "read 10 pages"
+   ],
+   "bodyIncludes": [
+    "3-day streak"
+   ]
+  }
+ }
+}

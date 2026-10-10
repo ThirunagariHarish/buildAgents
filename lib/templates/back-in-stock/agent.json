@@ -1,0 +1,42 @@
+{
+  "id": "back-in-stock",
+  "name": "Back in stock",
+  "icon": "📦",
+  "version": "1.0.0",
+  "description": "Checks a product page and tells you when it is no longer sold out.",
+  "permissions": [
+    "notify",
+    "memory",
+    "http"
+  ],
+  "http": {
+    "allowFromSettings": [
+      "url"
+    ]
+  },
+  "triggers": [
+    {
+      "type": "interval",
+      "minutes": 30
+    },
+    {
+      "type": "manual",
+      "label": "Check now"
+    }
+  ],
+  "settings": [
+    {
+      "key": "url",
+      "label": "Product page",
+      "type": "url"
+    },
+    {
+      "key": "soldOutText",
+      "label": "Words shown when sold out",
+      "type": "text"
+    }
+  ],
+  "budget": {
+    "steps": 8
+  }
+}

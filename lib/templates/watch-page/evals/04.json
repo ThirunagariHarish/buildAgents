@@ -1,0 +1,25 @@
+{
+ "name": "Only notifies when the watched words first appear",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://exams.example.org/",
+  "lookFor": "Results declared"
+ },
+ "memory": {
+  "hash": "old",
+  "snapshot": "Results awaited"
+ },
+ "http": {
+  "https://exams.example.org/": "<p>Results declared for Class 12. Check your roll number.</p>"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Results declared"
+   ]
+  }
+ }
+}

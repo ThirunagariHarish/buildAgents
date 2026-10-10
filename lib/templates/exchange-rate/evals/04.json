@@ -1,0 +1,19 @@
+{
+ "name": "Unknown currency is quiet",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "from": "USD",
+  "to": "XYZ",
+  "below": 1
+ },
+ "http": {
+  "https://open.er-api.com/v6/latest/*": "{\"rates\":{\"INR\":84}}"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

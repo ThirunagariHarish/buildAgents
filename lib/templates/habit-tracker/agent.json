@@ -1,0 +1,42 @@
+{
+  "id": "habit-tracker",
+  "name": "Habit streak",
+  "icon": "🔥",
+  "version": "1.0.0",
+  "description": "Log a daily habit with one tap; get an evening nudge if you haven't, and see your streak grow.",
+  "permissions": [
+    "notify",
+    "memory"
+  ],
+  "triggers": [
+    {
+      "type": "schedule",
+      "at": "20:30"
+    },
+    {
+      "type": "manual",
+      "label": "Log today",
+      "inputs": [
+        {
+          "key": "did",
+          "label": "Did you do it today?",
+          "type": "choice",
+          "options": [
+            "Yes",
+            "Not today"
+          ]
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "key": "habit",
+      "label": "The habit",
+      "type": "text"
+    }
+  ],
+  "budget": {
+    "steps": 6
+  }
+}

@@ -1,0 +1,20 @@
+{
+ "name": "Stays in stock without repeating",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://shop.example.com/x"
+ },
+ "memory": {
+  "soldOut": false
+ },
+ "http": {
+  "https://shop.example.com/x": "<button>Add to cart</button>"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

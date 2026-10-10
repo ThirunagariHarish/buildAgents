@@ -1,0 +1,21 @@
+{
+ "name": "Still sold out is quiet",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://shop.example.com/x",
+  "soldOutText": "Out of stock"
+ },
+ "http": {
+  "https://shop.example.com/x": "<p>Currently OUT OF STOCK</p>"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "soldOut": true
+  }
+ }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "Bills due",
+  "icon": "🧾",
+  "category": "Money",
+  "summary": "A heads-up a few days before each bill, so nothing is late.",
+  "fields": [
+    {
+      "key": "bills",
+      "label": "Bills and the day of the month they're due",
+      "type": "text",
+      "placeholder": "Rent 1, Phone 15, Credit card 22"
+    },
+    {
+      "key": "lead",
+      "label": "Days of warning",
+      "type": "number",
+      "default": "3"
+    }
+  ],
+  "when": {
+    "type": "schedule",
+    "default": "09:00"
+  }
+}

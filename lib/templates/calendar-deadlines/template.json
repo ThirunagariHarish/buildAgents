@@ -1,0 +1,25 @@
+{
+  "name": "Coming up",
+  "icon": "📅",
+  "category": "Daily",
+  "summary": "Every morning, what's on your calendar in the next couple of days: classes, deadlines, appointments.",
+  "fields": [
+    {
+      "key": "icsUrl",
+      "label": "Your calendar's private iCal link",
+      "type": "secret",
+      "placeholder": "https://…/basic.ics",
+      "help": "Google Calendar: Settings → your calendar → Secret address in iCal format. Apple: share a calendar publicly and copy the link. Course sites often have an export link."
+    },
+    {
+      "key": "days",
+      "label": "How many days ahead",
+      "type": "number",
+      "default": "2"
+    }
+  ],
+  "when": {
+    "type": "schedule",
+    "default": "07:00"
+  }
+}

@@ -1,0 +1,19 @@
+{
+ "name": "Next month's bill counts across the month end",
+ "trigger": {
+  "type": "schedule"
+ },
+ "now": "2026-10-30T03:30:00Z",
+ "tz": "UTC",
+ "settings": {
+  "bills": "Rent 1"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "bodyIncludes": [
+    "in 2 days"
+   ]
+  }
+ }
+}

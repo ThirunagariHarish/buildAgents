@@ -1,0 +1,13 @@
+{
+ "name": "Quiet at night in your own time zone",
+ "trigger": {
+  "type": "interval"
+ },
+ "now": "2026-10-12T17:30:00Z",
+ "tz": "Asia/Kolkata",
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

@@ -1,0 +1,29 @@
+{
+ "name": "Lists what's in the next two days",
+ "trigger": {
+  "type": "schedule"
+ },
+ "now": "2026-10-12T01:30:00Z",
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "icsUrl": "https://calendar.example.com/private/basic.ics"
+ },
+ "http": {
+  "https://calendar.example.com/private/basic.ics": "BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nDTSTART:20261012T100000\r\nSUMMARY:Physics lecture\r\nEND:VEVENT\r\nBEGIN:VTODO\r\nDUE:20261013\r\nSUMMARY:Essay due\r\nEND:VTODO\r\nBEGIN:VEVENT\r\nDTSTART:20261020T090000\r\nSUMMARY:Far away\r\nEND:VEVENT\r\nEND:VCALENDAR"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "2 things"
+   ],
+   "bodyIncludes": [
+    "Today 10:00: Physics lecture",
+    "Tomorrow: Due: Essay due"
+   ],
+   "bodyExcludes": [
+    "Far away"
+   ]
+  }
+ }
+}

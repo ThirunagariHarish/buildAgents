@@ -1,0 +1,18 @@
+{
+  "name": "Habit streak",
+  "icon": "🔥",
+  "category": "Health",
+  "summary": "Tap Run to log your habit; an evening nudge if you haven't, and your streak to keep you going.",
+  "fields": [
+    {
+      "key": "habit",
+      "label": "The habit",
+      "type": "text",
+      "placeholder": "e.g. walk 20 minutes, read 10 pages"
+    }
+  ],
+  "when": {
+    "type": "schedule",
+    "default": "20:30"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "Drink water",
+  "icon": "💧",
+  "category": "Health",
+  "summary": "Gentle reminders through the day toward your daily goal. Quiet at night.",
+  "fields": [
+    {
+      "key": "glasses",
+      "label": "Glasses a day",
+      "type": "number",
+      "default": "8"
+    }
+  ],
+  "when": {
+    "type": "interval",
+    "choices": [
+      60,
+      90,
+      120,
+      180
+    ],
+    "default": 120
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "Exchange rate alert",
+  "icon": "💱",
+  "category": "Money",
+  "summary": "Tells you when a currency crosses the rate you're waiting for.",
+  "fields": [
+    {
+      "key": "from",
+      "label": "From currency",
+      "type": "text",
+      "default": "USD"
+    },
+    {
+      "key": "to",
+      "label": "To currency",
+      "type": "text",
+      "default": "INR"
+    },
+    {
+      "key": "above",
+      "label": "Tell me when it goes above (optional)",
+      "type": "number",
+      "optional": true
+    },
+    {
+      "key": "below",
+      "label": "Tell me when it goes below (optional)",
+      "type": "number",
+      "optional": true
+    }
+  ],
+  "when": {
+    "type": "interval",
+    "choices": [
+      60,
+      180,
+      720
+    ],
+    "default": 60
+  }
+}

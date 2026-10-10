@@ -1,0 +1,32 @@
+{
+  "id": "water",
+  "name": "Drink water",
+  "icon": "💧",
+  "version": "1.0.0",
+  "description": "Reminds you to drink water through the day toward your goal, and stays quiet at night.",
+  "permissions": [
+    "notify",
+    "memory"
+  ],
+  "triggers": [
+    {
+      "type": "interval",
+      "minutes": 120
+    },
+    {
+      "type": "manual",
+      "label": "Remind me now"
+    }
+  ],
+  "settings": [
+    {
+      "key": "glasses",
+      "label": "Glasses a day",
+      "type": "number",
+      "optional": true
+    }
+  ],
+  "budget": {
+    "steps": 4
+  }
+}

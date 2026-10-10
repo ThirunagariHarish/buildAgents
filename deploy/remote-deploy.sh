@@ -122,6 +122,7 @@ if grep -q '^PB_BWRAP=1' "$ENV_FILE"; then
   ARGS=$(set -a; . "$ENV_FILE"; set +a; cd "$APP_DIR" && node -e "console.log(require('./lib/claude').sandboxArgs('$DATA/work/_check','/home/boxbuild').join(' '))")
   echo "claude inside the crew sandbox: $(set -a; . "$ENV_FILE"; set +a; timeout 120 sudo -u boxbuild -H --preserve-env=CLAUDE_CODE_OAUTH_TOKEN,PB_HIDE_DIRS bwrap $ARGS -- claude -p 'Reply with exactly: OK' --model haiku 2>&1 | tail -1)"
   echo "data hidden inside the sandbox: $(sudo -u boxbuild -H bwrap $ARGS -- /bin/sh -c "ls -A $DATA | grep -v work | wc -l; ls -A /opt/box/data 2>/dev/null | wc -l" | tr '\n' ' ')(0 0 = hidden)"
+  echo "cloud-run sandbox network: $(sudo -u boxbuild -H bwrap $ARGS --unshare-net -- node -e "fetch('https://example.com',{signal:AbortSignal.timeout(5000)}).then(()=>console.log('OPEN (bad)')).catch(()=>console.log('none (good)'))" 2>&1 | tail -1)"
   rm -rf "$DATA/work/_check"
 fi
 

@@ -1,0 +1,42 @@
+{
+  "id": "price-drop",
+  "name": "Price drop",
+  "icon": "🏷️",
+  "version": "1.0.0",
+  "description": "Reads a product page and tells you when its price falls to your target.",
+  "permissions": [
+    "notify",
+    "memory",
+    "http"
+  ],
+  "http": {
+    "allowFromSettings": [
+      "url"
+    ]
+  },
+  "triggers": [
+    {
+      "type": "interval",
+      "minutes": 360
+    },
+    {
+      "type": "manual",
+      "label": "Check now"
+    }
+  ],
+  "settings": [
+    {
+      "key": "url",
+      "label": "Product page",
+      "type": "url"
+    },
+    {
+      "key": "target",
+      "label": "Target price",
+      "type": "number"
+    }
+  ],
+  "budget": {
+    "steps": 8
+  }
+}

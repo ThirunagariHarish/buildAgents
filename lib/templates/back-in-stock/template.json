@@ -1,0 +1,34 @@
+{
+  "name": "Back in stock",
+  "icon": "📦",
+  "category": "Shopping",
+  "summary": "Tells you the moment a sold-out item can be bought again.",
+  "examples": [
+    "Sneaker drops",
+    "Consoles",
+    "Restocks"
+  ],
+  "fields": [
+    {
+      "key": "url",
+      "label": "Product page",
+      "type": "url"
+    },
+    {
+      "key": "soldOutText",
+      "label": "Words the page shows when it's sold out",
+      "type": "text",
+      "default": "out of stock"
+    }
+  ],
+  "when": {
+    "type": "interval",
+    "choices": [
+      15,
+      30,
+      60,
+      180
+    ],
+    "default": 30
+  }
+}

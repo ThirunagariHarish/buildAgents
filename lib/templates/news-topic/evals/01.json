@@ -1,0 +1,23 @@
+{
+ "name": "First run confirms with the latest headline",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "topic": "visa bulletin"
+ },
+ "http": {
+  "https://news.google.com/rss/search*": "<rss><channel><item><title>Visa bulletin for November moves EB-2</title><link>https://n/1</link></item><item><title>Older story</title><link>https://n/2</link></item></channel></rss>"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Watching"
+   ],
+   "bodyIncludes": [
+    "EB-2"
+   ]
+  }
+ }
+}

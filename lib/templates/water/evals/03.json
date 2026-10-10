@@ -1,0 +1,24 @@
+{
+ "name": "Goal reached says so, then stops",
+ "trigger": {
+  "type": "interval"
+ },
+ "now": "2026-10-12T12:00:00Z",
+ "settings": {
+  "glasses": 3
+ },
+ "memory": {
+  "count": {
+   "day": "2026-10-12",
+   "n": 2
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Last glass"
+   ]
+  }
+ }
+}

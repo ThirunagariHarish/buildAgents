@@ -1,0 +1,32 @@
+{
+  "name": "Umbrella check",
+  "icon": "☔",
+  "category": "Daily",
+  "summary": "Each morning, tells you if you need an umbrella or a warm jacket. Quiet on nice days.",
+  "fields": [
+    {
+      "key": "place",
+      "label": "Where (lat, lon), used when location is off",
+      "type": "text",
+      "placeholder": "e.g. 17.38, 78.48",
+      "optional": true
+    },
+    {
+      "key": "rainChance",
+      "label": "Tell me from this chance of rain (%)",
+      "type": "number",
+      "default": "40"
+    }
+  ],
+  "when": {
+    "type": "schedule",
+    "default": "07:30",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+ "name": "Nothing new is quiet",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "topic": "x"
+ },
+ "memory": {
+  "seen": [
+   "Older story"
+  ]
+ },
+ "http": {
+  "https://news.google.com/rss/search*": "<rss><channel><item><title>Older story</title><link>l</link></item></channel></rss>"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

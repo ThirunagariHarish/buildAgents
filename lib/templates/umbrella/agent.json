@@ -1,0 +1,52 @@
+{
+  "id": "umbrella",
+  "name": "Umbrella check",
+  "icon": "☔",
+  "version": "1.0.0",
+  "description": "Every weekday morning, says if you need an umbrella or a warm jacket today. Quiet on nice days.",
+  "permissions": [
+    "notify",
+    "memory",
+    "http",
+    "location"
+  ],
+  "http": {
+    "allow": [
+      "api.open-meteo.com"
+    ]
+  },
+  "triggers": [
+    {
+      "type": "schedule",
+      "at": "07:30",
+      "days": [
+        "mon",
+        "tue",
+        "wed",
+        "thu",
+        "fri"
+      ]
+    },
+    {
+      "type": "manual",
+      "label": "Check now"
+    }
+  ],
+  "settings": [
+    {
+      "key": "place",
+      "label": "Where (lat, lon), used when location is off",
+      "type": "text",
+      "optional": true
+    },
+    {
+      "key": "rainChance",
+      "label": "Rain chance to warn at (%)",
+      "type": "number",
+      "optional": true
+    }
+  ],
+  "budget": {
+    "steps": 6
+  }
+}

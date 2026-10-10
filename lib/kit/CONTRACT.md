@@ -26,6 +26,8 @@ An agent is three things in this repository. Pocket Box signs them into a packag
 
 - `permissions`: only what the code uses. `notify`, `memory`, `location`, `http` (with `http.allow` host names), `model`, `handoff`.
 - `triggers`: `schedule` (`at` "HH:MM" in the phone's time zone, optional `days`), `interval` (`minutes`, 15 to 1440), `manual` (a button, optional `label`), `open` (each time the Runtime opens).
+- `triggers[].inputs` (manual trigger only, at most 5): questions asked when the owner taps Run, e.g. `{ "type": "manual", "label": "Log it", "inputs": [{ "key": "amount", "label": "How many?", "type": "number" }, { "key": "how", "label": "How was it?", "type": "choice", "options": ["Good", "Bad"] }] }`. Types: `text`, `number`, `choice` (2-8 `options`). The code reads `ctx.input.amount`; scenarios set `"trigger": { "type": "manual", "input": { "amount": 2 } }`.
+- `http.allowFromSettings`: setting keys (type `url` or `secret`) whose https address the agent may also read, e.g. a page the owner chooses. Prefer `http.allow` when the host is fixed.
 - `settings`: values the owner types once in the Studio (`text`, `url`, `number`, `secret`, `time`). The code reads them as `ctx.settings.<key>`. Never hard-code personal data.
 - `budget.steps`: the most ctx calls one run may make (default 30). `budget.handoffsPerRun` (default 1).
 
@@ -52,7 +54,9 @@ function parseIcs(text, day) { /* plain JavaScript helpers are fine */ return []
 | --- | --- | --- |
 | `ctx.trigger` | | `{ type, ... }` that started this run |
 | `ctx.settings` | | the owner's values for `settings` |
-| `ctx.now()` | | the current time, ISO string |
+| `ctx.now()` | | the current instant, ISO string (UTC) |
+| `ctx.local()` | | the owner's local `{ date: "2026-10-12", time: "07:30", hour, minute, weekday: "mon", tz }` — use it for quiet hours and "once a day" |
+| `ctx.input` | | what the owner typed or chose when they tapped Run (see inputs below), else `{}` |
 | `ctx.log(...)` | | writes to the run history |
 | `await ctx.memory.get(key)` / `set(key, value)` | `memory` | JSON values, kept on the phone |
 | `await ctx.notify({ title, body })` | `notify` | shows a notification (in shadow mode it is only recorded) |
@@ -75,6 +79,7 @@ At least three scenarios: a normal run, an edge case, and a failure the agent mu
   "settings": { "icsUrl": "https://calendar.google.com/calendar/ical/x/basic.ics" },
   "memory": {},
   "http": { "https://calendar.google.com/calendar/ical/x/basic.ics": { "status": 200, "text": "BEGIN:VCALENDAR..." } },
+  "tz": "Asia/Kolkata",
   "model": ["canned model answer"],
   "handoff": [],
   "location": { "lat": 17.38, "lon": 78.48 },

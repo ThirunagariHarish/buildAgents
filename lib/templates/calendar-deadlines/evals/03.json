@@ -1,0 +1,24 @@
+{
+ "name": "A broken link says so",
+ "trigger": {
+  "type": "schedule"
+ },
+ "now": "2026-10-12T01:30:00Z",
+ "settings": {
+  "icsUrl": "https://calendar.example.com/private/basic.ics"
+ },
+ "http": {
+  "https://calendar.example.com/private/basic.ics": {
+   "status": 404,
+   "text": ""
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "not working"
+   ]
+  }
+ }
+}

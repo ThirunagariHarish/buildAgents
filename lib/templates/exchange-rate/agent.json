@@ -1,0 +1,54 @@
+{
+  "id": "exchange-rate",
+  "name": "Exchange rate alert",
+  "icon": "💱",
+  "version": "1.0.0",
+  "description": "Checks a currency pair and tells you when it crosses your rate, or moves 1% without a target.",
+  "permissions": [
+    "notify",
+    "memory",
+    "http"
+  ],
+  "http": {
+    "allow": [
+      "open.er-api.com"
+    ]
+  },
+  "triggers": [
+    {
+      "type": "interval",
+      "minutes": 60
+    },
+    {
+      "type": "manual",
+      "label": "Check now"
+    }
+  ],
+  "settings": [
+    {
+      "key": "from",
+      "label": "From currency",
+      "type": "text"
+    },
+    {
+      "key": "to",
+      "label": "To currency",
+      "type": "text"
+    },
+    {
+      "key": "above",
+      "label": "Alert above",
+      "type": "number",
+      "optional": true
+    },
+    {
+      "key": "below",
+      "label": "Alert below",
+      "type": "number",
+      "optional": true
+    }
+  ],
+  "budget": {
+    "steps": 6
+  }
+}

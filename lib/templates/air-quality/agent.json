@@ -1,0 +1,45 @@
+{
+  "id": "air-quality",
+  "name": "Air quality alert",
+  "icon": "🌫️",
+  "version": "1.0.0",
+  "description": "Checks the air quality where you are and tells you when it crosses your limit, and when it clears.",
+  "permissions": [
+    "notify",
+    "memory",
+    "http",
+    "location"
+  ],
+  "http": {
+    "allow": [
+      "air-quality-api.open-meteo.com"
+    ]
+  },
+  "triggers": [
+    {
+      "type": "interval",
+      "minutes": 180
+    },
+    {
+      "type": "manual",
+      "label": "Check now"
+    }
+  ],
+  "settings": [
+    {
+      "key": "place",
+      "label": "Where (lat, lon), used when location is off",
+      "type": "text",
+      "optional": true
+    },
+    {
+      "key": "limit",
+      "label": "Warn above this US AQI",
+      "type": "number",
+      "optional": true
+    }
+  ],
+  "budget": {
+    "steps": 6
+  }
+}

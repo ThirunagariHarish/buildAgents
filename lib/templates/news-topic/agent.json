@@ -1,0 +1,37 @@
+{
+  "id": "news-topic",
+  "name": "News on a topic",
+  "icon": "📰",
+  "version": "1.0.0",
+  "description": "Checks the news for a topic you choose and sends new headlines, up to three at a time.",
+  "permissions": [
+    "notify",
+    "memory",
+    "http"
+  ],
+  "http": {
+    "allow": [
+      "news.google.com"
+    ]
+  },
+  "triggers": [
+    {
+      "type": "interval",
+      "minutes": 180
+    },
+    {
+      "type": "manual",
+      "label": "Check now"
+    }
+  ],
+  "settings": [
+    {
+      "key": "topic",
+      "label": "Topic",
+      "type": "text"
+    }
+  ],
+  "budget": {
+    "steps": 6
+  }
+}

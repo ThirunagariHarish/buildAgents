@@ -1,0 +1,27 @@
+{
+ "name": "Falls to target notifies once with the old price",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://shop.example.com/p/1",
+  "target": 800
+ },
+ "memory": {
+  "lastPrice": 899
+ },
+ "http": {
+  "https://shop.example.com/p/1": "<span>Now </span> <b>$789.99</b>"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "789.99"
+   ],
+   "bodyIncludes": [
+    "was 899"
+   ]
+  }
+ }
+}

@@ -162,7 +162,7 @@
   }
 
   function runnable(a) {
-    return a.package && a.channel !== 'off' && R.verified[a.agentId] === true && !(a.missingSettings || []).length;
+    return a.package && a.channel !== 'off' && a.runsOn !== 'cloud' && R.verified[a.agentId] === true && !(a.missingSettings || []).length;
   }
 
   /** Which trigger (if any) makes this agent due now. */
@@ -232,7 +232,8 @@
     const pkg = a.package;
     const m = pkg.manifest;
     const perms = new Set(m.permissions || []);
-    const allow = new Set(((m.http && m.http.allow) || []).map((h) => h.toLowerCase()));
+    const runSettings = (R.state.agents.find((x) => x.agentId === a.agentId) || {}).settings || {};
+    const allow = self.PocketCore ? self.PocketCore.allowedHosts(m, runSettings) : new Set(((m.http && m.http.allow) || []).map((h) => h.toLowerCase()));
     const maxSteps = Number((m.budget && m.budget.steps) || 30);
     const maxHandoffs = Number((m.budget && m.budget.handoffsPerRun) ?? 1);
     const live = a.channel === 'live';
@@ -266,7 +267,7 @@
       },
       async httpGet(url) {
         const u = new URL(url);
-        if (u.protocol !== 'https:' || !allow.has(u.hostname.toLowerCase())) throw new Error(`${u.hostname} is not in this agent's http.allow.`);
+        if (u.protocol !== 'https:' || !allow.has(u.hostname.toLowerCase())) throw new Error(`${u.hostname} is not an address this agent may read.`);
         record.httpReads += 1;
         return device('http', { agentId: a.agentId, url: u.toString() });
       },
@@ -329,7 +330,7 @@
         if (record.steps > maxSteps) { reply(false, null, 'Step budget exceeded.'); return finish({ ok: false, error: `Step budget exceeded: more than ${maxSteps} ctx calls in one run.` }); }
         try { reply(true, await tools[msg.fn](...(msg.args || []))); } catch (e) { reply(false, null, e.message); }
       };
-      w.postMessage({ type: 'run', code: pkg.code, manifest: m, trigger, settings: (R.state.agents.find((x) => x.agentId === a.agentId) || {}).settings || {} });
+      w.postMessage({ type: 'run', code: pkg.code, manifest: m, trigger, settings: runSettings, tz: tz() });
     });
   }
 
@@ -410,6 +411,50 @@
     } catch (e) { toast(e.message, 'bad'); } finally { btn.disabled = false; }
   }
 
+  // ---- asking for a run's inputs ----------------------------------------------------------
+  const Speech = self.SpeechRecognition || self.webkitSpeechRecognition;
+  function askInputs(a, trig) {
+    const field = (i) => {
+      if (i.type === 'choice') return `<div class="row wrap" style="gap:8px" data-choice="${esc(i.key)}">${i.options.map((o, n) => `<button type="button" class="chip ${n === 0 ? 'on' : ''}" data-opt="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;
+      return `<div class="row" style="gap:8px"><input class="input" name="${esc(i.key)}" ${i.type === 'number' ? 'type="number" inputmode="decimal"' : 'type="text"'} autocomplete="off" style="flex:1">${Speech && i.type !== 'number' ? `<button type="button" class="mic" data-mic="${esc(i.key)}" aria-label="Speak">🎙</button>` : ''}</div>`;
+    };
+    const scrim = document.createElement('div');
+    scrim.className = 'scrim';
+    scrim.innerHTML = `<div class="sheet"><div class="grab"></div><form class="stack">
+      <div class="row" style="gap:12px"><div class="avatar sm">${esc(a.icon || '✳︎')}</div><div class="h3">${esc(trig.label || a.title)}</div></div>
+      ${trig.inputs.map((i) => `<label class="field"><span>${esc(i.label)}</span>${field(i)}</label>`).join('')}
+      <div class="row" style="justify-content:flex-end"><button type="button" class="btn ghost sm" data-close>Cancel</button><button class="btn sm">Run</button></div>
+    </form></div>`;
+    const close = () => { scrim.classList.add('out'); setTimeout(() => scrim.remove(), 300); };
+    scrim.addEventListener('click', (e) => {
+      if (e.target === scrim || e.target.closest('[data-close]')) return close();
+      const opt = e.target.closest('[data-opt]');
+      if (opt) { for (const c of opt.parentElement.children) c.classList.toggle('on', c === opt); return; }
+      const mic = e.target.closest('[data-mic]');
+      if (mic && Speech) {
+        const inp = scrim.querySelector(`input[name="${mic.dataset.mic}"]`);
+        const rec = new Speech(); rec.lang = navigator.language || 'en-US'; rec.interimResults = true;
+        rec.onresult = (ev) => { inp.value = Array.from(ev.results).map((r) => r[0].transcript).join(''); };
+        rec.onend = () => mic.classList.remove('listening');
+        rec.onerror = () => toast('Could not hear that. Type it instead.', 'bad');
+        try { rec.start(); mic.classList.add('listening'); } catch {}
+      }
+    });
+    scrim.querySelector('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const raw = {};
+      for (const i of trig.inputs) {
+        if (i.type === 'choice') raw[i.key] = scrim.querySelector(`[data-choice="${i.key}"] .chip.on`)?.dataset.opt;
+        else raw[i.key] = scrim.querySelector(`input[name="${i.key}"]`)?.value;
+      }
+      const input = self.PocketCore ? self.PocketCore.cleanInputs(a.package.manifest, raw) : raw;
+      close();
+      await runAgent(a, { type: 'manual', input });
+    });
+    document.body.append(scrim);
+    scrim.querySelector('input')?.focus();
+  }
+
   // ---- screens --------------------------------------------------------------------------
   function render() {
     if (!R.pair) return renderPair();
@@ -449,8 +494,8 @@
       const l = last[a.agentId] || {};
       const v = R.verified[a.agentId];
       const due = a.package && a.channel !== 'off' ? nextDue(a) : null;
-      const pill = a.channel === 'off' ? '<span class="pill">Off</span>' : v === false ? '<span class="pill bad">Bad signature</span>' : a.channel === 'live' ? '<span class="pill good"><span class="dot"></span>Live</span>' : '<span class="pill accent">Shadow</span>';
-      const line = (a.missingSettings || []).length ? `Needs settings in the Studio: ${a.missingSettings.join(', ')}`
+      const pill = a.runsOn === 'cloud' ? '<span class="pill accent">Cloud</span>' : a.channel === 'off' ? '<span class="pill">Off</span>' : v === false ? '<span class="pill bad">Bad signature</span>' : a.channel === 'live' ? '<span class="pill good"><span class="dot"></span>Live</span>' : '<span class="pill accent">Shadow</span>';
+      const line = a.runsOn === 'cloud' ? 'Runs in the cloud on its schedule; it notifies you here.' : (a.missingSettings || []).length ? `Needs settings in the Studio: ${a.missingSettings.join(', ')}`
         : R.running.has(a.agentId) ? 'Running…'
         : l.result ? `${l.result.ok ? 'Ran' : 'Failed'} ${ago(l.result.at)}${l.result.said ? ` · “${l.result.said}”` : ''}${due ? ` · next ${when(due)}` : ''}`
         : due ? `Next ${when(due)}` : 'Not run yet';
@@ -521,7 +566,14 @@
     if (act === 'pair-code') return pairWithCode($('#pcode')?.value || '', $('#pname')?.value || (Native ? (Native.platform === 'ios' ? 'iPhone' : 'Android phone') : 'Phone'), el);
     if (act === 'push') return enablePush(el);
     if (act === 'tab') { R.tab = el.dataset.tab; return render(); }
-    if (act === 'run') { const a = R.state.agents.find((x) => x.agentId === el.dataset.id); if (a) await runAgent(a, { type: 'manual' }); return; }
+    if (act === 'run') {
+      const a = R.state.agents.find((x) => x.agentId === el.dataset.id);
+      if (!a) return;
+      const manual = (a.package.manifest.triggers || []).find((t) => t.type === 'manual' && Array.isArray(t.inputs) && t.inputs.length);
+      if (manual) return askInputs(a, manual);
+      await runAgent(a, { type: 'manual' });
+      return;
+    }
     if (act === 'clear-feed') { ls.set(K.feed, []); return render(); }
     if (act === 'sync') { await sync(); toast('Up to date.'); return; }
     if (act === 'unpair') {

@@ -1,0 +1,37 @@
+{
+  "id": "uptime",
+  "name": "Site uptime",
+  "icon": "🟢",
+  "version": "1.0.0",
+  "description": "Checks a website and tells you when it is down, and when it is back.",
+  "permissions": [
+    "notify",
+    "memory",
+    "http"
+  ],
+  "http": {
+    "allowFromSettings": [
+      "url"
+    ]
+  },
+  "triggers": [
+    {
+      "type": "interval",
+      "minutes": 15
+    },
+    {
+      "type": "manual",
+      "label": "Check now"
+    }
+  ],
+  "settings": [
+    {
+      "key": "url",
+      "label": "Website",
+      "type": "url"
+    }
+  ],
+  "budget": {
+    "steps": 8
+  }
+}

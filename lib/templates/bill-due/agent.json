@@ -1,0 +1,37 @@
+{
+  "id": "bill-due",
+  "name": "Bills due",
+  "icon": "🧾",
+  "version": "1.0.0",
+  "description": "Each morning, checks your list of monthly bills and warns you a few days before each is due.",
+  "permissions": [
+    "notify",
+    "memory"
+  ],
+  "triggers": [
+    {
+      "type": "schedule",
+      "at": "09:00"
+    },
+    {
+      "type": "manual",
+      "label": "Check now"
+    }
+  ],
+  "settings": [
+    {
+      "key": "bills",
+      "label": "Bills and due days, e.g. Rent 1, Phone 15",
+      "type": "text"
+    },
+    {
+      "key": "lead",
+      "label": "Days of warning",
+      "type": "number",
+      "optional": true
+    }
+  ],
+  "budget": {
+    "steps": 4
+  }
+}

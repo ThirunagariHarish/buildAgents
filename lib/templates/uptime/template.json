@@ -1,0 +1,28 @@
+{
+  "name": "Site uptime",
+  "icon": "🟢",
+  "category": "Business",
+  "summary": "Checks your website and tells you when it goes down and when it's back.",
+  "examples": [
+    "Your shop",
+    "Your portfolio",
+    "A client's site"
+  ],
+  "fields": [
+    {
+      "key": "url",
+      "label": "Website",
+      "type": "url",
+      "placeholder": "https://yourshop.com"
+    }
+  ],
+  "when": {
+    "type": "interval",
+    "choices": [
+      15,
+      30,
+      60
+    ],
+    "default": 15
+  }
+}

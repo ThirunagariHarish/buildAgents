@@ -1,0 +1,16 @@
+{
+ "name": "Quiet after work",
+ "trigger": {
+  "type": "interval"
+ },
+ "now": "2026-10-12T14:00:00Z",
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "end": "18:00"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

@@ -1,0 +1,42 @@
+{
+  "id": "calendar-deadlines",
+  "name": "Coming up",
+  "icon": "📅",
+  "version": "1.0.0",
+  "description": "Each morning, lists what's on your calendar in the next few days.",
+  "permissions": [
+    "notify",
+    "http"
+  ],
+  "http": {
+    "allowFromSettings": [
+      "icsUrl"
+    ]
+  },
+  "triggers": [
+    {
+      "type": "schedule",
+      "at": "07:00"
+    },
+    {
+      "type": "manual",
+      "label": "Show me now"
+    }
+  ],
+  "settings": [
+    {
+      "key": "icsUrl",
+      "label": "Private iCal link",
+      "type": "secret"
+    },
+    {
+      "key": "days",
+      "label": "Days ahead",
+      "type": "number",
+      "optional": true
+    }
+  ],
+  "budget": {
+    "steps": 4
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "News on a topic",
+  "icon": "📰",
+  "category": "Watchers",
+  "summary": "New headlines about anything you name: a company, a team, a visa category, your own name.",
+  "fields": [
+    {
+      "key": "topic",
+      "label": "Topic",
+      "type": "text",
+      "placeholder": "e.g. H-1B lottery, Tesla, your name"
+    }
+  ],
+  "when": {
+    "type": "interval",
+    "choices": [
+      60,
+      180,
+      720,
+      1440
+    ],
+    "default": 180
+  }
+}

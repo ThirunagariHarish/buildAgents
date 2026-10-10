@@ -1,0 +1,26 @@
+{
+ "name": "An error page is not mistaken for a restock",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://shop.example.com/x"
+ },
+ "memory": {
+  "soldOut": true
+ },
+ "http": {
+  "https://shop.example.com/x": {
+   "status": 500,
+   "text": "oops"
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "soldOut": true
+  }
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "name": "A changed page names what is new",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://example.gov/bulletin"
+ },
+ "memory": {
+  "hash": "old",
+  "snapshot": "Bulletin Final action date is 01JAN20. Next update soon."
+ },
+ "http": {
+  "https://example.gov/bulletin": "<h1>Bulletin</h1><p>Final action date is 15MAR20. Next update soon.</p>"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "changed"
+   ],
+   "bodyIncludes": [
+    "15MAR20"
+   ]
+  }
+ }
+}

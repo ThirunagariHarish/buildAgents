@@ -1,0 +1,21 @@
+{
+ "name": "Same low price does not repeat",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://shop.example.com/p/1",
+  "target": 800
+ },
+ "memory": {
+  "lastPrice": 789.99
+ },
+ "http": {
+  "https://shop.example.com/p/1": "<b>$789.99</b>"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

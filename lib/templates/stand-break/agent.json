@@ -1,0 +1,34 @@
+{
+  "id": "stand-break",
+  "name": "Stand and stretch",
+  "icon": "🧍",
+  "version": "1.0.0",
+  "description": "During your work hours on weekdays, reminds you to stand up and stretch, with a different idea each time.",
+  "permissions": [
+    "notify",
+    "memory"
+  ],
+  "triggers": [
+    {
+      "type": "interval",
+      "minutes": 60
+    }
+  ],
+  "settings": [
+    {
+      "key": "start",
+      "label": "Work starts",
+      "type": "time",
+      "optional": true
+    },
+    {
+      "key": "end",
+      "label": "Work ends",
+      "type": "time",
+      "optional": true
+    }
+  ],
+  "budget": {
+    "steps": 4
+  }
+}

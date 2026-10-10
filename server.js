@@ -22,6 +22,20 @@ const packages = require('./lib/packages');
 const devices = require('./lib/devices');
 const settings = require('./lib/settings');
 const scheduler = require('./lib/scheduler');
+const cloudrun = require('./lib/cloudrun');
+const templates = require('./lib/templates');
+const prefs = require('./lib/prefs');
+const { deliver } = require('./lib/deliver');
+const { cleanInputs } = require('./lib/kit/core');
+
+/** After any run (phone or cloud): remember it on the agent and tell open Studio screens. */
+function afterRun(agentId, run) {
+  const a = store.loadAgent(agentId);
+  if (!a) return;
+  a.lastRun = { at: run.at, ok: run.ok, channel: run.channel, where: run.deviceName, summary: run.notifications[0] ? run.notifications[0].title : run.ok ? 'Ran, nothing to say' : 'Failed' };
+  store.saveAgent(a);
+  bus.publish(a, { event: 'run', run });
+}
 const { askClaude } = require('./lib/claude');
 const { PERMISSIONS } = require('./lib/kit/core');
 
@@ -117,6 +131,8 @@ function agentView(a, user) {
     ...a,
     ownerName: owner ? `${owner.firstName} ${owner.lastName}`.trim() : null,
     running: bus.running(a.id), thinking: bus.thinking(a.id), needsYou: store.needsYou(a),
+    runsOn: a.runsOn || 'phone', cloudRunning: cloudrun.isRunning(a.id),
+    inputs: ((manifest?.triggers || []).find((t) => t.type === 'manual' && Array.isArray(t.inputs)) || {}).inputs || [],
     package: rec ? { version: manifest.version, channel: rec.channel, publishedAt: rec.publishedAt, permissions: manifest.permissions, triggers: manifest.triggers, http: manifest.http || null, evals: rec.package.evals, history: rec.history, commit: rec.package.commit } : null,
     settings: manifest ? settings.view(a.id, manifest) : [],
   };
@@ -156,7 +172,7 @@ const server = http.createServer(async (req, res) => {
     // ---- public: session and accounts ----
     if (p === '/api/session' && req.method === 'GET') {
       const u = currentUser(req);
-      return json(res, 200, { authed: !!u, user: auth.publicUser(u), version: APP_VERSION, mailConfigured: mail.configured() });
+      return json(res, 200, { authed: !!u, user: auth.publicUser(u), version: APP_VERSION, mailConfigured: mail.configured(), openSignup: config.OPEN_SIGNUP });
     }
     if (p === '/api/login' && req.method === 'POST') {
       const body = await readBody(req).catch(() => ({}));
@@ -174,8 +190,13 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/signup' && req.method === 'POST') {
       const body = await readBody(req).catch(() => ({}));
       try {
-        const { user, duplicate } = auth.signup({ ...body, ip });
-        if (!duplicate) {
+        const { user, duplicate, token } = auth.signup({ ...body, ip });
+        if (!duplicate && token) {
+          // Open sign-up: the set-password link is the email check.
+          mail.send({ to: user.email, subject: 'Set your Pocket Box password', text: `Hi ${user.firstName},\n\nWelcome to Pocket Box. Set your password with this link (one use, 24 hours) and you're in:\n\n${BASE_URL}/#/reset/${token}\n\nIf you didn't sign up, ignore this email and nothing happens.\n` }).catch(() => {});
+          for (const ad of auth.admins()) mail.send({ to: ad.email, subject: `New Pocket Box sign-up: ${user.firstName} ${user.lastName}`, text: `${user.firstName} ${user.lastName} (${user.email}, ${user.phone}) signed up. No action needed; you can disable the account under People: ${BASE_URL}/#/people\n` }).catch(() => {});
+          bus.broadcast({ event: 'users' }, { adminsOnly: true });
+        } else if (!duplicate) {
           push.broadcast({ title: 'Access request', body: `${user.firstName} ${user.lastName} asked to join Pocket Box.`, url: '/#/people', tag: `signup:${user.id}` }, auth.admins().map((x) => x.id)).catch(() => {});
           for (const ad of auth.admins()) mail.send({ to: ad.email, subject: `Pocket Box access request: ${user.firstName} ${user.lastName}`, text: `${user.firstName} ${user.lastName} (${user.email}, ${user.phone}) asked for access.\n\nApprove in Pocket Box → People: ${BASE_URL}/#/people\n` }).catch(() => {});
           mail.send({ to: user.email, subject: 'We got your Pocket Box request', text: `Hi ${user.firstName},\n\nThanks for asking to join Pocket Box. The administrator reviews each request; once yours is approved you'll get another email with a link to set your password.\n\n${BASE_URL}\n` }).catch(() => {});
@@ -185,10 +206,13 @@ const server = http.createServer(async (req, res) => {
           const r = auth.forgot({ email: user.email, ip });
           const link = r ? `\n\nForgot it? Set a new password here (one use, 24 hours):\n${BASE_URL}/#/reset/${r.token}` : '';
           mail.send({ to: user.email, subject: 'You already have a Pocket Box account', text: `Hi ${user.firstName},\n\nSomeone (probably you) asked to create a Pocket Box account with this email, but you already have one. Sign in at ${BASE_URL}${link}\n\nIf this wasn't you, you can ignore this email.\n` }).catch(() => {});
+        } else if (user.status === 'unverified') {
+          const r = auth.forgot({ email: user.email, ip });
+          if (r) mail.send({ to: user.email, subject: 'Set your Pocket Box password', text: `Hi ${user.firstName},\n\nHere's a fresh link to set your Pocket Box password (one use, 24 hours):\n\n${BASE_URL}/#/reset/${r.token}\n` }).catch(() => {});
         } else if (user.status === 'pending') {
           mail.send({ to: user.email, subject: 'Your Pocket Box request is waiting for approval', text: `Hi ${user.firstName},\n\nYour request to join Pocket Box is still waiting for the administrator. You'll get an email with a link to set your password once it's approved.\n` }).catch(() => {});
         }
-        return json(res, 200, { ok: true, message: 'Thanks! Check your email for a confirmation. Once the administrator approves your request, you will get a link to set your password.' });
+        return json(res, 200, { ok: true, message: config.OPEN_SIGNUP ? 'Check your email: we sent a link to set your password. It works once, for 24 hours. (Check Spam if it isn\'t there in a minute.)' : 'Thanks! Check your email for a confirmation. Once the administrator approves your request, you will get a link to set your password.' });
       } catch (e) { return json(res, e.status || 500, { error: e.status ? e.message : 'Could not send the request.' }); }
     }
     if (p === '/api/forgot' && req.method === 'POST') {
@@ -241,6 +265,10 @@ async function studioApi(req, res, p, url, user) {
       crew: Object.entries(crew.CREW).map(([id, c]) => ({ id, name: c.name, emoji: c.emoji })),
       permissions: PERMISSIONS, publicKey: packages.publicKey(),
     });
+  }
+  if (p === '/api/me/prefs') {
+    if (req.method === 'GET') return json(res, 200, { prefs: prefs.get(user.id), mailConfigured: mail.configured() });
+    if (req.method === 'POST') { const b = await readBody(req).catch(() => ({})); return json(res, 200, { prefs: prefs.set(user.id, b) }); }
   }
   if (p === '/api/me/about') {
     if (req.method === 'GET') return json(res, 200, { about: room.aboutMe(user.id) });
@@ -295,6 +323,18 @@ async function studioApi(req, res, p, url, user) {
   }
   const dm = p.match(/^\/api\/devices\/([a-f0-9]{12})$/);
   if (dm && req.method === 'DELETE') return json(res, devices.revoke(user.id, dm[1], { admin: isAdmin(user) }) ? 200 : 404, { ok: true });
+
+  // ---- ready-made agents ----
+  if (p === '/api/templates' && req.method === 'GET') return json(res, 200, { templates: templates.list() });
+  const tm = p.match(/^\/api\/templates\/([a-z0-9-]+)\/install$/);
+  if (tm && req.method === 'POST') {
+    const b = await readBody(req).catch(() => ({}));
+    if (auth.limited(`install:${user.id}`, 30, 3600 * 1000)) return json(res, 429, { error: 'Too many installs in an hour.' });
+    try {
+      const a = await templates.install(user, tm[1], { values: b.values || {}, when: b.when || {}, live: b.live !== false, title: b.title, runsOn: b.runsOn });
+      return json(res, 201, agentView(a, user));
+    } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+  }
 
   // ---- agents ----
   if (p === '/api/agents' && req.method === 'GET') {
@@ -356,6 +396,50 @@ async function studioApi(req, res, p, url, user) {
     try { crew.resume(a); return json(res, 202, { ok: true }); } catch (e) { return json(res, e.status || 500, { error: e.message }); }
   }
   if (action === 'pause' && req.method === 'POST') { bus.stop(a.id); return json(res, 202, { ok: true }); }
+  if (action === 'quick' && req.method === 'POST') {
+    if (a.ownerId !== user.id) return json(res, 403, { error: 'Only the agent\'s owner can change it.' });
+    if (!bus.start(a.id)) return json(res, 409, { error: 'Wait for the current step to finish.' });
+    try {
+      const b = await readBody(req).catch(() => ({}));
+      const done = await crew.quickEdit(a, { at: b.at, days: b.days, minutes: b.minutes });
+      if (done.length) {
+        const msg = store.addMessage(a, { agentId: 'system', agentName: 'Pocket Box', emoji: '📦', kind: 'system', summary: done.join(' ').slice(0, 160), content: done.join(' ') });
+        store.saveAgent(a);
+        bus.publish(a, { event: 'message', message: msg });
+      }
+      return json(res, 200, { ...agentView(store.loadAgent(a.id), user), changed: done });
+    } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+    finally { bus.finish(a.id); }
+  }
+  if (action === 'where' && req.method === 'POST') {
+    if (a.ownerId !== user.id) return json(res, 403, { error: 'Only the agent\'s owner chooses where it runs.' });
+    const b = await readBody(req).catch(() => ({}));
+    if (!['phone', 'cloud'].includes(b.runsOn)) return json(res, 400, { error: 'Choose phone or cloud.' });
+    a.runsOn = b.runsOn;
+    store.saveAgent(a);
+    return json(res, 200, agentView(a, user));
+  }
+  if (action === 'snooze' && req.method === 'POST') {
+    if (a.ownerId !== user.id) return json(res, 403, { error: 'Only the agent\'s owner can snooze it.' });
+    const b = await readBody(req).catch(() => ({}));
+    const minutes = b.until === 'off' ? 0 : b.until === 'today' ? null : Math.min(Math.max(Number(b.minutes) || 60, 15), 7 * 24 * 60);
+    if (b.until === 'today') { const d = new Date(); d.setHours(23, 59, 0, 0); a.snoozeUntil = d.getTime(); }
+    else a.snoozeUntil = minutes ? Date.now() + minutes * 60000 : null;
+    store.saveAgent(a);
+    return json(res, 200, agentView(a, user));
+  }
+  if (action === 'run' && req.method === 'POST') {
+    if (a.ownerId !== user.id) return json(res, 403, { error: 'Only the agent\'s owner can run it.' });
+    const rec = packages.load(a.id);
+    if (!rec) return json(res, 409, { error: 'It has to be built first.' });
+    if (rec.channel === 'off') return json(res, 409, { error: 'It is switched off. Turn it on first.' });
+    const missing = settings.missing(a.id, rec.package.manifest);
+    if (missing.length) return json(res, 409, { error: `It needs your settings first: ${missing.join(', ')}.` });
+    if (cloudrun.isRunning(a.id)) return json(res, 409, { error: 'It is running right now.' });
+    const b = await readBody(req).catch(() => ({}));
+    const run = await cloudrun.run(a, { type: 'manual', input: cleanInputs(rec.package.manifest, b.input) }, { onRun: (r) => afterRun(a.id, r) });
+    return run ? json(res, 200, { run }) : json(res, 409, { error: 'It could not run just now.' });
+  }
   if (action === 'channel' && req.method === 'POST') {
     const b = await readBody(req).catch(() => ({}));
     if (!['live', 'shadow', 'off'].includes(b.channel)) return json(res, 400, { error: 'Channel is live, shadow or off.' });
@@ -430,7 +514,7 @@ async function deviceApi(req, res, p, url) {
       owner: { firstName: owner.firstName },
       handoff: { used: devices.handoffUsage(device.ownerId), cap: config.HANDOFF_DAILY_CAP },
       agents: list.map(({ a, rec }) => ({
-        agentId: a.id, title: a.title, icon: a.icon || null, channel: rec.channel,
+        agentId: a.id, title: a.title, icon: a.icon || null, channel: rec.channel, runsOn: a.runsOn || 'phone',
         package: rec.channel === 'off' ? null : rec.package, signature: rec.channel === 'off' ? null : rec.signature,
         settings: settings.values(a.id), missingSettings: settings.missing(a.id, rec.package.manifest),
       })),
@@ -447,10 +531,9 @@ async function deviceApi(req, res, p, url) {
     const own = ownAgent(b.agentId);
     if (!own) return json(res, 404, { error: 'No such agent on this phone.' });
     const run = devices.recordRun(device, own.a.id, b);
-    const a = store.loadAgent(own.a.id);
-    a.lastRun = { at: run.at, ok: run.ok, channel: run.channel, summary: run.notifications[0] ? run.notifications[0].title : run.ok ? 'Ran, nothing to say' : 'Failed' };
-    store.saveAgent(a);
-    bus.publish(a, { event: 'run', run });
+    afterRun(own.a.id, run);
+    // The phone showed it already; this only sends the email copy, if wanted.
+    deliver(store.loadAgent(own.a.id), run.notifications, { channel: run.channel, viaPush: false }).catch(() => {});
     return json(res, 201, { ok: true, id: run.id });
   }
   if (p === '/api/device/http' && req.method === 'POST') {
@@ -458,7 +541,7 @@ async function deviceApi(req, res, p, url) {
     const own = ownAgent(b.agentId);
     if (!own) return json(res, 404, { error: 'No such agent on this phone.' });
     if (!(own.rec.package.manifest.permissions || []).includes('http')) return json(res, 403, { error: 'This agent may not read the web.' });
-    return json(res, 200, await devices.httpGet(own.rec.package.manifest, b.url));
+    return json(res, 200, await devices.httpGet(own.rec.package.manifest, b.url, settings.values(own.a.id)));
   }
   if (p === '/api/device/handoff' && req.method === 'POST') {
     const b = await readBody(req).catch(() => ({}));
@@ -495,7 +578,7 @@ setTimeout(() => {
     try { crew.resume(a); console.log(`  resumed ${a.title}`); } catch (e) { console.error(`resume ${a.id}: ${e.message}`); }
   }
 }, 8000);
-scheduler.start();
+scheduler.start({ onCloudRun: afterRun });
 
 let stopping = false;
 async function gracefulStop(signal) {

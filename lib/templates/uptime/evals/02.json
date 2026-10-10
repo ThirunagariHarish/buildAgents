@@ -1,0 +1,27 @@
+{
+ "name": "One failure is a blip",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://shop.example.com/"
+ },
+ "http": {
+  "https://shop.example.com/": {
+   "status": 502,
+   "text": ""
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "state": {
+    "up": true,
+    "misses": 1,
+    "since": "08:00"
+   }
+  }
+ }
+}

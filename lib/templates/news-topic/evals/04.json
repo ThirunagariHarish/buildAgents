@@ -1,0 +1,25 @@
+{
+ "name": "Feed down is quiet",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "topic": "x"
+ },
+ "memory": {
+  "seen": [
+   "a"
+  ]
+ },
+ "http": {
+  "https://news.google.com/rss/search*": {
+   "status": 500,
+   "text": ""
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

@@ -1,0 +1,23 @@
+{
+ "name": "Warns three days ahead",
+ "trigger": {
+  "type": "schedule"
+ },
+ "now": "2026-10-12T03:30:00Z",
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "bills": "Rent 1, Phone 15, Card 22",
+  "lead": 3
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Phone"
+   ],
+   "bodyIncludes": [
+    "in 3 days"
+   ]
+  }
+ }
+}

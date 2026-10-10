@@ -1,0 +1,17 @@
+{
+ "name": "Healthy site is quiet",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://shop.example.com/"
+ },
+ "http": {
+  "https://shop.example.com/": "ok"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

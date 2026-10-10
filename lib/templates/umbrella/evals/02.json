@@ -1,0 +1,18 @@
+{
+ "name": "Nice day stays quiet",
+ "trigger": {
+  "type": "schedule"
+ },
+ "location": {
+  "lat": 17.38,
+  "lon": 78.48
+ },
+ "http": {
+  "https://api.open-meteo.com/v1/forecast*": "{\"hourly\": {\"time\": [], \"precipitation_probability\": []}, \"daily\": {\"precipitation_probability_max\": [10], \"temperature_2m_max\": [28], \"temperature_2m_min\": [19]}}"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

@@ -1,0 +1,21 @@
+{
+ "name": "Above target stays quiet",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://shop.example.com/p/1",
+  "target": 800
+ },
+ "http": {
+  "https://shop.example.com/p/1": "<span class=price>$899.00</span>"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "lastPrice": 899
+  }
+ }
+}

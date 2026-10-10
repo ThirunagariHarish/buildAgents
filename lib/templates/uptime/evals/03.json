@@ -1,0 +1,30 @@
+{
+ "name": "Second failure alerts",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://shop.example.com/"
+ },
+ "memory": {
+  "state": {
+   "up": true,
+   "misses": 1,
+   "since": "07:45"
+  }
+ },
+ "http": {
+  "https://shop.example.com/": {
+   "status": 0,
+   "text": ""
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "is down"
+   ]
+  }
+ }
+}

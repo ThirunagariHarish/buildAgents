@@ -1,0 +1,24 @@
+{
+ "name": "A page with no price warns once",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://shop.example.com/p/1",
+  "target": 800
+ },
+ "http": {
+  "https://shop.example.com/p/1": "<p>Sold by many sellers</p>"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "No price"
+   ]
+  },
+  "memory": {
+   "warned": true
+  }
+ }
+}

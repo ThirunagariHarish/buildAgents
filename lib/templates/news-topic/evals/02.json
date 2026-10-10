@@ -1,0 +1,32 @@
+{
+ "name": "New headlines are bundled, at most three",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "topic": "visa bulletin"
+ },
+ "memory": {
+  "seen": [
+   "Older story"
+  ]
+ },
+ "http": {
+  "https://news.google.com/rss/search*": "<rss><channel><item><title>A1 story here</title><link>l1</link></item><item><title>B2 story here</title><link>l2</link></item><item><title>C3 story here</title><link>l3</link></item><item><title>D4 story here</title><link>l4</link></item><item><title>Older story</title><link>l5</link></item></channel></rss>"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "4 new"
+   ],
+   "bodyIncludes": [
+    "A1 story",
+    "C3 story"
+   ],
+   "bodyExcludes": [
+    "D4 story"
+   ]
+  }
+ }
+}

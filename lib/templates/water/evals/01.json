@@ -1,0 +1,19 @@
+{
+ "name": "First reminder of the day",
+ "trigger": {
+  "type": "interval"
+ },
+ "now": "2026-10-12T03:30:00Z",
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "glasses": 6
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "bodyIncludes": [
+    "Glass 1 of 6"
+   ]
+  }
+ }
+}

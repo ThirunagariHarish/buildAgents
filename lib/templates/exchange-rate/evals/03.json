@@ -1,0 +1,26 @@
+{
+ "name": "Without targets, a 1% move notifies",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "from": "EUR",
+  "to": "USD"
+ },
+ "memory": {
+  "state": {
+   "ref": 1.1
+  }
+ },
+ "http": {
+  "https://open.er-api.com/v6/latest/*": "{\"rates\":{\"USD\":1.1125}}"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "moved up"
+   ]
+  }
+ }
+}

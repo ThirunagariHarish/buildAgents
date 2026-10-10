@@ -1,0 +1,25 @@
+{
+ "name": "Logging twice is harmless",
+ "trigger": {
+  "type": "manual",
+  "input": {
+   "did": "Yes"
+  }
+ },
+ "now": "2026-10-12T15:00:00Z",
+ "memory": {
+  "streak": {
+   "last": "2026-10-12",
+   "count": 2,
+   "best": 2
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Already"
+   ]
+  }
+ }
+}

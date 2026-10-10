@@ -1,0 +1,20 @@
+{
+ "name": "Cold dry morning suggests a jacket",
+ "trigger": {
+  "type": "schedule"
+ },
+ "settings": {
+  "place": "51.5, -0.12"
+ },
+ "http": {
+  "https://api.open-meteo.com/v1/forecast*": "{\"hourly\": {\"time\": [], \"precipitation_probability\": []}, \"daily\": {\"precipitation_probability_max\": [5], \"temperature_2m_max\": [9], \"temperature_2m_min\": [2]}}"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "jacket"
+   ]
+  }
+ }
+}

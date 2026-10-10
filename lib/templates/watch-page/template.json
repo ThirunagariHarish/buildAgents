@@ -1,0 +1,37 @@
+{
+  "name": "Watch a page",
+  "icon": "👀",
+  "category": "Watchers",
+  "summary": "Tells you when a web page changes, or when a word you care about appears on it.",
+  "examples": [
+    "Visa bulletin",
+    "Exam results",
+    "Government notices",
+    "Ticket pages"
+  ],
+  "fields": [
+    {
+      "key": "url",
+      "label": "Page to watch",
+      "type": "url",
+      "placeholder": "https://travel.state.gov/…"
+    },
+    {
+      "key": "lookFor",
+      "label": "Only tell me when this text appears (optional)",
+      "type": "text",
+      "placeholder": "e.g. Results declared",
+      "optional": true
+    }
+  ],
+  "when": {
+    "type": "interval",
+    "choices": [
+      30,
+      60,
+      180,
+      720
+    ],
+    "default": 60
+  }
+}

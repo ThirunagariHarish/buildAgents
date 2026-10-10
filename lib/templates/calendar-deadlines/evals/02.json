@@ -1,0 +1,18 @@
+{
+ "name": "An empty stretch is quiet",
+ "trigger": {
+  "type": "schedule"
+ },
+ "now": "2026-10-12T01:30:00Z",
+ "settings": {
+  "icsUrl": "https://calendar.example.com/private/basic.ics"
+ },
+ "http": {
+  "https://calendar.example.com/private/basic.ics": "BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nDTSTART:20261101\r\nSUMMARY:Later\r\nEND:VEVENT\r\nEND:VCALENDAR"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

@@ -1,0 +1,21 @@
+{
+ "name": "Past the goal stays quiet",
+ "trigger": {
+  "type": "interval"
+ },
+ "now": "2026-10-12T13:00:00Z",
+ "settings": {
+  "glasses": 3
+ },
+ "memory": {
+  "count": {
+   "day": "2026-10-12",
+   "n": 3
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

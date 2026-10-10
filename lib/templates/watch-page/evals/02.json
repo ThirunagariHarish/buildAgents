@@ -1,0 +1,21 @@
+{
+ "name": "No change, no notification",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://example.gov/bulletin"
+ },
+ "memory": {
+  "hash": "4d38965b",
+  "snapshot": "Same"
+ },
+ "http": {
+  "https://example.gov/bulletin": "<p>Same</p>"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

@@ -34,6 +34,9 @@ function evalsOn(dir) {
   assert.ok(!rb.ok && rb.problems.some((p) => /fetch/.test(p)) && rb.problems.some((p) => /http/.test(p)), 'bad agent should be refused');
   console.log('kit: forbidden word and undeclared permission refused');
 
+  // 2b. Every ready-made agent passes its own checks.
+  execFileSync(process.execPath, [path.join(__dirname, 'test-templates.js')], { stdio: 'inherit' });
+
   // 3. Signatures.
   const packages = require('../lib/packages');
   const manifest = JSON.parse(fs.readFileSync(path.join(good, 'agent.json'), 'utf8'));
@@ -57,6 +60,17 @@ function evalsOn(dir) {
     assert.strictEqual((await get('/agent-core.js')).status, 200);
     console.log('server: Studio, Runtime, worker policy and sign-in all as expected');
   } catch (e) { console.error(log); throw e; } finally { srv.kill('SIGKILL'); }
+  // 5. A cloud run in its own process: the agent's code cannot reach the
+  //    Studio's process, and every ctx call is answered by the Studio.
+  const cloudrun = require('../lib/cloudrun');
+  const store = require('../lib/store');
+  const cag = store.createAgent({ ownerId: 'x', idea: 'cloud test' });
+  const sneaky = 'async function run(ctx) { let p = null; try { p = ctx["constr" + "uctor"]["constr" + "uctor"]("return process")(); } catch (e) {} await ctx.notify({ title: p ? "escaped " + typeof p.env : "contained", body: "ok" }); }';
+  packages.publish({ agent: cag, manifest: { ...manifest, permissions: ['notify'], settings: [] }, code: sneaky, report: r, commit: 'test' });
+  const run = await cloudrun.run(store.loadAgent(cag.id), { type: 'manual' });
+  assert.ok(run && run.ok, `cloud run should finish: ${run && run.error}`);
+  console.log(`cloud run: finished in its own process; agent saw "${run.notifications[0].title}" (it may reach its own child process, never the Studio's)`);
+
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('selftest: all good');
 })().catch((e) => { console.error(`selftest FAILED: ${e.message}`); process.exit(1); });

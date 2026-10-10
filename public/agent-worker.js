@@ -63,7 +63,7 @@ self.onmessage = async (ev) => {
   const started = Date.now();
   let made;
   try {
-    made = Core.makeCtx({ manifest: m.manifest, trigger: m.trigger, settings: m.settings, host });
+    made = Core.makeCtx({ manifest: m.manifest, trigger: m.trigger, settings: m.settings, host, tz: m.tz });
     // Compile first (needs the compiler), then remove every way to compile more.
     // eslint-disable-next-line no-new-func
     const compiled = new Function('ctx', `'use strict';\n${m.code}\n;return run(ctx);`);

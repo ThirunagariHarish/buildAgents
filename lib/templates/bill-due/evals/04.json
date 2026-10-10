@@ -1,0 +1,18 @@
+{
+ "name": "A day 31 bill lands on the last day of short months",
+ "trigger": {
+  "type": "schedule"
+ },
+ "now": "2026-11-29T09:00:00Z",
+ "settings": {
+  "bills": "Insurance 31"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "bodyIncludes": [
+    "tomorrow"
+   ]
+  }
+ }
+}

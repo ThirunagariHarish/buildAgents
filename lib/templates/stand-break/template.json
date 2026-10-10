@@ -1,0 +1,30 @@
+{
+  "name": "Stand and stretch",
+  "icon": "🧍",
+  "category": "Health",
+  "summary": "A nudge to get up during work hours on weekdays, with a different stretch each time.",
+  "fields": [
+    {
+      "key": "start",
+      "label": "Work starts",
+      "type": "time",
+      "default": "09:00"
+    },
+    {
+      "key": "end",
+      "label": "Work ends",
+      "type": "time",
+      "default": "18:00"
+    }
+  ],
+  "when": {
+    "type": "interval",
+    "choices": [
+      30,
+      45,
+      60,
+      90
+    ],
+    "default": 60
+  }
+}

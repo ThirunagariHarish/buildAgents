@@ -1,0 +1,30 @@
+{
+ "name": "Recovery is announced",
+ "trigger": {
+  "type": "interval"
+ },
+ "settings": {
+  "url": "https://shop.example.com/"
+ },
+ "memory": {
+  "state": {
+   "up": false,
+   "misses": 4,
+   "since": "07:45"
+  }
+ },
+ "http": {
+  "https://shop.example.com/": "ok"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "back up"
+   ],
+   "bodyIncludes": [
+    "07:45"
+   ]
+  }
+ }
+}

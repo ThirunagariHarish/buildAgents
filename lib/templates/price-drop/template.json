@@ -1,0 +1,35 @@
+{
+  "name": "Price drop",
+  "icon": "🏷️",
+  "category": "Shopping",
+  "summary": "Watches a product page and tells you when the price falls to your target.",
+  "examples": [
+    "A phone you want",
+    "Flights",
+    "Hotel rate"
+  ],
+  "fields": [
+    {
+      "key": "url",
+      "label": "Product page",
+      "type": "url",
+      "placeholder": "https://…"
+    },
+    {
+      "key": "target",
+      "label": "Tell me at or below this price",
+      "type": "number",
+      "placeholder": "e.g. 799"
+    }
+  ],
+  "when": {
+    "type": "interval",
+    "choices": [
+      60,
+      180,
+      360,
+      720
+    ],
+    "default": 360
+  }
+}

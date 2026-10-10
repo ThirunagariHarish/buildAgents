@@ -1,0 +1,19 @@
+{
+ "name": "Nudges during work hours",
+ "trigger": {
+  "type": "interval"
+ },
+ "now": "2026-10-12T05:00:00Z",
+ "tz": "Asia/Kolkata",
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "stand up"
+   ]
+  },
+  "memory": {
+   "i": 1
+  }
+ }
+}

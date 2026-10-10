@@ -1,0 +1,29 @@
+{
+  "name": "Air quality alert",
+  "icon": "🌫️",
+  "category": "Health",
+  "summary": "Tells you when the air near you turns unhealthy, and when it's clear again.",
+  "fields": [
+    {
+      "key": "place",
+      "label": "Where (lat, lon), used when location is off",
+      "type": "text",
+      "optional": true
+    },
+    {
+      "key": "limit",
+      "label": "Warn above this US AQI",
+      "type": "number",
+      "default": "100"
+    }
+  ],
+  "when": {
+    "type": "interval",
+    "choices": [
+      60,
+      180,
+      360
+    ],
+    "default": 180
+  }
+}

@@ -1,0 +1,13 @@
+{
+ "name": "Quiet on weekends",
+ "trigger": {
+  "type": "interval"
+ },
+ "now": "2026-10-11T05:00:00Z",
+ "tz": "Asia/Kolkata",
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

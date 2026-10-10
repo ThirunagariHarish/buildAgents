@@ -1,0 +1,43 @@
+{
+  "id": "watch-page",
+  "name": "Watch a page",
+  "icon": "👀",
+  "version": "1.0.0",
+  "description": "Checks a web page on a schedule and tells you when it changes, or when a word you care about appears.",
+  "permissions": [
+    "notify",
+    "memory",
+    "http"
+  ],
+  "http": {
+    "allowFromSettings": [
+      "url"
+    ]
+  },
+  "triggers": [
+    {
+      "type": "interval",
+      "minutes": 60
+    },
+    {
+      "type": "manual",
+      "label": "Check now"
+    }
+  ],
+  "settings": [
+    {
+      "key": "url",
+      "label": "Page to watch",
+      "type": "url"
+    },
+    {
+      "key": "lookFor",
+      "label": "Only tell me when this text appears",
+      "type": "text",
+      "optional": true
+    }
+  ],
+  "budget": {
+    "steps": 12
+  }
+}
