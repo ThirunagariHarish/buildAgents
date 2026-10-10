@@ -1,38 +1,41 @@
-run: 96  commit: dd36711  ssh step: success  at: 2026-10-10T20:46:46Z
+run: 97  commit: 9a3ed88  ssh step: success  at: 2026-10-10T20:48:12Z
 
-Cloning into '/opt/pocketbox'...
-HEAD: dd36711   domain: agents.cashflowus.com   port: 3401
+HEAD: 9a3ed88   domain: agents.cashflowus.com   port: 3401
 == prerequisites ==
 node v22.23.3, claude 2.1.287 (Claude Code), build user 999, bwrap /usr/bin/bwrap
 == env file ==
 keys in /etc/pocketbox.env: PB_PORT PB_DOMAIN PB_DATA_DIR PB_HIDE_DIRS CLAUDE_CODE_OAUTH_TOKEN 
 == data ==
-accounts: copied from Box (1 user(s))
 data: root 711, work: root 711
 == sandbox ==
 bubblewrap: on (read-only system, Pocket Box and Box data hidden, own repo only)
 == service ==
 service: active
-   Oct 10 20:46:18 srv1349789 systemd[1]: Started pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone.
-   Oct 10 20:46:18 srv1349789 node[2404418]:   Pocket Box is running at http://localhost:3401 (public https://agents.cashflowus.com)
+   Oct 10 20:47:54 srv1349789 node[2404418]:   SIGTERM: 0 run(s) finishing their current turn…
+   Oct 10 20:47:54 srv1349789 systemd[1]: Stopping pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone...
+   Oct 10 20:47:54 srv1349789 systemd[1]: pocketbox.service: Deactivated successfully.
+   Oct 10 20:47:54 srv1349789 systemd[1]: Stopped pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone.
+   Oct 10 20:47:54 srv1349789 systemd[1]: Started pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone.
+   Oct 10 20:47:54 srv1349789 node[2410393]:   Pocket Box is running at http://localhost:3401 (public https://agents.cashflowus.com)
 local /: HTTP 200
 local /runtime: HTTP 200
 api without sign-in: HTTP 401 (401 = sign-in enforced)
 worker policy: Content-Security-Policy: default-src 'none'; script-src 'self' 'unsafe-eval'; connect-src 'none'
 accounts: 1 user(s): harishkumart1994@gmail.com (admin, approved)
+service sees hidden dirs: PB_HIDE_DIRS=/opt/box/data
 signing key: not created yet
 == route (k3s Traefik) ==
-   namespace/pocketbox created
-   service/pocketbox created
-   endpointslice.discovery.k8s.io/pocketbox-host created
-   ingress.networking.k8s.io/pocketbox created
-   certificate: pocketbox-tls ready=False 
+   namespace/pocketbox unchanged
+   service/pocketbox unchanged
+   endpointslice.discovery.k8s.io/pocketbox-host unchanged
+   ingress.networking.k8s.io/pocketbox unchanged
+   certificate: pocketbox-tls ready=True 
 == claude ==
-haiku: OK (4s) -> OK
-sonnet: OK (2s) -> OK
+haiku: OK (2s) -> OK
+sonnet: OK (3s) -> OK
 opus: OK (3s) -> OK
 claude inside the crew sandbox: OK
-data hidden inside the sandbox: 0 8 (0 0 = hidden)
+data hidden inside the sandbox: 0 0 (0 0 = hidden)
 == the domain, as the internet reaches it ==
 https://agents.cashflowus.com/ -> HTTP 200
 https://agents.cashflowus.com/runtime -> HTTP 200
