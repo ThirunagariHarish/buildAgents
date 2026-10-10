@@ -237,7 +237,7 @@
     const maxSteps = Number((m.budget && m.budget.steps) || 30);
     const maxHandoffs = Number((m.budget && m.budget.handoffsPerRun) ?? 1);
     const live = a.channel === 'live';
-    const record = { notifications: [], log: [], steps: 0, handoffs: 0, httpReads: 0 };
+    const record = { notifications: [], log: [], steps: 0, handoffs: 0, httpReads: 0, webhooks: [] };
     R.running.add(a.agentId);
     markRun(a.agentId, trigger.type);
     render();
@@ -272,6 +272,15 @@
         record.httpReads += 1;
         return device('http', { agentId: a.agentId, url: u.toString() });
       },
+      async webhook(key, data) {
+        if (!((m.webhook && m.webhook.settings) || []).includes(key)) throw new Error(`"${key}" is not a webhook setting of this agent.`);
+        record.webhooks = record.webhooks || [];
+        if (record.webhooks.length >= 10) throw new Error('At most 10 webhook messages in one run.');
+        if (!live) { record.webhooks.push({ key, sent: false, held: true }); return { status: 0, sent: false, held: true }; }
+        const r = await device('webhook', { agentId: a.agentId, key, data });
+        record.webhooks.push({ key, sent: !!r.sent, status: r.status });
+        return r;
+      },
       async location() {
         if (Native) { const l = await Native.call('location', {}, 15000); return l && Number.isFinite(l.lat) ? l : null; }
         return new Promise((resolve) => {
@@ -293,7 +302,7 @@
         try { return (await device('handoff', { agentId: a.agentId, prompt })).text ?? null; } catch { return null; }
       },
     };
-    const PERM_OF = { memoryGet: 'memory', memorySet: 'memory', notify: 'notify', httpGet: 'http', location: 'location', model: 'model', handoff: 'handoff' };
+    const PERM_OF = { memoryGet: 'memory', memorySet: 'memory', notify: 'notify', httpGet: 'http', location: 'location', model: 'model', handoff: 'handoff', webhook: 'webhook' };
 
     return new Promise((resolve) => {
       const w = new Worker('/agent-worker.js');
@@ -307,7 +316,7 @@
         const run = {
           agentId: a.agentId, version: m.version, channel: live ? 'live' : 'shadow', trigger: trigger.type,
           ok: !!res.ok, error: res.ok ? null : res.error, steps: record.steps, durationMs: res.durationMs || 0,
-          notifications: record.notifications, log: record.log.slice(-30), handoffs: record.handoffs, httpReads: record.httpReads,
+          notifications: record.notifications, log: record.log.slice(-30), handoffs: record.handoffs, httpReads: record.httpReads, webhooks: record.webhooks,
         };
         report(run);
         const l = lastRuns(); l[a.agentId] = { ...(l[a.agentId] || {}), result: { ok: run.ok, error: run.error, at: Date.now(), said: record.notifications[0]?.title || null } }; ls.set(K.last, l);

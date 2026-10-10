@@ -1,0 +1,6 @@
+{
+  "name": "Hook address not set yet: fails clearly",
+  "trigger": { "type": "schedule" },
+  "settings": { "message": "Hello" },
+  "expect": { "error": "not a web address yet" }
+}

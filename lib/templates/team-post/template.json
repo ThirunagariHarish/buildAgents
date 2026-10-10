@@ -1,0 +1,31 @@
+{
+  "name": "Post to a team channel",
+  "icon": "📣",
+  "category": "Work",
+  "summary": "Posts your message to a Slack, Discord or Teams channel at the time you choose: standup, timesheets, the weekly review.",
+  "examples": [
+    "Standup in 15 minutes",
+    "Fill in your timesheet",
+    "Bins go out tonight"
+  ],
+  "fields": [
+    {
+      "key": "message",
+      "label": "Message",
+      "type": "text",
+      "placeholder": "e.g. Standup in 15 minutes 👋"
+    },
+    {
+      "key": "hook",
+      "label": "Channel webhook address",
+      "type": "secret",
+      "placeholder": "https://hooks.slack.com/services/…",
+      "help": "Slack: add the Incoming Webhooks app to a channel. Discord: channel settings → Integrations → Webhooks. Paste the address it gives you."
+    }
+  ],
+  "when": {
+    "type": "schedule",
+    "default": "09:45",
+    "days": ["mon", "tue", "wed", "thu", "fri"]
+  }
+}

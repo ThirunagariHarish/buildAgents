@@ -27,6 +27,7 @@ const templates = require('./lib/templates');
 const plans = require('./lib/plans');
 const billing = require('./lib/billing');
 const shares = require('./lib/shares');
+const telegram = require('./lib/telegram');
 const mineCount = (userId) => store.listAgents().filter((x) => x.ownerId === userId).length;
 const prefs = require('./lib/prefs');
 const { deliver } = require('./lib/deliver');
@@ -343,10 +344,17 @@ async function studioApi(req, res, p, url, user) {
     try { auth.login({ email: user.email, password: b.password, ip: clientIp(req) }); } catch { return json(res, 400, { error: 'That password isn\'t right.' }); }
     for (const a of store.listAgents().filter((x) => x.ownerId === user.id)) { bus.stop(a.id); try { packages.setChannel(a.id, 'off'); } catch {} shares.revoke(a.id); store.deleteAgent(a.id); }
     for (const d of devices.list(user.id)) devices.revoke(user.id, d.id);
+    telegram.unlink(user.id);
     auth.deleteUser(user.id);
     res.setHeader('Set-Cookie', sessionCookie(req, '', 0));
     return json(res, 200, { ok: true });
   }
+  if (p === '/api/me/telegram' && req.method === 'GET') return json(res, 200, telegram.status(user.id));
+  if (p === '/api/me/telegram' && req.method === 'POST') {
+    const url = telegram.linkFor(user.id);
+    return url ? json(res, 200, { url }) : json(res, 409, { error: 'Telegram isn\'t set up on this Pocket Box yet.' });
+  }
+  if (p === '/api/me/telegram' && req.method === 'DELETE') { telegram.unlink(user.id); return json(res, 200, telegram.status(user.id)); }
   if (p === '/api/me/prefs') {
     if (req.method === 'GET') return json(res, 200, { prefs: prefs.get(user.id), mailConfigured: mail.configured() });
     if (req.method === 'POST') { const b = await readBody(req).catch(() => ({})); return json(res, 200, { prefs: prefs.set(user.id, b) }); }
@@ -735,6 +743,18 @@ async function deviceApi(req, res, p, url) {
     if (!(own.rec.package.manifest.permissions || []).includes('http')) return json(res, 403, { error: 'This agent may not read the web.' });
     return json(res, 200, await devices.httpGet(own.rec.package.manifest, b.url, settings.values(own.a.id)));
   }
+  if (p === '/api/device/webhook' && req.method === 'POST') {
+    const b = await readBody(req).catch(() => ({}));
+    const own = ownAgent(b.agentId);
+    if (!own) return json(res, 404, { error: 'No such agent on this phone.' });
+    const m = own.rec.package.manifest;
+    if (!(m.permissions || []).includes('webhook') || !((m.webhook && m.webhook.settings) || []).includes(b.key)) return json(res, 403, { error: 'This agent may not send to that hook.' });
+    // Only live, unsnoozed agents send; shadow runs only record what they would have sent.
+    if (own.rec.channel !== 'live' || (own.a.snoozeUntil && own.a.snoozeUntil > Date.now())) return json(res, 200, { status: 0, sent: false, held: true });
+    if (auth.limited(`webhook:${own.a.id}`, 60, 3600 * 1000)) return json(res, 429, { error: 'Too many webhook messages this hour.' });
+    if (JSON.stringify(b.data ?? {}).length > 20000) return json(res, 400, { error: 'A webhook message is over 20 KB.' });
+    return json(res, 200, await devices.httpPost(settings.values(own.a.id)[b.key], b.data ?? {}));
+  }
   if (p === '/api/device/handoff' && req.method === 'POST') {
     const b = await readBody(req).catch(() => ({}));
     const own = ownAgent(b.agentId);
@@ -772,6 +792,7 @@ setTimeout(() => {
   }
 }, 8000);
 scheduler.start({ onCloudRun: afterRun });
+telegram.start().catch((e) => console.error(`telegram: ${e.message}`));
 
 let stopping = false;
 async function gracefulStop(signal) {

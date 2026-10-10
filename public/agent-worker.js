@@ -27,6 +27,7 @@ const host = {
   memorySet: (k, v) => call('memorySet', k, v),
   notify: (n) => call('notify', n),
   httpGet: (u) => call('httpGet', u),
+  webhook: (k, d) => call('webhook', k, d),
   location: () => call('location'),
   model: (p, o) => call('model', p, o),
   handoff: (p) => call('handoff', p),

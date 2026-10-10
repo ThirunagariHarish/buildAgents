@@ -1,0 +1,42 @@
+{
+  "id": "team-post",
+  "name": "Post to a team channel",
+  "icon": "📣",
+  "version": "1.0.0",
+  "description": "At the time you choose, posts your message to a Slack, Discord or Teams channel through its webhook, and tells you if the post did not go through.",
+  "permissions": [
+    "webhook",
+    "notify"
+  ],
+  "webhook": {
+    "settings": [
+      "hook"
+    ]
+  },
+  "triggers": [
+    {
+      "type": "schedule",
+      "at": "09:45",
+      "days": ["mon", "tue", "wed", "thu", "fri"]
+    },
+    {
+      "type": "manual",
+      "label": "Post now"
+    }
+  ],
+  "settings": [
+    {
+      "key": "message",
+      "label": "Message",
+      "type": "text"
+    },
+    {
+      "key": "hook",
+      "label": "Channel webhook address",
+      "type": "secret"
+    }
+  ],
+  "budget": {
+    "steps": 3
+  }
+}

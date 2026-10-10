@@ -24,10 +24,11 @@ An agent is three things in this repository. Pocket Box signs them into a packag
 }
 ```
 
-- `permissions`: only what the code uses. `notify`, `memory`, `location`, `http` (with `http.allow` host names), `model`, `handoff`.
+- `permissions`: only what the code uses. `notify`, `memory`, `location`, `http` (with `http.allow` host names), `model`, `handoff`, `webhook` (with `webhook.settings`).
 - `triggers`: `schedule` (`at` "HH:MM" in the phone's time zone, optional `days`), `interval` (`minutes`, 15 to 1440), `manual` (a button, optional `label`), `open` (each time the Runtime opens).
 - `triggers[].inputs` (manual trigger only, at most 5): questions asked when the owner taps Run, e.g. `{ "type": "manual", "label": "Log it", "inputs": [{ "key": "amount", "label": "How many?", "type": "number" }, { "key": "how", "label": "How was it?", "type": "choice", "options": ["Good", "Bad"] }] }`. Types: `text`, `number`, `choice` (2-8 `options`). The code reads `ctx.input.amount`; scenarios set `"trigger": { "type": "manual", "input": { "amount": 2 } }`.
 - `http.allowFromSettings`: setting keys (type `url` or `secret`) whose https address the agent may also read, e.g. a page the owner chooses. Prefer `http.allow` when the host is fixed.
+- `webhook.settings`: setting keys (type `url` or `secret`) holding hook addresses the owner pastes in (a Slack or Discord incoming webhook, Home Assistant, IFTTT, Zapier). The agent names the setting, never an address: `ctx.webhook.send("slackHook", { text: "..." })`. Slack and Discord take `{ "text": ... }` / `{ "content": ... }`.
 - `settings`: values the owner types once in the Studio (`text`, `url`, `number`, `secret`, `time`). The code reads them as `ctx.settings.<key>`. Never hard-code personal data.
 - `budget.steps`: the most ctx calls one run may make (default 30). `budget.handoffsPerRun` (default 1).
 
@@ -61,6 +62,7 @@ function parseIcs(text, day) { /* plain JavaScript helpers are fine */ return []
 | `await ctx.memory.get(key)` / `set(key, value)` | `memory` | JSON values, kept on the phone |
 | `await ctx.notify({ title, body })` | `notify` | shows a notification (in shadow mode it is only recorded) |
 | `await ctx.http.get(url)` | `http` | `{ status, text }`, https only, hosts in `http.allow` |
+| `await ctx.webhook.send(key, data)` | `webhook` | POSTs `data` as JSON to the address in setting `key` (listed in `webhook.settings`); `{ status, sent, held }`. In shadow mode (or while snoozed) nothing is sent: `held` is `true`. `status` 0 with `held` false means the hook could not be reached. At most 10 per run |
 | `await ctx.location.current()` | `location` | `{ lat, lon }` or `null` |
 | `await ctx.model.generate(prompt, { maxWords })` | `model` | text, or `null` when no model is available: always handle `null` |
 | `await ctx.handoff(prompt)` | `handoff` | text from the owner's Studio, or `null`; use only for hard reasoning |
@@ -70,6 +72,8 @@ Rules: prefer plain code and rules over models. Handle every failure (no network
 ## evals/*.json
 
 At least three scenarios: a normal run, an edge case, and a failure the agent must handle.
+
+For a webhook agent: scenarios record what `ctx.webhook.send` sent; check it with `"expect": { "webhook": { "count": 1, "includes": ["Standup"] } }` (also `min`, `max`). `"webhookStatus": 500` makes every send fail, to test that case.
 
 ```json
 {

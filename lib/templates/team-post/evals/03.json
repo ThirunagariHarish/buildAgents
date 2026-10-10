@@ -1,0 +1,7 @@
+{
+  "name": "The channel refuses: tells the owner",
+  "trigger": { "type": "manual" },
+  "settings": { "message": "Timesheets!", "hook": "https://discord.com/api/webhooks/1/x" },
+  "webhookStatus": 404,
+  "expect": { "webhook": { "count": 1 }, "notify": { "count": 1, "bodyIncludes": ["404"] } }
+}

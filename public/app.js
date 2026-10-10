@@ -289,6 +289,7 @@
   function onEvent(m) {
     const r = route();
     if (m.event === 'users' && r.name === 'people') return render({ transition: false });
+    if (m.event === 'prefs' && r.name === 'me') return render({ transition: false });
     if (!m.agentId) return;
     const here = r.name === 'a' && r.id === m.agentId && S.agent;
     if (!here) { if (r.name === 'home') softRefresh(600); return; }
@@ -729,7 +730,7 @@
       ${r.notifications.length ? r.notifications.map((n) => `<div class="feed-item" style="margin-top:12px"><div class="t">${esc(n.title)}</div><div class="b">${esc(n.body)}</div></div>`).join('') : `<div class="small muted" style="margin-top:10px">${r.ok ? 'Nothing to tell you this time.' : esc(r.error || '')}</div>`}
       ${r.error && r.notifications.length ? `<div class="note bad small" style="margin-top:10px">${esc(r.error)}</div>` : ''}
       <div class="row between" style="margin-top:12px">
-        <span class="tiny faint">v${esc(r.version)} · ${r.steps} steps · ${Math.round(r.durationMs)} ms${r.httpReads ? ` · ${r.httpReads} web reads` : ''}${r.handoffs ? ` · ${r.handoffs} hand-offs` : ''}</span>
+        <span class="tiny faint">v${esc(r.version)} · ${r.steps} steps · ${Math.round(r.durationMs)} ms${r.httpReads ? ` · ${r.httpReads} web reads` : ''}${(r.webhooks || []).length ? ` · ${r.webhooks.filter((w) => w.sent).length}/${r.webhooks.length} webhook${r.webhooks.length === 1 ? '' : 's'} sent` : ''}${r.handoffs ? ` · ${r.handoffs} hand-offs` : ''}</span>
         <span class="row" style="gap:4px">${r.log.length ? `<button class="btn ghost sm" data-act="runlog" data-id="${esc(r.id)}">Log</button>` : ''}${a.ownerId === S.session.user.id ? `<button class="btn soft sm" data-act="wrong" data-id="${esc(r.id)}">This was wrong</button>` : ''}</span>
       </div>
     </article>`).join('')}</div>`;
@@ -863,7 +864,7 @@
 
   // ---- you ------------------------------------------------------------------------
   async function meView() {
-    const [{ about }, pk, pr, pl] = await Promise.all([api('/api/me/about'), api('/api/push/key').catch(() => ({ devices: 0 })), api('/api/me/prefs').catch(() => ({})), api('/api/me/plan').catch(() => null)]);
+    const [{ about }, pk, pr, pl, tg] = await Promise.all([api('/api/me/about'), api('/api/push/key').catch(() => ({ devices: 0 })), api('/api/me/prefs').catch(() => ({})), api('/api/me/plan').catch(() => null), api('/api/me/telegram').catch(() => ({ available: false }))]);
     S.prefs = pr.prefs; S.prefsMail = pr.mailConfigured;
     const u = S.session.user;
     const theme = store.get('pb.theme', 'system');
@@ -882,6 +883,7 @@
           <label class="row" style="gap:10px"><input type="checkbox" name="emailAgents" ${S.prefs?.emailAgents ? 'checked' : ''} style="width:20px;height:20px"><span>Also email me what my live agents say${S.prefsMail === false ? ' <span class="small faint">(email isn\'t set up on the server)</span>' : ''}</span></label>
           <div class="field"><span>Quiet hours</span><div class="row" style="gap:8px"><input class="input" type="time" name="quietFrom" value="${esc(S.prefs?.quietFrom || '')}" style="flex:1;min-width:0"><span class="small muted">to</span><input class="input" type="time" name="quietTo" value="${esc(S.prefs?.quietTo || '')}" style="flex:1;min-width:0"></div></div>
           <div class="field"><span>Daily digest at</span><input class="input" type="time" name="digestAt" value="${esc(S.prefs?.digestAt || '18:00')}" style="max-width:50%"></div>
+          ${tg.available || tg.linked ? `<div class="row between" style="gap:10px"><span class="small"><strong>Telegram</strong> <span class="muted">${tg.linked ? `connected${tg.name ? ` to ${esc(tg.name)}` : ''}` : 'get agents\' messages in Telegram too'}</span></span>${tg.linked ? '<button type="button" class="btn ghost sm" data-act="tg-off">Disconnect</button>' : '<button type="button" class="btn soft sm" data-act="tg-on">Connect</button>'}</div>` : ''}
           <p class="small muted" style="margin:0">During quiet hours agents still run; only urgent ones buzz. Time zone: ${esc(S.prefs?.tz || Intl.DateTimeFormat().resolvedOptions().timeZone)}.</p>
           <div class="row"><button class="btn sm">Save</button></div>
         </form>
@@ -1234,6 +1236,8 @@
       case 'unshare': { try { S.agent = await api(`/api/agents/${a.id}/members/${el.dataset.user}`, { method: 'DELETE' }); const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(S.agent); } catch (err) { toast(err.message, 'bad'); } break; }
       case 'uninvite': { try { S.agent = await api(`/api/agents/${a.id}/invites?email=${encodeURIComponent(el.dataset.email)}`, { method: 'DELETE' }); const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(S.agent); } catch (err) { toast(err.message, 'bad'); } break; }
       case 'upgrade': { const r = await post('/api/billing/checkout', { plan: el.dataset.plan }); if (r && r.url) location.href = r.url; break; }
+      case 'tg-on': { const r = await post('/api/me/telegram'); if (r && r.url) { window.open(r.url, '_blank', 'noopener'); toast('Tap Start in Telegram, then come back.'); } break; }
+      case 'tg-off': { try { await api('/api/me/telegram', { method: 'DELETE' }); toast('Telegram disconnected.'); render({ transition: false }); } catch (err) { toast(err.message, 'bad'); } break; }
       case 'billing-portal': { const r = await post('/api/billing/portal'); if (r && r.url) location.href = r.url; break; }
       case 'delete-account':
         sheet(`<form class="stack"><div class="h3">Delete your account?</div><p class="small muted" style="margin:0">This removes your account and all your agents, their settings and runs, and unpairs your phones. It can't be undone.</p>
