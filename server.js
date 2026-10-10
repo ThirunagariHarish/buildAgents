@@ -712,9 +712,12 @@ async function deviceApi(req, res, p, url) {
       publicKey: packages.publicKey(), pushKey: push.publicKey(), version: APP_VERSION,
       device: { id: device.id, name: device.name, tz: device.tz },
       owner: { firstName: owner.firstName },
+      // How the owner wants to be reached; the Runtime applies it to what runs on the phone.
+      hush: (() => { const pr = prefs.get(owner.id); return { pauseUntil: pr.pauseUntil, quietFrom: pr.quietFrom, quietTo: pr.quietTo, tz: pr.tz }; })(),
       handoff: { used: devices.handoffUsage(device.ownerId), cap: plans.planOf(owner).handoffsPerDay },
       agents: list.map(({ a, rec }) => ({
         agentId: a.id, title: a.title, icon: a.icon || null, channel: rec.channel, runsOn: a.runsOn || 'phone',
+        snoozeUntil: a.snoozeUntil || null, notifyStyle: a.notifyStyle || 'normal',
         package: rec.channel === 'off' ? null : rec.package, signature: rec.channel === 'off' ? null : rec.signature,
         settings: settings.values(a.id), missingSettings: settings.missing(a.id, rec.package.manifest),
       })),

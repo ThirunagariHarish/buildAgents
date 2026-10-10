@@ -423,13 +423,14 @@
 
   // ---- home ----------------------------------------------------------------------
   async function homeView() {
-    const [list, , meta, devs] = await Promise.all([
+    const [list, , meta, devs, pr] = await Promise.all([
       api('/api/agents'),
       loadTemplates(),
       S.meta ? Promise.resolve(S.meta) : api('/api/meta'),
       S.devices ? Promise.resolve({ devices: S.devices }) : api('/api/devices').catch(() => ({ devices: [] })),
+      api('/api/me/prefs').catch(() => ({})),
     ]);
-    S.agents = list.agents; S.meta = meta; S.devices = devs.devices;
+    S.agents = list.agents; S.meta = meta; S.devices = devs.devices; if (pr.prefs) S.prefs = pr.prefs;
     const name = S.session.user?.firstName || '';
     const waiting = S.agents.filter((a) => a.needsYou && a.mine);
     const rest = S.agents.filter((a) => !(a.needsYou && a.mine));
@@ -440,6 +441,7 @@
         <h1 class="display" style="margin-top:10px">What should <em>your agent</em> do?</h1>
         <p class="lede">Say it the way you'd ask a friend. The room turns it into a brief; the crew builds, tests and signs it; your phone runs it.</p>
       </section>
+      ${pausedBanner()}
       <div data-install-slot="home" style="margin-bottom:16px">${installCard({ dismissible: true })}</div>
       <form data-form="new" class="composer glass rise">
         <textarea name="idea" data-grow rows="3" placeholder="Every weekday at 7:30, tell me if I need an umbrella and when to leave for my first meeting…" required></textarea>
@@ -584,6 +586,20 @@
         <div class="row"><button class="btn accent">Start watching</button></div>
       </form>
     </div>`;
+  }
+
+  /** "Pause all": a banner while it's on, and the choices to turn it on. */
+  const pausedUntil = () => (S.prefs?.pauseUntil && S.prefs.pauseUntil > Date.now() ? S.prefs.pauseUntil : null);
+  const pauseWhen = (t) => { const d = new Date(t); const today = d.toDateString() === new Date().toDateString(); return `${today ? '' : `${d.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}, `}${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`; };
+  function pausedBanner() {
+    const u = pausedUntil();
+    return u ? `<div class="glass card row between rise" style="gap:12px;margin-bottom:16px"><span class="small"><strong>All agents paused</strong> <span class="muted">until ${esc(pauseWhen(u))}. They still run; you'll see what they said here.</span></span><button class="btn soft sm" data-act="pause-all" data-for="off">Resume</button></div>` : '';
+  }
+  function pauseControls() {
+    const u = pausedUntil();
+    return `<div class="field"><span>Pause all agents</span><div class="row wrap" style="gap:8px">${u
+      ? `<span class="small muted" style="align-self:center">Paused until ${esc(pauseWhen(u))}</span><button type="button" class="chip" data-act="pause-all" data-for="off">Resume now</button>`
+      : '<button type="button" class="chip" data-act="pause-all" data-for="60">1 hour</button><button type="button" class="chip" data-act="pause-all" data-for="morning">Until tomorrow 8:00</button><button type="button" class="chip" data-act="pause-all" data-for="week">A week</button>'}</div></div>`;
   }
 
   function agentCard(a) {
@@ -881,6 +897,7 @@
         <form data-form="prefs" class="glass card stack rise">
           <div class="h3">How agents reach you</div>
           <label class="row" style="gap:10px"><input type="checkbox" name="emailAgents" ${S.prefs?.emailAgents ? 'checked' : ''} style="width:20px;height:20px"><span>Also email me what my live agents say${S.prefsMail === false ? ' <span class="small faint">(email isn\'t set up on the server)</span>' : ''}</span></label>
+          ${pauseControls()}
           <div class="field"><span>Quiet hours</span><div class="row" style="gap:8px"><input class="input" type="time" name="quietFrom" value="${esc(S.prefs?.quietFrom || '')}" style="flex:1;min-width:0"><span class="small muted">to</span><input class="input" type="time" name="quietTo" value="${esc(S.prefs?.quietTo || '')}" style="flex:1;min-width:0"></div></div>
           <div class="field"><span>Daily digest at</span><input class="input" type="time" name="digestAt" value="${esc(S.prefs?.digestAt || '18:00')}" style="max-width:50%"></div>
           ${tg.available || tg.linked ? `<div class="row between" style="gap:10px"><span class="small"><strong>Telegram</strong> <span class="muted">${tg.linked ? `connected${tg.name ? ` to ${esc(tg.name)}` : ''}` : 'get agents\' messages in Telegram too'}</span></span>${tg.linked ? '<button type="button" class="btn ghost sm" data-act="tg-off">Disconnect</button>' : '<button type="button" class="btn soft sm" data-act="tg-on">Connect</button>'}</div>` : ''}
@@ -1236,6 +1253,16 @@
       case 'unshare': { try { S.agent = await api(`/api/agents/${a.id}/members/${el.dataset.user}`, { method: 'DELETE' }); const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(S.agent); } catch (err) { toast(err.message, 'bad'); } break; }
       case 'uninvite': { try { S.agent = await api(`/api/agents/${a.id}/invites?email=${encodeURIComponent(el.dataset.email)}`, { method: 'DELETE' }); const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(S.agent); } catch (err) { toast(err.message, 'bad'); } break; }
       case 'upgrade': { const r = await post('/api/billing/checkout', { plan: el.dataset.plan }); if (r && r.url) location.href = r.url; break; }
+      case 'pause-all': {
+        const f = el.dataset.for;
+        let until = null;
+        if (f === '60') until = Date.now() + 3600000;
+        if (f === 'week') until = Date.now() + 7 * 86400000;
+        if (f === 'morning') { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(8, 0, 0, 0); until = d.getTime(); }
+        const r = await post('/api/me/prefs', { pauseUntil: until });
+        if (r) { S.prefs = r.prefs; toast(until ? `Paused until ${pauseWhen(until)}.` : 'Agents can reach you again.'); render({ transition: false }); }
+        break;
+      }
       case 'tg-on': { const r = await post('/api/me/telegram'); if (r && r.url) { window.open(r.url, '_blank', 'noopener'); toast('Tap Start in Telegram, then come back.'); } break; }
       case 'tg-off': { try { await api('/api/me/telegram', { method: 'DELETE' }); toast('Telegram disconnected.'); render({ transition: false }); } catch (err) { toast(err.message, 'bad'); } break; }
       case 'billing-portal': { const r = await post('/api/billing/portal'); if (r && r.url) location.href = r.url; break; }

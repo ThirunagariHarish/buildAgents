@@ -253,14 +253,18 @@
       },
       async notify(n) {
         const item = { agentId: a.agentId, icon: a.icon, agent: a.title, title: String(n.title).slice(0, 120), body: String(n.body || '').slice(0, 1200), at: Date.now(), shadow: !live };
+        // Paused, snoozed, quiet hours or a digest agent: it goes to the feed, not to the lock screen.
+        const held = live && holdNow(a);
+        if (held) item.held = held;
         record.notifications.push({ title: item.title, body: item.body });
         feedAdd(item);
         const shownTitle = a.icon && !item.title.startsWith(a.icon) ? `${a.icon} ${item.title}` : item.title;
-        if (live && Native) Native.post({ type: 'notify', title: shownTitle, body: item.body, tag: `agent:${a.agentId}:${item.at}` });
+        if (held) { /* recorded only */ }
+        else if (live && Native) Native.post({ type: 'notify', title: shownTitle, body: item.body, tag: `agent:${a.agentId}:${item.at}` });
         else if (live) {
           try {
             const reg = await navigator.serviceWorker?.ready;
-            if (reg && Notification.permission === 'granted') await reg.showNotification(shownTitle, { body: item.body, tag: `agent:${a.agentId}:${item.at}`, icon: '/icon.svg', badge: '/icon.svg', data: { url: '/runtime#feed' } });
+            if (reg && Notification.permission === 'granted') await reg.showNotification(shownTitle, { body: item.body, tag: `agent:${a.agentId}:${item.at}`, icon: '/icon.svg', badge: '/icon.svg', data: { url: '/runtime#feed' }, silent: ((R.state.agents || []).find((x) => x.agentId === a.agentId) || {}).notifyStyle === 'quiet' });
             else toast(`${item.title}: ${item.body}`.slice(0, 160));
           } catch { toast(`${item.title}: ${item.body}`.slice(0, 160)); }
         }
@@ -423,6 +427,23 @@
 
   // ---- asking for a run's inputs ----------------------------------------------------------
   const Speech = self.SpeechRecognition || self.webkitSpeechRecognition;
+  /** Why a live agent's notification should not buzz right now, or null. */
+  function holdNow(a) {
+    const info = (R.state.agents || []).find((x) => x.agentId === a.agentId) || {};
+    const h = R.state.hush || {};
+    const now = Date.now();
+    if (h.pauseUntil && h.pauseUntil > now) return 'paused';
+    if (info.snoozeUntil && info.snoozeUntil > now) return 'snoozed';
+    if (info.notifyStyle === 'digest') return 'in your digest';
+    if (info.notifyStyle !== 'urgent' && h.quietFrom && h.quietTo) {
+      let hm = '';
+      try { hm = new Intl.DateTimeFormat('en-GB', { timeZone: h.tz || undefined, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date()); } catch { hm = ''; }
+      const inQuiet = h.quietFrom <= h.quietTo ? hm >= h.quietFrom && hm < h.quietTo : hm >= h.quietFrom || hm < h.quietTo;
+      if (hm && inQuiet) return 'quiet hours';
+    }
+    return null;
+  }
+
   function askInputs(a, trig) {
     const field = (i) => {
       if (i.type === 'choice') return `<div class="row wrap" style="gap:8px" data-choice="${esc(i.key)}">${i.options.map((o, n) => `<button type="button" class="chip ${n === 0 ? 'on' : ''}" data-opt="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;
@@ -523,7 +544,7 @@
   function feedView(feed) {
     if (!feed.length) return '<div class="glass empty">What your agents say shows up here. In shadow mode this is the only place it shows up.</div>';
     return `<div class="stack">${feed.slice(0, 80).map((f) => `<div class="feed-item rise">
-      <div class="row between"><span class="small" style="font-weight:600">${esc(f.icon || '')} ${esc(f.agent)}</span>${f.shadow ? '<span class="pill accent">would have said</span>' : ''}</div>
+      <div class="row between"><span class="small" style="font-weight:600">${esc(f.icon || '')} ${esc(f.agent)}</span>${f.shadow ? '<span class="pill accent">would have said</span>' : f.held ? `<span class="pill">held: ${esc(f.held)}</span>` : ''}</div>
       <div class="t" style="margin-top:6px">${esc(f.title)}</div><div class="b">${esc(f.body)}</div><div class="m">${ago(f.at)}</div></div>`).join('')}
       <div class="row" style="justify-content:center"><button class="btn ghost sm" data-act="clear-feed">Clear</button></div></div>`;
   }
