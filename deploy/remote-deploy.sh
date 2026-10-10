@@ -98,6 +98,7 @@ echo "worker policy: $(curl -s -D - -o /dev/null --max-time 8 http://localhost:$
 echo "accounts: $(node -e "try{const u=JSON.parse(require('fs').readFileSync('$DATA/users.json'));console.log(u.length+' user(s): '+u.map(x=>x.email+' ('+x.role+', '+x.status+')').join(', '))}catch(e){console.log('none yet')}")"
 echo "service sees hidden dirs: $(tr '\0' '\n' < /proc/$(systemctl show -p MainPID --value pocketbox)/environ 2>/dev/null | grep '^PB_HIDE_DIRS=' || echo none)"
 echo "mail: $(set -a; . "$ENV_FILE"; set +a; timeout 30 node -e "require('./lib/mail').verify().then(r=>console.log(r.ok?'SMTP login OK as '+process.env.PB_SMTP_USER+' via '+process.env.PB_SMTP_HOST:'NOT working: '+r.error))")"
+echo "recent email (no content): $(tail -n 8 "$DATA/mail-log.jsonl" 2>/dev/null | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const l=d.trim().split('\n').filter(Boolean).map(x=>JSON.parse(x));console.log(l.length?'\n'+l.map(x=>'   '+x.at+'  '+(x.sent?'SENT ':'FAILED ')+x.to+'  \u201c'+x.subject+'\u201d'+(x.error?'  '+x.error:'')).join('\n'):'none logged yet')})")"
 echo "signing key: $(node -e "try{console.log(JSON.parse(require('fs').readFileSync('$DATA/keys/signing.json')).publicKey.slice(0,16)+'… (Ed25519)')}catch(e){console.log('not created yet')}")"
 
 # Box's port is reachable from the cluster; give Pocket Box's the same treatment.

@@ -178,8 +178,17 @@ const server = http.createServer(async (req, res) => {
         if (!duplicate) {
           push.broadcast({ title: 'Access request', body: `${user.firstName} ${user.lastName} asked to join Pocket Box.`, url: '/#/people', tag: `signup:${user.id}` }, auth.admins().map((x) => x.id)).catch(() => {});
           for (const ad of auth.admins()) mail.send({ to: ad.email, subject: `Pocket Box access request: ${user.firstName} ${user.lastName}`, text: `${user.firstName} ${user.lastName} (${user.email}, ${user.phone}) asked for access.\n\nApprove in Pocket Box → People: ${BASE_URL}/#/people\n` }).catch(() => {});
+          mail.send({ to: user.email, subject: 'We got your Pocket Box request', text: `Hi ${user.firstName},\n\nThanks for asking to join Pocket Box. The administrator reviews each request; once yours is approved you'll get another email with a link to set your password.\n\n${BASE_URL}\n` }).catch(() => {});
+        } else if (user.status === 'approved') {
+          // Already has an account: tell the inbox owner, with a reset link.
+          // The screen says the same either way, so nobody learns who has an account.
+          const r = auth.forgot({ email: user.email, ip });
+          const link = r ? `\n\nForgot it? Set a new password here (one use, 24 hours):\n${BASE_URL}/#/reset/${r.token}` : '';
+          mail.send({ to: user.email, subject: 'You already have a Pocket Box account', text: `Hi ${user.firstName},\n\nSomeone (probably you) asked to create a Pocket Box account with this email, but you already have one. Sign in at ${BASE_URL}${link}\n\nIf this wasn't you, you can ignore this email.\n` }).catch(() => {});
+        } else if (user.status === 'pending') {
+          mail.send({ to: user.email, subject: 'Your Pocket Box request is waiting for approval', text: `Hi ${user.firstName},\n\nYour request to join Pocket Box is still waiting for the administrator. You'll get an email with a link to set your password once it's approved.\n` }).catch(() => {});
         }
-        return json(res, 200, { ok: true, message: 'Thanks. The administrator will review your request; you will get a link to set your password once it is approved.' });
+        return json(res, 200, { ok: true, message: 'Thanks! Check your email for a confirmation. Once the administrator approves your request, you will get a link to set your password.' });
       } catch (e) { return json(res, e.status || 500, { error: e.status ? e.message : 'Could not send the request.' }); }
     }
     if (p === '/api/forgot' && req.method === 'POST') {
