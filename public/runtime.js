@@ -375,7 +375,7 @@
     scrim.innerHTML = `<div class="sheet"><div class="grab"></div><div class="stack">
       <div class="h2">Add it to your Home Screen</div>
       <p class="muted" style="margin:0">On iPhone, only Home Screen apps can get notifications, and notifications are how scheduled agents wake up.</p>
-      <ol class="prose" style="margin:0;padding-left:20px"><li>Tap <strong>Share</strong> in Safari's toolbar.</li><li>Choose <strong>Add to Home Screen</strong>.</li><li>Open <strong>Pocket</strong> from your Home Screen and tap <strong>Allow notifications</strong>.</li></ol>
+      <ol class="prose" style="margin:0;padding-left:20px"><li>Tap <strong>Share</strong> in Safari's toolbar.</li><li>Choose <strong>Add to Home Screen</strong>.</li><li>Open <strong>Pocket Box</strong> from your Home Screen, go to <strong>Your phones → Open the Runtime</strong>, and tap <strong>Allow</strong>.</li></ol>
       <div class="row" style="justify-content:flex-end"><button class="btn sm" data-close>Got it</button></div></div></div>`;
     scrim.addEventListener('click', (e) => { if (e.target === scrim || e.target.closest('[data-close]')) { scrim.classList.add('out'); setTimeout(() => scrim.remove(), 300); } });
     document.body.append(scrim);
@@ -431,7 +431,7 @@
       </section>
       ${R.problem ? `<div class="note bad rise" style="margin-bottom:14px">${esc(R.problem)}</div>` : ''}
       ${unsupported ? '<div class="note bad rise" style="margin-bottom:14px">This browser cannot check package signatures (Ed25519), so nothing runs here. Update iOS / your browser.</div>' : ''}
-      ${pushOn ? '' : `<section class="glass card row rise" style="gap:14px;margin-bottom:16px"><div class="avatar">🔔</div><div style="flex:1;min-width:0"><div class="h3">Let scheduled agents wake this phone</div><div class="small muted">${isIOS() && !standalone() ? 'Add Pocket to your Home Screen first.' : 'Allow notifications once.'}</div></div><button class="btn sm" data-act="push">${isIOS() && !standalone() ? 'How' : 'Allow'}</button></section>`}
+      ${pushOn ? '' : `<section class="glass card row rise" style="gap:14px;margin-bottom:16px"><div class="avatar">🔔</div><div style="flex:1;min-width:0"><div class="h3">Let scheduled agents wake this phone</div><div class="small muted">${isIOS() && !standalone() ? 'Add Pocket Box to your Home Screen first.' : 'Allow notifications once.'}</div></div><button class="btn sm" data-act="push">${isIOS() && !standalone() ? 'How' : 'Allow'}</button></section>`}
       <div class="tabs glass rise" role="tablist">
         <button class="tab ${R.tab === 'agents' ? 'on' : ''}" data-act="tab" data-tab="agents">Agents</button>
         <button class="tab ${R.tab === 'feed' ? 'on' : ''}" data-act="tab" data-tab="feed">Feed${feed.length ? ` · ${Math.min(feed.length, 99)}` : ''}</button>

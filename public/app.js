@@ -89,12 +89,75 @@
   }
 
   const icon = {
+    share: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5"/><path d="M6 11H5a1 1 0 00-1 1v8a1 1 0 001 1h14a1 1 0 001-1v-8a1 1 0 00-1-1h-1"/></svg>',
+    addSquare: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg>',
+    dots: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="display:inline;vertical-align:-3px"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>',
     back: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
     send: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
     phone: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M11 18.5h2"/></svg>',
     people: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.8a3.4 3.4 0 010 6.4M18 14.8c1.8.8 3 2.6 3.5 5.2"/></svg>',
     user: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.2-6 8-6s7 2 8 6"/></svg>',
   };
+
+  // ---- installing the website as an app ---------------------------------------------
+  // Android and desktop Chrome/Edge offer a real install prompt; iPhone does
+  // not let a page add itself, so it gets a short guide instead.
+  let installPrompt = null;
+  addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; refreshInstall(); });
+  addEventListener('appinstalled', () => { installPrompt = null; refreshInstall(); toast('Pocket Box is on your Home Screen.'); });
+  const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  function devicePlatform() {
+    const ua = navigator.userAgent;
+    if (/iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return 'ios';
+    if (/Android/.test(ua)) return 'android';
+    return 'desktop';
+  }
+  const canInstall = () => !standalone() && (!!installPrompt || devicePlatform() !== 'desktop');
+  function installCard({ dismissible = false } = {}) {
+    if (!canInstall() || (dismissible && store.get('pb.installHidden', false))) return '';
+    return `<div class="glass row install-card pop" style="gap:14px;padding:12px 12px 12px 14px;border-radius:var(--r-md)">
+      <img src="/icon-180.png" alt="" width="44" height="44" style="border-radius:12px;box-shadow:0 4px 12px -6px rgba(40,30,90,.4)">
+      <div style="flex:1;min-width:0"><div class="h3">Install Pocket Box</div><div class="small muted">Open it from your Home Screen like an app.</div></div>
+      <button class="btn sm" data-act="install">Install</button>
+      ${dismissible ? '<button class="btn ghost sm icon" data-act="install-hide" aria-label="Hide">✕</button>' : ''}
+    </div>`;
+  }
+  const installPill = () => (canInstall() ? `<button class="chip pop" data-act="install">${icon.addSquare} Install app</button>` : '');
+  function refreshInstall() {
+    for (const slot of document.querySelectorAll('[data-install-slot]')) {
+      slot.innerHTML = slot.dataset.installSlot === 'pill' ? installPill() : installCard({ dismissible: slot.dataset.installSlot === 'home' });
+    }
+  }
+  async function install() {
+    if (installPrompt) {
+      const p = installPrompt;
+      installPrompt = null;
+      await p.prompt();
+      const choice = await p.userChoice.catch(() => ({}));
+      if (choice.outcome !== 'accepted') installPrompt = p;
+      refreshInstall();
+      return;
+    }
+    const ios = devicePlatform() === 'ios';
+    const safari = ios && !/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
+    const steps = ios
+      ? [
+          safari ? `Tap ${icon.share} <strong>Share</strong> in Safari's toolbar. Don't see it? Tap ${icon.dots} first.` : `Tap ${icon.share} <strong>Share</strong> next to the address bar.`,
+          `Scroll down and tap ${icon.addSquare} <strong>Add to Home Screen</strong>.`,
+          'Tap <strong>Add</strong>, then open <strong>Pocket Box</strong> from your Home Screen.',
+        ]
+      : [
+          `Tap ${icon.dots} in the browser's top-right corner.`,
+          `Tap <strong>Install app</strong> or ${icon.addSquare} <strong>Add to Home screen</strong>.`,
+          'Confirm, then open <strong>Pocket Box</strong> from your Home Screen.',
+        ];
+    sheet(`<div class="stack">
+      <div class="row" style="gap:14px"><img src="/icon-180.png" alt="" width="52" height="52" style="border-radius:14px"><div><div class="h2" style="font-size:20px">Add Pocket Box to your Home Screen</div><div class="small muted">${ios ? 'iPhone adds web apps from the Share menu.' : 'Your browser adds it from its menu.'}</div></div></div>
+      <ol class="install-steps">${steps.map((t) => `<li><span>${t}</span></li>`).join('')}</ol>
+      ${ios ? '<p class="small muted" style="margin:0">Once it opens from the Home Screen, it can also show your agents\' notifications.</p>' : ''}
+      <div class="row" style="justify-content:flex-end"><button class="btn sm" data-close>Got it</button></div>
+    </div>`);
+  }
 
   // ---- routing -----------------------------------------------------------------
   function route() {
@@ -228,7 +291,7 @@
   const authShell = (inner) => `<div class="center"><section class="auth glass rise">${inner}</section></div>`;
   function loginView() {
     return authShell(`
-      <div class="brand" style="margin-bottom:28px"><span class="mark"></span>Pocket Box</div>
+      <div class="row" style="margin-bottom:28px"><div class="brand"><span class="mark"></span>Pocket Box</div><span class="spacer"></span><span data-install-slot="pill">${installPill()}</span></div>
       <h1 class="display">Agents that live <em>in your pocket</em>.</h1>
       <p class="muted" style="margin:12px 0 24px">Describe what you want done. A room of experts designs it, a crew builds and tests it, and it runs on your phone.</p>
       <form data-form="login" class="stack">
@@ -328,6 +391,7 @@
         <h1 class="display" style="margin-top:10px">What should <em>your agent</em> do?</h1>
         <p class="lede">Say it the way you'd ask a friend. The room turns it into a brief; the crew builds, tests and signs it; your phone runs it.</p>
       </section>
+      <div data-install-slot="home" style="margin-bottom:16px">${installCard({ dismissible: true })}</div>
       <form data-form="new" class="composer glass rise">
         <textarea name="idea" data-grow rows="3" placeholder="Every weekday at 7:30, tell me if I need an umbrella and when to leave for my first meeting…" required></textarea>
         <div class="bar">
@@ -546,7 +610,7 @@
 
   // ---- phones -------------------------------------------------------------------
   async function phonesView() {
-    const { devices, apps } = await api('/api/devices');
+    const { devices } = await api('/api/devices');
     S.devices = devices;
     return `<div class="shell">${topBar()}
       <section style="padding:28px 0 20px" class="rise">
@@ -558,19 +622,18 @@
         <ol class="prose" style="margin:0;padding-left:20px">
           <li>On your phone, open <strong>${esc(location.host)}/runtime</strong> and sign in.</li>
           <li>Tap <strong>Pair this phone</strong>.</li>
-          <li>On iPhone, use Share → <strong>Add to Home Screen</strong>, then open it from there and allow notifications. That's what lets scheduled agents wake it.</li>
+          <li>Add Pocket Box to the Home Screen (the sign-in page has an <strong>Install the app</strong> button), open it from there, and allow notifications. That's what lets scheduled agents wake it.</li>
         </ol>
         <div class="row"><a class="btn" href="/runtime">Open the Runtime here</a></div>
       </section>
       <section class="glass card stack rise" style="margin-top:14px">
-        <div class="h3">Pair the Pocket app</div>
-        <p class="small muted" style="margin:0">The app runs agents in the background on their own schedule, even when it's closed. Pair it with a one-time code from here; a code works once, for 10 minutes.</p>
-        <div class="row wrap"><button class="btn soft" data-act="pair-code">Get a pairing code</button>${apps?.android ? `<a class="btn ghost" href="/download/pocket.apk">Download for Android · v${esc(apps.android.version)}</a>` : ''}</div>
-        ${apps?.android ? '<p class="tiny faint" style="margin:0">Android asks once to allow installs from your browser. The iPhone app needs an Apple Developer account first.</p>' : ''}
+        <div class="h3">Pair without signing in on the phone</div>
+        <p class="small muted" style="margin:0">Get a one-time code here and type it on the Runtime's pairing screen. It works once, for 10 minutes.</p>
+        <div class="row"><button class="btn soft" data-act="pair-code">Get a pairing code</button></div>
       </section>
       <section style="margin-top:28px">
         <div class="eyebrow" style="margin:0 0 12px 4px">Paired</div>
-        ${devices.length ? `<div class="glass list">${devices.map((d) => `<div class="item"><div class="avatar sm">📱</div><div class="grow"><div class="h3">${esc(d.name)}</div><div class="small muted">${esc({ android: 'Android app', ios: 'iPhone app' }[d.platform] || 'Web')} · ${esc(d.tz)} · seen ${ago(d.lastSeenAt)}</div></div><button class="btn ghost sm" data-act="unpair" data-id="${esc(d.id)}">Remove</button></div>`).join('')}</div>` : '<div class="glass empty">No phones yet.</div>'}
+        ${devices.length ? `<div class="glass list">${devices.map((d) => `<div class="item"><div class="avatar sm">📱</div><div class="grow"><div class="h3">${esc(d.name)}</div><div class="small muted">${esc(d.tz)} · seen ${ago(d.lastSeenAt)}</div></div><button class="btn ghost sm" data-act="unpair" data-id="${esc(d.id)}">Remove</button></div>`).join('')}</div>` : '<div class="glass empty">No phones yet.</div>'}
       </section>
     </div>`;
   }
@@ -820,10 +883,12 @@
         });
         break;
       }
+      case 'install': await install(); break;
+      case 'install-hide': store.set('pb.installHidden', true); refreshInstall(); break;
       case 'pair-code': {
         const r = await post('/api/devices/code');
         if (r) sheet(`<div class="stack" style="text-align:center">
-          <div class="h3">Type this into the Pocket app</div>
+          <div class="h3">Type this on the phone's pairing screen</div>
           <div class="mono" style="font-size:34px;letter-spacing:.12em;font-weight:600;padding:10px 0;user-select:all">${esc(r.code)}</div>
           <p class="small muted" style="margin:0">Server: <span class="mono">${esc(location.host)}</span> · works once, until ${new Date(r.expiresAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</p>
           <div class="row" style="justify-content:center"><button class="btn sm" data-close>Done</button></div></div>`);

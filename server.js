@@ -29,10 +29,6 @@ const { PORT, BASE_URL } = config;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const KIT_CORE = path.join(__dirname, 'lib', 'kit', 'core.js');
 const COOKIE = 'pb_session';
-const DOWNLOADS = path.join(config.DATA, 'downloads');
-function appBuilds() {
-  try { return { android: JSON.parse(fs.readFileSync(path.join(DOWNLOADS, 'pocket.json'), 'utf8')) }; } catch { return { android: null }; }
-}
 
 // ---- helpers ------------------------------------------------------------------
 function json(res, code, obj) {
@@ -205,14 +201,6 @@ const server = http.createServer(async (req, res) => {
       catch (e) { return json(res, e.status || 500, { error: e.message }); }
     }
 
-    // ---- the Android app, built by CI and copied here ----
-    if (p === '/download/pocket.apk' && (req.method === 'GET' || req.method === 'HEAD')) {
-      const apk = path.join(DOWNLOADS, 'pocket.apk');
-      if (!fs.existsSync(apk)) { res.writeHead(404); return res.end('Not built yet.'); }
-      res.writeHead(200, { 'Content-Type': 'application/vnd.android.package-archive', 'Content-Disposition': 'attachment; filename="Pocket.apk"', 'Content-Length': fs.statSync(apk).size, 'Cache-Control': 'no-store' });
-      return fs.createReadStream(apk).pipe(res);
-    }
-
     const user = p.startsWith('/api/') ? currentUser(req) : null;
     if (p.startsWith('/api/') && !user && !PUBLIC_API.has(p)) return json(res, 401, { error: 'Sign in to continue.', login: true });
     if (p.startsWith('/api/')) return await studioApi(req, res, p, url, user);
@@ -285,7 +273,7 @@ async function studioApi(req, res, p, url, user) {
   }
 
   // ---- phones ----
-  if (p === '/api/devices' && req.method === 'GET') return json(res, 200, { devices: devices.list(user.id), apps: appBuilds() });
+  if (p === '/api/devices' && req.method === 'GET') return json(res, 200, { devices: devices.list(user.id) });
   if (p === '/api/devices/pair' && req.method === 'POST') {
     const b = await readBody(req).catch(() => ({}));
     if (auth.limited(`pair:${user.id}`, 10, 3600 * 1000)) return json(res, 429, { error: 'Too many pairings in an hour.' });
