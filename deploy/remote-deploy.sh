@@ -89,6 +89,7 @@ echo "local /runtime: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8
 echo "api without sign-in: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:$PORT/api/agents) (401 = sign-in enforced)"
 echo "worker policy: $(curl -s -D - -o /dev/null --max-time 8 http://localhost:$PORT/agent-worker.js | grep -i '^content-security-policy' | tr -d '\r')"
 echo "accounts: $(node -e "try{const u=JSON.parse(require('fs').readFileSync('$DATA/users.json'));console.log(u.length+' user(s): '+u.map(x=>x.email+' ('+x.role+', '+x.status+')').join(', '))}catch(e){console.log('none yet')}")"
+echo "service sees hidden dirs: $(tr '\0' '\n' < /proc/$(systemctl show -p MainPID --value pocketbox)/environ 2>/dev/null | grep '^PB_HIDE_DIRS=' || echo none)"
 echo "signing key: $(node -e "try{console.log(JSON.parse(require('fs').readFileSync('$DATA/keys/signing.json')).publicKey.slice(0,16)+'… (Ed25519)')}catch(e){console.log('not created yet')}")"
 
 # Box's port is reachable from the cluster; give Pocket Box's the same treatment.
@@ -109,7 +110,7 @@ echo "== claude =="
 (set -a; . "$ENV_FILE"; set +a; timeout 200 node deploy/check-claude.js 2>&1)
 if grep -q '^PB_BWRAP=1' "$ENV_FILE"; then
   mkdir -p "$DATA/work/_check" && chown boxbuild:boxbuild "$DATA/work/_check"
-  ARGS=$(cd "$APP_DIR" && PB_DATA_DIR=$DATA node -e "console.log(require('./lib/claude').sandboxArgs('$DATA/work/_check','/home/boxbuild').join(' '))")
+  ARGS=$(set -a; . "$ENV_FILE"; set +a; cd "$APP_DIR" && node -e "console.log(require('./lib/claude').sandboxArgs('$DATA/work/_check','/home/boxbuild').join(' '))")
   echo "claude inside the crew sandbox: $(set -a; . "$ENV_FILE"; set +a; timeout 120 sudo -u boxbuild -H --preserve-env=CLAUDE_CODE_OAUTH_TOKEN,PB_HIDE_DIRS bwrap $ARGS -- claude -p 'Reply with exactly: OK' --model haiku 2>&1 | tail -1)"
   echo "data hidden inside the sandbox: $(sudo -u boxbuild -H bwrap $ARGS -- /bin/sh -c "ls -A $DATA | grep -v work | wc -l; ls -A /opt/box/data 2>/dev/null | wc -l" | tr '\n' ' ')(0 0 = hidden)"
   rm -rf "$DATA/work/_check"
