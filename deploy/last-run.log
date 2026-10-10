@@ -1,6 +1,6 @@
-run: 109  commit: 9b7dc22  ssh step: success  at: 2026-10-10T23:38:08Z
+run: 110  commit: 3f53ca9  ssh step: success  at: 2026-10-10T23:45:21Z
 
-HEAD: 9b7dc22   domain: agents.cashflowus.com   port: 3401
+HEAD: 3f53ca9   domain: agents.cashflowus.com   port: 3401
 == prerequisites ==
 node v22.23.3, claude 2.1.287 (Claude Code), build user 999, bwrap /usr/bin/bwrap
 == env file ==
@@ -11,12 +11,12 @@ data: root 711, work: root 711
 bubblewrap: on (read-only system, Pocket Box and Box data hidden, own repo only)
 == service ==
 service: active
-   Oct 10 23:37:47 srv1349789 systemd[1]: Stopping pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone...
-   Oct 10 23:37:47 srv1349789 node[2955815]:   SIGTERM: 0 run(s) finishing their current turn…
-   Oct 10 23:37:50 srv1349789 systemd[1]: pocketbox.service: Deactivated successfully.
-   Oct 10 23:37:50 srv1349789 systemd[1]: Stopped pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone.
-   Oct 10 23:37:50 srv1349789 systemd[1]: Started pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone.
-   Oct 10 23:37:50 srv1349789 node[2972834]:   Pocket Box is running at http://localhost:3401 (public https://agents.cashflowus.com)
+   Oct 10 23:44:57 srv1349789 systemd[1]: Stopping pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone...
+   Oct 10 23:44:57 srv1349789 node[2972834]:   SIGTERM: 0 run(s) finishing their current turn…
+   Oct 10 23:45:00 srv1349789 systemd[1]: pocketbox.service: Deactivated successfully.
+   Oct 10 23:45:00 srv1349789 systemd[1]: Stopped pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone.
+   Oct 10 23:45:00 srv1349789 systemd[1]: Started pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone.
+   Oct 10 23:45:00 srv1349789 node[2996370]:   Pocket Box is running at http://localhost:3401 (public https://agents.cashflowus.com)
 local /: HTTP 200
 local /runtime: HTTP 200
 api without sign-in: HTTP 401 (401 = sign-in enforced)
