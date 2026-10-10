@@ -1,28 +1,29 @@
-run: 98  commit: 1d6808b  ssh step: success  at: 2026-10-10T20:54:54Z
+run: 99  commit: 31bad68  ssh step: success  at: 2026-10-10T21:10:25Z
 
-HEAD: 1d6808b   domain: agents.cashflowus.com   port: 3401
+HEAD: 31bad68   domain: agents.cashflowus.com   port: 3401
 == prerequisites ==
 node v22.23.3, claude 2.1.287 (Claude Code), build user 999, bwrap /usr/bin/bwrap
 == env file ==
-keys in /etc/pocketbox.env: PB_PORT PB_DOMAIN PB_DATA_DIR PB_HIDE_DIRS CLAUDE_CODE_OAUTH_TOKEN 
+keys in /etc/pocketbox.env: PB_PORT PB_DOMAIN PB_DATA_DIR PB_HIDE_DIRS CLAUDE_CODE_OAUTH_TOKEN PB_SMTP_HOST PB_SMTP_PORT PB_SMTP_USER PB_SMTP_PASS PB_MAIL_FROM 
 == data ==
 data: root 711, work: root 711
 == sandbox ==
 bubblewrap: on (read-only system, Pocket Box and Box data hidden, own repo only)
 == service ==
 service: active
-   Oct 10 20:54:36 srv1349789 systemd[1]: Stopping pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone...
-   Oct 10 20:54:36 srv1349789 node[2410393]:   SIGTERM: 0 run(s) finishing their current turn…
-   Oct 10 20:54:36 srv1349789 systemd[1]: pocketbox.service: Deactivated successfully.
-   Oct 10 20:54:36 srv1349789 systemd[1]: Stopped pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone.
-   Oct 10 20:54:36 srv1349789 systemd[1]: Started pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone.
-   Oct 10 20:54:36 srv1349789 node[2432790]:   Pocket Box is running at http://localhost:3401 (public https://agents.cashflowus.com)
+   Oct 10 21:10:07 srv1349789 systemd[1]: Stopping pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone...
+   Oct 10 21:10:07 srv1349789 node[2432790]:   SIGTERM: 0 run(s) finishing their current turn…
+   Oct 10 21:10:07 srv1349789 systemd[1]: pocketbox.service: Deactivated successfully.
+   Oct 10 21:10:07 srv1349789 systemd[1]: Stopped pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone.
+   Oct 10 21:10:08 srv1349789 systemd[1]: Started pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone.
+   Oct 10 21:10:08 srv1349789 node[2484369]:   Pocket Box is running at http://localhost:3401 (public https://agents.cashflowus.com)
 local /: HTTP 200
 local /runtime: HTTP 200
 api without sign-in: HTTP 401 (401 = sign-in enforced)
 worker policy: Content-Security-Policy: default-src 'none'; script-src 'self' 'unsafe-eval'; connect-src 'none'
 accounts: 1 user(s): harishkumart1994@gmail.com (admin, approved)
 service sees hidden dirs: PB_HIDE_DIRS=/opt/box/data
+mail: SMTP login OK as harishkumart1994@gmail.com via smtp.gmail.com
 signing key: not created yet
 == route (k3s Traefik) ==
    namespace/pocketbox unchanged
@@ -33,7 +34,7 @@ signing key: not created yet
 == claude ==
 haiku: OK (2s) -> OK
 sonnet: OK (2s) -> OK
-opus: OK (4s) -> OK
+opus: OK (2s) -> OK
 claude inside the crew sandbox: OK
 data hidden inside the sandbox: 0 0 (0 0 = hidden)
 == the domain, as the internet reaches it ==
