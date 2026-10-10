@@ -36,7 +36,7 @@ self.addEventListener('push', (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch { data = { title: 'Pocket Box', body: event.data && event.data.text() }; }
   event.waitUntil(self.registration.showNotification(data.title || 'Pocket Box', {
-    body: data.body || '', tag: data.tag || 'pocketbox', renotify: true,
+    body: data.body || '', tag: data.tag || 'pocketbox', renotify: !data.silent, silent: !!data.silent, requireInteraction: !!data.urgent,
     icon: '/icon.svg', badge: '/icon.svg', data: { url: data.url || '/' },
   }));
 });

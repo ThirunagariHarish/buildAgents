@@ -210,10 +210,11 @@
   async function render({ transition = true } = {}) {
     const ticket = ++rendering;
     const r = route();
-    const publicRoutes = ['login', 'signup', 'forgot', 'reset'];
+    const publicRoutes = ['login', 'signup', 'forgot', 'reset', 'privacy', 'terms'];
     if (!S.session) S.session = await api('/api/session').catch(() => ({ authed: false }));
     if (ticket !== rendering) return;
-    if (!S.session.authed && !publicRoutes.includes(r.name)) return go('#/login');
+    if (!S.session.authed && r.name === 's' && r.id) store.set('pb.after', { hash: `#/s/${r.id}`, at: Date.now() });
+    if (!S.session.authed && !publicRoutes.includes(r.name)) return go(r.name === 's' ? '#/signup' : '#/login');
     if (S.session.authed && ['login', 'signup'].includes(r.name)) return go('#/');
     if (S.session.authed) { connect(); if (!S.tzSent) { S.tzSent = true; api('/api/me/prefs', { method: 'POST', body: { tz: Intl.DateTimeFormat().resolvedOptions().timeZone } }).catch(() => {}); } }
 
@@ -236,8 +237,11 @@
       case 'people': return peopleView();
       case 'me': return meView();
       case 'templates': return templatesView(r.id);
+      case 'privacy': return legalView('privacy');
+      case 'terms': return legalView('terms');
       case 't': return templateView(r.id);
       case 'watch': return watchView();
+      case 's': return shareView(r.id);
       default: return homeView();
     }
   }
@@ -346,7 +350,8 @@
       <a class="btn soft" href="#/signup" style="width:100%;margin-top:14px">Create an account</a>
       <div class="row small" style="margin-top:16px;justify-content:center">
         <a class="link" href="#/forgot">Forgot password?</a>
-      </div>`);
+      </div>
+      <div class="row tiny faint" style="margin-top:18px;justify-content:center;gap:14px"><a href="#/privacy">Privacy</a><a href="#/terms">Terms</a></div>`);
   }
   function signupView() {
     return authShell(`
@@ -522,6 +527,40 @@
     </div>`;
   }
 
+  /** Where to go after signing in: a shared link opened before signing in, else home. */
+  function afterSignIn() {
+    const a = store.get('pb.after', null);
+    store.set('pb.after', null);
+    return a && /^#\/s\/[\w-]+$/.test(a.hash) && Date.now() - a.at < 3 * 86400000 ? a.hash : '#/';
+  }
+
+  // ---- a copy of someone's agent, from a shared link ----------------------------------------------
+  const triggerText = (t) => t.type === 'schedule' ? `at ${t.at}${t.days && t.days.length && t.days.length < 7 ? ` on ${t.days.join(', ')}` : ' every day'}`
+    : t.type === 'interval' ? `every ${t.minutes >= 60 ? `${t.minutes / 60} h` : `${t.minutes} min`}` : t.type === 'manual' ? 'when you tap Run' : t.type;
+  async function shareView(code) {
+    const pv = await api(`/api/shares/${encodeURIComponent(code)}`);
+    const perms = (pv.permissions || []).map((x) => esc((S.meta?.permissions || {})[x] || x).toLowerCase());
+    const hosts = pv.http && pv.http.allow && pv.http.allow.length ? pv.http.allow : null;
+    return `<div class="shell">
+      <header class="top"><a class="btn ghost icon" href="#/" aria-label="Home">${icon.back}</a></header>
+      <section class="rise" style="padding:4px 0 18px"><div class="row" style="gap:16px"><div class="avatar xl">${esc(pv.icon)}</div><div><h1 class="h2" style="font-size:26px">${esc(pv.title)}</h1><div class="small muted" style="margin-top:4px">Shared by ${esc(pv.sharedBy)} · version ${esc(pv.version)}</div></div></div>
+        <p class="lede" style="margin-top:16px">${esc(pv.description || '')}</p></section>
+      <div class="glass card stack rise">
+        <div class="eyebrow">What you get</div>
+        <div class="small">Your own copy of ${esc(pv.title)}. It is checked again and signed for you; ${esc(pv.sharedBy)} never sees your settings, its memory or its runs, and changes they make later don't reach your copy.</div>
+        <div class="small muted">Runs ${(pv.triggers || []).map(triggerText).map(esc).join(', or ') || 'when you tap Run'}.</div>
+        <div class="small muted">It may: ${perms.join('; ') || 'nothing beyond notifying you'}.</div>
+        ${hosts ? `<div class="small muted">It reads: ${hosts.map(esc).join(', ')}${pv.http.allowFromSettings ? ', and the address you give it' : ''}.</div>` : pv.http && pv.http.allowFromSettings ? '<div class="small muted">It reads the address you give it.</div>' : ''}
+        ${(pv.settings || []).length ? `<div class="small muted">You'll fill in: ${pv.settings.map((x) => esc(x.label) + (x.optional ? ' (optional)' : '')).join(', ')}.</div>` : ''}
+      </div>
+      <form data-form="share-install" data-code="${esc(code)}" class="glass card stack rise" style="margin-top:14px">
+        ${runsOnPicker()}
+        <label class="row" style="gap:10px"><input type="checkbox" name="live" style="width:20px;height:20px"><span>Notify me for real right away <span class="small faint">(left off, it first runs quietly so you can see what it would say)</span></span></label>
+        <div class="row"><button class="btn accent">Get my copy</button></div>
+      </form>
+    </div>`;
+  }
+
   // ---- the "watch a page" wizard -----------------------------------------------------------------
   function watchView() {
     const modes = [
@@ -547,7 +586,7 @@
   }
 
   function agentCard(a) {
-    const line = a.needsYou && a.mine ? a.needsYou
+    const line = a.shared ? `Shared with you${a.lastRun ? ` · last run ${ago(a.lastRun.at)}` : ''}` : a.needsYou && a.mine ? a.needsYou
       : a.lastRun ? `${a.lastRun.ok ? 'Last run' : 'Last run failed'} ${ago(a.lastRun.at)} · ${a.lastRun.summary || ''}`
       : a.release ? `Version ${a.release.version} · ${a.release.channel}` : stageName(a);
     return `<a class="glass agent-card rise" href="#/a/${a.id}">
@@ -665,6 +704,7 @@
       if (a.status === 'error' || a.status === 'paused') b.push('<button class="btn sm" data-act="resume">Resume</button>');
       if (a.stage === 'brief') b.push('<button class="btn accent" data-act="build">Build this agent</button>');
       if (a.stage === 'plan_review') b.push('<button class="btn accent" data-act="approve">Approve plan and build</button>');
+      if (a.package && !mine && a.role === 'member') b.push('<button class="btn accent" data-act="run-cloud">Run it</button>');
       if (a.package && mine) {
         if (a.package.channel === 'shadow') b.push('<button class="btn accent" data-act="channel" data-channel="live">Go live</button>');
         if (a.package.channel === 'live') b.push('<button class="btn soft sm" data-act="channel" data-channel="shadow">Back to shadow</button>');
@@ -712,6 +752,18 @@
           ${snoozed ? `<span class="pill warn">Snoozed until ${new Date(a.snoozeUntil).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' })}</span><button class="btn ghost sm" data-act="snooze" data-until="off">Unsnooze</button>`
             : '<button class="btn soft sm" data-act="snooze" data-minutes="60">Snooze 1 hour</button><button class="btn soft sm" data-act="snooze" data-until="today">Pause for today</button>'}
         </div>
+      </section>` : ''}
+      ${mine ? `<section class="glass card stack">
+        <div class="h3">How it tells you</div>
+        <div class="row wrap" style="gap:8px">${[['normal', 'Normal'], ['quiet', 'Quietly'], ['urgent', 'Urgent'], ['digest', 'In my daily digest']].map(([k, l]) => `<button class="chip ${(a.notifyStyle || 'normal') === k ? 'on' : ''}" data-act="style" data-style="${k}">${l}</button>`).join('')}</div>
+        <p class="small muted" style="margin:0">${{ normal: 'A normal notification.', quiet: 'Arrives without sound or buzz.', urgent: 'Stays on screen and gets through quiet hours. Use it for things that can\'t wait.', digest: 'Nothing buzzes; what it says is collected and sent once a day (time under You).' }[a.notifyStyle || 'normal']}</p>
+      </section>
+      <section class="glass card stack">
+        <div class="h3">Shared with</div>
+        <p class="small muted" style="margin:0">They get its notifications and can run it (for example, tap "I'm OK"). Only you can change it.</p>
+        ${(a.members || []).map((m) => `<div class="row between"><span>${esc(m.name)} <span class="small faint">${esc(m.email)}</span></span><button class="btn ghost sm" data-act="unshare" data-user="${esc(m.userId)}">Remove</button></div>`).join('')}
+        ${(a.invites || []).map((e) => `<div class="row between"><span>${esc(e)} <span class="pill">invited</span></span><button class="btn ghost sm" data-act="uninvite" data-email="${esc(e)}">Remove</button></div>`).join('')}
+        <form data-form="share" class="row" style="gap:8px"><input class="input" name="email" type="email" placeholder="their@email.com" required style="flex:1"><button class="btn sm">Share</button></form>
       </section>` : ''}
       ${a.settings.length ? `<form data-form="settings" class="glass card stack">
         <div class="h3">Your values</div>
@@ -805,19 +857,20 @@
       <div class="glass list rise">${users.map((u) => `<div class="item" style="flex-wrap:wrap">
         <div class="avatar sm">${esc((u.firstName || '?')[0])}</div>
         <div class="grow"><div class="h3">${esc(u.name)} ${u.role === 'admin' ? '<span class="pill accent">admin</span>' : ''}</div><div class="small muted">${esc(u.email)}${u.phone ? ` · ${esc(u.phone)}` : ''} · ${esc(u.status === 'unverified' ? 'email not confirmed yet' : u.status)}</div></div>
-        <div class="row wrap" style="gap:6px">${acts(u)}</div></div>`).join('')}</div>
+        <div class="row wrap" style="gap:6px">${u.primary ? '' : `<select class="input" style="width:auto;padding:6px 10px;font-size:13px" data-plan-for="${esc(u.id)}">${['free', 'plus', 'family', 'business'].map((x) => `<option value="${x}" ${(u.plan || 'free') === x ? 'selected' : ''}>${x}</option>`).join('')}</select>`}${acts(u)}</div></div>`).join('')}</div>
     </div>`;
   }
 
   // ---- you ------------------------------------------------------------------------
   async function meView() {
-    const [{ about }, pk, pr] = await Promise.all([api('/api/me/about'), api('/api/push/key').catch(() => ({ devices: 0 })), api('/api/me/prefs').catch(() => ({}))]);
+    const [{ about }, pk, pr, pl] = await Promise.all([api('/api/me/about'), api('/api/push/key').catch(() => ({ devices: 0 })), api('/api/me/prefs').catch(() => ({})), api('/api/me/plan').catch(() => null)]);
     S.prefs = pr.prefs; S.prefsMail = pr.mailConfigured;
     const u = S.session.user;
     const theme = store.get('pb.theme', 'system');
     return `<div class="shell">${topBar()}
       <section style="padding:28px 0 20px" class="rise"><h1 class="display" style="font-size:clamp(36px,8vw,52px)">${esc(u.firstName)}<em>.</em></h1><p class="lede">${esc(u.email)}</p></section>
       <div class="stack-lg">
+        ${pl ? planSection(pl) : ''}
         <form data-form="about" class="glass card stack rise">
           <div class="h3">About me</div>
           <p class="small muted" style="margin:0">The room's "Your Voice" speaks for you from this: your routine, where you live and work, what annoys you. Keep it short.</p>
@@ -827,8 +880,9 @@
         <form data-form="prefs" class="glass card stack rise">
           <div class="h3">How agents reach you</div>
           <label class="row" style="gap:10px"><input type="checkbox" name="emailAgents" ${S.prefs?.emailAgents ? 'checked' : ''} style="width:20px;height:20px"><span>Also email me what my live agents say${S.prefsMail === false ? ' <span class="small faint">(email isn\'t set up on the server)</span>' : ''}</span></label>
-          <div class="row wrap" style="gap:10px"><span class="small muted">Quiet hours</span><input class="input" type="time" name="quietFrom" value="${esc(S.prefs?.quietFrom || '')}" style="width:auto"><span class="small muted">to</span><input class="input" type="time" name="quietTo" value="${esc(S.prefs?.quietTo || '')}" style="width:auto"></div>
-          <p class="small muted" style="margin:0">During quiet hours agents still run; nothing buzzes. Time zone: ${esc(S.prefs?.tz || Intl.DateTimeFormat().resolvedOptions().timeZone)}.</p>
+          <div class="field"><span>Quiet hours</span><div class="row" style="gap:8px"><input class="input" type="time" name="quietFrom" value="${esc(S.prefs?.quietFrom || '')}" style="flex:1;min-width:0"><span class="small muted">to</span><input class="input" type="time" name="quietTo" value="${esc(S.prefs?.quietTo || '')}" style="flex:1;min-width:0"></div></div>
+          <div class="field"><span>Daily digest at</span><input class="input" type="time" name="digestAt" value="${esc(S.prefs?.digestAt || '18:00')}" style="max-width:50%"></div>
+          <p class="small muted" style="margin:0">During quiet hours agents still run; only urgent ones buzz. Time zone: ${esc(S.prefs?.tz || Intl.DateTimeFormat().resolvedOptions().timeZone)}.</p>
           <div class="row"><button class="btn sm">Save</button></div>
         </form>
         <section class="glass card stack rise">
@@ -847,9 +901,49 @@
           <label class="field"><span>New (10+ characters)</span><input class="input" name="next" type="password" autocomplete="new-password" minlength="10" required></label>
           <div class="row"><button class="btn sm">Change it</button></div>
         </form>
+        <section class="glass card stack rise">
+          <div class="h3">Your data</div>
+          <p class="small muted" style="margin:0">Download everything Pocket Box keeps about you, or delete your account and all your agents. <a class="link" href="#/privacy">Privacy</a> · <a class="link" href="#/terms">Terms</a></p>
+          <div class="row wrap" style="gap:8px"><a class="btn soft sm" href="/api/me/export" download>Download my data</a>${u.primary ? '' : '<button class="btn danger sm" data-act="delete-account">Delete my account</button>'}</div>
+        </section>
         <div class="row rise"><button class="btn ghost" data-act="logout">Sign out</button></div>
       </div>
     </div>`;
+  }
+
+  function planSection(pl) {
+    const p = pl.plan, u = pl.usage;
+    const meter = (used, max, unit) => (max == null ? `<div class="small row between"><span class="muted">${unit}</span><span>unlimited</span></div>` : `<div class="small"><div class="row between"><span class="muted">${unit}</span><span>${used} of ${max}</span></div><div style="height:6px;border-radius:3px;background:var(--line);margin-top:6px;overflow:hidden"><div style="height:100%;width:${Math.min(100, Math.round((used / max) * 100))}%;background:linear-gradient(90deg,#7a64ff,#e46fa0)"></div></div></div>`);
+    return `<section class="glass card stack rise">
+      <div class="row between"><div class="h3">Plan</div><span class="pill accent">${esc(p.name)}</span></div>
+      ${meter(u.builds, p.builds, 'Custom agents this month')}
+      ${meter(pl.agents, p.agents, 'Agents')}
+      ${p.spendUsd == null ? '' : meter(Number(u.spendUsd.toFixed(2)), p.spendUsd, 'AI use this month (USD)')}
+      ${p.id === 'owner' ? '<p class="small muted" style="margin:0">You own this Pocket Box: no limits, and your agents run on your own Claude login.</p>' : `
+        <div class="tpl-grid">${pl.plans.filter((x) => x.id !== 'free').map((x) => `<div class="glass" style="padding:14px;border-radius:var(--r-md)"><div class="row between"><span class="h3">${esc(x.name)}</span><span class="small">USD ${x.priceUsd}/mo</span></div>
+          <div class="small muted" style="margin-top:6px">${x.builds} custom a month · ${x.agents} agents${x.members ? ` · share with ${x.members}` : ''}</div>
+          ${p.id === x.id ? '<div class="pill good" style="margin-top:10px">Your plan</div>' : pl.payments && x.buyable ? `<button class="btn sm" style="margin-top:10px" data-act="upgrade" data-plan="${x.id}">Choose ${esc(x.name)}</button>` : ''}</div>`).join('')}</div>
+        ${pl.payments ? (pl.hasSubscription ? '<div class="row"><button class="btn soft sm" data-act="billing-portal">Manage or cancel</button></div>' : '') : '<p class="small muted" style="margin:0">Paid plans open soon.</p>'}`}
+    </section>`;
+  }
+
+  function legalView(kind) {
+    const back = S.session?.authed ? '#/me' : '#/login';
+    const privacy = `<h1 class="display" style="font-size:40px">Privacy</h1>
+      <p><strong>What Pocket Box keeps.</strong> Your name, email and phone; your agents (what you asked for, the room's and crew's notes, the code); the values you give your agents' settings; a record of each run (when, what it said); your paired devices; and your preferences.</p>
+      <p><strong>Where your agents run.</strong> On your phone, or, if you choose "In the cloud", on Pocket Box's server in a sealed process with no other access. Agents can only read web addresses listed in their manifest or the pages you give them, and only through Pocket Box.</p>
+      <p><strong>AI.</strong> Designing and building an agent, answering your questions and hand-offs send the relevant text to Anthropic's Claude. Ready-made agents and ordinary runs use no AI.</p>
+      <p><strong>What we never do.</strong> Sell your data, show you ads, or read your email, messages or other apps.</p>
+      <p><strong>Your control.</strong> Under You → Your data you can download everything we keep, or delete your account; deleting removes your agents, their settings, runs and devices.</p>
+      <p><strong>Contact.</strong> The administrator of this Pocket Box.</p>`;
+    const terms = `<h1 class="display" style="font-size:40px">Terms</h1>
+      <p><strong>What it is.</strong> Pocket Box helps you make personal agents that remind, watch and summarise. They can be wrong or late: a missed run or a wrong number is possible. Don't rely on an agent where a mistake could hurt someone.</p>
+      <p><strong>Not advice.</strong> Health, medication, money and care agents are reminders, not medical, financial or professional advice.</p>
+      <p><strong>Fair use.</strong> Don't use agents to overload websites, break a site's terms, or collect other people's personal data. We may pause agents that do.</p>
+      <p><strong>Plans.</strong> Paid plans renew monthly until cancelled under You → Plan → Manage. Limits reset on the 1st of each month.</p>
+      <p><strong>Changes.</strong> We may change these terms; we'll tell you in the app first.</p>`;
+    return `<div class="shell"><header class="top"><a class="btn ghost icon" href="${back}" aria-label="Back">${icon.back}</a></header>
+      <article class="glass card prose rise" style="font-size:16px">${kind === 'privacy' ? privacy : terms}<p class="small muted">Last updated October 2026.</p></article></div>`;
   }
 
   function errorView(e) {
@@ -896,6 +990,11 @@
   }
 
   // ---- events --------------------------------------------------------------------
+  document.addEventListener('change', async (e) => {
+    const sel = e.target.closest('select[data-plan-for]');
+    if (!sel) return;
+    try { await api(`/api/admin/users/${sel.dataset.planFor}/plan`, { method: 'POST', body: { plan: sel.value } }); toast(`Plan set to ${sel.value}.`); } catch (err) { toast(err.message, 'bad'); }
+  });
   document.addEventListener('input', (e) => {
     const ta = e.target.closest('textarea[data-grow]');
     if (ta) grow(ta);
@@ -925,7 +1024,8 @@
         S.session = { authed: true, user: r.user };
         const next = new URLSearchParams(location.search).get('next');
         if (next === '/runtime') { location.href = '/runtime'; return; }
-        go('#/');
+        if (/^\/#\/s\/[A-Za-z0-9_-]+$/.test(next || '')) { location.href = next; return; }
+        go(afterSignIn());
       } else if (kind === 'signup') {
         const r = await api('/api/signup', { method: 'POST', body: data });
         form.innerHTML = `<div class="note good pop">${esc(r.message)}</div>`;
@@ -936,7 +1036,7 @@
         const r = await api('/api/reset', { method: 'POST', body: { token: form.dataset.token, password: data.password } });
         const l = await api('/api/login', { method: 'POST', body: { email: r.email, password: data.password } });
         S.session = { authed: true, user: l.user };
-        go('#/');
+        go(afterSignIn());
       } else if (kind === 'new') {
         const a = await api('/api/agents', { method: 'POST', body: { idea: data.idea, template: store.get('pb.template', null) } });
         store.set('pb.template', null);
@@ -973,6 +1073,11 @@
         const a = await api(`/api/templates/${id}/install`, { method: 'POST', body: { values, when, live: !!data.live, runsOn } });
         toast(`${a.title} is on. ${a.runsOn === 'cloud' ? 'It runs in the cloud.' : 'Open the Runtime on your phone to start it.'}`);
         S.agent = null; go(`#/a/${a.id}`);
+      } else if (kind === 'share-install') {
+        const runsOn = form.querySelector('[data-runs] .on')?.dataset.runsOn || 'cloud';
+        const a = await api(`/api/shares/${encodeURIComponent(form.dataset.code)}/install`, { method: 'POST', body: { live: !!data.live, runsOn } });
+        toast(`${a.title} is yours.${(a.missingSettings || []).length ? ' Add its settings to start it.' : ''}`);
+        S.agent = null; go(`#/a/${a.id}`);
       } else if (kind === 'watch') {
         const mode = form.querySelector('[data-modes] .on')?.dataset.mode || 'change';
         const minutes = Number(form.querySelector('[data-every] .on')?.dataset.min || 60);
@@ -987,8 +1092,12 @@
         const a = await api(`/api/templates/${pick[0]}/install`, { method: 'POST', body: { values: { url: data.url, ...pick[1] }, when: { minutes: nearest }, live: true, runsOn: 'cloud', title: `Watch ${host}`.slice(0, 40) } });
         toast('Watching. You\'ll hear from it when something changes.');
         S.agent = null; go(`#/a/${a.id}`);
+      } else if (kind === 'share') {
+        S.agent = await api(`/api/agents/${S.agent.id}/members`, { method: 'POST', body: { email: data.email } });
+        const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(S.agent);
+        toast('Shared. They\'ve been emailed.');
       } else if (kind === 'prefs') {
-        const r = await api('/api/me/prefs', { method: 'POST', body: { emailAgents: !!data.emailAgents, quietFrom: data.quietFrom || null, quietTo: data.quietTo || null, tz: Intl.DateTimeFormat().resolvedOptions().timeZone } });
+        const r = await api('/api/me/prefs', { method: 'POST', body: { emailAgents: !!data.emailAgents, quietFrom: data.quietFrom || null, quietTo: data.quietTo || null, digestAt: data.digestAt || '18:00', tz: Intl.DateTimeFormat().resolvedOptions().timeZone } });
         S.prefs = r.prefs; toast('Saved.');
       } else if (kind === 'about') {
         await api('/api/me/about', { method: 'POST', body: data });
@@ -1083,16 +1192,36 @@
         const close = sheet(`<div class="stack">
           <div class="row" style="gap:12px"><div class="avatar">${esc(a.icon || '✳︎')}</div><div class="h3">${esc(a.title)}</div></div>
           <button class="btn soft" style="width:100%" data-sheet="rename">Rename</button>
-          ${a.package ? '<a class="btn soft" style="width:100%" href="/runtime">Open the Runtime</a>' : ''}
-          <button class="btn danger" style="width:100%" data-sheet="delete">Delete agent</button>
+          ${a.package && a.role !== 'member' ? '<button class="btn soft" style="width:100%" data-sheet="share">Share a copy</button><a class="btn soft" style="width:100%" href="/runtime">Open the Runtime</a>' : ''}
+          ${a.role === 'member' ? '<button class="btn danger" style="width:100%" data-sheet="leave">Leave this shared agent</button>' : '<button class="btn danger" style="width:100%" data-sheet="delete">Delete agent</button>'}
           <button class="btn ghost" style="width:100%" data-close>Close</button></div>`);
         const root = $('.scrim:last-of-type');
         root.addEventListener('click', async (ev) => {
           const s = ev.target.closest('[data-sheet]');
           if (!s) return;
-          if (s.dataset.sheet === 'rename') {
+          if (s.dataset.sheet === 'share') {
+            close();
+            let r;
+            try { r = await api(`/api/agents/${a.id}/share`, { method: 'POST' }); } catch (err) { toast(err.message, 'bad'); return; }
+            S.agent.shareCode = r.code;
+            const done = sheet(`<div class="stack"><div class="h3">Share a copy of ${esc(a.title)}</div>
+              <p class="small muted" style="margin:0">Anyone with this link can make their own copy: its code and checks, never your settings, memory or runs. Your changes later don't reach their copy.</p>
+              <input class="input" readonly value="${esc(r.url)}" data-share-url>
+              <div class="row wrap" style="gap:8px"><button class="btn accent sm" data-share="copy">Copy link</button>${navigator.share ? '<button class="btn soft sm" data-share="send">Send…</button>' : ''}<button class="btn ghost sm" data-share="stop">Stop sharing</button></div>
+              <button class="btn ghost" style="width:100%" data-close>Done</button></div>`);
+            $('[data-share-url]').closest('.scrim').addEventListener('click', async (ev2) => {
+              const b = ev2.target.closest('[data-share]');
+              if (!b) return;
+              if (b.dataset.share === 'copy') { try { await navigator.clipboard.writeText(r.url); toast('Link copied.'); } catch { $('[data-share-url]').select(); } }
+              if (b.dataset.share === 'send') navigator.share({ title: a.title, text: `Try my Pocket Box agent "${a.title}"`, url: r.url }).catch(() => {});
+              if (b.dataset.share === 'stop') { try { await api(`/api/agents/${a.id}/share`, { method: 'DELETE' }); S.agent.shareCode = null; toast('That link no longer works.'); done(); } catch (err) { toast(err.message, 'bad'); } }
+            });
+          } else if (s.dataset.sheet === 'rename') {
             const t = prompt('Name', a.title);
             if (t && t.trim()) { S.agent = await api(`/api/agents/${a.id}`, { method: 'PATCH', body: { title: t.trim() } }).catch((err) => { toast(err.message, 'bad'); return S.agent; }); patchAgent(); close(); }
+          } else if (s.dataset.sheet === 'leave') {
+            if (!confirm(`Stop getting ${a.title}'s notifications?`)) return;
+            try { await api(`/api/agents/${a.id}/members/${S.session.user.id}`, { method: 'DELETE' }); close(); S.agent = null; go('#/'); } catch (err) { toast(err.message, 'bad'); }
           } else if (s.dataset.sheet === 'delete') {
             if (!confirm(`Delete ${a.title}? Your phones stop running it.`)) return;
             try { await api(`/api/agents/${a.id}`, { method: 'DELETE' }); close(); S.agent = null; go('#/'); } catch (err) { toast(err.message, 'bad'); }
@@ -1101,6 +1230,18 @@
         break;
       }
       case 'install': await install(); break;
+      case 'style': { const r = await post(`/api/agents/${a.id}/style`, { style: el.dataset.style }); if (r) { S.agent = r; const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(r); } break; }
+      case 'unshare': { try { S.agent = await api(`/api/agents/${a.id}/members/${el.dataset.user}`, { method: 'DELETE' }); const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(S.agent); } catch (err) { toast(err.message, 'bad'); } break; }
+      case 'uninvite': { try { S.agent = await api(`/api/agents/${a.id}/invites?email=${encodeURIComponent(el.dataset.email)}`, { method: 'DELETE' }); const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(S.agent); } catch (err) { toast(err.message, 'bad'); } break; }
+      case 'upgrade': { const r = await post('/api/billing/checkout', { plan: el.dataset.plan }); if (r && r.url) location.href = r.url; break; }
+      case 'billing-portal': { const r = await post('/api/billing/portal'); if (r && r.url) location.href = r.url; break; }
+      case 'delete-account':
+        sheet(`<form class="stack"><div class="h3">Delete your account?</div><p class="small muted" style="margin:0">This removes your account and all your agents, their settings and runs, and unpairs your phones. It can't be undone.</p>
+          <label class="field"><span>Your password</span><input class="input" name="password" type="password" autocomplete="current-password" required></label>
+          <div class="row" style="justify-content:flex-end"><button type="button" class="btn ghost sm" data-close>Keep it</button><button class="btn danger sm">Delete everything</button></div></form>`,
+        async (fd) => { await api('/api/me/delete', { method: 'POST', body: { password: fd.get('password') } }); S.session = { authed: false }; S.es?.close(); S.es = null; toast('Your account was deleted.'); go('#/login'); });
+        break;
+      case 'set-plan': { const r = await post(`/api/admin/users/${el.dataset.id}/plan`, { plan: el.value }); if (r) toast('Plan changed.'); break; }
       case 'where': { const r = await post(`/api/agents/${a.id}/where`, { runsOn: el.dataset.where }); if (r) { S.agent = r; const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(r); toast(r.runsOn === 'cloud' ? 'It now runs in the cloud.' : 'It now runs on your phone.'); } break; }
       case 'snooze': { const r = await post(`/api/agents/${a.id}/snooze`, el.dataset.until ? { until: el.dataset.until } : { minutes: Number(el.dataset.minutes) }); if (r) { S.agent = r; const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(r); toast(r.snoozeUntil ? 'Snoozed. It still runs; you just won\'t be notified.' : 'Notifications are back on.'); } break; }
       case 'edit-when': {
@@ -1195,4 +1336,5 @@
     navigator.serviceWorker.addEventListener('message', (e) => { if (e.data?.type === 'navigate' && e.data.url) location.href = e.data.url; });
   }
   render({ transition: false });
+  if (new URLSearchParams(location.search).has('paid')) { setTimeout(() => toast('Thank you! Your plan updates in a moment.'), 800); history.replaceState(null, '', `/${location.hash}`); }
 })();

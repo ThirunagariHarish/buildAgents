@@ -68,8 +68,15 @@ function evalsOn(dir) {
   const sneaky = 'async function run(ctx) { let p = null; try { p = ctx["constr" + "uctor"]["constr" + "uctor"]("return process")(); } catch (e) {} await ctx.notify({ title: p ? "escaped " + typeof p.env : "contained", body: "ok" }); }';
   packages.publish({ agent: cag, manifest: { ...manifest, permissions: ['notify'], settings: [] }, code: sneaky, report: r, commit: 'test' });
   const run = await cloudrun.run(store.loadAgent(cag.id), { type: 'manual' });
-  assert.ok(run && run.ok, `cloud run should finish: ${run && run.error}`);
-  console.log(`cloud run: finished in its own process; agent saw "${run.notifications[0].title}" (it may reach its own child process, never the Studio's)`);
+  if (process.getuid && process.getuid() === 0 && process.env.PB_BWRAP !== '1') {
+    // As root with no sandbox, cloud runs must refuse to start at all.
+    assert.ok(run && !run.ok && /need the sandbox/.test(run.error), `cloud run without a sandbox should refuse: ${run && run.error}`);
+    console.log('cloud run: refused to start as root without the sandbox (as it should)');
+  } else {
+    assert.ok(run && run.ok, `cloud run should finish: ${run && run.error}`);
+    assert.strictEqual(run.notifications[0].title, 'contained', 'the agent reached a code compiler');
+    console.log('cloud run: finished in its own process; the agent could not reach a code compiler');
+  }
 
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('selftest: all good');

@@ -255,11 +255,12 @@
         const item = { agentId: a.agentId, icon: a.icon, agent: a.title, title: String(n.title).slice(0, 120), body: String(n.body || '').slice(0, 1200), at: Date.now(), shadow: !live };
         record.notifications.push({ title: item.title, body: item.body });
         feedAdd(item);
-        if (live && Native) Native.post({ type: 'notify', title: `${a.icon || ''} ${item.title}`.trim(), body: item.body, tag: `agent:${a.agentId}:${item.at}` });
+        const shownTitle = a.icon && !item.title.startsWith(a.icon) ? `${a.icon} ${item.title}` : item.title;
+        if (live && Native) Native.post({ type: 'notify', title: shownTitle, body: item.body, tag: `agent:${a.agentId}:${item.at}` });
         else if (live) {
           try {
             const reg = await navigator.serviceWorker?.ready;
-            if (reg && Notification.permission === 'granted') await reg.showNotification(`${a.icon || ''} ${item.title}`.trim(), { body: item.body, tag: `agent:${a.agentId}:${item.at}`, icon: '/icon.svg', badge: '/icon.svg', data: { url: '/runtime#feed' } });
+            if (reg && Notification.permission === 'granted') await reg.showNotification(shownTitle, { body: item.body, tag: `agent:${a.agentId}:${item.at}`, icon: '/icon.svg', badge: '/icon.svg', data: { url: '/runtime#feed' } });
             else toast(`${item.title}: ${item.body}`.slice(0, 160));
           } catch { toast(`${item.title}: ${item.body}`.slice(0, 160)); }
         }

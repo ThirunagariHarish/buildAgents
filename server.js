@@ -24,6 +24,10 @@ const settings = require('./lib/settings');
 const scheduler = require('./lib/scheduler');
 const cloudrun = require('./lib/cloudrun');
 const templates = require('./lib/templates');
+const plans = require('./lib/plans');
+const billing = require('./lib/billing');
+const shares = require('./lib/shares');
+const mineCount = (userId) => store.listAgents().filter((x) => x.ownerId === userId).length;
 const prefs = require('./lib/prefs');
 const { deliver } = require('./lib/deliver');
 const { cleanInputs } = require('./lib/kit/core');
@@ -32,9 +36,8 @@ const { cleanInputs } = require('./lib/kit/core');
 function afterRun(agentId, run) {
   const a = store.loadAgent(agentId);
   if (!a) return;
-  a.lastRun = { at: run.at, ok: run.ok, channel: run.channel, where: run.deviceName, summary: run.notifications[0] ? run.notifications[0].title : run.ok ? 'Ran, nothing to say' : 'Failed' };
-  store.saveAgent(a);
-  bus.publish(a, { event: 'run', run });
+  const fresh = store.patch(agentId, { lastRun: { at: run.at, ok: run.ok, channel: run.channel, where: run.deviceName, summary: run.notifications[0] ? run.notifications[0].title : run.ok ? 'Ran, nothing to say' : 'Failed' } });
+  bus.publish(fresh || a, { event: 'run', run });
 }
 const { askClaude } = require('./lib/claude');
 const { PERMISSIONS } = require('./lib/kit/core');
@@ -50,13 +53,24 @@ function json(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Content-Length': Buffer.byteLength(body) });
   res.end(body);
 }
-function readBody(req, limit = 1e6) {
+function readRaw(req, limit = 1e6) {
   return new Promise((resolve, reject) => {
     let data = '';
-    req.on('data', (c) => { data += c; if (data.length > limit) req.destroy(); });
-    req.on('end', () => { try { resolve(data ? JSON.parse(data) : {}); } catch (e) { reject(e); } });
-    req.on('error', reject);
+    let done = false;
+    req.on('data', (c) => {
+      if (done) return;
+      data += c;
+      // Settle first, then drop the connection, so the request never hangs.
+      if (data.length > limit) { done = true; reject(Object.assign(new Error('That request is too large.'), { status: 413 })); req.destroy(); }
+    });
+    req.on('end', () => { if (!done) { done = true; resolve(data); } });
+    req.on('error', (e) => { if (!done) { done = true; reject(e); } });
+    req.on('close', () => { if (!done) { done = true; reject(new Error('The request was cut off.')); } });
   });
+}
+async function readBody(req, limit = 1e6) {
+  const data = await readRaw(req, limit);
+  try { return data ? JSON.parse(data) : {}; } catch { throw Object.assign(new Error('That request is not valid JSON.'), { status: 400 }); }
 }
 function cookies(req) {
   return Object.fromEntries(String(req.headers.cookie || '').split(';').map((c) => {
@@ -66,10 +80,26 @@ function cookies(req) {
 }
 const isHttps = (req) => req.headers['x-forwarded-proto'] === 'https';
 const sessionCookie = (req, value, maxAge) => `${COOKIE}=${value}; Path=/; Max-Age=${maxAge}; HttpOnly; SameSite=Strict${isHttps(req) ? '; Secure' : ''}`;
-const clientIp = (req) => String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+// X-Forwarded-For is only believed when it came through our own proxy. Walking
+// from the right, the first address that is not a proxy we run is the client;
+// anything further left was written by the client and could be made up.
+const OUR_PROXIES = new Set(['2.25.157.104', '69.62.86.166', ...String(process.env.PB_TRUSTED_PROXIES || '').split(',').map((s) => s.trim()).filter(Boolean)]);
+const isOurs = (ip) => {
+  ip = String(ip || '').replace(/^::ffff:/, '');
+  return OUR_PROXIES.has(ip) || ip === '::1' || /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|fd|fc)/i.test(ip);
+};
+const clientIp = (req) => {
+  const peer = String(req.socket.remoteAddress || '');
+  if (!isOurs(peer)) return peer.replace(/^::ffff:/, '');
+  const hops = String(req.headers['x-forwarded-for'] || '').split(',').map((s) => s.trim()).filter(Boolean);
+  for (let i = hops.length - 1; i >= 0; i--) if (!isOurs(hops[i]) || i === 0) return hops[i].replace(/^::ffff:/, '');
+  return peer.replace(/^::ffff:/, '');
+};
 const currentUser = (req) => auth.userForSession(cookies(req)[COOKIE]);
 const isAdmin = (u) => !!u && u.role === 'admin';
-const canSee = (u, a) => !!a && (isAdmin(u) || a.ownerId === u.id);
+const isMember = (u, a) => !!a && !!u && (a.members || []).some((m) => m.userId === u.id);
+const canSee = (u, a) => !!a && (isAdmin(u) || a.ownerId === u.id || isMember(u, a));
+const canManage = (u, a) => !!a && (isAdmin(u) || a.ownerId === u.id);
 
 const CSP_APP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
 // The worker that runs an agent's code: it may compile that code, and nothing
@@ -129,9 +159,14 @@ function agentView(a, user) {
   const owner = isAdmin(user) && a.ownerId !== user.id ? auth.getUser(a.ownerId) : null;
   return {
     ...a,
+    shareCode: canManage(user, a) ? shares.codeFor(a.id) : null,
     ownerName: owner ? `${owner.firstName} ${owner.lastName}`.trim() : null,
     running: bus.running(a.id), thinking: bus.thinking(a.id), needsYou: store.needsYou(a),
-    runsOn: a.runsOn || 'phone', cloudRunning: cloudrun.isRunning(a.id),
+    runsOn: a.runsOn || 'phone', cloudRunning: cloudrun.isRunning(a.id), notifyStyle: a.notifyStyle || 'normal',
+    role: a.ownerId === user.id ? 'owner' : isMember(user, a) ? 'member' : 'admin',
+    members: (a.members || []).map((m) => { const x = auth.getUser(m.userId); return x ? { userId: x.id, name: `${x.firstName} ${x.lastName}`.trim(), email: x.email } : null; }).filter(Boolean),
+    invites: a.ownerId === user.id ? (a.invites || []) : [],
+    ownerFirstName: (auth.getUser(a.ownerId) || {}).firstName || '',
     inputs: ((manifest?.triggers || []).find((t) => t.type === 'manual' && Array.isArray(t.inputs)) || {}).inputs || [],
     package: rec ? { version: manifest.version, channel: rec.channel, publishedAt: rec.publishedAt, permissions: manifest.permissions, triggers: manifest.triggers, http: manifest.http || null, evals: rec.package.evals, history: rec.history, commit: rec.package.commit } : null,
     settings: manifest ? settings.view(a.id, manifest) : [],
@@ -139,7 +174,7 @@ function agentView(a, user) {
 }
 
 // ---- server ------------------------------------------------------------------------
-const PUBLIC_API = new Set(['/api/session', '/api/login', '/api/logout', '/api/signup', '/api/forgot', '/api/reset']);
+const PUBLIC_API = new Set(['/api/session', '/api/login', '/api/logout', '/api/signup', '/api/forgot', '/api/reset', '/api/stripe/webhook']);
 
 async function sendSetPasswordMail(u, token, reason) {
   const link = `${BASE_URL}/#/reset/${token}`;
@@ -158,6 +193,16 @@ const server = http.createServer(async (req, res) => {
     if (p.startsWith('/api/') && crossSiteWrite(req)) return json(res, 403, { error: 'Cross-site request refused.' });
     const ip = clientIp(req);
 
+    // ---- Stripe tells us about payments (signed; no session) ----
+    if (p === '/api/stripe/webhook' && req.method === 'POST') {
+      const raw = await readRaw(req);
+      if (!billing.verify(raw, req.headers['stripe-signature'])) return json(res, 400, { error: 'Bad signature.' });
+      let event; try { event = JSON.parse(raw); } catch { return json(res, 400, { error: 'Bad JSON.' }); }
+      const what = await billing.apply(event).catch((e) => `failed: ${e.message}`);
+      console.log(`stripe ${event.type}: ${what}`);
+      bus.broadcast({ event: 'users' }, { adminsOnly: true });
+      return json(res, 200, { received: true });
+    }
     // ---- a native app pairing with a code from the Studio (no token yet) ----
     if (p === '/api/device/pair-code' && req.method === 'POST') {
       if (auth.limited(`paircode:ip:${ip}`, 10, 10 * 60 * 1000)) return json(res, 429, { error: 'Too many tries. Wait a few minutes.' });
@@ -253,7 +298,7 @@ async function studioApi(req, res, p, url, user) {
   if (p === '/api/events' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
     res.write(`data: ${JSON.stringify({ event: 'hello', version: APP_VERSION })}\n\n`);
-    bus.attach(res, user);
+    bus.attach(res, cookies(req)[COOKIE]);
     const ping = setInterval(() => res.write(': ping\n\n'), 25000);
     req.on('close', () => { clearInterval(ping); bus.detach(res); });
     return;
@@ -265,6 +310,42 @@ async function studioApi(req, res, p, url, user) {
       crew: Object.entries(crew.CREW).map(([id, c]) => ({ id, name: c.name, emoji: c.emoji })),
       permissions: PERMISSIONS, publicKey: packages.publicKey(),
     });
+  }
+  if (p === '/api/me/plan' && req.method === 'GET') {
+    const plan = plans.planOf(user);
+    return json(res, 200, {
+      plan: { ...plan, builds: Number.isFinite(plan.builds) ? plan.builds : null, agents: Number.isFinite(plan.agents) ? plan.agents : null, spendUsd: Number.isFinite(plan.spendUsd) ? plan.spendUsd : null },
+      usage: plans.usage(user.id), agents: mineCount(user.id), payments: billing.configured(), hasSubscription: !!user.stripeCustomer,
+      plans: Object.entries(plans.PLANS).map(([id, x]) => ({ id, ...x, buyable: id !== 'free' && !!billing.priceFor(id) })),
+    });
+  }
+  if (p === '/api/billing/checkout' && req.method === 'POST') {
+    const b = await readBody(req).catch(() => ({}));
+    try { return json(res, 200, { url: await billing.checkout(user, String(b.plan || '')) }); } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+  }
+  if (p === '/api/billing/portal' && req.method === 'POST') {
+    try { return json(res, 200, { url: await billing.portal(user) }); } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+  }
+  if (p === '/api/me/export' && req.method === 'GET') {
+    const mine = store.listAgents().filter((x) => x.ownerId === user.id);
+    const out = {
+      exportedAt: new Date().toISOString(), account: auth.publicUser(user), preferences: prefs.get(user.id), aboutMe: room.aboutMe(user.id),
+      devices: devices.list(user.id),
+      agents: mine.map((a) => { const rec = packages.load(a.id); return { id: a.id, title: a.title, stage: a.stage, createdAt: a.createdAt, brief: a.brief, plan: a.plan, messages: a.messages, package: rec ? rec.package : null, channel: rec ? rec.channel : null, settings: rec ? settings.view(a.id, rec.package.manifest) : [], runs: devices.runs(a.id, 500) }; }),
+    };
+    const body = JSON.stringify(out, null, 1);
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Content-Disposition': 'attachment; filename="pocket-box-export.json"', 'Cache-Control': 'no-store', 'Content-Length': Buffer.byteLength(body) });
+    return res.end(body);
+  }
+  if (p === '/api/me/delete' && req.method === 'POST') {
+    const b = await readBody(req).catch(() => ({}));
+    if (user.primary) return json(res, 400, { error: 'The primary administrator can\'t delete this account.' });
+    try { auth.login({ email: user.email, password: b.password, ip: clientIp(req) }); } catch { return json(res, 400, { error: 'That password isn\'t right.' }); }
+    for (const a of store.listAgents().filter((x) => x.ownerId === user.id)) { bus.stop(a.id); try { packages.setChannel(a.id, 'off'); } catch {} shares.revoke(a.id); store.deleteAgent(a.id); }
+    for (const d of devices.list(user.id)) devices.revoke(user.id, d.id);
+    auth.deleteUser(user.id);
+    res.setHeader('Set-Cookie', sessionCookie(req, '', 0));
+    return json(res, 200, { ok: true });
   }
   if (p === '/api/me/prefs') {
     if (req.method === 'GET') return json(res, 200, { prefs: prefs.get(user.id), mailConfigured: mail.configured() });
@@ -279,6 +360,14 @@ async function studioApi(req, res, p, url, user) {
   if (p.startsWith('/api/admin/')) {
     if (!isAdmin(user)) return json(res, 403, { error: 'Administrators only.' });
     if (p === '/api/admin/users' && req.method === 'GET') return json(res, 200, { users: auth.listUsers(), mailConfigured: mail.configured() });
+    const pm = p.match(/^\/api\/admin\/users\/([a-f0-9]+)\/plan$/);
+    if (pm && req.method === 'POST') {
+      const b = await readBody(req).catch(() => ({}));
+      if (!plans.PLANS[b.plan]) return json(res, 400, { error: 'Unknown plan.' });
+      const u = auth.setPlan(pm[1], { plan: b.plan });
+      bus.broadcast({ event: 'users' }, { adminsOnly: true });
+      return u ? json(res, 200, { ok: true }) : json(res, 404, { error: 'No such user.' });
+    }
     const m = p.match(/^\/api\/admin\/users\/([a-f0-9]+)\/(approve|decline|disable|enable|resend|make-admin|remove-admin)$/);
     if (m && req.method === 'POST') {
       const [, id, act] = m;
@@ -286,13 +375,24 @@ async function studioApi(req, res, p, url, user) {
         if (act === 'make-admin' || act === 'remove-admin') {
           if (!user.primary) return json(res, 403, { error: 'Only the primary administrator can change roles.' });
           auth.setRole(id, act === 'make-admin' ? 'admin' : 'user');
-        } else if (id === user.id) return json(res, 400, { error: 'You cannot change your own account here.' });
-        else if (act === 'approve' || act === 'resend') {
+          bus.broadcast({ event: 'users' }, { adminsOnly: true });
+          return json(res, 200, { ok: true });
+        }
+        if (id === user.id) return json(res, 400, { error: 'You cannot change your own account here.' });
+        const target = auth.getUser(id);
+        if (!target) return json(res, 404, { error: 'No such user.' });
+        // Nobody acts on the primary administrator here, and only the primary acts on other administrators.
+        if (target.primary || (target.role === 'admin' && !user.primary)) return json(res, 403, { error: 'Only the primary administrator can change another administrator.' });
+        if (act === 'approve' || act === 'resend') {
+          // A set-password link is shown on screen only for someone who has never set a password;
+          // for an existing account it goes by email only, so it cannot be used to take the account over.
+          const fresh = !target.hash;
           const { user: u, token } = auth.approve(id);
           const r = await sendSetPasswordMail(u, token, 'approved');
           bus.broadcast({ event: 'users' }, { adminsOnly: true });
-          return json(res, 200, { ok: true, emailed: r.sent, link: r.sent ? null : r.link });
-        } else if (act === 'decline') auth.decline(id);
+          return json(res, 200, { ok: true, emailed: r.sent, link: r.sent || !fresh ? null : r.link });
+        }
+        if (act === 'decline') auth.decline(id);
         else auth.setStatus(id, act === 'disable' ? 'disabled' : 'approved');
         bus.broadcast({ event: 'users' }, { adminsOnly: true });
         return json(res, 200, { ok: true });
@@ -330,29 +430,67 @@ async function studioApi(req, res, p, url, user) {
   if (tm && req.method === 'POST') {
     const b = await readBody(req).catch(() => ({}));
     if (auth.limited(`install:${user.id}`, 30, 3600 * 1000)) return json(res, 429, { error: 'Too many installs in an hour.' });
+    const slot = plans.canAddAgent(user, mineCount(user.id));
+    if (!slot.ok) return json(res, 402, { error: slot.reason, upgrade: true });
     try {
       const a = await templates.install(user, tm[1], { values: b.values || {}, when: b.when || {}, live: b.live !== false, title: b.title, runsOn: b.runsOn });
       return json(res, 201, agentView(a, user));
     } catch (e) { return json(res, e.status || 500, { error: e.message }); }
   }
 
+  // ---- shared links: a copy of someone's agent ----
+  const sm = p.match(/^\/api\/shares\/([\w-]{8,20})(?:\/(install))?$/);
+  if (sm && req.method === 'GET' && !sm[2]) {
+    const pv = shares.preview(sm[1]);
+    return pv ? json(res, 200, pv) : json(res, 404, { error: 'This link no longer works.' });
+  }
+  if (sm && sm[2] && req.method === 'POST') {
+    const b = await readBody(req).catch(() => ({}));
+    if (auth.limited(`install:${user.id}`, 30, 3600 * 1000)) return json(res, 429, { error: 'Too many installs in an hour.' });
+    const slot = plans.canAddAgent(user, mineCount(user.id));
+    if (!slot.ok) return json(res, 402, { error: slot.reason, upgrade: true });
+    try {
+      const a = await shares.install(user, sm[1], { live: b.live === true, runsOn: b.runsOn });
+      return json(res, 201, agentView(a, user));
+    } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+  }
+
   // ---- agents ----
   if (p === '/api/agents' && req.method === 'GET') {
-    return json(res, 200, { agents: store.listAgents().filter((a) => canSee(user, a)).map((a) => ({ ...store.summary(a), running: bus.running(a.id), mine: a.ownerId === user.id })) });
+    // Invitations by email turn into membership once that person has an account.
+    for (const a of store.listAgents()) {
+      if ((a.invites || []).includes(user.email)) {
+        store.patch(a.id, (x) => {
+          x.invites = (x.invites || []).filter((e) => e !== user.email);
+          x.members = [...(x.members || []).filter((m) => m.userId !== user.id), { userId: user.id, addedAt: Date.now() }];
+        });
+      }
+    }
+    return json(res, 200, { agents: store.listAgents().filter((a) => canSee(user, a)).map((a) => ({ ...store.summary(a), running: bus.running(a.id), mine: a.ownerId === user.id, shared: isMember(user, a) })) });
   }
   if (p === '/api/agents' && req.method === 'POST') {
     const b = await readBody(req).catch(() => ({}));
     if (!String(b.idea || '').trim()) return json(res, 400, { error: 'Describe the agent you want.' });
     if (auth.limited(`create:${user.id}`, 30, 3600 * 1000)) return json(res, 429, { error: 'Too many new agents in an hour.' });
+    const can = plans.canBuild(user);
+    if (!can.ok) return json(res, 402, { error: can.reason, upgrade: !!can.upgrade });
+    const slot = plans.canAddAgent(user, mineCount(user.id));
+    if (!slot.ok) return json(res, 402, { error: slot.reason, upgrade: true });
     const a = store.createAgent({ ownerId: user.id, idea: b.idea, template: room.TEMPLATES[b.template] ? b.template : null, rounds: b.rounds });
+    plans.recordBuild(user.id);
     room.runRoom(a);
     return json(res, 201, agentView(store.loadAgent(a.id), user));
   }
-  const am = p.match(/^\/api\/agents\/([a-f0-9]{12})(?:\/([a-z-]+))?(?:\/([a-f0-9]{10}))?(?:\/([a-z]+))?$/);
+  const am = p.match(/^\/api\/agents\/([a-f0-9]{12})(?:\/([a-z-]+))?(?:\/([a-f0-9]{10,12}))?(?:\/([a-z]+))?$/);
   if (!am) return json(res, 404, { error: 'not found' });
   const [, id, action, sub, subAction] = am;
-  const a = store.loadAgent(id);
+  let a = store.loadAgent(id);
   if (!canSee(user, a)) return json(res, 404, { error: 'No such agent.' });
+  // People it is shared with may look, see its runs, run it, and leave.
+  const memberOnly = !canManage(user, a);
+  const memberMay = (!action && req.method === 'GET') || (action === 'runs' && req.method === 'GET' && !sub) || (action === 'run' && req.method === 'POST')
+    || (action === 'members' && req.method === 'DELETE' && sub === user.id);
+  if (memberOnly && !memberMay) return json(res, 403, { error: 'Only the agent\'s owner can do that.' });
 
   if (!action && req.method === 'GET') return json(res, 200, agentView(a, user));
   if (!action && req.method === 'PATCH') {
@@ -363,6 +501,7 @@ async function studioApi(req, res, p, url, user) {
   if (!action && req.method === 'DELETE') {
     bus.stop(a.id);
     try { packages.setChannel(a.id, 'off'); } catch {}
+    shares.revoke(a.id);
     store.deleteAgent(a.id);
     bus.publish(a, { event: 'deleted' });
     return json(res, 200, { ok: true });
@@ -371,11 +510,17 @@ async function studioApi(req, res, p, url, user) {
     const b = await readBody(req).catch(() => ({}));
     const text = String(b.text || '').trim().slice(0, 4000);
     if (!text) return json(res, 400, { error: 'Write something first.' });
+    const spend = plans.canSpend(auth.getUser(a.ownerId));
+    if (!spend.ok) return json(res, 402, { error: spend.reason, upgrade: !!spend.upgrade });
     const msg = store.addMessage(a, { agentId: 'owner', agentName: 'You', kind: 'owner', summary: text.slice(0, 160), content: text });
     store.saveAgent(a);
     bus.publish(a, { event: 'message', message: msg });
     crew.onOwnerMessage(store.loadAgent(a.id), text).catch((e) => console.error(`note ${a.id}: ${e.message}`));
     return json(res, 201, msg);
+  }
+  if (['build', 'approve', 'resume'].includes(action) && req.method === 'POST') {
+    const spend = plans.canSpend(auth.getUser(a.ownerId));
+    if (!spend.ok) return json(res, 402, { error: spend.reason, upgrade: !!spend.upgrade });
   }
   if (action === 'build' && req.method === 'POST') {
     if (!a.brief) return json(res, 409, { error: 'The room has not written the brief yet.' });
@@ -396,6 +541,35 @@ async function studioApi(req, res, p, url, user) {
     try { crew.resume(a); return json(res, 202, { ok: true }); } catch (e) { return json(res, e.status || 500, { error: e.message }); }
   }
   if (action === 'pause' && req.method === 'POST') { bus.stop(a.id); return json(res, 202, { ok: true }); }
+  if (action === 'members' && req.method === 'POST' && !sub) {
+    if (a.ownerId !== user.id) return json(res, 403, { error: 'Only the agent\'s owner can share it.' });
+    const b = await readBody(req).catch(() => ({}));
+    const email = String(b.email || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return json(res, 400, { error: 'Enter an email address.' });
+    if (email === user.email) return json(res, 400, { error: 'That\'s you.' });
+    const limit = plans.planOf(user).members;
+    const count = (a.members || []).length + (a.invites || []).length;
+    if (count >= limit) return json(res, 402, { error: limit ? `Your plan shares an agent with up to ${limit} people.` : 'Sharing comes with the Family and Business plans.', upgrade: true });
+    const target = auth.listUsers().find((x) => x.email === email && x.status === 'approved');
+    a = store.patch(a.id, (x) => {
+      x.members = x.members || []; x.invites = x.invites || [];
+      if (target) { if (!x.members.some((m) => m.userId === target.id)) x.members.push({ userId: target.id, addedAt: Date.now() }); }
+      else if (!x.invites.includes(email)) x.invites.push(email);
+    });
+    mail.send({ to: email, subject: `${user.firstName} shared "${a.title}" with you on Pocket Box`, text: target
+      ? `Hi ${target.firstName},\n\n${user.firstName} ${user.lastName} shared the agent "${a.title}" with you. You'll get its notifications, and you can run it from Pocket Box.\n\n${BASE_URL}/#/a/${a.id}\n`
+      : `Hi,\n\n${user.firstName} ${user.lastName} shared the agent "${a.title}" with you on Pocket Box. Create a free account with this email to get its notifications:\n\n${BASE_URL}/#/signup\n` }).catch(() => {});
+    return json(res, 200, agentView(a, user));
+  }
+  if (action === 'members' && req.method === 'DELETE' && sub) {
+    a = store.patch(a.id, (x) => { x.members = (x.members || []).filter((m) => m.userId !== sub); });
+    return json(res, 200, a.ownerId === user.id ? agentView(a, user) : { ok: true });
+  }
+  if (action === 'invites' && req.method === 'DELETE') {
+    const email = String(url.searchParams.get('email') || '').toLowerCase();
+    a = store.patch(a.id, (x) => { x.invites = (x.invites || []).filter((e) => e !== email); });
+    return json(res, 200, agentView(a, user));
+  }
   if (action === 'quick' && req.method === 'POST') {
     if (a.ownerId !== user.id) return json(res, 403, { error: 'Only the agent\'s owner can change it.' });
     if (!bus.start(a.id)) return json(res, 409, { error: 'Wait for the current step to finish.' });
@@ -411,25 +585,41 @@ async function studioApi(req, res, p, url, user) {
     } catch (e) { return json(res, e.status || 500, { error: e.message }); }
     finally { bus.finish(a.id); }
   }
+  if (action === 'share' && req.method === 'POST') {
+    if (a.ownerId !== user.id) return json(res, 403, { error: 'Only the agent\'s owner can share a copy.' });
+    if (!packages.load(a.id)) return json(res, 409, { error: 'It has to be built before it can be shared.' });
+    const code = shares.create(a, user);
+    return json(res, 200, { code, url: `${BASE_URL}/#/s/${code}` });
+  }
+  if (action === 'share' && req.method === 'DELETE') {
+    if (a.ownerId !== user.id) return json(res, 403, { error: 'Only the agent\'s owner can stop sharing.' });
+    shares.revoke(a.id);
+    return json(res, 200, { ok: true });
+  }
+  if (action === 'style' && req.method === 'POST') {
+    if (a.ownerId !== user.id) return json(res, 403, { error: 'Only the agent\'s owner chooses how it notifies.' });
+    const b = await readBody(req).catch(() => ({}));
+    if (!['normal', 'quiet', 'urgent', 'digest'].includes(b.style)) return json(res, 400, { error: 'Choose normal, quiet, urgent or digest.' });
+    a = store.patch(a.id, { notifyStyle: b.style });
+    return json(res, 200, agentView(a, user));
+  }
   if (action === 'where' && req.method === 'POST') {
     if (a.ownerId !== user.id) return json(res, 403, { error: 'Only the agent\'s owner chooses where it runs.' });
     const b = await readBody(req).catch(() => ({}));
     if (!['phone', 'cloud'].includes(b.runsOn)) return json(res, 400, { error: 'Choose phone or cloud.' });
-    a.runsOn = b.runsOn;
-    store.saveAgent(a);
+    a = store.patch(a.id, { runsOn: b.runsOn });
     return json(res, 200, agentView(a, user));
   }
   if (action === 'snooze' && req.method === 'POST') {
     if (a.ownerId !== user.id) return json(res, 403, { error: 'Only the agent\'s owner can snooze it.' });
     const b = await readBody(req).catch(() => ({}));
     const minutes = b.until === 'off' ? 0 : b.until === 'today' ? null : Math.min(Math.max(Number(b.minutes) || 60, 15), 7 * 24 * 60);
-    if (b.until === 'today') { const d = new Date(); d.setHours(23, 59, 0, 0); a.snoozeUntil = d.getTime(); }
-    else a.snoozeUntil = minutes ? Date.now() + minutes * 60000 : null;
-    store.saveAgent(a);
+    let until = minutes ? Date.now() + minutes * 60000 : null;
+    if (b.until === 'today') { const d = new Date(); d.setHours(23, 59, 0, 0); until = d.getTime(); }
+    a = store.patch(a.id, { snoozeUntil: until });
     return json(res, 200, agentView(a, user));
   }
   if (action === 'run' && req.method === 'POST') {
-    if (a.ownerId !== user.id) return json(res, 403, { error: 'Only the agent\'s owner can run it.' });
     const rec = packages.load(a.id);
     if (!rec) return json(res, 409, { error: 'It has to be built first.' });
     if (rec.channel === 'off') return json(res, 409, { error: 'It is switched off. Turn it on first.' });
@@ -437,7 +627,7 @@ async function studioApi(req, res, p, url, user) {
     if (missing.length) return json(res, 409, { error: `It needs your settings first: ${missing.join(', ')}.` });
     if (cloudrun.isRunning(a.id)) return json(res, 409, { error: 'It is running right now.' });
     const b = await readBody(req).catch(() => ({}));
-    const run = await cloudrun.run(a, { type: 'manual', input: cleanInputs(rec.package.manifest, b.input) }, { onRun: (r) => afterRun(a.id, r) });
+    const run = await cloudrun.run(a, { type: 'manual', input: cleanInputs(rec.package.manifest, b.input), by: user.firstName }, { onRun: (r) => afterRun(a.id, r) });
     return run ? json(res, 200, { run }) : json(res, 409, { error: 'It could not run just now.' });
   }
   if (action === 'channel' && req.method === 'POST') {
@@ -472,6 +662,8 @@ async function studioApi(req, res, p, url, user) {
   if (action === 'runs' && sub && subAction === 'wrong' && req.method === 'POST') {
     const run = devices.runs(a.id, 500).find((r) => r.id === sub);
     if (!run) return json(res, 404, { error: 'No such run.' });
+    const spend = plans.canSpend(auth.getUser(a.ownerId));
+    if (!spend.ok) return json(res, 402, { error: spend.reason, upgrade: !!spend.upgrade });
     const b = await readBody(req).catch(() => ({}));
     const text = `That run was wrong${b.note ? `: ${String(b.note).slice(0, 1500)}` : '.'}\n\nThe run (${new Date(run.at).toISOString()}, ${run.trigger}, version ${run.version}): ${run.ok ? 'finished' : `failed: ${run.error}`}. ${run.notifications.map((n) => `Notified "${n.title}: ${n.body}"`).join(' ') || 'No notification.'} Log: ${run.log.join(' | ').slice(0, 1500)}`;
     const msg = store.addMessage(a, { agentId: 'owner', agentName: 'You', kind: 'owner', summary: text.slice(0, 160), content: text });
@@ -512,7 +704,7 @@ async function deviceApi(req, res, p, url) {
       publicKey: packages.publicKey(), pushKey: push.publicKey(), version: APP_VERSION,
       device: { id: device.id, name: device.name, tz: device.tz },
       owner: { firstName: owner.firstName },
-      handoff: { used: devices.handoffUsage(device.ownerId), cap: config.HANDOFF_DAILY_CAP },
+      handoff: { used: devices.handoffUsage(device.ownerId), cap: plans.planOf(owner).handoffsPerDay },
       agents: list.map(({ a, rec }) => ({
         agentId: a.id, title: a.title, icon: a.icon || null, channel: rec.channel, runsOn: a.runsOn || 'phone',
         package: rec.channel === 'off' ? null : rec.package, signature: rec.channel === 'off' ? null : rec.signature,
@@ -552,9 +744,10 @@ async function deviceApi(req, res, p, url) {
     if (!perms.includes('handoff') && !(b.kind === 'model' && perms.includes('model'))) return json(res, 403, { error: 'This agent may not hand off.' });
     // Owner only: the phone is the owner's and the agent is the owner's.
     if (own.a.ownerId !== device.ownerId) return json(res, 403, { error: 'Hand-offs are for the owner\'s own agents.' });
-    if (!devices.takeHandoff(device.ownerId)) return json(res, 429, { error: `Today's hand-off cap (${config.HANDOFF_DAILY_CAP}) is used up.`, text: null });
+    const cap = plans.planOf(owner).handoffsPerDay;
+    if (!devices.takeHandoff(device.ownerId, cap)) return json(res, 429, { error: `Today's hand-off cap (${cap}) is used up.`, text: null });
     try {
-      const r = await askClaude({
+      const r = await askClaude({ account: own.a.ownerId,
         model: 'sonnet', timeoutMs: 3 * 60 * 1000,
         system: `You answer one request from "${own.a.title}", a personal agent running on its owner's phone. Answer directly and briefly in plain text (no markdown headings), under 200 words unless the request asks for a specific format. You have no tools.`,
         prompt: String(b.prompt || '').slice(0, 8000),

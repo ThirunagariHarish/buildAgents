@@ -1,0 +1,21 @@
+{
+ "name": "A second I'm OK the same day is quiet",
+ "trigger": {
+  "type": "manual",
+  "input": {
+   "status": "I'm OK"
+  }
+ },
+ "now": "2026-10-12T05:00:00Z",
+ "settings": {
+  "person": "Mum"
+ },
+ "memory": {
+  "lastOk": "2026-10-12"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

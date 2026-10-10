@@ -1,0 +1,24 @@
+{
+ "name": "Asking for a call always gets through",
+ "trigger": {
+  "type": "manual",
+  "input": {
+   "status": "Please call me"
+  }
+ },
+ "now": "2026-10-12T03:00:00Z",
+ "settings": {
+  "person": "Dad"
+ },
+ "memory": {
+  "lastOk": "2026-10-12"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "asked for a call"
+   ]
+  }
+ }
+}

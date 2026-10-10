@@ -1,0 +1,25 @@
+{
+  "name": "I'm OK check-in",
+  "icon": "💛",
+  "category": "Family",
+  "summary": "Someone you care for taps \"I'm OK\" each day. If they haven't by the time you choose, the family hears about it.",
+  "examples": [
+    "Elderly parent living alone",
+    "Someone recovering",
+    "Solo traveller"
+  ],
+  "fields": [
+    {
+      "key": "person",
+      "label": "Who checks in",
+      "type": "text",
+      "placeholder": "e.g. Mum"
+    }
+  ],
+  "when": {
+    "type": "schedule",
+    "default": "10:00"
+  },
+  "share": true,
+  "after": "Share it with the person and your family under Settings → Shared with. They tap Run → \"I'm OK\" each day."
+}

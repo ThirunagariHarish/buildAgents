@@ -37,6 +37,12 @@ case "$TOKEN" in sk-ant-oat01-*) ;; "") ;; *) echo "claude token: wrong format, 
     v=$(printf '%s' "$v" | tr -d '"$`\\')
     case "$v" in *" "*) [ -n "$v" ] && printf '%s="%s"\n' "$to" "$v" ;; *) [ -n "$v" ] && printf '%s=%s\n' "$to" "$v" ;; esac
   done
+  # Paying customers (all optional; each turns on when its GitHub secret exists):
+  # the Anthropic key that customers' builds are billed to, and Stripe.
+  for k in ANTHROPIC_API_KEY STRIPE_SECRET_KEY STRIPE_WEBHOOK_SECRET STRIPE_PRICE_PLUS STRIPE_PRICE_FAMILY STRIPE_PRICE_BUSINESS; do
+    from=POCKETBOX_$k; v=$(clean "${!from:-}" | tr -d '[:space:]"$`\\')
+    if [ -n "$v" ]; then printf 'PB_%s=%s\n' "$k" "$v"; fi
+  done
   # The sender name is the app's own; the address is the SMTP account.
   SMTP_ADDR=$(printf '%s' "${BOX_SMTP_USER:-}" | tr -d '[:space:]')
   [ -n "$SMTP_ADDR" ] && printf 'PB_MAIL_FROM="Pocket Box <%s>"\n' "$SMTP_ADDR"

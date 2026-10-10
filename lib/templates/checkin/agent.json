@@ -1,0 +1,42 @@
+{
+  "id": "checkin",
+  "name": "I'm OK check-in",
+  "icon": "💛",
+  "version": "1.0.0",
+  "description": "A daily check-in: the person taps I'm OK; if they haven't by the set time, everyone it's shared with is told. They can also ask for a call.",
+  "permissions": [
+    "notify",
+    "memory"
+  ],
+  "triggers": [
+    {
+      "type": "schedule",
+      "at": "10:00"
+    },
+    {
+      "type": "manual",
+      "label": "Check in",
+      "inputs": [
+        {
+          "key": "status",
+          "label": "How are you today?",
+          "type": "choice",
+          "options": [
+            "I'm OK",
+            "Please call me"
+          ]
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "key": "person",
+      "label": "Who checks in",
+      "type": "text"
+    }
+  ],
+  "budget": {
+    "steps": 4
+  }
+}

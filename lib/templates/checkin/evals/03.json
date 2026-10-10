@@ -1,0 +1,28 @@
+{
+ "name": "I'm OK is recorded and shared",
+ "trigger": {
+  "type": "manual",
+  "input": {
+   "status": "I'm OK"
+  }
+ },
+ "now": "2026-10-12T03:00:00Z",
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "person": "Mum"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "checked in"
+   ],
+   "bodyIncludes": [
+    "08:30"
+   ]
+  },
+  "memory": {
+   "lastOk": "2026-10-12"
+  }
+ }
+}
