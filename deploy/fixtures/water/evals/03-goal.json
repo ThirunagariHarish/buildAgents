@@ -1,0 +1,1 @@
+{"trigger":{"type":"interval"},"settings":{"glasses":8},"memory":{"count":{"day":"2026-10-12","n":7}},"http":{},"name":"Goal reached","now":"2026-10-12T18:00:00.000Z","expect":{"notify":{"count":1,"bodyIncludes":["Goal reached"]}}}

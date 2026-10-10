@@ -1,0 +1,64 @@
+# Routes agents.cashflowus.com through the cluster's Traefik to Pocket Box,
+# which runs as a systemd service on the worker node (69.62.86.166:3401),
+# outside k8s, next to Box. Applied by deploy/remote-deploy.sh.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pocketbox
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pocketbox
+  namespace: pocketbox
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3401
+      protocol: TCP
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: pocketbox-host
+  namespace: pocketbox
+  labels:
+    kubernetes.io/service-name: pocketbox
+    endpointslice.kubernetes.io/managed-by: pocketbox-manual
+addressType: IPv4
+ports:
+  - name: http
+    port: 3401
+    protocol: TCP
+endpoints:
+  - addresses:
+      - 69.62.86.166
+    conditions:
+      ready: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pocketbox
+  namespace: pocketbox
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: agents.cashflowus.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pocketbox
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - agents.cashflowus.com
+      secretName: pocketbox-tls

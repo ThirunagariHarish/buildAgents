@@ -1,0 +1,76 @@
+name: Deploy Pocket Box
+
+on:
+  push:
+    branches: [pocketbox]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-pocketbox
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Test the agent kit and the server before deploying
+        run: |
+          for f in server.js lib/*.js lib/kit/*.js public/*.js; do node --check "$f"; done
+          node deploy/selftest.js
+
+      - name: Deploy to VPS via SSH
+        id: ssh
+        uses: appleboy/ssh-action@v1
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          BOX_SMTP_HOST: ${{ secrets.BOX_SMTP_HOST }}
+          BOX_SMTP_PORT: ${{ secrets.BOX_SMTP_PORT }}
+          BOX_SMTP_USER: ${{ secrets.BOX_SMTP_USER }}
+          BOX_SMTP_PASS: ${{ secrets.BOX_SMTP_PASS }}
+          BOX_MAIL_FROM: ${{ secrets.BOX_MAIL_FROM }}
+          BOX_TELEGRAM_TOKEN: ${{ secrets.BOX_TELEGRAM_TOKEN }}
+          BOX_TELEGRAM_CHAT_ID: ${{ secrets.BOX_TELEGRAM_CHAT_ID }}
+          BOX_ADMIN_PASSWORD: ${{ secrets.BOX_ADMIN_PASSWORD }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          envs: CLAUDE_CODE_OAUTH_TOKEN,BOX_SMTP_HOST,BOX_SMTP_PORT,BOX_SMTP_USER,BOX_SMTP_PASS,BOX_MAIL_FROM,BOX_TELEGRAM_TOKEN,BOX_TELEGRAM_CHAT_ID,BOX_ADMIN_PASSWORD
+          capture_stdout: true
+          command_timeout: 20m
+          script: |
+            set -e
+            APP_DIR=/opt/pocketbox
+            REPO_URL=https://github.com/ThirunagariHarish/buildAgents.git
+            BRANCH=pocketbox
+            command -v git >/dev/null || (apt-get update -y && apt-get install -y git curl)
+            if [ ! -d "$APP_DIR/.git" ]; then
+              git clone -b "$BRANCH" --single-branch "$REPO_URL" "$APP_DIR"
+            else
+              cd "$APP_DIR" && git fetch -q origin "$BRANCH" && git reset -q --hard "origin/$BRANCH"
+            fi
+            bash "$APP_DIR/deploy/remote-deploy.sh" 2>&1
+
+      - name: Commit deploy log
+        if: always()
+        env:
+          OUT: ${{ steps.ssh.outputs.stdout }}
+          OUTCOME: ${{ steps.ssh.outcome }}
+        run: |
+          {
+            echo "run: ${{ github.run_number }}  commit: ${GITHUB_SHA::7}  ssh step: $OUTCOME  at: $(date -u +%FT%TZ)"
+            echo
+            printf '%s\n' "$OUT"
+          } > deploy/last-run.log
+          git config user.name "pocketbox-deploy-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add deploy/last-run.log
+          git commit -m "Deploy log for run ${{ github.run_number }} [skip ci]" || exit 0
+          for i in 1 2 3; do git pull -q --rebase origin pocketbox && git push -q origin HEAD:pocketbox && break; sleep 3; done

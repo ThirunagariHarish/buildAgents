@@ -1,0 +1,1 @@
+{"trigger":{"type":"interval"},"settings":{"glasses":8},"memory":{},"http":{},"name":"First glass","now":"2026-10-12T09:00:00.000Z","expect":{"notify":{"count":1,"bodyIncludes":["Glass 1 of 8"]},"memory":{"count":{"day":"2026-10-12","n":1}}}}

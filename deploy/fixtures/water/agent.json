@@ -1,0 +1,31 @@
+{
+  "id": "water-reminder",
+  "name": "Water reminder",
+  "icon": "💧",
+  "description": "Reminds you to drink water during the day, quiet at night.",
+  "version": "1.0.0",
+  "permissions": [
+    "notify",
+    "memory"
+  ],
+  "triggers": [
+    {
+      "type": "interval",
+      "minutes": 120
+    },
+    {
+      "type": "manual",
+      "label": "Remind me now"
+    }
+  ],
+  "settings": [
+    {
+      "key": "glasses",
+      "label": "Glasses per day",
+      "type": "number"
+    }
+  ],
+  "budget": {
+    "steps": 6
+  }
+}
