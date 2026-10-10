@@ -25,9 +25,16 @@ BOX_GITHUB_TOKEN=$(printf '%s' "${BOX_GITHUB_TOKEN:-}" | tr -d '[:space:]')
   [ -n "$BOX_GITHUB_TOKEN" ] && printf 'BOX_GITHUB_TOKEN=%s\n' "$BOX_GITHUB_TOKEN"
   [ -n "${BOX_TELEGRAM_TOKEN:-}" ] && printf 'BOX_TELEGRAM_TOKEN=%s\n' "$(printf '%s' "$BOX_TELEGRAM_TOKEN" | tr -d '[:space:]')"
   [ -n "${BOX_TELEGRAM_CHAT_ID:-}" ] && printf 'BOX_TELEGRAM_CHAT_ID=%s\n' "$(printf '%s' "$BOX_TELEGRAM_CHAT_ID" | tr -d '[:space:]')"
-  for k in BOX_SMTP_HOST BOX_SMTP_PORT BOX_SMTP_USER BOX_SMTP_PASS BOX_MAIL_FROM BOX_ADMIN_PASSWORD; do
-    v=$(printf '%s' "${!k:-}" | tr -d '\r\n'); [ -n "$v" ] && printf '%s=%s\n' "$k" "$v"
+  for k in BOX_SMTP_HOST BOX_SMTP_PORT BOX_SMTP_USER BOX_SMTP_PASS BOX_ADMIN_PASSWORD; do
+    v=$(printf '%s' "${!k:-}" | tr -d '\r\n')
+    # App Passwords are shown with spaces; Gmail wants them without.
+    case "$k" in BOX_SMTP_HOST|BOX_SMTP_PORT|BOX_SMTP_USER|BOX_SMTP_PASS) v=$(printf '%s' "$v" | tr -d '[:space:]') ;; esac
+    v=$(printf '%s' "$v" | tr -d '"$`\\')
+    case "$v" in *" "*) printf '%s="%s"\n' "$k" "$v" ;; ?*) printf '%s=%s\n' "$k" "$v" ;; esac
   done
+  # The sender name is the app's own; the address is the SMTP account.
+  SMTP_ADDR=$(printf '%s' "${BOX_SMTP_USER:-}" | tr -d '[:space:]')
+  [ -n "$SMTP_ADDR" ] && printf 'BOX_MAIL_FROM="Box <%s>"\n' "$SMTP_ADDR"
   printf 'BOX_DOMAIN=%s\n' "$DOMAIN"
   printf 'BOX_KUBECONFIG_FILE=/etc/box-kubeconfig\n'
 } > /etc/box.env
@@ -77,7 +84,7 @@ CHECK_TOKEN=$(node -e "const a=require('./lib/auth');a.ensureAdmin();const u=a.a
 COOKIE="box_session=${CHECK_TOKEN}"
 echo "api without sign-in: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:3400/api/ideas) (401 = sign-in enforced)"
 echo "accounts: $(node -e "try{const u=JSON.parse(require('fs').readFileSync('data/users.json'));console.log(u.length+' user(s): '+u.map(x=>x.email+' ('+x.role+', '+x.status+')').join(', '))}catch(e){console.log('none yet')}")"
-echo "mail: $([ -n "${BOX_SMTP_HOST:-}" ] && echo "SMTP via ${BOX_SMTP_HOST}" || echo 'not configured (approval links shown in the app instead)')"
+echo "mail: $(set -a; . /etc/box.env 2>/dev/null; set +a; timeout 30 node -e "require('./lib/mail').verify().then(r=>console.log(r.ok?'SMTP login OK as '+process.env.BOX_SMTP_USER+' via '+process.env.BOX_SMTP_HOST:'NOT working: '+r.error))")"
 echo "security headers: $(curl -s -D - -o /dev/null --max-time 8 http://localhost:3400/ | grep -ciE 'content-security-policy|x-frame-options|x-content-type') of 3"
 echo "agent pool: $(curl -s --max-time 8 -H "Cookie: $COOKIE" http://localhost:3400/api/agents | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const l=JSON.parse(d);console.log(l.length+' agents — '+l.map(a=>a.name+(a.builtin?'':' (added)')).join(', '))}catch(e){console.log('unreadable: '+d.slice(0,120))}})")"
 
