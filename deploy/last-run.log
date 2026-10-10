@@ -1,6 +1,6 @@
-run: 105  commit: f50850f  ssh step: success  at: 2026-10-10T21:45:54Z
+run: 106  commit: 5c54479  ssh step: success  at: 2026-10-10T23:05:10Z
 
-HEAD: f50850f   domain: agents.cashflowus.com   port: 3401
+HEAD: 5c54479   domain: agents.cashflowus.com   port: 3401
 == prerequisites ==
 node v22.23.3, claude 2.1.287 (Claude Code), build user 999, bwrap /usr/bin/bwrap
 == env file ==
@@ -11,12 +11,12 @@ data: root 711, work: root 711
 bubblewrap: on (read-only system, Pocket Box and Box data hidden, own repo only)
 == service ==
 service: active
-   Oct 10 21:45:25 srv1349789 node[2582217]:   SIGTERM: 1 run(s) finishing their current turn…
-   Oct 10 21:45:38 srv1349789 systemd[1]: pocketbox.service: Deactivated successfully.
-   Oct 10 21:45:38 srv1349789 systemd[1]: Stopped pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone.
-   Oct 10 21:45:38 srv1349789 systemd[1]: pocketbox.service: Consumed 9.327s CPU time, 184.5M memory peak, 0B memory swap peak.
-   Oct 10 21:45:38 srv1349789 systemd[1]: Started pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone.
-   Oct 10 21:45:38 srv1349789 node[2604119]:   Pocket Box is running at http://localhost:3401 (public https://agents.cashflowus.com)
+   Oct 10 23:04:47 srv1349789 node[2604119]:   SIGTERM: 0 run(s) finishing their current turn…
+   Oct 10 23:04:50 srv1349789 systemd[1]: pocketbox.service: Deactivated successfully.
+   Oct 10 23:04:50 srv1349789 systemd[1]: Stopped pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone.
+   Oct 10 23:04:50 srv1349789 systemd[1]: pocketbox.service: Consumed 33.815s CPU time, 303.3M memory peak, 0B memory swap peak.
+   Oct 10 23:04:50 srv1349789 systemd[1]: Started pocketbox.service - Pocket Box — personal agents, built in the Studio, run on your phone.
+   Oct 10 23:04:51 srv1349789 node[2862871]:   Pocket Box is running at http://localhost:3401 (public https://agents.cashflowus.com)
 local /: HTTP 200
 local /runtime: HTTP 200
 api without sign-in: HTTP 401 (401 = sign-in enforced)
@@ -34,11 +34,12 @@ signing key: hbGVuEbi21ZZkyeV… (Ed25519)
    ingress.networking.k8s.io/pocketbox unchanged
    certificate: pocketbox-tls ready=True 
 == claude ==
-haiku: OK (3s) -> OK
+haiku: OK (2s) -> OK
 sonnet: OK (2s) -> OK
-opus: OK (2s) -> OK
+opus: OK (3s) -> OK
 claude inside the crew sandbox: OK
 data hidden inside the sandbox: 0 0 (0 0 = hidden)
+cloud-run sandbox network: none (good)
 == the domain, as the internet reaches it ==
 https://agents.cashflowus.com/ -> HTTP 200
 https://agents.cashflowus.com/runtime -> HTTP 200
