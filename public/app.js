@@ -237,16 +237,17 @@
         <div id="form-note"></div>
         <button class="btn" style="width:100%">Sign in</button>
       </form>
-      <div class="row between small" style="margin-top:18px">
+      <div class="row" style="margin:14px 0 0;gap:10px;color:var(--faint)"><span style="flex:1;height:1px;background:var(--line-2)"></span><span class="small">New here?</span><span style="flex:1;height:1px;background:var(--line-2)"></span></div>
+      <a class="btn soft" href="#/signup" style="width:100%;margin-top:14px">Create an account</a>
+      <div class="row small" style="margin-top:16px;justify-content:center">
         <a class="link" href="#/forgot">Forgot password?</a>
-        <a class="link" href="#/signup">Ask for access</a>
       </div>`);
   }
   function signupView() {
     return authShell(`
       <a class="btn ghost sm" href="#/login" style="margin:-8px 0 12px -10px">${icon.back} Back</a>
-      <h1 class="display" style="font-size:40px">Ask for <em>access</em></h1>
-      <p class="muted" style="margin:10px 0 22px">Pocket Box is invite-only. The administrator reviews each request; you'll get an email to set your password.</p>
+      <h1 class="display" style="font-size:40px">Create your <em>account</em></h1>
+      <p class="muted" style="margin:10px 0 22px">The administrator approves each new account. Once approved, you'll get a link to set your password.</p>
       <form data-form="signup" class="stack">
         <div class="row" style="gap:10px">
           <label class="field" style="flex:1"><span>First name</span><input class="input" name="firstName" autocomplete="given-name" required autofocus></label>
@@ -255,7 +256,7 @@
         <label class="field"><span>Email</span><input class="input" name="email" type="email" autocomplete="email" required></label>
         <label class="field"><span>Phone</span><input class="input" name="phone" type="tel" autocomplete="tel" required></label>
         <div id="form-note"></div>
-        <button class="btn" style="width:100%">Send request</button>
+        <button class="btn" style="width:100%">Create account</button>
       </form>`);
   }
   function forgotView() {
