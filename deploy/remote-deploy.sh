@@ -31,7 +31,11 @@ case "$TOKEN" in sk-ant-oat01-*) ;; "") ;; *) echo "claude token: wrong format, 
   [ -n "$TOKEN" ] && printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "$TOKEN"
   # Mail, Telegram and the first administrator password reuse Box's secrets.
   for pair in PB_SMTP_HOST:BOX_SMTP_HOST PB_SMTP_PORT:BOX_SMTP_PORT PB_SMTP_USER:BOX_SMTP_USER PB_SMTP_PASS:BOX_SMTP_PASS PB_MAIL_FROM:BOX_MAIL_FROM PB_TELEGRAM_TOKEN:BOX_TELEGRAM_TOKEN PB_TELEGRAM_CHAT_ID:BOX_TELEGRAM_CHAT_ID PB_ADMIN_PASSWORD:BOX_ADMIN_PASSWORD; do
-    to=${pair%%:*}; from=${pair##*:}; v=$(clean "${!from:-}"); [ -n "$v" ] && printf '%s=%s\n' "$to" "$v"
+    to=${pair%%:*}; from=${pair##*:}; v=$(clean "${!from:-}")
+    # App Passwords are shown with spaces; Gmail wants them without.
+    case "$to" in PB_SMTP_PASS|PB_SMTP_HOST|PB_SMTP_PORT|PB_SMTP_USER) v=$(printf '%s' "$v" | tr -d '[:space:]') ;; esac
+    v=$(printf '%s' "$v" | tr -d '"$`\\')
+    case "$v" in *" "*) [ -n "$v" ] && printf '%s="%s"\n' "$to" "$v" ;; *) [ -n "$v" ] && printf '%s=%s\n' "$to" "$v" ;; esac
   done
 } > "$ENV_FILE"
 chmod 600 "$ENV_FILE"
@@ -90,6 +94,7 @@ echo "api without sign-in: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-t
 echo "worker policy: $(curl -s -D - -o /dev/null --max-time 8 http://localhost:$PORT/agent-worker.js | grep -i '^content-security-policy' | tr -d '\r')"
 echo "accounts: $(node -e "try{const u=JSON.parse(require('fs').readFileSync('$DATA/users.json'));console.log(u.length+' user(s): '+u.map(x=>x.email+' ('+x.role+', '+x.status+')').join(', '))}catch(e){console.log('none yet')}")"
 echo "service sees hidden dirs: $(tr '\0' '\n' < /proc/$(systemctl show -p MainPID --value pocketbox)/environ 2>/dev/null | grep '^PB_HIDE_DIRS=' || echo none)"
+echo "mail: $(set -a; . "$ENV_FILE"; set +a; timeout 30 node -e "require('./lib/mail').verify().then(r=>console.log(r.ok?'SMTP login OK as '+process.env.PB_SMTP_USER+' via '+process.env.PB_SMTP_HOST:'NOT working: '+r.error))")"
 echo "signing key: $(node -e "try{console.log(JSON.parse(require('fs').readFileSync('$DATA/keys/signing.json')).publicKey.slice(0,16)+'… (Ed25519)')}catch(e){console.log('not created yet')}")"
 
 # Box's port is reachable from the cluster; give Pocket Box's the same treatment.
