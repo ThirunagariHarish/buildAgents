@@ -1,0 +1,101 @@
+name: Build Android app
+
+on:
+  push:
+    branches: [pocketbox]
+    paths: ['android/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-pocketbox
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Fetch the signing key from the server (made on the first build)
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          set -e
+          KDIR=/opt/pocketbox/data/keys
+          if [ -n "$VPS_SSH_KEY" ]; then
+            printf '%s\n' "$VPS_SSH_KEY" > "$RUNNER_TEMP/k" && chmod 600 "$RUNNER_TEMP/k"
+            SSH="ssh -i $RUNNER_TEMP/k -o StrictHostKeyChecking=accept-new"; SCP="scp -i $RUNNER_TEMP/k -o StrictHostKeyChecking=accept-new"
+          else
+            sudo apt-get install -y -qq sshpass >/dev/null
+            export SSHPASS="$VPS_PASSWORD"
+            SSH="sshpass -e ssh -o StrictHostKeyChecking=accept-new"; SCP="sshpass -e scp -o StrictHostKeyChecking=accept-new"
+          fi
+          if $SCP -q "$VPS_USER@$VPS_HOST:$KDIR/android.keystore" "$RUNNER_TEMP/pocket.keystore" 2>/dev/null && $SCP -q "$VPS_USER@$VPS_HOST:$KDIR/android.pass" "$RUNNER_TEMP/pocket.pass" 2>/dev/null; then
+            echo "signing key: fetched from the server"
+          else
+            openssl rand -hex 24 > "$RUNNER_TEMP/pocket.pass"
+            keytool -genkeypair -keystore "$RUNNER_TEMP/pocket.keystore" -storepass "$(cat "$RUNNER_TEMP/pocket.pass")" -keypass "$(cat "$RUNNER_TEMP/pocket.pass")" \
+              -alias pocket -keyalg RSA -keysize 3072 -validity 10000 -dname "CN=Pocket Box, O=cashflowus" >/dev/null 2>&1
+            $SSH "$VPS_USER@$VPS_HOST" "mkdir -p $KDIR && chmod 700 $KDIR"
+            $SCP -q "$RUNNER_TEMP/pocket.keystore" "$RUNNER_TEMP/pocket.pass" "$VPS_USER@$VPS_HOST:$KDIR/"
+            $SSH "$VPS_USER@$VPS_HOST" "cd $KDIR && mv pocket.keystore android.keystore && mv pocket.pass android.pass && chmod 600 android.keystore android.pass"
+            echo "signing key: created and stored on the server"
+          fi
+          echo "::add-mask::$(cat "$RUNNER_TEMP/pocket.pass")"
+          echo "POCKET_KEYSTORE=$RUNNER_TEMP/pocket.keystore" >> "$GITHUB_ENV"
+          echo "POCKET_KEYSTORE_PASS=$(cat "$RUNNER_TEMP/pocket.pass")" >> "$GITHUB_ENV"
+          rm -f "$RUNNER_TEMP/k"
+
+      - name: Build the APK
+        id: build
+        run: |
+          set -o pipefail
+          gradle -p android assembleRelease --no-daemon --console=plain 2>&1 | tee build.log
+          cp android/app/build/outputs/apk/release/app-release.apk pocket.apk
+          printf '{"version":"1.0.%s","builtAt":"%s","commit":"%s"}\n' "$GITHUB_RUN_NUMBER" "$(date -u +%FT%TZ)" "${GITHUB_SHA::7}" > pocket.json
+          ls -la pocket.apk
+
+      - name: Put the APK on the Pocket Box server
+        if: success()
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          source: pocket.apk,pocket.json
+          target: /opt/pocketbox/data/downloads
+
+      - name: Save the build log to the branch
+        if: always()
+        run: |
+          {
+            echo "run: ${{ github.run_number }}  commit: ${GITHUB_SHA::7}  build: ${{ steps.build.outcome }}  at: $(date -u +%FT%TZ)"
+            echo
+            grep -E "^e: |error:|FAILURE|What went wrong|BUILD (SUCCESSFUL|FAILED)|warning: \[|> Task :app:(compile|assemble)" build.log | head -80 || true
+            echo
+            echo "== last lines =="
+            tail -40 build.log
+          } > android-build.log
+          git config user.name "pocketbox-build-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git fetch -q origin pocketbox && git checkout -q -B pocketbox origin/pocketbox
+          mkdir -p deploy && mv android-build.log deploy/android-build.log
+          git add deploy/android-build.log
+          git commit -q -m "Android build log for run ${{ github.run_number }} [skip ci]" || exit 0
+          for i in 1 2 3; do git pull -q --rebase origin pocketbox && git push -q origin HEAD:pocketbox && break; sleep 3; done

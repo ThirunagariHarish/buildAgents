@@ -22,6 +22,29 @@
   const OPEN_EVERY_MS = 10 * 60 * 1000;
   const LATE_WINDOW_MS = 3 * 3600 * 1000;
 
+  // ---- the native Pocket app around this page (Android or iPhone), if any ----
+  // The apps load this same page; they add background wake-ups, native
+  // notifications, location and (on iPhone) Apple's on-device model.
+  const Native = (() => {
+    const android = self.PocketNative && typeof self.PocketNative.postMessage === 'function' ? self.PocketNative : null;
+    const ios = self.webkit && self.webkit.messageHandlers && self.webkit.messageHandlers.PocketNative;
+    if (!android && !ios) return null;
+    const pending = new Map();
+    let seq = 0;
+    const reply = (id, ok, value) => { const p = pending.get(id); if (!p) return; pending.delete(id); p(ok ? value : undefined); };
+    self.__pocketReply = reply;
+    if (android) android.onmessage = (e) => { try { const m = JSON.parse(e.data); if (m.reply) reply(m.reply, m.ok, m.value); } catch {} };
+    const post = (m) => { try { if (android) android.postMessage(JSON.stringify(m)); else ios.postMessage(m); } catch {} };
+    const call = (type, data = {}, timeoutMs = 30000) => new Promise((resolve) => {
+      const id = ++seq;
+      pending.set(id, resolve);
+      post({ type, id, ...data });
+      setTimeout(() => { if (pending.delete(id)) resolve(undefined); }, timeoutMs);
+    });
+    return { platform: android ? 'android' : 'ios', post, call };
+  })();
+  const BACKGROUND = new URLSearchParams(location.search).has('bg');
+
   const R = { pair: ls.get(K.pair, null), state: ls.get(K.state, null), verified: {}, running: new Set(), tab: 'agents', session: null, problem: null, offline: false };
 
   function toast(text, kind = '') {
@@ -107,6 +130,7 @@
       if (!quiet && !R.state) R.problem = e.message;
     }
     if (R.state) R.verified = await verifyAll(R.state);
+    tellNativeSchedule();
     flushOutbox();
     render();
   }
@@ -168,6 +192,23 @@
     } finally { checking = false; }
   }
 
+  /** The native app sets its own alarms from this: the next times each agent is due. */
+  function tellNativeSchedule() {
+    if (!Native || !R.state || !self.PocketCore) return;
+    const items = [];
+    for (const a of R.state.agents) {
+      if (!runnable(a)) continue;
+      for (const t of a.package.manifest.triggers || []) {
+        if (t.type === 'schedule') {
+          let from = new Date();
+          for (let i = 0; i < 3; i++) { const d = self.PocketCore.nextDue(t, from); if (!d) break; items.push({ agentId: a.agentId, title: a.title, icon: a.icon || '', kind: 'schedule', at: d.getTime() }); from = new Date(d.getTime() + 60000); }
+        }
+        if (t.type === 'interval') items.push({ agentId: a.agentId, title: a.title, icon: a.icon || '', kind: 'interval', minutes: Number(t.minutes) });
+      }
+    }
+    Native.post({ type: 'schedule', items, live: R.state.agents.filter((a) => a.channel === 'live').map((a) => a.agentId) });
+  }
+
   // ---- running an agent ---------------------------------------------------------------
   function feedAdd(item) {
     const f = ls.get(K.feed, []);
@@ -213,7 +254,8 @@
         const item = { agentId: a.agentId, icon: a.icon, agent: a.title, title: String(n.title).slice(0, 120), body: String(n.body || '').slice(0, 1200), at: Date.now(), shadow: !live };
         record.notifications.push({ title: item.title, body: item.body });
         feedAdd(item);
-        if (live) {
+        if (live && Native) Native.post({ type: 'notify', title: `${a.icon || ''} ${item.title}`.trim(), body: item.body, tag: `agent:${a.agentId}:${item.at}` });
+        else if (live) {
           try {
             const reg = await navigator.serviceWorker?.ready;
             if (reg && Notification.permission === 'granted') await reg.showNotification(`${a.icon || ''} ${item.title}`.trim(), { body: item.body, tag: `agent:${a.agentId}:${item.at}`, icon: '/icon.svg', badge: '/icon.svg', data: { url: '/runtime#feed' } });
@@ -228,14 +270,18 @@
         record.httpReads += 1;
         return device('http', { agentId: a.agentId, url: u.toString() });
       },
-      location() {
+      async location() {
+        if (Native) { const l = await Native.call('location', {}, 15000); return l && Number.isFinite(l.lat) ? l : null; }
         return new Promise((resolve) => {
           if (!navigator.geolocation) return resolve(null);
           navigator.geolocation.getCurrentPosition((p) => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }), () => resolve(null), { timeout: 12000, maximumAge: 5 * 60000, enableHighAccuracy: false });
         });
       },
       async model(prompt, opts) {
-        const local = await onDeviceModel(prompt, (opts && opts.maxWords) || 150);
+        const maxWords = (opts && opts.maxWords) || 150;
+        const native = Native ? await Native.call('model', { prompt, maxWords }, 60000) : undefined;
+        if (typeof native === 'string') return native;
+        const local = await onDeviceModel(prompt, maxWords);
         if (local !== undefined) return local;
         try { return (await device('handoff', { agentId: a.agentId, prompt, kind: 'model' })).text ?? null; } catch { return null; }
       },
@@ -339,7 +385,21 @@
   async function pairHere(name, btn) {
     btn.disabled = true;
     try {
-      const res = await fetch('/api/devices/pair', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, tz: tz() }) });
+      const res = await fetch('/api/devices/pair', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, tz: tz(), platform: Native ? Native.platform : 'web' }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Pairing failed.');
+      R.pair = { token: data.token, publicKey: data.publicKey, deviceId: data.device.id, name: data.device.name, pairedAt: Date.now() };
+      if (!ls.set(K.pair, R.pair)) throw new Error('This browser will not keep data (private mode?). Pairing needs it.');
+      R.problem = null;
+      toast('Paired. This phone now runs your agents.');
+      await sync();
+    } catch (e) { toast(e.message, 'bad'); } finally { btn.disabled = false; }
+  }
+
+  async function pairWithCode(code, name, btn) {
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/device/pair-code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, name, tz: tz(), platform: Native ? Native.platform : 'web' }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Pairing failed.');
       R.pair = { token: data.token, publicKey: data.publicKey, deviceId: data.device.id, name: data.device.name, pairedAt: Date.now() };
@@ -354,7 +414,7 @@
   function render() {
     if (!R.pair) return renderPair();
     const st = R.state;
-    const pushOn = 'Notification' in window && Notification.permission === 'granted';
+    const pushOn = !!Native || ('Notification' in window && Notification.permission === 'granted');
     const agents = st ? st.agents : [];
     const feed = ls.get(K.feed, []);
     const unsupported = R.verified._unsupported;
@@ -443,6 +503,12 @@
           <button class="btn" style="width:100%" data-act="pair">Pair this phone</button>
           <p class="tiny faint" style="margin:6px 0 0">Signed in as ${esc(R.session.user.email)}.</p></div>`
         : `<a class="btn" style="width:100%" href="/?next=/runtime#/login">Sign in to pair</a>`}
+      <div class="row" style="margin:18px 0 0;gap:10px;color:var(--faint)"><span style="flex:1;height:1px;background:var(--line-2)"></span><span class="small">or use a code</span><span style="flex:1;height:1px;background:var(--line-2)"></span></div>
+      <div class="stack" style="margin-top:14px">
+        <input class="input mono" id="pcode" placeholder="ABCD-1234" autocomplete="one-time-code" autocapitalize="characters" maxlength="9" style="text-align:center;letter-spacing:.12em">
+        <button class="btn soft" style="width:100%" data-act="pair-code">Pair with code</button>
+        <p class="tiny faint" style="margin:0;text-align:center">Get a code in the Studio under Your phones.</p>
+      </div>
     </section></div>`;
   }
 
@@ -452,6 +518,7 @@
     if (!el) return;
     const act = el.dataset.act;
     if (act === 'pair') return pairHere($('#pname')?.value || 'Phone', el);
+    if (act === 'pair-code') return pairWithCode($('#pcode')?.value || '', $('#pname')?.value || (Native ? (Native.platform === 'ios' ? 'iPhone' : 'Android phone') : 'Phone'), el);
     if (act === 'push') return enablePush(el);
     if (act === 'tab') { R.tab = el.dataset.tab; return render(); }
     if (act === 'run') { const a = R.state.agents.find((x) => x.agentId === el.dataset.id); if (a) await runAgent(a, { type: 'manual' }); return; }
@@ -465,12 +532,13 @@
   });
 
   async function wake({ opened = true } = {}) {
-    if (!R.pair) return render();
+    if (!R.pair) { if (BACKGROUND && Native) Native.post({ type: 'done' }); return render(); }
     await sync({ quiet: true });
     const m = location.hash.match(/run=([a-f0-9]{12})/);
     if (m) history.replaceState(null, '', '/runtime');
     if (location.hash === '#feed') { R.tab = 'feed'; history.replaceState(null, '', '/runtime'); render(); }
-    await checkDue({ opened });
+    await checkDue({ opened: opened && !BACKGROUND });
+    if (BACKGROUND && Native) Native.post({ type: 'done' });
   }
 
   // ---- start ----------------------------------------------------------------------------
@@ -478,7 +546,8 @@
   if (theme !== 'system') document.documentElement.dataset.theme = theme;
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
   // The core helps compute next-due times on this page too (no network, no eval).
-  const s = document.createElement('script'); s.src = '/agent-core.js'; s.onload = () => render(); document.head.append(s);
+  const s = document.createElement('script'); s.src = '/agent-core.js'; s.onload = () => { render(); tellNativeSchedule(); }; document.head.append(s);
+  if (Native) document.documentElement.dataset.native = Native.platform;
 
   if (R.state && R.pair) verifyAll(R.state).then((v) => { R.verified = v; render(); });
   render();

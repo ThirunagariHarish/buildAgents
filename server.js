@@ -29,6 +29,10 @@ const { PORT, BASE_URL } = config;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const KIT_CORE = path.join(__dirname, 'lib', 'kit', 'core.js');
 const COOKIE = 'pb_session';
+const DOWNLOADS = path.join(config.DATA, 'downloads');
+function appBuilds() {
+  try { return { android: JSON.parse(fs.readFileSync(path.join(DOWNLOADS, 'pocket.json'), 'utf8')) }; } catch { return { android: null }; }
+}
 
 // ---- helpers ------------------------------------------------------------------
 function json(res, code, obj) {
@@ -142,6 +146,14 @@ const server = http.createServer(async (req, res) => {
     if (p.startsWith('/api/') && crossSiteWrite(req)) return json(res, 403, { error: 'Cross-site request refused.' });
     const ip = clientIp(req);
 
+    // ---- a native app pairing with a code from the Studio (no token yet) ----
+    if (p === '/api/device/pair-code' && req.method === 'POST') {
+      if (auth.limited(`paircode:ip:${ip}`, 10, 10 * 60 * 1000)) return json(res, 429, { error: 'Too many tries. Wait a few minutes.' });
+      const b = await readBody(req).catch(() => ({}));
+      const r = devices.redeemCode(b.code, auth.getUser, { name: b.name, tz: b.tz, ua: req.headers['user-agent'], platform: b.platform });
+      if (!r) return json(res, 400, { error: 'That code is wrong or expired. Make a new one in the Studio under Your phones.' });
+      return json(res, 200, { ...r, publicKey: packages.publicKey() });
+    }
     // ---- device API (bearer token from a paired phone) ----
     if (p.startsWith('/api/device/')) return deviceApi(req, res, p, url);
 
@@ -191,6 +203,14 @@ const server = http.createServer(async (req, res) => {
       if (auth.limited(`reset:ip:${ip}`, 10, 3600 * 1000)) return json(res, 429, { error: 'Too many attempts.' });
       try { const u = auth.resetPassword({ token: body.token, password: body.password }); return json(res, 200, { ok: true, email: u.email }); }
       catch (e) { return json(res, e.status || 500, { error: e.message }); }
+    }
+
+    // ---- the Android app, built by CI and copied here ----
+    if (p === '/download/pocket.apk' && (req.method === 'GET' || req.method === 'HEAD')) {
+      const apk = path.join(DOWNLOADS, 'pocket.apk');
+      if (!fs.existsSync(apk)) { res.writeHead(404); return res.end('Not built yet.'); }
+      res.writeHead(200, { 'Content-Type': 'application/vnd.android.package-archive', 'Content-Disposition': 'attachment; filename="Pocket.apk"', 'Content-Length': fs.statSync(apk).size, 'Cache-Control': 'no-store' });
+      return fs.createReadStream(apk).pipe(res);
     }
 
     const user = p.startsWith('/api/') ? currentUser(req) : null;
@@ -265,12 +285,16 @@ async function studioApi(req, res, p, url, user) {
   }
 
   // ---- phones ----
-  if (p === '/api/devices' && req.method === 'GET') return json(res, 200, { devices: devices.list(user.id) });
+  if (p === '/api/devices' && req.method === 'GET') return json(res, 200, { devices: devices.list(user.id), apps: appBuilds() });
   if (p === '/api/devices/pair' && req.method === 'POST') {
     const b = await readBody(req).catch(() => ({}));
     if (auth.limited(`pair:${user.id}`, 10, 3600 * 1000)) return json(res, 429, { error: 'Too many pairings in an hour.' });
-    try { const r = devices.pair(user, { name: b.name, tz: b.tz, ua: req.headers['user-agent'] }); return json(res, 200, { ...r, publicKey: packages.publicKey() }); }
+    try { const r = devices.pair(user, { name: b.name, tz: b.tz, ua: req.headers['user-agent'], platform: b.platform }); return json(res, 200, { ...r, publicKey: packages.publicKey() }); }
     catch (e) { return json(res, e.status || 500, { error: e.message }); }
+  }
+  if (p === '/api/devices/code' && req.method === 'POST') {
+    if (auth.limited(`paircode:${user.id}`, 20, 3600 * 1000)) return json(res, 429, { error: 'Too many codes in an hour.' });
+    return json(res, 200, devices.createCode(user));
   }
   const dm = p.match(/^\/api\/devices\/([a-f0-9]{12})$/);
   if (dm && req.method === 'DELETE') return json(res, devices.revoke(user.id, dm[1], { admin: isAdmin(user) }) ? 200 : 404, { ok: true });

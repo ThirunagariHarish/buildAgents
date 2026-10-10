@@ -2,3 +2,9 @@ data/
 node_modules/
 *.log
 !deploy/last-run.log
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+ios/*.xcodeproj/
+ios/build/

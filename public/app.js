@@ -546,7 +546,7 @@
 
   // ---- phones -------------------------------------------------------------------
   async function phonesView() {
-    const { devices } = await api('/api/devices');
+    const { devices, apps } = await api('/api/devices');
     S.devices = devices;
     return `<div class="shell">${topBar()}
       <section style="padding:28px 0 20px" class="rise">
@@ -562,9 +562,15 @@
         </ol>
         <div class="row"><a class="btn" href="/runtime">Open the Runtime here</a></div>
       </section>
+      <section class="glass card stack rise" style="margin-top:14px">
+        <div class="h3">Pair the Pocket app</div>
+        <p class="small muted" style="margin:0">The app runs agents in the background on their own schedule, even when it's closed. Pair it with a one-time code from here; a code works once, for 10 minutes.</p>
+        <div class="row wrap"><button class="btn soft" data-act="pair-code">Get a pairing code</button>${apps?.android ? `<a class="btn ghost" href="/download/pocket.apk">Download for Android · v${esc(apps.android.version)}</a>` : ''}</div>
+        ${apps?.android ? '<p class="tiny faint" style="margin:0">Android asks once to allow installs from your browser. The iPhone app needs an Apple Developer account first.</p>' : ''}
+      </section>
       <section style="margin-top:28px">
         <div class="eyebrow" style="margin:0 0 12px 4px">Paired</div>
-        ${devices.length ? `<div class="glass list">${devices.map((d) => `<div class="item"><div class="avatar sm">📱</div><div class="grow"><div class="h3">${esc(d.name)}</div><div class="small muted">${esc(d.tz)} · seen ${ago(d.lastSeenAt)}</div></div><button class="btn ghost sm" data-act="unpair" data-id="${esc(d.id)}">Remove</button></div>`).join('')}</div>` : '<div class="glass empty">No phones yet.</div>'}
+        ${devices.length ? `<div class="glass list">${devices.map((d) => `<div class="item"><div class="avatar sm">📱</div><div class="grow"><div class="h3">${esc(d.name)}</div><div class="small muted">${esc({ android: 'Android app', ios: 'iPhone app' }[d.platform] || 'Web')} · ${esc(d.tz)} · seen ${ago(d.lastSeenAt)}</div></div><button class="btn ghost sm" data-act="unpair" data-id="${esc(d.id)}">Remove</button></div>`).join('')}</div>` : '<div class="glass empty">No phones yet.</div>'}
       </section>
     </div>`;
   }
@@ -812,6 +818,15 @@
             try { await api(`/api/agents/${a.id}`, { method: 'DELETE' }); close(); S.agent = null; go('#/'); } catch (err) { toast(err.message, 'bad'); }
           }
         });
+        break;
+      }
+      case 'pair-code': {
+        const r = await post('/api/devices/code');
+        if (r) sheet(`<div class="stack" style="text-align:center">
+          <div class="h3">Type this into the Pocket app</div>
+          <div class="mono" style="font-size:34px;letter-spacing:.12em;font-weight:600;padding:10px 0;user-select:all">${esc(r.code)}</div>
+          <p class="small muted" style="margin:0">Server: <span class="mono">${esc(location.host)}</span> · works once, until ${new Date(r.expiresAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</p>
+          <div class="row" style="justify-content:center"><button class="btn sm" data-close>Done</button></div></div>`);
         break;
       }
       case 'unpair':
