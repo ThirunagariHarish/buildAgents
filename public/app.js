@@ -89,6 +89,7 @@
   }
 
   const icon = {
+    mic: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0013 0M12 17.5V21"/></svg>',
     share: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5"/><path d="M6 11H5a1 1 0 00-1 1v8a1 1 0 001 1h14a1 1 0 001-1v-8a1 1 0 00-1-1h-1"/></svg>',
     addSquare: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg>',
     dots: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="display:inline;vertical-align:-3px"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>',
@@ -157,6 +158,44 @@
       ${ios ? '<p class="small muted" style="margin:0">Once it opens from the Home Screen, it can also show your agents\' notifications.</p>' : ''}
       <div class="row" style="justify-content:flex-end"><button class="btn sm" data-close>Got it</button></div>
     </div>`);
+  }
+
+  // ---- speaking instead of typing -------------------------------------------------------
+  // The browser's own speech recognition (Chrome, Edge, Safari). The words
+  // land in the box as you speak; tap the mic again, or pause, to stop.
+  const Speech = self.SpeechRecognition || self.webkitSpeechRecognition;
+  const micButton = () => (Speech ? `<button type="button" class="mic" data-act="mic" aria-label="Speak instead of typing" title="Speak">${icon.mic}</button>` : '');
+  let listening = null;
+  function toggleMic(btn) {
+    if (listening) { listening.stop(); return; }
+    const form = btn.closest('form');
+    const ta = form && form.querySelector('textarea');
+    if (!ta) return;
+    const rec = new Speech();
+    rec.lang = navigator.language || 'en-US';
+    rec.interimResults = true;
+    rec.continuous = true;
+    const before = ta.value.trim() ? `${ta.value.trim()} ` : '';
+    let finalText = '';
+    rec.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalText += t; else interim += t;
+      }
+      ta.value = (before + finalText + interim).replace(/\s+/g, ' ').trimStart();
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    rec.onerror = (e) => {
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast('Allow the microphone for this site to speak your idea.', 'bad');
+      else if (e.error === 'no-speech') toast('Didn\'t catch that. Tap the mic and try again.');
+      else if (e.error !== 'aborted') toast(`Speech stopped: ${e.error}`, 'bad');
+    };
+    rec.onend = () => { listening = null; btn.classList.remove('listening'); btn.setAttribute('aria-label', 'Speak instead of typing'); ta.focus(); };
+    try { rec.start(); } catch { toast('The microphone is busy. Try again.', 'bad'); return; }
+    listening = rec;
+    btn.classList.add('listening');
+    btn.setAttribute('aria-label', 'Stop listening');
   }
 
   // ---- routing -----------------------------------------------------------------
@@ -397,7 +436,7 @@
         <div class="bar">
           <span class="small faint hide-sm">Shift + Enter for a new line</span>
           <span class="spacer"></span>
-          <button class="send" aria-label="Start" disabled>${icon.send}</button>
+          ${micButton()}<button class="send" aria-label="Start" disabled>${icon.send}</button>
         </div>
       </form>
       <div class="row wrap rise" style="margin-top:14px;gap:8px">
@@ -445,7 +484,7 @@
       ${ctaView(a)}
       ${a.ownerId === S.session.user.id ? `<form data-form="message" class="composer glass slim">
         <textarea name="text" data-grow rows="1" placeholder="${esc(placeholderFor(a))}"></textarea>
-        <div class="bar"><span class="spacer"></span><button class="send" aria-label="Send" disabled>${icon.send}</button></div>
+        <div class="bar"><span class="spacer"></span>${micButton()}<button class="send" aria-label="Send" disabled>${icon.send}</button></div>
       </form>` : ''}
     </div></div>`;
   }
@@ -884,6 +923,7 @@
         break;
       }
       case 'install': await install(); break;
+      case 'mic': toggleMic(el); break;
       case 'install-hide': store.set('pb.installHidden', true); refreshInstall(); break;
       case 'pair-code': {
         const r = await post('/api/devices/code');
@@ -941,7 +981,7 @@
 
   // ---- start -------------------------------------------------------------------------
   applyTheme();
-  addEventListener('hashchange', () => render());
+  addEventListener('hashchange', () => { if (listening) listening.abort(); render(); });
   addEventListener('pageshow', (e) => { if (e.persisted) render({ transition: false }); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && route().name === 'a') softRefresh(100); });
   if ('serviceWorker' in navigator) {

@@ -210,6 +210,12 @@ img, svg { display: block; }
 .send { width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer; background: var(--btn); color: var(--btn-ink); display: grid; place-items: center; transition: transform 0.35s var(--spring), opacity 0.2s; }
 .send:active { transform: scale(0.9); }
 .send[disabled] { opacity: 0.25; cursor: default; }
+.mic { width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer; background: transparent; color: var(--muted); display: grid; place-items: center; position: relative; transition: transform 0.35s var(--spring), background 0.25s, color 0.25s; -webkit-tap-highlight-color: transparent; }
+.mic:hover { background: var(--line); color: var(--ink); }
+.mic:active { transform: scale(0.9); }
+.mic.listening { background: linear-gradient(135deg, #7a64ff, #e46fa0 60%, #f29a5b); color: #fff; }
+.mic.listening::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid #e46fa0; opacity: 0.6; animation: mic-ring 1.4s var(--ease) infinite; }
+@keyframes mic-ring { from { transform: scale(0.9); opacity: 0.7; } to { transform: scale(1.35); opacity: 0; } }
 
 /* ---- agents list ---- */
 .agent-card { display: flex; gap: 14px; align-items: center; padding: 16px; text-decoration: none; transition: transform 0.45s var(--ease), box-shadow 0.45s var(--ease); }
