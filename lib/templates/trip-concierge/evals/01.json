@@ -1,0 +1,55 @@
+{
+ "name": "Pasted airline email becomes a trip with outbound and return flights",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "Your trip confirmation\n\nConfirmation number: K7XQ2M\n\nThu, Dec 3, 2026\nUA 1234  San Francisco (SFO) to New York (JFK)\nDeparts 08:15 AM  Arrives 04:52 PM\nEconomy · Seat 23C\n\nSun, Dec 6, 2026\nUA 1557  New York (JFK) to San Francisco (SFO)\nDeparts 05:40 PM  Arrives 09:15 PM\nEconomy · Seat 31A\n\nTraveler: Sam Lee\nCheck in online starting 24 hours before departure at united.com.",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T17:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Added to your New York trip (Thu Dec 3 – Sun Dec 6)",
+    "UA 1234 SFO → JFK, Thu Dec 3 08:15 · K7XQ2M",
+    "UA 1557 JFK → SFO, Sun Dec 6 17:40"
+   ]
+  },
+  "memory": {
+   "trips": [
+    {
+     "id": 1,
+     "items": [
+      {
+       "k": "f",
+       "al": "UA",
+       "n": "1234",
+       "d": "2026-12-03",
+       "t": "08:15",
+       "f": "SFO",
+       "to": "JFK",
+       "cf": "K7XQ2M"
+      },
+      {
+       "k": "f",
+       "al": "UA",
+       "n": "1557",
+       "d": "2026-12-06",
+       "t": "17:40",
+       "f": "JFK",
+       "to": "SFO",
+       "cf": "K7XQ2M"
+      }
+     ]
+    }
+   ]
+  },
+  "http": {
+   "max": 0
+  }
+ }
+}

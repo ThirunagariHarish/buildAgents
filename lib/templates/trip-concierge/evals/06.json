@@ -1,0 +1,26 @@
+{
+ "name": "\"add flight UA123\" with no date or route asks for them",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "add flight UA123",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T17:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "the date (dec 3) and the route (SFO-JFK)"
+   ]
+  },
+  "memory": {
+   "trips": {
+    "exists": false
+   }
+  }
+ }
+}

@@ -1,0 +1,42 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {
+  "done": [
+   {
+    "d": "2026-10-12",
+    "c": "dishes",
+    "p": "Leo"
+   }
+  ]
+ },
+ "name": "Doing someone else's chore still gets credit, and a repeat is caught",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "done the dishes",
+   "from": "Maya"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "already done today by Leo"
+   ]
+  },
+  "memory": {
+   "done": [
+    {
+     "d": "2026-10-12",
+     "c": "dishes",
+     "p": "Leo"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,50 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {
+  "lists": {
+   "groceries": [
+    {
+     "t": "bread",
+     "by": "Sam"
+    },
+    {
+     "t": "eggs",
+     "by": "Maya",
+     "b": "Leo"
+    }
+   ]
+  }
+ },
+ "name": "Clear bought removes only ticked items",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "clear bought",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Cleared 1 bought item",
+    "groceries: 1 left"
+   ]
+  },
+  "memory": {
+   "lists": {
+    "groceries": [
+     {
+      "t": "bread",
+      "by": "Sam"
+     }
+    ]
+   }
+  }
+ }
+}

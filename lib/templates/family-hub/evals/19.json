@@ -1,0 +1,53 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {
+  "events": [
+   {
+    "n": 1,
+    "t": "Dinner at grandma's",
+    "d": "2026-10-17",
+    "tm": "18:00",
+    "by": "Maya"
+   },
+   {
+    "n": 2,
+    "t": "Parent-teacher meeting",
+    "d": "2026-10-13",
+    "tm": "16:00",
+    "by": "Sam"
+   },
+   {
+    "n": 3,
+    "t": "Old picnic",
+    "d": "2026-10-05",
+    "by": "Sam"
+   }
+  ]
+ },
+ "name": "Upcoming events in order",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "events",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Coming up (2)",
+    "2. Parent-teacher meeting: tomorrow 16:00",
+    "1. Dinner at grandma's: Sat 17 Oct 18:00"
+   ],
+   "excludes": [
+    "Old picnic"
+   ]
+  }
+ }
+}

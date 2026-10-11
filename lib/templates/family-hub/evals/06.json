@@ -1,0 +1,39 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {},
+ "name": "Another named list with a colon",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "packing: passports, chargers",
+   "from": "Maya"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Added passports, chargers to packing"
+   ]
+  },
+  "memory": {
+   "lists": {
+    "packing": [
+     {
+      "t": "passports",
+      "by": "Maya"
+     },
+     {
+      "t": "chargers",
+      "by": "Maya"
+     }
+    ]
+   }
+  }
+ }
+}

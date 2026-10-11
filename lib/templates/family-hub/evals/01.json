@@ -1,0 +1,56 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {
+  "lists": {
+   "groceries": [
+    {
+     "t": "bread",
+     "by": "Sam"
+    }
+   ]
+  }
+ },
+ "name": "Add several things to the shared groceries list",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "add eggs, milk to groceries",
+   "from": "Maya"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Added eggs, milk to groceries",
+    "3 to get: bread, eggs, milk"
+   ]
+  },
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "lists": {
+    "groceries": [
+     {
+      "t": "bread",
+      "by": "Sam"
+     },
+     {
+      "t": "eggs",
+      "by": "Maya"
+     },
+     {
+      "t": "milk",
+      "by": "Maya"
+     }
+    ]
+   }
+  }
+ }
+}

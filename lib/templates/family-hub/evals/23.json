@@ -1,0 +1,23 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {
+  "sent": {
+   "daily": "2026-10-12"
+  }
+ },
+ "name": "Morning message is not repeated",
+ "trigger": {
+  "type": "schedule",
+  "at": "07:30"
+ },
+ "now": "2026-10-12T02:00:00.000Z",
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

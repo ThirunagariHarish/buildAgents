@@ -1,0 +1,33 @@
+{
+  "name": "Family Hub",
+  "icon": "🏡",
+  "category": "Family",
+  "tier": "life",
+  "summary": "The whole family's organiser: share it and everyone adds to the shopping list, sees whose turn the chores are, and gets reminded about family plans.",
+  "handles": [
+    "One shared shopping list anyone can add to and tick off, plus any other list (packing, gifts)",
+    "A fair chore rotation that moves daily or weekly, with swaps that trade turns",
+    "Credits whoever did a chore and posts a weekly scoreboard on Sunday",
+    "Family events with a reminder the evening before and 2 hours ahead",
+    "07:30 morning message: today's chores, events and what's on the shopping list"
+  ],
+  "talk": [
+    "add eggs, milk",
+    "bought eggs",
+    "who's on dishes?",
+    "done dishes",
+    "swap dishes with Maya today",
+    "event: dinner at grandma's sat 6pm"
+  ],
+  "setup": [
+    "Type the family's first names, one per line, so chores rotate between them.",
+    "Adjust the chores list: one per line, e.g. \"Dishes daily\" or \"Trash weekly mon\".",
+    "Share the agent with the family (Settings → Shared with) so everyone can message it."
+  ],
+  "fields": [
+    { "key": "people", "label": "Family members", "type": "text", "multiline": true, "optional": true, "help": "First names, one per line. Chores rotate in this order.", "placeholder": "Sam\nMaya\nLeo" },
+    { "key": "chores", "label": "Chores", "type": "text", "multiline": true, "optional": true, "help": "One per line: chore, then daily or weekly plus a day, e.g. \"Trash weekly mon\".", "placeholder": "Dishes daily\nTrash weekly mon", "default": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun" }
+  ],
+  "share": true,
+  "after": "Share it with your family under Settings → Shared with, then say \"chores\" to see today's rota or \"add eggs\" to start the shopping list."
+}

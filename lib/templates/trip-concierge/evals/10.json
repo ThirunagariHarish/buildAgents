@@ -1,0 +1,61 @@
+{
+ "name": "\"packing\" far ahead: no forecast yet, basic list, no web reads",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "packing",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T17:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "memory": {
+  "trips": [
+   {
+    "id": 1,
+    "items": [
+     {
+      "k": "f",
+      "al": "UA",
+      "n": "1234",
+      "d": "2026-12-03",
+      "t": "08:15",
+      "f": "SFO",
+      "to": "JFK",
+      "cf": "K7XQ2M"
+     },
+     {
+      "k": "h",
+      "nm": "New York Marriott Marquis",
+      "in": "2026-12-03",
+      "out": "2026-12-06",
+      "ad": "1535 Broadway, New York, NY 10036",
+      "cf": "83920571"
+     },
+     {
+      "k": "f",
+      "al": "UA",
+      "n": "1557",
+      "d": "2026-12-06",
+      "t": "17:40",
+      "f": "JFK",
+      "to": "SFO",
+      "cf": "K7XQ2M"
+     }
+    ]
+   }
+  ]
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "forecast for New York isn't out yet",
+    "Pack: ID, 4 days of clothes"
+   ]
+  },
+  "http": {
+   "max": 0
+  }
+ }
+}

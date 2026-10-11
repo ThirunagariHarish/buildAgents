@@ -1,0 +1,39 @@
+{
+ "name": "Booking.com hotel email: name, dates, address and city",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "Booking.com: Your stay at Taj Mahal Palace, Mumbai\nCheck-in: 12 Dec 2026\nCheck-out: 15 Dec 2026\nAddress: Apollo Bunder, Colaba, Mumbai 400001\nBooking number: 4812937465",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T17:00:00.000Z",
+ "tz": "Asia/Kolkata",
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Added to your Mumbai trip (Sat Dec 12 – Tue Dec 15)",
+    "Taj Mahal Palace, Dec 12–Dec 15 (3 nights) · 4812937465"
+   ]
+  },
+  "memory": {
+   "trips": [
+    {
+     "id": 1,
+     "items": [
+      {
+       "k": "h",
+       "nm": "Taj Mahal Palace",
+       "in": "2026-12-12",
+       "out": "2026-12-15",
+       "ad": "Apollo Bunder, Colaba, Mumbai 400001",
+       "cf": "4812937465"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

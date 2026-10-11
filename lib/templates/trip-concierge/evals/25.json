@@ -1,0 +1,26 @@
+{
+ "name": "\"help\" lists what it understands",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "help",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T17:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "trips",
+    "next",
+    "packing",
+    "add flight UA123 dec 3 08:15 SFO-JFK",
+    "add hotel Marriott Times Square dec 3-6",
+    "delete trip 1"
+   ]
+  }
+ }
+}

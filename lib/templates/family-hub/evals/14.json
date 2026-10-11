@@ -1,0 +1,30 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {
+  "swaps": {
+   "2026-10-12|dishes": "Maya",
+   "2026-10-14|dishes": "Leo"
+  }
+ },
+ "name": "After a swap the rota shows the new person",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "who's on dishes",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Dishes today: Maya."
+   ]
+  }
+ }
+}

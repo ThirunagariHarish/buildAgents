@@ -1,0 +1,87 @@
+{
+ "name": "\"add hotel Marriott Times Square dec 3-6\" joins the trip",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "add hotel Marriott Times Square dec 3-6",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T17:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "memory": {
+  "trips": [
+   {
+    "id": 1,
+    "items": [
+     {
+      "k": "f",
+      "al": "UA",
+      "n": "1234",
+      "d": "2026-12-03",
+      "t": "08:15",
+      "f": "SFO",
+      "to": "JFK",
+      "cf": "K7XQ2M"
+     },
+     {
+      "k": "f",
+      "al": "UA",
+      "n": "1557",
+      "d": "2026-12-06",
+      "t": "17:40",
+      "f": "JFK",
+      "to": "SFO",
+      "cf": "K7XQ2M"
+     }
+    ]
+   }
+  ]
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Added to your New York trip",
+    "Marriott Times Square, Dec 3–Dec 6 (3 nights)"
+   ]
+  },
+  "memory": {
+   "trips": [
+    {
+     "id": 1,
+     "items": [
+      {
+       "k": "f",
+       "al": "UA",
+       "n": "1234",
+       "d": "2026-12-03",
+       "t": "08:15",
+       "f": "SFO",
+       "to": "JFK",
+       "cf": "K7XQ2M"
+      },
+      {
+       "k": "h",
+       "nm": "Marriott Times Square",
+       "in": "2026-12-03",
+       "out": "2026-12-06",
+       "ad": "",
+       "cf": ""
+      },
+      {
+       "k": "f",
+       "al": "UA",
+       "n": "1557",
+       "d": "2026-12-06",
+       "t": "17:40",
+       "f": "JFK",
+       "to": "SFO",
+       "cf": "K7XQ2M"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

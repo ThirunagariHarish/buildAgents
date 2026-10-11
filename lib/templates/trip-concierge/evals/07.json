@@ -1,0 +1,43 @@
+{
+ "name": "International flight: \"next\" times leaving with a 3-hour buffer",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "next",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T17:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "memory": {
+  "trips": [
+   {
+    "id": 2,
+    "items": [
+     {
+      "k": "f",
+      "al": "AI",
+      "n": "174",
+      "d": "2026-10-20",
+      "t": "21:45",
+      "f": "SFO",
+      "to": "BLR",
+      "cf": ""
+     }
+    ]
+   }
+  ]
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Next (in 8 days): ✈️ AI 174 SFO → BLR, Tue Oct 20 21:45",
+    "Bengaluru trip",
+    "Check-in opens Mon Oct 19 at 21:45",
+    "leave for the airport by 18:45"
+   ],
+   "link": "airindia.com"
+  }
+ }
+}

@@ -1,0 +1,53 @@
+{
+ "name": "IndiGo email with Indian airports (DEL → BOM and back) forwarded to the inbox",
+ "trigger": {
+  "type": "inbox",
+  "input": {
+   "text": "IndiGo booking confirmed. PNR: X4KM9T\n6E 2134 | DEL → BOM | 12 Dec 2026 | Departure 06:45 | Arrival 08:55\n6E 5317 | BOM → DEL | 15 Dec 2026 | Departure 19:30 | Arrival 21:40"
+  }
+ },
+ "now": "2026-10-12T17:00:00.000Z",
+ "tz": "Asia/Kolkata",
+ "memory": {},
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Added to your Mumbai trip"
+   ],
+   "bodyIncludes": [
+    "6E 2134 DEL → BOM, Sat Dec 12 06:45 · X4KM9T",
+    "6E 5317 BOM → DEL, Tue Dec 15 19:30"
+   ]
+  },
+  "memory": {
+   "trips": [
+    {
+     "id": 1,
+     "items": [
+      {
+       "k": "f",
+       "al": "6E",
+       "n": "2134",
+       "d": "2026-12-12",
+       "t": "06:45",
+       "f": "DEL",
+       "to": "BOM",
+       "cf": "X4KM9T"
+      },
+      {
+       "k": "f",
+       "al": "6E",
+       "n": "5317",
+       "d": "2026-12-15",
+       "t": "19:30",
+       "f": "BOM",
+       "to": "DEL",
+       "cf": "X4KM9T"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

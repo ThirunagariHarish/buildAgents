@@ -1,0 +1,31 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {},
+ "name": "Swap with someone not in the family",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "swap dishes with Bob",
+   "from": "Leo"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "I don't know Bob",
+    "Sam, Maya, Leo"
+   ]
+  },
+  "memory": {
+   "swaps": {
+    "exists": false
+   }
+  }
+ }
+}

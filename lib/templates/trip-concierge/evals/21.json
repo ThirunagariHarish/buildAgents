@@ -1,0 +1,101 @@
+{
+ "name": "Return flight check-in the day before flying home",
+ "trigger": {
+  "type": "interval",
+  "minutes": 60
+ },
+ "now": "2026-12-05T23:00:00.000Z",
+ "tz": "America/New_York",
+ "memory": {
+  "trips": [
+   {
+    "id": 1,
+    "items": [
+     {
+      "k": "f",
+      "al": "UA",
+      "n": "1234",
+      "d": "2026-12-03",
+      "t": "08:15",
+      "f": "SFO",
+      "to": "JFK",
+      "cf": "K7XQ2M",
+      "ci": 1,
+      "lv": 1
+     },
+     {
+      "k": "h",
+      "nm": "New York Marriott Marquis",
+      "in": "2026-12-03",
+      "out": "2026-12-06",
+      "ad": "1535 Broadway, New York, NY 10036",
+      "cf": "83920571",
+      "sent": 1
+     },
+     {
+      "k": "f",
+      "al": "UA",
+      "n": "1557",
+      "d": "2026-12-06",
+      "t": "17:40",
+      "f": "JFK",
+      "to": "SFO",
+      "cf": "K7XQ2M"
+     }
+    ],
+    "wx": 1
+   }
+  ]
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Check in now: UA 1557 JFK → SFO (return flight)"
+   ],
+   "link": "united.com"
+  },
+  "memory": {
+   "trips": [
+    {
+     "id": 1,
+     "items": [
+      {
+       "k": "f",
+       "al": "UA",
+       "n": "1234",
+       "d": "2026-12-03",
+       "t": "08:15",
+       "f": "SFO",
+       "to": "JFK",
+       "cf": "K7XQ2M",
+       "ci": 1,
+       "lv": 1
+      },
+      {
+       "k": "h",
+       "nm": "New York Marriott Marquis",
+       "in": "2026-12-03",
+       "out": "2026-12-06",
+       "ad": "1535 Broadway, New York, NY 10036",
+       "cf": "83920571",
+       "sent": 1
+      },
+      {
+       "k": "f",
+       "al": "UA",
+       "n": "1557",
+       "d": "2026-12-06",
+       "t": "17:40",
+       "f": "JFK",
+       "to": "SFO",
+       "cf": "K7XQ2M",
+       "ci": 1
+      }
+     ],
+     "wx": 1
+    }
+   ]
+  }
+ }
+}

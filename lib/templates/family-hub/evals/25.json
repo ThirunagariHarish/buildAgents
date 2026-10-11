@@ -1,0 +1,52 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {
+  "sent": {
+   "daily": "2026-10-17"
+  },
+  "events": [
+   {
+    "n": 1,
+    "t": "Dinner at grandma's",
+    "d": "2026-10-17",
+    "tm": "18:00",
+    "by": "Maya",
+    "e": 1
+   }
+  ]
+ },
+ "name": "Two hours before an event",
+ "trigger": {
+  "type": "interval",
+  "minutes": 60
+ },
+ "now": "2026-10-17T10:50:00.000Z",
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "At 18:00: Dinner at grandma's"
+   ],
+   "bodyIncludes": [
+    "about 2 hours"
+   ]
+  },
+  "memory": {
+   "events": [
+    {
+     "n": 1,
+     "t": "Dinner at grandma's",
+     "d": "2026-10-17",
+     "tm": "18:00",
+     "by": "Maya",
+     "e": 1,
+     "h": 1
+    }
+   ]
+  }
+ }
+}

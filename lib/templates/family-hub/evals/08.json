@@ -1,0 +1,51 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {
+  "done": [
+   {
+    "d": "2026-10-11",
+    "c": "dishes",
+    "p": "Sam"
+   }
+  ]
+ },
+ "name": "Done dishes is credited to the sender",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "done dishes",
+   "from": "Leo"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Dishes done",
+    "Credit to Leo (1 this week)"
+   ],
+   "excludes": [
+    "turn"
+   ]
+  },
+  "memory": {
+   "done": [
+    {
+     "d": "2026-10-11",
+     "c": "dishes",
+     "p": "Sam"
+    },
+    {
+     "d": "2026-10-12",
+     "c": "dishes",
+     "p": "Leo"
+    }
+   ]
+  }
+ }
+}

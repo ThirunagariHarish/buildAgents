@@ -1,0 +1,28 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {},
+ "name": "Unknown message gets examples, not an error",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "what is the meaning of life",
+   "from": "Leo"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "didn't catch",
+    "add eggs",
+    "help"
+   ]
+  },
+  "error": false
+ }
+}

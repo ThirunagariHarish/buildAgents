@@ -1,5 +1,5 @@
 {
- "name": "\"targets\" lists active alerts; \"remove target 1\" removes one",
+ "name": "\"targets\" lists only the active alerts",
  "trigger": {
   "type": "message",
   "input": {

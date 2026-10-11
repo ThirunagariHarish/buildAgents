@@ -1,0 +1,41 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {
+  "lists": {
+   "groceries": [
+    {
+     "t": "bread",
+     "by": "Sam"
+    },
+    {
+     "t": "eggs",
+     "by": "Maya",
+     "b": "Leo"
+    }
+   ]
+  }
+ },
+ "name": "Show the groceries list with who added and who bought",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "groceries",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Groceries: 1 to get, 1 got",
+    "• bread (Sam)",
+    "✓ eggs, got by Leo"
+   ]
+  }
+ }
+}

@@ -1,0 +1,42 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {
+  "sent": {
+   "daily": "2026-10-16"
+  },
+  "events": [
+   {
+    "n": 1,
+    "t": "Dinner at grandma's",
+    "d": "2026-10-17",
+    "tm": "18:00",
+    "by": "Maya"
+   },
+   {
+    "n": 2,
+    "t": "Lunch",
+    "d": "2026-10-16",
+    "tm": "13:00",
+    "by": "Sam",
+    "e": 1,
+    "h": 1
+   }
+  ]
+ },
+ "name": "Nothing due this hour: no notification",
+ "trigger": {
+  "type": "interval",
+  "minutes": 60
+ },
+ "now": "2026-10-16T06:30:00.000Z",
+ "expect": {
+  "notify": {
+   "count": 0
+  },
+  "maxSteps": 4
+ }
+}

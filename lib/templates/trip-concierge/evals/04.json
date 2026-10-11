@@ -1,0 +1,41 @@
+{
+ "name": "\"add flight UA123 dec 3 08:15 SFO-JFK\" adds a flight typed by hand",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "add flight UA123 dec 3 08:15 SFO-JFK",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T17:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Added to your New York trip",
+    "UA 123 SFO → JFK, Thu Dec 3 08:15"
+   ]
+  },
+  "memory": {
+   "trips": [
+    {
+     "id": 1,
+     "items": [
+      {
+       "k": "f",
+       "al": "UA",
+       "n": "123",
+       "d": "2026-12-03",
+       "t": "08:15",
+       "f": "SFO",
+       "to": "JFK",
+       "cf": ""
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

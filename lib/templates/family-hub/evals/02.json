@@ -1,0 +1,45 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {
+  "lists": {
+   "groceries": [
+    {
+     "t": "eggs",
+     "by": "Sam"
+    }
+   ]
+  }
+ },
+ "name": "\"add\" alone goes to groceries and skips duplicates",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "add Eggs",
+   "from": "Leo"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Already on groceries",
+    "1 to get: eggs"
+   ]
+  },
+  "memory": {
+   "lists": {
+    "groceries": [
+     {
+      "t": "eggs",
+      "by": "Sam"
+     }
+    ]
+   }
+  }
+ }
+}

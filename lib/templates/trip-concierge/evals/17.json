@@ -1,0 +1,99 @@
+{
+ "name": "24 hours before: online check-in with United's check-in page",
+ "trigger": {
+  "type": "interval",
+  "minutes": 60
+ },
+ "now": "2026-12-02T16:30:00.000Z",
+ "tz": "America/Los_Angeles",
+ "memory": {
+  "trips": [
+   {
+    "id": 1,
+    "items": [
+     {
+      "k": "f",
+      "al": "UA",
+      "n": "1234",
+      "d": "2026-12-03",
+      "t": "08:15",
+      "f": "SFO",
+      "to": "JFK",
+      "cf": "K7XQ2M"
+     },
+     {
+      "k": "h",
+      "nm": "New York Marriott Marquis",
+      "in": "2026-12-03",
+      "out": "2026-12-06",
+      "ad": "1535 Broadway, New York, NY 10036",
+      "cf": "83920571"
+     },
+     {
+      "k": "f",
+      "al": "UA",
+      "n": "1557",
+      "d": "2026-12-06",
+      "t": "17:40",
+      "f": "JFK",
+      "to": "SFO",
+      "cf": "K7XQ2M"
+     }
+    ],
+    "wx": 1
+   }
+  ]
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Check in now: UA 1234 SFO → JFK"
+   ],
+   "bodyIncludes": [
+    "departing Thu Dec 3 at 08:15",
+    "Confirmation K7XQ2M"
+   ],
+   "link": "united.com/en/us/checkin"
+  },
+  "memory": {
+   "trips": [
+    {
+     "id": 1,
+     "items": [
+      {
+       "k": "f",
+       "al": "UA",
+       "n": "1234",
+       "d": "2026-12-03",
+       "t": "08:15",
+       "f": "SFO",
+       "to": "JFK",
+       "cf": "K7XQ2M",
+       "ci": 1
+      },
+      {
+       "k": "h",
+       "nm": "New York Marriott Marquis",
+       "in": "2026-12-03",
+       "out": "2026-12-06",
+       "ad": "1535 Broadway, New York, NY 10036",
+       "cf": "83920571"
+      },
+      {
+       "k": "f",
+       "al": "UA",
+       "n": "1557",
+       "d": "2026-12-06",
+       "t": "17:40",
+       "f": "JFK",
+       "to": "SFO",
+       "cf": "K7XQ2M"
+      }
+     ],
+     "wx": 1
+    }
+   ]
+  }
+ }
+}

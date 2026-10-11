@@ -1,0 +1,57 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {
+  "done": [
+   {
+    "d": "2026-10-11",
+    "c": "dishes",
+    "p": "Leo"
+   },
+   {
+    "d": "2026-10-12",
+    "c": "dishes",
+    "p": "Leo"
+   },
+   {
+    "d": "2026-10-12",
+    "c": "trash",
+    "p": "Maya"
+   },
+   {
+    "d": "2026-10-13",
+    "c": "dishes",
+    "p": "Maya"
+   },
+   {
+    "d": "2026-10-14",
+    "c": "mowing",
+    "p": "Maya",
+    "x": 1
+   }
+  ]
+ },
+ "name": "This week's scores per person",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "scores",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-16T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "since Mon 12 Oct",
+    "Maya 3",
+    "Leo 1",
+    "Sam 0"
+   ]
+  }
+ }
+}

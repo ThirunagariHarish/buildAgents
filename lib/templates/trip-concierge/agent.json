@@ -1,0 +1,18 @@
+{
+  "id": "trip-concierge",
+  "name": "Trip Concierge",
+  "icon": "🧳",
+  "version": "1.0.0",
+  "description": "Turns your flight, hotel and car confirmations into a trip plan, then walks you through it: check-in reminders, weather and packing, when to leave for the airport, the hotel address on arrival.",
+  "permissions": ["notify", "memory", "http", "model"],
+  "http": { "allow": ["geocoding-api.open-meteo.com", "api.open-meteo.com"] },
+  "triggers": [
+    { "type": "message", "examples": ["trips", "next", "packing", "add flight UA123 dec 3 08:15 SFO-JFK", "add hotel Marriott Times Square dec 3-6", "delete trip 1", "help"] },
+    { "type": "inbox" },
+    { "type": "interval", "minutes": 60 }
+  ],
+  "settings": [
+    { "key": "bufferHours", "label": "Hours at the airport", "type": "number", "optional": true, "help": "How early to be at the airport before departure. Leave empty for 2 hours domestic, 3 international. Example: 2.5", "placeholder": "2" }
+  ],
+  "budget": { "steps": 60 }
+}

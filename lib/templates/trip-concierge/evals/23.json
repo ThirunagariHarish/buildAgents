@@ -1,0 +1,22 @@
+{
+ "name": "Prose email: \"Delta Air Lines flight 412 ... Atlanta (ATL) ... Seattle (SEA)\"",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "Delta Air Lines flight 412 on December 18, 2026. Departs Atlanta (ATL) 7:05 PM, arrives Seattle (SEA) 9:20 PM. Record locator: GHT7QP",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T17:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Added to your Seattle trip (Fri Dec 18)",
+    "DL 412 ATL → SEA, Fri Dec 18 19:05 · GHT7QP"
+   ]
+  }
+ }
+}

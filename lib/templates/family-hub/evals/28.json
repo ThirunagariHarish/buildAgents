@@ -1,0 +1,34 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "chores": "Dishes daily"
+ },
+ "memory": {
+  "seen": [
+   "Arjun"
+  ]
+ },
+ "name": "No names set: whoever messages joins the rotation",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "chores",
+   "from": "Priya"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Dishes: "
+   ]
+  },
+  "memory": {
+   "seen": [
+    "Arjun",
+    "Priya"
+   ]
+  }
+ }
+}

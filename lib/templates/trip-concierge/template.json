@@ -1,0 +1,24 @@
+{
+  "name": "Trip Concierge",
+  "icon": "🧳",
+  "category": "Travel",
+  "tier": "life",
+  "summary": "Paste or forward your booking emails and it builds the trip plan, then tells you what to do and when, from check-in to the hotel door.",
+  "handles": [
+    "Reads flight, hotel and car rental confirmations into one trip",
+    "Check-in reminder 24 hours before each flight, with the airline's check-in page",
+    "Destination weather and a packing list 2 days before you go",
+    "Tells you when to leave for the airport",
+    "Hotel address on check-in day, one tap to Maps",
+    "Same again for the flight home"
+  ],
+  "talk": ["trips", "next", "packing", "add flight UA123 dec 3 08:15 SFO-JFK", "add hotel Marriott Times Square dec 3-6", "delete trip 1"],
+  "setup": [
+    "Paste a confirmation email into its chat, or forward it to its inbox address (shown under Settings).",
+    "Optional: an iPhone Shortcut on the Share sheet with \"Get contents of URL\" (POST, the text as the body) to its inbox address sends any booking email in one tap."
+  ],
+  "fields": [
+    { "key": "bufferHours", "label": "Hours at the airport", "type": "number", "optional": true, "help": "How early to be at the airport before departure. Leave empty for 2 hours domestic, 3 international. Example: 2.5", "placeholder": "2" }
+  ],
+  "after": "Paste your next flight or hotel confirmation into the chat, or type \"add flight UA123 dec 3 08:15 SFO-JFK\". Then say \"trips\"."
+}

@@ -1,0 +1,27 @@
+{
+ "name": "Unclear email, model unavailable: asks the owner to type it",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "Your Akasa booking is confirmed: QP 1402 on 14 Nov, departing 6:10 from Bengaluru, landing in Mumbai at 7:55.",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T17:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "memory": {},
+ "model": [],
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "add flight UA123 dec 3 08:15 SFO-JFK"
+   ]
+  },
+  "memory": {
+   "trips": {
+    "exists": false
+   }
+  }
+ }
+}

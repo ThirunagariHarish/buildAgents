@@ -1,0 +1,44 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {
+  "lists": {
+   "groceries": [
+    {
+     "t": "bread",
+     "by": "Sam"
+    }
+   ]
+  }
+ },
+ "name": "Bought something that isn't on a list",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "bought bananas",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "bananas isn't on any list"
+   ]
+  },
+  "memory": {
+   "lists": {
+    "groceries": [
+     {
+      "t": "bread",
+      "by": "Sam"
+     }
+    ]
+   }
+  }
+ }
+}

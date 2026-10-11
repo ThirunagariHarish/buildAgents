@@ -1,0 +1,38 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {},
+ "name": "Add a family event",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "event: dinner at grandma's sat 6pm",
+   "from": "Maya"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Dinner at grandma's",
+    "Sat 17 Oct at 18:00",
+    "evening before and 2 hours before"
+   ]
+  },
+  "memory": {
+   "events": [
+    {
+     "n": 1,
+     "t": "Dinner at grandma's",
+     "d": "2026-10-17",
+     "tm": "18:00",
+     "by": "Maya"
+    }
+   ]
+  }
+ }
+}

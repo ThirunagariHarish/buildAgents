@@ -1,0 +1,23 @@
+{
+ "name": "Unknown short message gets a helpful answer",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "thanks!",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T17:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "didn't catch that",
+    "add flight"
+   ]
+  },
+  "error": false
+ }
+}

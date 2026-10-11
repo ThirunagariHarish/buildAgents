@@ -1,0 +1,30 @@
+{
+  "id": "family-hub",
+  "name": "Family Hub",
+  "icon": "🏡",
+  "version": "1.0.0",
+  "description": "The household organiser the whole family talks to: shared shopping and packing lists, a fair chore rotation with swaps and weekly scores, and family events with reminders.",
+  "permissions": ["notify", "memory"],
+  "triggers": [
+    { "type": "schedule", "at": "07:30" },
+    {
+      "type": "message",
+      "examples": [
+        "add eggs, milk",
+        "groceries",
+        "bought eggs",
+        "chores",
+        "done dishes",
+        "who's on trash?",
+        "swap dishes with Maya today",
+        "event: dinner at grandma's sat 6pm"
+      ]
+    },
+    { "type": "interval", "minutes": 60 }
+  ],
+  "settings": [
+    { "key": "people", "label": "Family members", "type": "text", "multiline": true, "optional": true, "help": "First names, one per line. Chores rotate between them in this order. If empty, everyone who messages the hub joins the rotation.", "placeholder": "Sam\nMaya\nLeo" },
+    { "key": "chores", "label": "Chores", "type": "text", "multiline": true, "optional": true, "help": "One per line: the chore, then daily or weekly (and a day for weekly ones), e.g. \"Dishes daily\", \"Trash weekly mon\", \"Vacuum weekly\".", "placeholder": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun" }
+  ],
+  "budget": { "steps": 40, "handoffsPerRun": 0 }
+}

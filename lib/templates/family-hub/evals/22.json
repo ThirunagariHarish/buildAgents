@@ -1,0 +1,54 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {
+  "sent": {
+   "daily": "2026-10-17"
+  },
+  "done": [
+   {
+    "d": "2026-10-12",
+    "c": "dishes",
+    "p": "Leo"
+   },
+   {
+    "d": "2026-10-13",
+    "c": "dishes",
+    "p": "Sam"
+   },
+   {
+    "d": "2026-10-14",
+    "c": "dishes",
+    "p": "Maya"
+   },
+   {
+    "d": "2026-10-15",
+    "c": "dishes",
+    "p": "Maya"
+   }
+  ]
+ },
+ "name": "Sunday morning adds the weekly scoreboard",
+ "trigger": {
+  "type": "schedule",
+  "at": "07:30"
+ },
+ "now": "2026-10-18T02:00:00.000Z",
+ "expect": {
+  "notify": {
+   "count": 1,
+   "bodyIncludes": [
+    "Bathroom: Sam",
+    "This week's chores: 🥇 Maya 2 · Leo 1 · Sam 1"
+   ]
+  },
+  "memory": {
+   "sent": {
+    "daily": "2026-10-18"
+   }
+  }
+ }
+}

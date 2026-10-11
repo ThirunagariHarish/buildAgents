@@ -1,0 +1,29 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {},
+ "name": "Help lists what the family can say",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "help",
+   "from": "Leo"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "add eggs",
+    "done dishes",
+    "swap dishes with Maya today",
+    "event:",
+    "scores"
+   ]
+  }
+ }
+}

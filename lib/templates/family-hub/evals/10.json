@@ -1,0 +1,25 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {},
+ "name": "Who's on a chore today, and on another day",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "who's on dishes?",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Dishes today: Leo."
+   ]
+  }
+ }
+}

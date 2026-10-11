@@ -1,0 +1,32 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {},
+ "name": "Swap trades turns fairly",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "swap dishes with Maya today",
+   "from": "Leo"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Maya does dishes today",
+    "Leo takes Maya's turn Wed 14 Oct"
+   ]
+  },
+  "memory": {
+   "swaps": {
+    "2026-10-12|dishes": "Maya",
+    "2026-10-14|dishes": "Leo"
+   }
+  }
+ }
+}

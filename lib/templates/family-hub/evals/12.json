@@ -1,0 +1,36 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "people": "Sam\nMaya\nLeo",
+  "chores": "Dishes daily\nTrash weekly mon\nLaundry weekly sat\nBathroom weekly sun"
+ },
+ "memory": {
+  "done": [
+   {
+    "d": "2026-10-12",
+    "c": "trash",
+    "p": "Maya"
+   }
+  ]
+ },
+ "name": "Today's chore assignments with what's done",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "chores",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Dishes: Leo",
+    "Trash: Maya ✓ done by Maya",
+    "Laundry (Sat): Leo",
+    "Bathroom (Sun): Sam"
+   ]
+  }
+ }
+}
