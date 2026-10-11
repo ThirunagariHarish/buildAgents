@@ -1,0 +1,64 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "person": "Mum",
+  "medicines": "Metformin 500mg | 08:00, 20:00 | 60\nAmlodipine 5mg | 8am | 30",
+  "pharmacyPhone": "+91 40 2345 6789",
+  "doctorPhone": "+91 40 2345 0000",
+  "personPhone": "+91 98765 43210"
+ },
+ "name": "21:00 day summary for the family",
+ "trigger": {
+  "type": "schedule",
+  "at": "21:00"
+ },
+ "now": "2026-10-12T15:30:00.000Z",
+ "memory": {
+  "since": "2026-10-01T00:00",
+  "pills": {
+   "metformin 500mg": {
+    "n": 60,
+    "s": 60
+   },
+   "amlodipine 5mg": {
+    "n": 30,
+    "s": 30
+   }
+  },
+  "log": {
+   "2026-10-12": {
+    "metformin 500mg@08:00": "08:10",
+    "amlodipine 5mg@08:00": "08:12"
+   }
+  },
+  "appts": [
+   {
+    "n": 1,
+    "t": "Dr Rao",
+    "d": "2026-10-13",
+    "tm": "10:00"
+   }
+  ]
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Mum today: 2 of 3 doses taken"
+   ],
+   "bodyIncludes": [
+    "✓ 08:00 Amlodipine 5mg: taken 08:12",
+    "✗ 20:00 Metformin 500mg: not taken",
+    "Tomorrow: Dr Rao at 10:00"
+   ],
+   "bodyExcludes": [
+    "This week"
+   ]
+  },
+  "memory": {
+   "sent": {
+    "sum": "2026-10-12"
+   }
+  }
+ }
+}

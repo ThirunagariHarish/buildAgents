@@ -1,0 +1,42 @@
+{
+  "id": "care-manager",
+  "name": "Care Manager",
+  "icon": "💊",
+  "version": "1.0.0",
+  "description": "Looks after someone's medicines and appointments with the family: dose-time nudges, an alert if a dose is missed, pill counts with refill warnings, appointment reminders and a nightly summary.",
+  "permissions": ["notify", "memory"],
+  "triggers": [
+    { "type": "schedule", "at": "21:00" },
+    {
+      "type": "message",
+      "examples": [
+        "taken",
+        "took metformin",
+        "skip evening metformin",
+        "refilled metformin 90",
+        "appointment dr rao tue 10am",
+        "meds",
+        "adherence",
+        "pills left"
+      ]
+    },
+    {
+      "type": "manual",
+      "label": "Taken",
+      "inputs": [
+        { "key": "status", "label": "Medicines", "type": "choice", "options": ["Took my due medicines", "Skip this dose"] }
+      ]
+    },
+    { "type": "interval", "minutes": 15 }
+  ],
+  "settings": [
+    { "key": "person", "label": "Who you care for", "type": "text", "help": "Their name as the family says it, e.g. Mum or Grandpa Raj.", "placeholder": "Mum" },
+    { "key": "medicines", "label": "Medicines", "type": "text", "multiline": true, "help": "One per line: name | times | pills left (optional), e.g. \"Metformin 500mg | 08:00, 20:00 | 60\".", "placeholder": "Metformin 500mg | 08:00, 20:00 | 60\nAmlodipine 5mg | 08:00 | 30" },
+    { "key": "personPhone", "label": "Their phone", "type": "text", "optional": true, "help": "Optional. Adds a one-tap call to missed-dose alerts, e.g. +91 98765 43210.", "placeholder": "+91 98765 43210" },
+    { "key": "pharmacyPhone", "label": "Pharmacy phone", "type": "text", "optional": true, "help": "Optional. Adds a one-tap call to refill alerts.", "placeholder": "+91 40 2345 6789" },
+    { "key": "doctorPhone", "label": "Doctor's phone", "type": "text", "optional": true, "help": "Optional. Adds a one-tap call to appointment reminders.", "placeholder": "+91 40 2345 0000" },
+    { "key": "refillDays", "label": "Refill warning (days)", "type": "number", "optional": true, "help": "Warn when this many days of pills are left. Default 7.", "placeholder": "7" },
+    { "key": "escalateAfter", "label": "Missed-dose alert after (min)", "type": "number", "optional": true, "help": "Minutes after a dose time with no confirmation before the family is alerted. Default 60.", "placeholder": "60" }
+  ],
+  "budget": { "steps": 50, "handoffsPerRun": 0 }
+}

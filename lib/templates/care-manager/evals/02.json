@@ -1,0 +1,40 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "person": "Mum",
+  "medicines": "Metformin 500mg | 08:00, 20:00 | 60\nAmlodipine 5mg | 8am | 30",
+  "pharmacyPhone": "+91 40 2345 6789",
+  "doctorPhone": "+91 40 2345 0000",
+  "personPhone": "+91 98765 43210"
+ },
+ "name": "Already nudged and not yet late: quiet",
+ "trigger": {
+  "type": "interval",
+  "minutes": 15
+ },
+ "now": "2026-10-12T03:05:00.000Z",
+ "memory": {
+  "since": "2026-10-01T00:00",
+  "pills": {
+   "metformin 500mg": {
+    "n": 60,
+    "s": 60
+   },
+   "amlodipine 5mg": {
+    "n": 30,
+    "s": 30
+   }
+  },
+  "alerts": {
+   "2026-10-12": {
+    "metformin 500mg@08:00": 1,
+    "amlodipine 5mg@08:00": 1
+   }
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

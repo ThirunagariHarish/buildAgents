@@ -1,0 +1,41 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "person": "Mum",
+  "medicines": ""
+ },
+ "name": "No medicines set yet: explains the format, never errors",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "meds",
+   "from": "Priya"
+  }
+ },
+ "now": "2026-10-12T02:40:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Metformin 500mg | 08:00, 20:00 | 60"
+   ]
+  },
+  "notify": {
+   "count": 0
+  },
+  "error": false
+ },
+ "memory": {
+  "since": "2026-10-01T00:00",
+  "pills": {
+   "metformin 500mg": {
+    "n": 60,
+    "s": 60
+   },
+   "amlodipine 5mg": {
+    "n": 30,
+    "s": 30
+   }
+  }
+ }
+}

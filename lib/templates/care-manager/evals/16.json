@@ -1,0 +1,54 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "person": "Mum",
+  "medicines": "Metformin 500mg | 08:00, 20:00 | 60\nAmlodipine 5mg | 8am | 30",
+  "pharmacyPhone": "+91 40 2345 6789",
+  "doctorPhone": "+91 40 2345 0000",
+  "personPhone": "+91 98765 43210"
+ },
+ "name": "Refilled adds pills and re-arms the warning",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "refilled metformin 90",
+   "from": "Priya"
+  }
+ },
+ "now": "2026-10-12T05:30:00.000Z",
+ "memory": {
+  "since": "2026-10-01T00:00",
+  "pills": {
+   "metformin 500mg": {
+    "n": 13,
+    "s": 60,
+    "w": 1
+   },
+   "amlodipine 5mg": {
+    "n": 29,
+    "s": 30
+   }
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Metformin 500mg: +90, now 103 pills",
+    "about 51 days"
+   ]
+  },
+  "memory": {
+   "pills": {
+    "metformin 500mg": {
+     "n": 103,
+     "s": 60
+    },
+    "amlodipine 5mg": {
+     "n": 29,
+     "s": 30
+    }
+   }
+  }
+ }
+}

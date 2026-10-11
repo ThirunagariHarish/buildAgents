@@ -1,0 +1,60 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "person": "Mum",
+  "medicines": "Metformin 500mg | 08:00, 20:00 | 60\nAmlodipine 5mg | 8am | 30",
+  "pharmacyPhone": "+91 40 2345 6789",
+  "doctorPhone": "+91 40 2345 0000",
+  "personPhone": "+91 98765 43210"
+ },
+ "name": "\"took metformin\" confirms only that medicine",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "took metformin",
+   "from": "Mum"
+  }
+ },
+ "now": "2026-10-12T02:40:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Metformin 500mg (08:00)"
+   ],
+   "excludes": [
+    "Amlodipine"
+   ]
+  },
+  "memory": {
+   "log": {
+    "2026-10-12": {
+     "metformin 500mg@08:00": "08:10"
+    }
+   },
+   "pills": {
+    "metformin 500mg": {
+     "n": 59,
+     "s": 60
+    },
+    "amlodipine 5mg": {
+     "n": 30,
+     "s": 30
+    }
+   }
+  }
+ },
+ "memory": {
+  "since": "2026-10-01T00:00",
+  "pills": {
+   "metformin 500mg": {
+    "n": 60,
+    "s": 60
+   },
+   "amlodipine 5mg": {
+    "n": 30,
+    "s": 30
+   }
+  }
+ }
+}

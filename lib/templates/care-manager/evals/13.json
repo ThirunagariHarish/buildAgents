@@ -1,0 +1,53 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "person": "Mum",
+  "medicines": "Metformin 500mg | 08:00, 20:00 | 60\nAmlodipine 5mg | 8am | 30",
+  "pharmacyPhone": "+91 40 2345 6789",
+  "doctorPhone": "+91 40 2345 0000",
+  "personPhone": "+91 98765 43210"
+ },
+ "name": "Skip the evening dose ahead of time",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "skip evening metformin",
+   "from": "Priya"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "memory": {
+  "since": "2026-10-01T00:00",
+  "pills": {
+   "metformin 500mg": {
+    "n": 60,
+    "s": 60
+   },
+   "amlodipine 5mg": {
+    "n": 30,
+    "s": 30
+   }
+  },
+  "log": {
+   "2026-10-12": {
+    "metformin 500mg@08:00": "08:10"
+   }
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Skipped Metformin 500mg (20:00)"
+   ]
+  },
+  "memory": {
+   "log": {
+    "2026-10-12": {
+     "metformin 500mg@08:00": "08:10",
+     "metformin 500mg@20:00": "s"
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,69 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "person": "Mum",
+  "medicines": "Metformin 500mg | 08:00, 20:00",
+  "pharmacyPhone": "+91 40 2345 6789",
+  "doctorPhone": "+91 40 2345 0000",
+  "personPhone": "+91 98765 43210"
+ },
+ "name": "Sunday summary adds the weekly adherence",
+ "trigger": {
+  "type": "schedule",
+  "at": "21:00"
+ },
+ "now": "2026-10-18T15:30:00.000Z",
+ "memory": {
+  "since": "2026-10-01T00:00",
+  "pills": null,
+  "log": {
+   "2026-10-12": {
+    "metformin 500mg@08:00": "08:05",
+    "metformin 500mg@20:00": "20:05"
+   },
+   "2026-10-13": {
+    "metformin 500mg@08:00": "08:05",
+    "metformin 500mg@20:00": "20:05"
+   },
+   "2026-10-14": {
+    "metformin 500mg@20:00": "20:05"
+   },
+   "2026-10-15": {
+    "metformin 500mg@08:00": "08:05",
+    "metformin 500mg@20:00": "20:05"
+   },
+   "2026-10-16": {
+    "metformin 500mg@08:00": "08:05",
+    "metformin 500mg@20:00": "20:05"
+   },
+   "2026-10-17": {
+    "metformin 500mg@08:00": "08:05",
+    "metformin 500mg@20:00": "20:05"
+   },
+   "2026-10-18": {
+    "metformin 500mg@08:00": "08:05",
+    "metformin 500mg@20:00": "20:05"
+   }
+  },
+  "sent": {
+   "sum": "2026-10-17"
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "2 of 2 doses taken"
+   ],
+   "bodyIncludes": [
+    "This week: 13 of 14 doses taken (93%)",
+    "Missed: Metformin 500mg Wed 08:00"
+   ]
+  },
+  "memory": {
+   "sent": {
+    "sum": "2026-10-18"
+   }
+  }
+ }
+}

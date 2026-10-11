@@ -1,0 +1,62 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "person": "Mum",
+  "medicines": "Metformin 500mg | 08:00, 20:00",
+  "pharmacyPhone": "+91 40 2345 6789",
+  "doctorPhone": "+91 40 2345 0000",
+  "personPhone": "+91 98765 43210"
+ },
+ "name": "Adherence over the last 7 days",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "adherence",
+   "from": "Priya"
+  }
+ },
+ "now": "2026-10-12T16:00:00.000Z",
+ "memory": {
+  "since": "2026-10-01T00:00",
+  "pills": null,
+  "log": {
+   "2026-10-06": {
+    "metformin 500mg@08:00": "08:05",
+    "metformin 500mg@20:00": "20:05"
+   },
+   "2026-10-07": {
+    "metformin 500mg@08:00": "08:05",
+    "metformin 500mg@20:00": "20:05"
+   },
+   "2026-10-08": {
+    "metformin 500mg@08:00": "08:05"
+   },
+   "2026-10-09": {
+    "metformin 500mg@08:00": "08:05",
+    "metformin 500mg@20:00": "20:05"
+   },
+   "2026-10-10": {
+    "metformin 500mg@08:00": "s",
+    "metformin 500mg@20:00": "20:05"
+   },
+   "2026-10-11": {
+    "metformin 500mg@08:00": "08:05",
+    "metformin 500mg@20:00": "20:05"
+   },
+   "2026-10-12": {
+    "metformin 500mg@08:00": "08:05",
+    "metformin 500mg@20:00": "20:05"
+   }
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "12 of 14 doses taken (86%)",
+    "1 skipped",
+    "Missed: Metformin 500mg Thu 20:00"
+   ]
+  }
+ }
+}

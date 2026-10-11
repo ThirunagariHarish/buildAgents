@@ -1,0 +1,45 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "person": "Mum",
+  "medicines": "Sleep aid | 23:00 | 20",
+  "pharmacyPhone": "+91 40 2345 6789",
+  "doctorPhone": "+91 40 2345 0000",
+  "personPhone": "+91 98765 43210"
+ },
+ "name": "A late-night dose is still escalated after midnight",
+ "trigger": {
+  "type": "interval",
+  "minutes": 15
+ },
+ "now": "2026-10-12T18:35:00.000Z",
+ "memory": {
+  "since": "2026-10-01T00:00",
+  "pills": {
+   "sleep aid": {
+    "n": 20,
+    "s": 20
+   }
+  },
+  "alerts": {
+   "2026-10-12": {
+    "sleep aid@23:00": 1
+   }
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Mum hasn't taken the 23:00 Sleep aid"
+   ]
+  },
+  "memory": {
+   "alerts": {
+    "2026-10-12": {
+     "sleep aid@23:00": 2
+    }
+   }
+  }
+ }
+}

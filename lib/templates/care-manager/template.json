@@ -1,0 +1,38 @@
+{
+  "name": "Care Manager",
+  "icon": "💊",
+  "category": "Family",
+  "tier": "life",
+  "summary": "Keeps track of someone's medicines and doctor visits for the whole family: nudges at dose time, raises the alarm when a dose is missed, and warns before pills run out.",
+  "handles": [
+    "A nudge at each dose time; one tap or \"taken\" confirms it",
+    "If a dose isn't confirmed in time, one clear alert to the family saying who missed what",
+    "Counts pills down with every dose and warns before they run out, with a tap to call the pharmacy",
+    "Appointment reminders the evening before and 2 hours ahead",
+    "A 21:00 summary of the day, and the week's adherence on Sundays"
+  ],
+  "talk": [
+    "taken",
+    "took metformin",
+    "skip evening metformin",
+    "refilled metformin 90",
+    "appointment dr rao tue 10am",
+    "adherence"
+  ],
+  "setup": [
+    "Type the person's name and their medicines, one per line: name | times | pills left.",
+    "Share the agent with them and the family (Settings → Shared with).",
+    "They tap Run → \"Took my due medicines\" (or reply \"taken\") after each dose."
+  ],
+  "fields": [
+    { "key": "person", "label": "Who you care for", "type": "text", "help": "Their name as the family says it.", "placeholder": "Mum" },
+    { "key": "medicines", "label": "Medicines", "type": "text", "multiline": true, "help": "One per line: name | times | pills left (optional), e.g. \"Metformin 500mg | 08:00, 20:00 | 60\".", "placeholder": "Metformin 500mg | 08:00, 20:00 | 60\nAmlodipine 5mg | 08:00 | 30" },
+    { "key": "personPhone", "label": "Their phone", "type": "text", "help": "Optional: a one-tap call on missed-dose alerts.", "placeholder": "+91 98765 43210", "optional": true },
+    { "key": "pharmacyPhone", "label": "Pharmacy phone", "type": "text", "help": "Optional: a one-tap call on refill alerts.", "placeholder": "+91 40 2345 6789", "optional": true },
+    { "key": "doctorPhone", "label": "Doctor's phone", "type": "text", "help": "Optional: a one-tap call on appointment reminders.", "placeholder": "+91 40 2345 0000", "optional": true },
+    { "key": "refillDays", "label": "Refill warning (days)", "type": "number", "help": "Warn when this many days of pills are left.", "placeholder": "7", "optional": true, "default": 7 },
+    { "key": "escalateAfter", "label": "Missed-dose alert after (min)", "type": "number", "help": "Minutes without a confirmation before the family is alerted.", "placeholder": "60", "optional": true, "default": 60 }
+  ],
+  "share": true,
+  "after": "Share it with the person and the family under Settings → Shared with. At each dose time they tap Run → \"Took my due medicines\", or reply \"taken\" here."
+}

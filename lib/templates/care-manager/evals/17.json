@@ -1,0 +1,53 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "person": "Mum",
+  "medicines": "Metformin 500mg | 08:00, 20:00 | 60\nAmlodipine 5mg | 8am | 30",
+  "pharmacyPhone": "+91 40 2345 6789",
+  "doctorPhone": "+91 40 2345 0000",
+  "personPhone": "+91 98765 43210"
+ },
+ "name": "Add an appointment",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "appointment dr rao tue 10am",
+   "from": "Priya"
+  }
+ },
+ "now": "2026-10-12T05:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Dr Rao",
+    "tomorrow (Tue 13 Oct) at 10:00",
+    "evening before and 2 hours before"
+   ],
+   "link": "tel:+914023450000"
+  },
+  "memory": {
+   "appts": [
+    {
+     "n": 1,
+     "t": "Dr Rao",
+     "d": "2026-10-13",
+     "tm": "10:00"
+    }
+   ]
+  }
+ },
+ "memory": {
+  "since": "2026-10-01T00:00",
+  "pills": {
+   "metformin 500mg": {
+    "n": 60,
+    "s": 60
+   },
+   "amlodipine 5mg": {
+    "n": 30,
+    "s": 30
+   }
+  }
+ }
+}

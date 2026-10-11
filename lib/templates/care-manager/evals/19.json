@@ -1,0 +1,67 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "person": "Mum",
+  "medicines": "Metformin 500mg | 08:00, 20:00 | 60\nAmlodipine 5mg | 8am | 30",
+  "pharmacyPhone": "+91 40 2345 6789",
+  "doctorPhone": "+91 40 2345 0000",
+  "personPhone": "+91 98765 43210"
+ },
+ "name": "Appointment reminder 2 hours before",
+ "trigger": {
+  "type": "interval",
+  "minutes": 15
+ },
+ "now": "2026-10-13T02:40:00.000Z",
+ "memory": {
+  "since": "2026-10-01T00:00",
+  "pills": {
+   "metformin 500mg": {
+    "n": 60,
+    "s": 60
+   },
+   "amlodipine 5mg": {
+    "n": 30,
+    "s": 30
+   }
+  },
+  "appts": [
+   {
+    "n": 1,
+    "t": "Dr Rao",
+    "d": "2026-10-13",
+    "tm": "10:00",
+    "r1": 1
+   }
+  ],
+  "log": {
+   "2026-10-13": {
+    "metformin 500mg@08:00": "08:02",
+    "amlodipine 5mg@08:00": "08:02"
+   }
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Dr Rao at 10:00"
+   ],
+   "bodyIncludes": [
+    "about 2 hours"
+   ]
+  },
+  "memory": {
+   "appts": [
+    {
+     "n": 1,
+     "t": "Dr Rao",
+     "d": "2026-10-13",
+     "tm": "10:00",
+     "r1": 1,
+     "r2": 1
+    }
+   ]
+  }
+ }
+}

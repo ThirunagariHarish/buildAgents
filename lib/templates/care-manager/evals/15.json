@@ -1,0 +1,57 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "person": "Mum",
+  "medicines": "Metformin 500mg | 08:00, 20:00 | 60\nAmlodipine 5mg | 8am | 30",
+  "pharmacyPhone": "+91 40 2345 6789",
+  "doctorPhone": "+91 40 2345 0000",
+  "personPhone": "+91 98765 43210"
+ },
+ "name": "Refill alert is not repeated",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "taken",
+   "from": "Mum"
+  }
+ },
+ "now": "2026-10-12T14:35:00.000Z",
+ "memory": {
+  "since": "2026-10-01T00:00",
+  "pills": {
+   "metformin 500mg": {
+    "n": 14,
+    "s": 60,
+    "w": 1
+   },
+   "amlodipine 5mg": {
+    "n": 29,
+    "s": 30
+   }
+  },
+  "log": {
+   "2026-10-12": {
+    "metformin 500mg@08:00": "08:10",
+    "amlodipine 5mg@08:00": "08:10"
+   }
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "pills": {
+    "metformin 500mg": {
+     "n": 13,
+     "s": 60,
+     "w": 1
+    },
+    "amlodipine 5mg": {
+     "n": 29,
+     "s": 30
+    }
+   }
+  }
+ }
+}
