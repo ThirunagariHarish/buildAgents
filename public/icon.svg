@@ -1,13 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" class="pip pip-happy still" width="512" height="512" viewBox="-2 -9 124 134" role="img" aria-label="Pip">
   <defs>
-    <radialGradient id="a" cx="25%" cy="20%" r="80%"><stop offset="0" stop-color="#ffd8c4"/><stop offset="1" stop-color="#ffd8c4" stop-opacity="0"/></radialGradient>
-    <radialGradient id="b" cx="85%" cy="30%" r="75%"><stop offset="0" stop-color="#cbb8ff"/><stop offset="1" stop-color="#cbb8ff" stop-opacity="0"/></radialGradient>
-    <radialGradient id="c" cx="40%" cy="95%" r="80%"><stop offset="0" stop-color="#b9dcff"/><stop offset="1" stop-color="#b9dcff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="pip1b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9b8ff"/><stop offset=".55" stop-color="#e9b8f0"/><stop offset="1" stop-color="#ffc2c7"/></linearGradient>
+    <linearGradient id="pip1l" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a68fff"/><stop offset="1" stop-color="#f59ec2"/></linearGradient>
+    <radialGradient id="pip1g" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff6c9"/><stop offset=".5" stop-color="#ffd76a"/><stop offset="1" stop-color="#ffb84d"/></radialGradient>
   </defs>
-  <rect width="512" height="512" rx="116" fill="#f6f4f0"/>
-  <rect width="512" height="512" rx="116" fill="url(#a)"/>
-  <rect width="512" height="512" rx="116" fill="url(#b)"/>
-  <rect width="512" height="512" rx="116" fill="url(#c)"/>
-  <rect x="176" y="176" width="160" height="160" rx="52" fill="#17161b"/>
-  <circle cx="256" cy="256" r="22" fill="#f6f4f0"/>
+  <ellipse cx="60" cy="118" rx="30" ry="4.5" fill="#2b2442" opacity=".09" class="pip-shadow"/>
+  <g class="pip-body">
+    <g class="pip-sprout" transform="rotate(-7 14 44)"><path d="M60 30 C60 22 60 18 60 13" stroke="#8f78f2" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M60 22 C66 16 72 17 74 20 C70 24 65 24 60 22Z" fill="#8fd6a8"/><circle cx="60" cy="10" r="6.2" fill="url(#pip1g)" class="pip-bulb"/></g>
+    <rect x="16" y="38" width="88" height="74" rx="30" fill="url(#pip1b)"/>
+    <ellipse cx="40" cy="52" rx="14" ry="7" fill="#fff" opacity=".35" transform="rotate(-18 40 52)"/>
+    <g class="pip-lid" transform="rotate(-7 14 44)"><rect x="10" y="27" width="100" height="21" rx="10.5" fill="url(#pip1l)"/><rect x="18" y="30.5" width="42" height="5" rx="2.5" fill="#fff" opacity=".4"/></g>
+    <g class="pip-pocket"><path d="M47 92 h26 v9 a8 8 0 0 1 -8 8 h-10 a8 8 0 0 1 -8 -8z" fill="#fff" opacity=".42"/><path d="M47 92 h26" stroke="#fff" stroke-width="2" opacity=".7" stroke-linecap="round"/><path d="M60 104.5 c-3.4 -2.4 -5.2 -4 -5.2 -6 a2.6 2.6 0 0 1 5.2 -0.6 a2.6 2.6 0 0 1 5.2 0.6 c0 2 -1.8 3.6 -5.2 6z" fill="#ff7aa2"/></g>
+    <g stroke="#2b2442" stroke-width="3.2" stroke-linecap="round" fill="none"><path d="M39 66 Q46 58 53 66" /><path d="M67 66 Q74 58 81 66" /><path d="M51 77 Q60 87 69 77 Q60 82 51 77Z" class="fill"/></g>
+    <ellipse cx="33" cy="79" rx="7.5" ry="4.6" fill="#ff6f9c" opacity=".5"/><ellipse cx="87" cy="79" rx="7.5" ry="4.6" fill="#ff6f9c" opacity=".5"/>
+    <ellipse cx="44" cy="112" rx="9" ry="4.6" fill="#a68fff"/><ellipse cx="76" cy="112" rx="9" ry="4.6" fill="#a68fff"/>
+    
+  </g>
+  <style>.pip .fill{fill:#2b2442;stroke:none}</style>
 </svg>

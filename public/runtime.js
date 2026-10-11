@@ -496,7 +496,7 @@
     const unsupported = R.verified._unsupported;
     app.innerHTML = `<div class="shell">
       <header class="top">
-        <a class="brand" href="/runtime"><span class="mark"></span><span>Pocket Box</span></a>
+        <a class="brand" href="/runtime">${self.Pip ? `<span class="pip-mini">${self.Pip.svg('idle', 32, { still: true })}</span>` : '<span class="mark"></span>'}<span>Pocket Box</span></a>
         <span class="spacer"></span>
         ${R.offline ? '<span class="pill warn">Offline</span>' : ''}
         <a class="btn ghost sm" href="/">Studio ›</a>
@@ -585,7 +585,7 @@
     if (!R.session) R.session = await fetch('/api/session', { credentials: 'same-origin' }).then((r) => r.json()).catch(() => ({ authed: false }));
     const guess = isIOS() ? 'iPhone' : /Android/.test(navigator.userAgent) ? 'Android phone' : 'This device';
     app.innerHTML = `<div class="center"><section class="auth glass rise">
-      <div class="brand" style="margin-bottom:26px"><span class="mark"></span>Pocket</div>
+      <div class="brand" style="margin-bottom:26px">${self.Pip ? `<span class="pip-mini">${self.Pip.svg('hi', 32, { still: true })}</span>` : '<span class="mark"></span>'}Pocket Box</div>
       <h1 class="display" style="font-size:42px">Pair this <em>phone</em></h1>
       <p class="muted" style="margin:12px 0 22px">Pocket runs the agents you build in your Studio, right here. It only runs packages signed by your Studio.</p>
       ${R.problem ? `<div class="note bad" style="margin-bottom:14px">${esc(R.problem)}</div>` : ''}

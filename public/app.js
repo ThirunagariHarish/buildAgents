@@ -8,6 +8,8 @@
   const S = { session: null, meta: null, agents: [], agent: null, tab: 'thread', devices: null, open: new Set(), files: null, file: null, runs: null, users: null, es: null, version: null };
 
   // ---- small helpers ----------------------------------------------------------
+  const pip = (mood, size, opts) => (self.Pip ? self.Pip.svg(mood, size, opts) : '');
+  const pipMini = () => `<span class="pip-mini">${pip('idle', 32, { still: true })}</span>`;
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
@@ -213,6 +215,10 @@
   let rendering = 0;
   async function render({ transition = true } = {}) {
     const ticket = ++rendering;
+    const here = location.hash || '#/';
+    S.trail = S.trail || [];
+    if (S.trail[S.trail.length - 1] !== here) S.trail.push(here);
+    if (S.trail.length > 30) S.trail = S.trail.slice(-30);
     const r = route();
     const publicRoutes = ['login', 'signup', 'forgot', 'reset', 'privacy', 'terms'];
     if (!S.session) S.session = await api('/api/session').catch(() => ({ authed: false }));
@@ -250,7 +256,8 @@
       case 't': return templateView(r.id);
       case 'watch': return watchView();
       case 's': return shareView(r.id);
-      default: return updatesView();
+      case 'updates': return updatesView();
+      default: return hubView();
     }
   }
 
@@ -291,6 +298,9 @@
         try { S.agent = await api(`/api/agents/${r.id}`); } catch { return; }
         patchAgent();
       } else if (r.name === 'home') {
+        // Don't redraw the hub under someone who is typing to Pip.
+        const ta = $('form[data-form="ask"] textarea');
+        if (ta && (ta.value || document.activeElement === ta)) return;
         render({ transition: false });
       }
     }, delay);
@@ -357,9 +367,10 @@
   const authShell = (inner) => `<div class="center"><section class="auth glass rise">${inner}</section></div>`;
   function loginView() {
     return authShell(`
-      <div class="row" style="margin-bottom:28px"><div class="brand"><span class="mark"></span>Pocket Box</div><span class="spacer"></span><span data-install-slot="pill">${installPill()}</span></div>
+      <div class="row" style="margin-bottom:28px"><div class="brand">${pipMini()}Pocket Box</div><span class="spacer"></span><span data-install-slot="pill">${installPill()}</span></div>
+      <div style="display:flex;justify-content:center;margin:-6px 0 6px">${pip('hi', 120)}</div>
       <h1 class="display">Agents that live <em>in your pocket</em>.</h1>
-      <p class="muted" style="margin:12px 0 24px">Describe what you want done. A room of experts designs it, a crew builds and tests it, and it runs on your phone.</p>
+      <p class="muted" style="margin:12px 0 24px">Tell Pip what you need help with: your money, your day, your family, your next trip. Pocket Box sets up an agent that takes care of it and lets you know.</p>
       <form data-form="login" class="stack">
         <label class="field"><span>Email</span><input class="input" name="email" type="email" autocomplete="username" required autofocus></label>
         <label class="field"><span>Password</span><input class="input" name="password" type="password" autocomplete="current-password" required></label>
@@ -416,10 +427,10 @@
 
   // ---- chrome ------------------------------------------------------------------
   function topBar(extra = '') {
-    const u = S.session?.user;
     return `<header class="top">
-      <a class="brand" href="#/"><span class="mark"></span><span>Pocket Box</span></a>
-      <span class="spacer"></span>${extra}${u ? '' : ''}
+      <button class="btn ghost icon" data-act="back" aria-label="Back">${icon.back}</button>
+      <a class="brand" href="#/" style="margin-left:-4px">${pipMini()}<span>Pocket Box</span></a>
+      <span class="spacer"></span>${extra}
     </header>`;
   }
 
@@ -438,58 +449,7 @@
   }
 
   // ---- home ----------------------------------------------------------------------
-  async function homeView() {
-    const [list, , meta, devs, pr] = await Promise.all([
-      api('/api/agents'),
-      loadTemplates(),
-      S.meta ? Promise.resolve(S.meta) : api('/api/meta'),
-      S.devices ? Promise.resolve({ devices: S.devices }) : api('/api/devices').catch(() => ({ devices: [] })),
-      api('/api/me/prefs').catch(() => ({})),
-      api('/api/me/todo').then((r) => { S.todo = r.items; }).catch(() => { S.todo = []; }),
-    ]);
-    S.agents = list.agents; S.meta = meta; S.devices = devs.devices; if (pr.prefs) S.prefs = pr.prefs;
-    const name = S.session.user?.firstName || '';
-    const waiting = S.agents.filter((a) => a.needsYou && a.mine);
-    const rest = S.agents.filter((a) => !(a.needsYou && a.mine));
-    const tpl = store.get('pb.template', null);
-    return `<div class="shell">${topBar()}
-      <section style="padding:36px 0 28px" class="rise">
-        <div class="eyebrow">${esc(greeting())}${name ? `, ${esc(name)}` : ''}</div>
-        <h1 class="display" style="margin-top:10px">What should <em>your agent</em> do?</h1>
-        <p class="lede">Say it the way you'd ask a friend. The room turns it into a brief; the crew builds, tests and signs it; your phone runs it.</p>
-      </section>
-      ${pausedBanner()}
-      ${todoView()}
-      <div data-install-slot="home" style="margin-bottom:16px">${installCard({ dismissible: true })}</div>
-      <form data-form="new" class="composer glass rise">
-        <textarea name="idea" data-grow rows="3" placeholder="Every weekday at 7:30, tell me if I need an umbrella and when to leave for my first meeting…" required></textarea>
-        <div class="bar">
-          <span class="small faint hide-sm">Shift + Enter for a new line</span>
-          <span class="spacer"></span>
-          ${micButton()}<button class="send" aria-label="Start" disabled>${icon.send}</button>
-        </div>
-      </form>
-      <div class="row wrap rise" style="margin-top:14px;gap:8px">
-        ${meta.templates.map((t) => `<button class="chip ${tpl === t.id ? 'on' : ''}" data-act="template" data-id="${esc(t.id)}" title="${esc(t.hint)}">${esc(t.emoji)} ${esc(t.name)}</button>`).join('')}
-      </div>
-      ${S.templates.some((t) => t.tier === 'life') ? `<section style="margin-top:36px" class="rise">
-        <div class="row between" style="margin:0 4px 12px"><div class="eyebrow">Agents that run part of your life</div><a class="link small" href="#/templates">See all</a></div>
-        <div class="stack">${S.templates.filter((t) => t.tier === 'life').map(lifeCard).join('')}</div>
-      </section>` : ''}
-      <section style="margin-top:36px" class="rise">
-        <div class="row between" style="margin:0 4px 12px"><div class="eyebrow">Quick alerts</div><a class="link small" href="#/templates">See all ${S.templates.length}</a></div>
-        <a href="#/watch" class="glass card row watch-hero" style="text-decoration:none;gap:14px;margin-bottom:12px">
-          <div class="avatar">👀</div><div style="flex:1;min-width:0"><div class="h3">Watch a page for me</div><div class="small muted">Visa bulletin, results, prices, restocks, any page. Paste a link; we tell you when it changes.</div></div><span class="faint">›</span></a>
-        <div class="tpl-grid">${S.templates.filter((t) => t.tier !== 'life' && !['watch-page', 'price-drop', 'back-in-stock'].includes(t.id)).slice(0, 4).map(templateCard).join('')}</div>
-      </section>
-      ${S.devices.length ? '' : `<a href="#/phones" class="glass card row rise" style="margin-top:28px;text-decoration:none;gap:14px">
-        <div class="avatar">📱</div><div class="grow" style="flex:1"><div class="h3">Put Pocket Box on your phone</div><div class="small muted">Agents run on your phone, not here. Pair it once; it takes a minute.</div></div><span class="faint">›</span></a>`}
-      <section style="margin-top:36px">
-        <div class="eyebrow" style="margin:0 0 12px 4px">Your agents</div>
-        ${S.agents.length ? `<div class="stack">${[...waiting, ...rest].map(agentCard).join('')}</div>` : '<div class="glass empty">No agents yet. Describe one above, or pick a ready-made one.</div>'}
-      </section>
-    </div>`;
-  }
+
 
   // ---- ready-made agents ---------------------------------------------------------------------
   async function loadTemplates() {
@@ -545,7 +505,7 @@
     const t = S.templates.find((x) => x.id === id);
     if (!t) return errorView(new Error('No such ready-made agent.'));
     return `<div class="shell">
-      <header class="top"><a class="btn ghost icon" href="#/new" aria-label="Back">${icon.back}</a></header>
+      <header class="top"><button class="btn ghost icon" data-act="back" aria-label="Back">${icon.back}</button></header>
       <section class="rise" style="padding:4px 0 18px"><div class="row" style="gap:16px"><div class="avatar xl">${esc(t.icon)}</div><div><h1 class="h2" style="font-size:26px">${esc(t.name)}</h1><div class="small muted" style="margin-top:4px">${esc(t.category)} · tested and signed</div></div></div>
         <p class="lede" style="margin-top:16px">${esc(t.summary)}</p>
         ${t.examples ? `<div class="row wrap" style="gap:6px;margin-top:12px">${t.examples.map((e) => `<span class="pill">${esc(e)}</span>`).join('')}</div>` : ''}</section>
@@ -1097,8 +1057,99 @@
       <article class="glass card prose rise" style="font-size:16px">${kind === 'privacy' ? privacy : terms}<p class="small muted">Last updated October 2026.</p></article></div>`;
   }
 
+  // ===================== The hub: one screen everything starts from =====================
+  const IDEAS = [['💰', 'Track my spending', 'money-manager'], ['🧭', 'Plan my day', 'chief-of-staff'], ['👀', 'Watch a page', '#/watch'], ['💊', 'Medicine reminders', 'care-manager'],
+    ['🧑‍💼', 'Find me a job', 'job-hunter'], ['✈️', 'My next trip', 'trip-concierge'], ['🛂', 'Green card dates', 'visa-tracker'], ['🏡', 'Family chores', 'family-hub'], ['📈', 'My stocks', 'portfolio-watch'], ['🧠', 'Learn something', 'learning-coach']];
+  // What someone types → the ready-made agent that already does it.
+  const MATCH = [
+    [/visa|green ?card|priority date|bulletin|uscis|immigra/i, 'visa-tracker'],
+    [/watch (a |this |the )?(web ?)?(page|site)|website chang|price drop|back in stock|restock/i, '#/watch'],
+    [/spend|spent|budget|expense|money|financ|subscription|bank|bills?\b/i, 'money-manager'],
+    [/medicin|meds\b|pill|dose|caregiv|elderly|my (mom|dad|mother|father)'?s? health/i, 'care-manager'],
+    [/\bjobs?\b|career|hiring|resume|interview|apply/i, 'job-hunter'],
+    [/stock|portfolio|crypto|bitcoin|invest|shares/i, 'portfolio-watch'],
+    [/trip|flight|travel|hotel|vacation|itinerar/i, 'trip-concierge'],
+    [/learn|flashcard|vocab|study|quiz me|language/i, 'learning-coach'],
+    [/family|chore|grocer|household|kids/i, 'family-hub'],
+    [/remind|to-?do|task|plan my day|my day|calendar|organi[sz]/i, 'chief-of-staff'],
+  ];
+  function matchIdea(text) { for (const [re, id] of MATCH) if (re.test(text)) return id; return null; }
+
+  async function hubView() {
+    const [ag, up] = await Promise.all([
+      api('/api/agents'),
+      api('/api/updates').catch(() => ({ updates: [], unread: 0, devices: 0 })),
+      api('/api/me/todo').then((x) => { S.todo = x.items; }).catch(() => { S.todo = []; }),
+      loadTemplates().catch(() => {}),
+      api('/api/me/prefs').then((x) => { S.prefs = x.prefs; }).catch(() => {}),
+    ]);
+    S.agents = ag.agents; S.unread = up.unread; S.pushDevices = up.devices;
+    const name = S.session.user?.firstName || '';
+    const agents = S.agents;
+    const needs = agents.filter((x) => x.mine && x.needsYou);
+    const latest = up.updates.slice(0, 3);
+    const n = agents.length;
+    let mood = 'happy', line;
+    if (!n) { mood = 'hi'; line = `Hi${name ? ` ${name}` : ''}! I'm Pip. Tell me what you'd like help with and I'll set up an agent for it.`; }
+    else if (pausedUntil()) { mood = 'sleep'; line = 'Shh… all your agents are paused. Resume them whenever you\'re ready.'; }
+    else if (needs.length) { mood = 'think'; line = `${needs[0].title} needs you: ${needs[0].needsYou.replace(/:.*$/, '').toLowerCase()}.${needs.length > 1 ? ` (${needs.length - 1} more too.)` : ''}`; }
+    else if (up.unread) { mood = 'wow'; line = `${up.unread} new update${up.unread === 1 ? '' : 's'}!${latest[0] ? ` ${latest[0].agent}: “${latest[0].title}”` : ''}`; }
+    else { line = `All quiet. Your ${n} agent${n === 1 ? ' is' : 's are'} on it.`; }
+    const tile = (href, cls, ic, title, sub, badge = 0) => `<a class="tile ${cls}" href="${href}"><span class="ti">${ic}</span>${badge ? `<b class="badge">${Math.min(badge, 99)}</b>` : ''}<span class="tt">${title}</span><span class="ts">${esc(sub)}</span></a>`;
+    const st = (x) => plainStatus(x).tone || '';
+    return `<div class="shell hub">
+      <header class="top"><span class="brand">${pipMini()}<span>Pocket Box</span></span><span class="spacer"></span><a class="btn ghost icon" href="#/me" aria-label="You">${icon.user}</a></header>
+      <section class="hub-hero rise"><div class="pip-wrap">${pip(mood, 124)}</div>
+        <div class="speech"><div class="eyebrow">${esc(greeting())}${name ? `, ${esc(name)}` : ''}</div><p>${esc(line)}</p>
+          ${needs.length ? `<a class="btn accent sm" style="margin-top:10px" href="#/a/${needs[0].id}${/settings/.test(needs[0].needsYou) ? '/settings' : ''}">Take a look</a>` : ''}
+          ${!needs.length && pausedUntil() ? '<button class="btn accent sm" style="margin-top:10px" data-act="pause-all" data-for="off">Wake them up</button>' : ''}</div></section>
+      <form data-form="ask" class="composer glass ask rise">
+        <textarea name="text" data-grow rows="1" placeholder="What should I take care of?" aria-label="What should I take care of?"></textarea>
+        <div class="bar"><span class="small faint">Tell Pip in your own words</span><span class="spacer"></span>${micButton()}<button class="send" aria-label="Go" disabled>${icon.send}</button></div>
+      </form>
+      <div id="ask-reply"></div>
+      <div class="row chips-scroll rise" style="gap:8px;margin-top:12px">${IDEAS.map(([e, l, id]) => `<a class="chip" href="${id.startsWith('#') ? id : `#/t/${id}`}">${e} ${esc(l)}</a>`).join('')}</div>
+      ${notifyCard(up.devices)}
+      <div class="tiles rise">
+        ${tile('#/updates', 't-up', '🔔', 'Updates', up.unread ? `${up.unread} new` : up.updates.length ? 'All caught up' : 'Nothing yet', up.unread)}
+        ${tile('#/agents', 't-ag', '🤖', 'My agents', n ? `${n} agent${n === 1 ? '' : 's'}${needs.length ? ` · ${needs.length} need${needs.length === 1 ? 's' : ''} you` : ''}` : 'None yet', needs.length)}
+        ${tile('#/new', 't-new', '✨', 'New agent', 'Describe one or pick a ready-made')}
+        ${tile('#/me', 't-me', '⚙️', 'You', S.prefs?.pauseUntil > Date.now() ? 'All paused' : 'Notifications, plan')}
+      </div>
+      ${n ? `<div class="hub-sec"><div class="eyebrow">Your agents</div><a class="link small" href="#/agents">See all</a></div>
+        <div class="bubbles rise">${agents.map((x) => `<a class="bubble-agent" href="#/a/${x.id}"><span class="avatar">${esc(x.icon || '✳︎')}<i class="st ${st(x)}"></i></span><span class="nm">${esc(x.title)}</span></a>`).join('')}
+          <a class="bubble-agent add" href="#/new"><span class="avatar">${icon.plus}</span><span class="nm">New</span></a></div>` : ''}
+      ${latest.length ? `<div class="hub-sec"><div class="eyebrow">Latest</div><a class="link small" href="#/updates">See all</a></div><div class="stack" id="updates">${latest.map(updateCard).join('')}</div>` : ''}
+    </div>`;
+  }
+
+  /** Pip answers what was typed into the hub's box: a ready-made agent if one fits, else a custom one. */
+  async function askPip(text) {
+    const slot = $('#ask-reply');
+    const id = matchIdea(text);
+    const t = id && !id.startsWith('#') ? (S.templates || []).find((x) => x.id === id) : null;
+    if (id === '#/watch') { go('#/watch'); return; }
+    if (t && slot) {
+      S.askText = text;
+      slot.innerHTML = `<div class="pip-reply rise">${pip('happy', 64)}<div class="speech" style="flex:1"><p>I have just the thing: <strong>${esc(t.icon)} ${esc(t.name)}</strong>. ${esc(t.summary)}</p>
+        <div class="row wrap" style="gap:8px;margin-top:10px"><a class="btn accent sm" href="#/t/${esc(t.id)}">Set it up</a><button class="btn ghost sm" data-act="ask-custom">Make my own instead</button></div></div></div>`;
+      return;
+    }
+    await makeCustom(text);
+  }
+  async function makeCustom(text) {
+    const slot = $('#ask-reply');
+    if (slot) slot.innerHTML = `<div class="pip-reply rise">${pip('think', 64)}<div class="speech" style="flex:1"><p>On it! I'm getting a few experts to design it…</p></div></div>`;
+    try {
+      const a = await api('/api/agents', { method: 'POST', body: { idea: text } });
+      S.agent = null; go(`#/a/${a.id}`);
+    } catch (e) {
+      if (slot) slot.innerHTML = `<div class="pip-reply rise">${pip('sleep', 64)}<div class="speech" style="flex:1"><p>${esc(e.message)}</p>${e.data?.upgrade ? '<a class="btn accent sm" style="margin-top:10px" href="#/me">See plans</a>' : ''}</div></div>`;
+    }
+  }
+
   // ===================== The simple app: Updates · Agents · New · You =====================
-  const NAV_ON = { home: 'home', agents: 'agents', new: 'new', templates: 'new', t: 'new', watch: 'new', me: 'me', people: 'me', phones: 'me', s: 'new' };
+  const NAV_ON = {}; // no tab bar: the hub (#/) is where everything starts
   function bottomNav(active) {
     const items = [['home', '#/', 'Updates', icon.bell], ['agents', '#/agents', 'Agents', icon.grid], ['new', '#/new', 'New', icon.plus], ['me', '#/me', 'You', icon.me]];
     return `<nav class="nav" aria-label="Main">${items.map(([k, href, label, ic]) => `<a href="${href}" class="${active === k ? 'on' : ''}" ${active === k ? 'aria-current="page"' : ''}><span class="ni">${ic}${k === 'home' && S.unread ? `<b class="badge">${Math.min(S.unread, 99)}</b>` : ''}</span><span>${label}</span></a>`).join('')}</nav>`;
@@ -1182,7 +1233,7 @@
       ${todo.length ? `<section class="stack rise" style="margin-bottom:18px">${todo.map((t) => `<a class="glass card row todo-row" href="${esc(t.href || '#/me')}"><span style="flex:1;min-width:0"><span class="small" style="font-weight:600;display:block">${esc(t.title)}</span><span class="tiny muted">${esc(t.why)}</span></span><span class="btn accent sm" style="flex:none">${esc(t.action || 'Open')}</span></a>`).join('')}</section>` : ''}
       <div class="stack" id="updates">${r.updates.map(updateCard).join('')}</div>
       ${r.updates.length ? '' : `<section class="glass card stack rise empty-updates" style="text-align:center;padding:34px 22px">
-        <div style="font-size:40px">✨</div><div class="h3">Nothing yet</div>
+        <div style="display:flex;justify-content:center">${pip('sleep', 110)}</div><div class="h3">Nothing yet</div>
         <p class="small muted" style="margin:0">When your agents have something to tell you, it shows up here and on your phone.</p>
         <div class="row" style="justify-content:center"><a class="btn accent" href="#/new">Add an agent</a></div></section>`}
     </div>`;
@@ -1193,7 +1244,7 @@
     if (!u) return;
     const r = route();
     const here = r.name === 'a' && r.id === u.agentId;
-    if (r.name === 'home' || r.name === '' ) {
+    if (r.name === 'updates' || (r.name === 'home' && $('#updates'))) {
       const list = $('#updates');
       if (list && !list.querySelector(`[data-uid="${u.id}"]`)) { list.insertAdjacentHTML('afterbegin', updateCard(u)); $('.empty-updates')?.remove(); }
       api('/api/updates/seen', { method: 'POST' }).catch(() => {});
@@ -1226,7 +1277,7 @@
     };
     return `<div class="shell">${topBar()}
       <section class="rise row between" style="padding:14px 0 16px;align-items:flex-end"><h1 class="display" style="font-size:clamp(36px,10vw,52px)">Agents</h1><a class="btn accent sm" href="#/new">${icon.plus.replace(/22/g, '16')} New</a></section>
-      ${S.agents.length ? `<div class="stack">${S.agents.map(row).join('')}</div>` : `<section class="glass card stack" style="text-align:center;padding:34px 22px"><div style="font-size:40px">🤖</div><div class="h3">No agents yet</div><p class="small muted" style="margin:0">Pick a ready-made one or describe your own. It takes a minute.</p><div class="row" style="justify-content:center"><a class="btn accent" href="#/new">Add an agent</a></div></section>`}
+      ${S.agents.length ? `<div class="stack">${S.agents.map(row).join('')}</div>` : `<section class="glass card stack" style="text-align:center;padding:34px 22px"><div style="display:flex;justify-content:center">${pip('hi', 110)}</div><div class="h3">No agents yet</div><p class="small muted" style="margin:0">Pick a ready-made one or describe your own. It takes a minute.</p><div class="row" style="justify-content:center"><a class="btn accent" href="#/new">Add an agent</a></div></section>`}
     </div>`;
   }
 
@@ -1262,7 +1313,7 @@
     const ch = a.package.channel;
     const items = convoItems(a);
     return `<div class="shell has-dock">
-      <header class="top"><a class="btn ghost icon" href="#/agents" aria-label="Back">${icon.back}</a><span class="spacer"></span>${mine ? '<button class="btn soft sm" data-act="customize">Customize</button>' : ''}</header>
+      <header class="top"><button class="btn ghost icon" data-act="back" aria-label="Back">${icon.back}</button><span class="spacer"></span>${mine ? '<button class="btn soft sm" data-act="customize">Customize</button>' : ''}</header>
       <section class="rise" style="padding:4px 0 14px"><div class="row" style="gap:14px">
         <div class="avatar lg">${esc(a.icon || '✳︎')}</div>
         <div style="min-width:0"><h1 class="h2" style="font-size:24px;line-height:1.15">${esc(a.title)}</h1>
@@ -1391,12 +1442,12 @@
   document.addEventListener('input', (e) => {
     const ta = e.target.closest('textarea[data-grow]');
     if (ta) grow(ta);
-    const form = e.target.closest('form[data-form="new"], form[data-form="message"], form[data-form="chat"]');
+    const form = e.target.closest('form[data-form="new"], form[data-form="message"], form[data-form="chat"], form[data-form="ask"]');
     if (form) form.querySelector('.send').disabled = !form.querySelector('textarea').value.trim();
   });
 
   document.addEventListener('keydown', (e) => {
-    const ta = e.target.closest('form[data-form="new"] textarea, form[data-form="message"] textarea, form[data-form="chat"] textarea');
+    const ta = e.target.closest('form[data-form="new"] textarea, form[data-form="message"] textarea, form[data-form="chat"] textarea, form[data-form="ask"] textarea');
     if (ta && e.key === 'Enter' && !e.shiftKey && !e.isComposing && matchMedia('(hover: hover)').matches) { e.preventDefault(); ta.form.requestSubmit(); }
     if (e.key === 'Escape') $('.scrim')?.click();
   });
@@ -1435,6 +1486,10 @@
         store.set('pb.template', null);
         S.agent = null;
         go(`#/a/${a.id}`);
+      } else if (kind === 'ask') {
+        const text = String(data.text || '').trim();
+        if (!text) return;
+        await askPip(text);
       } else if (kind === 'chat') {
         const ta = form.querySelector('textarea');
         const text = String(data.text || '').trim();
@@ -1650,6 +1705,14 @@
         break;
       }
       case 'say': await sayToAgent(el.dataset.text); break;
+      case 'back': {
+        S.trail = S.trail || [];
+        S.trail.pop();
+        const prev = S.trail.pop();
+        go(prev && prev !== location.hash ? prev : '#/');
+        break;
+      }
+      case 'ask-custom': await makeCustom(S.askText || ''); break;
       case 'open-agent': if (!e.target.closest('a')) go(`#/a/${el.dataset.id}`); break;
       case 'customize': openCustomize(); break;
       case 'push-on': await enablePush(el, { test: true }); render({ transition: false }); break;
