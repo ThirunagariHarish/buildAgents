@@ -1,0 +1,32 @@
+{
+ "name": "my date in a form it cannot read: asks again, nothing saved",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "my date sometime in 2014",
+   "from": "Priya"
+  }
+ },
+ "now": "2026-10-16T09:00:00.000Z",
+ "tz": "America/Chicago",
+ "settings": {
+  "category": "EB2",
+  "country": "India",
+  "priorityDate": "2014-03-15"
+ },
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "didn't catch the date",
+    "my date 2014-03-15"
+   ]
+  },
+  "memory": {
+   "prefs": {
+    "exists": false
+   }
+  }
+ }
+}

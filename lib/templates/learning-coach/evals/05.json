@@ -1,0 +1,37 @@
+{
+ "name": "learn: first card into an empty deck",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "learn: capital of australia = canberra",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T03:30:00.000Z",
+ "tz": "Asia/Kolkata",
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Added card 1: capital of australia → canberra",
+    "1 card in total, 1 due today",
+    "quiz"
+   ]
+  },
+  "memory": {
+   "cards": [
+    {
+     "i": 1,
+     "q": "capital of australia",
+     "a": "canberra",
+     "d": "2026-10-12",
+     "v": 0,
+     "e": 250,
+     "r": 0,
+     "l": 0
+    }
+   ]
+  }
+ }
+}

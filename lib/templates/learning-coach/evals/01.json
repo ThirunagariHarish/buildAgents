@@ -1,0 +1,136 @@
+{
+ "name": "Morning: 6 cards due, streak mentioned",
+ "trigger": {
+  "type": "schedule",
+  "at": "09:00"
+ },
+ "now": "2026-10-12T03:30:00.000Z",
+ "tz": "Asia/Kolkata",
+ "memory": {
+  "cards": [
+   {
+    "i": 1,
+    "q": "capital of australia",
+    "a": "canberra",
+    "d": "2026-10-12",
+    "v": 3,
+    "e": 250,
+    "r": 2,
+    "l": 0
+   },
+   {
+    "i": 2,
+    "q": "hola",
+    "a": "hello",
+    "d": "2026-10-12",
+    "v": 1,
+    "e": 250,
+    "r": 1,
+    "l": 0
+   },
+   {
+    "i": 3,
+    "q": "adiós",
+    "a": "goodbye",
+    "d": "2026-10-15",
+    "v": 6,
+    "e": 250,
+    "r": 2,
+    "l": 0
+   },
+   {
+    "i": 4,
+    "q": "gracias",
+    "a": "thank you",
+    "d": "2026-10-11",
+    "v": 1,
+    "e": 230,
+    "r": 0,
+    "l": 1
+   },
+   {
+    "i": 5,
+    "q": "What year did WW2 end?",
+    "a": "1945",
+    "d": "2026-10-10",
+    "v": 0,
+    "e": 250,
+    "r": 0,
+    "l": 0
+   },
+   {
+    "i": 6,
+    "q": "good morning (Spanish)",
+    "a": "buenos días",
+    "d": "2026-10-10",
+    "v": 0,
+    "e": 250,
+    "r": 0,
+    "l": 0
+   },
+   {
+    "i": 7,
+    "q": "el perro",
+    "a": "the dog",
+    "d": "2026-10-20",
+    "v": 10,
+    "e": 250,
+    "r": 3,
+    "l": 0
+   },
+   {
+    "i": 8,
+    "q": "bueno",
+    "a": "good",
+    "d": "2026-10-11",
+    "v": 0,
+    "e": 250,
+    "r": 0,
+    "l": 0
+   }
+  ],
+  "log": [
+   {
+    "d": "2026-10-03",
+    "r": 10,
+    "c": 2,
+    "nw": 0
+   },
+   {
+    "d": "2026-10-09",
+    "r": 5,
+    "c": 4,
+    "nw": 2
+   },
+   {
+    "d": "2026-10-10",
+    "r": 6,
+    "c": 5,
+    "nw": 1
+   },
+   {
+    "d": "2026-10-11",
+    "r": 4,
+    "c": 3,
+    "nw": 1
+   }
+  ]
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "6 cards due today",
+    "say quiz"
+   ],
+   "bodyIncludes": [
+    "3 reviews + 3 new",
+    "Streak: 3 days"
+   ]
+  },
+  "memory": {
+   "sent": "2026-10-12"
+  },
+  "maxSteps": 5
+ }
+}

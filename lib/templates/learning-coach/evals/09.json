@@ -1,0 +1,81 @@
+{
+ "name": "topic: model drafts cards in \"Q = A\" lines",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "topic: 5 cards on spanish greetings",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T03:30:00.000Z",
+ "tz": "Asia/Kolkata",
+ "memory": {},
+ "model": [
+  "1. Hola = Hello\n2. Buenos días = Good morning\n3. Buenas tardes = Good afternoon\n4. Buenas noches = Good night\n5. ¿Qué tal? = How are you?\nThese are common greetings."
+ ],
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Drafted from \"spanish greetings\"",
+    "Added 5 cards",
+    "Hola → Hello",
+    "Buenos días → Good morning"
+   ]
+  },
+  "memory": {
+   "cards": [
+    {
+     "i": 1,
+     "q": "Hola",
+     "a": "Hello",
+     "d": "2026-10-12",
+     "v": 0,
+     "e": 250,
+     "r": 0,
+     "l": 0
+    },
+    {
+     "i": 2,
+     "q": "Buenos días",
+     "a": "Good morning",
+     "d": "2026-10-12",
+     "v": 0,
+     "e": 250,
+     "r": 0,
+     "l": 0
+    },
+    {
+     "i": 3,
+     "q": "Buenas tardes",
+     "a": "Good afternoon",
+     "d": "2026-10-12",
+     "v": 0,
+     "e": 250,
+     "r": 0,
+     "l": 0
+    },
+    {
+     "i": 4,
+     "q": "Buenas noches",
+     "a": "Good night",
+     "d": "2026-10-12",
+     "v": 0,
+     "e": 250,
+     "r": 0,
+     "l": 0
+    },
+    {
+     "i": 5,
+     "q": "¿Qué tal?",
+     "a": "How are you?",
+     "d": "2026-10-12",
+     "v": 0,
+     "e": 250,
+     "r": 0,
+     "l": 0
+    }
+   ]
+  }
+ }
+}

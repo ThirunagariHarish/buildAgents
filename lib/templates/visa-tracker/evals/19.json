@@ -1,0 +1,35 @@
+{
+ "name": "help lists what it understands",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "help",
+   "from": "Priya"
+  }
+ },
+ "now": "2026-10-16T09:00:00.000Z",
+ "tz": "America/Chicago",
+ "settings": {
+  "category": "EB2",
+  "country": "India",
+  "priorityDate": "2014-03-15"
+ },
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "status",
+    "history",
+    "eta",
+    "my date 2014-03-15",
+    "category eb3",
+    "check now",
+    "Now following: EB2 India, priority date 15MAR14"
+   ]
+  },
+  "http": {
+   "max": 0
+  }
+ }
+}

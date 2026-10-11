@@ -1,0 +1,16 @@
+{
+  "id": "learning-coach",
+  "name": "Learning Coach",
+  "icon": "🧠",
+  "version": "1.0.0",
+  "description": "A spaced-repetition tutor in your chat: add cards in plain words, say quiz, answer, and it schedules each card for when you're about to forget it. A morning nudge says how many are due.",
+  "permissions": ["notify", "memory", "model"],
+  "triggers": [
+    { "type": "schedule", "at": "09:00" },
+    { "type": "message", "examples": ["quiz", "learn: capital of australia = canberra", "add: hola - hello", "topic: 10 cards on spanish greetings", "stats", "cards", "delete 3", "help"] }
+  ],
+  "settings": [
+    { "key": "newPerDay", "label": "New cards a day", "type": "number", "help": "How many never-seen cards a day's quiz brings in, so reviews don't pile up. 10 is a good start.", "placeholder": "10", "optional": true, "default": "10" }
+  ],
+  "budget": { "steps": 30 }
+}

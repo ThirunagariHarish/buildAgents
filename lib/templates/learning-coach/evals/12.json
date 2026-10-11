@@ -1,0 +1,27 @@
+{
+ "name": "quiz: no cards yet",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "quiz",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T03:30:00.000Z",
+ "tz": "Asia/Kolkata",
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "No cards yet",
+    "learn:"
+   ]
+  },
+  "memory": {
+   "quiz": {
+    "exists": false
+   }
+  }
+ }
+}

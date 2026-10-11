@@ -1,0 +1,15 @@
+{
+ "name": "Morning: empty memory, no cards, no notification",
+ "trigger": {
+  "type": "schedule",
+  "at": "09:00"
+ },
+ "now": "2026-10-12T03:30:00.000Z",
+ "tz": "Asia/Kolkata",
+ "memory": {},
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

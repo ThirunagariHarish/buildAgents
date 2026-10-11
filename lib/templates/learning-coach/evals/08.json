@@ -1,0 +1,59 @@
+{
+ "name": "Pasted list: header skipped, 3 cards added, one bad line reported",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "Spanish numbers:\nuno - one\ndos – two\n3. tres = three\ncuatro",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T03:30:00.000Z",
+ "tz": "Asia/Kolkata",
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Added 3 cards",
+    "uno → one",
+    "dos → two",
+    "tres → three",
+    "1 line had no"
+   ]
+  },
+  "memory": {
+   "cards": [
+    {
+     "i": 1,
+     "q": "uno",
+     "a": "one",
+     "d": "2026-10-12",
+     "v": 0,
+     "e": 250,
+     "r": 0,
+     "l": 0
+    },
+    {
+     "i": 2,
+     "q": "dos",
+     "a": "two",
+     "d": "2026-10-12",
+     "v": 0,
+     "e": 250,
+     "r": 0,
+     "l": 0
+    },
+    {
+     "i": 3,
+     "q": "tres",
+     "a": "three",
+     "d": "2026-10-12",
+     "v": 0,
+     "e": 250,
+     "r": 0,
+     "l": 0
+    }
+   ]
+  }
+ }
+}

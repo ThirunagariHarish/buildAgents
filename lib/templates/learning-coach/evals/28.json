@@ -1,0 +1,27 @@
+{
+ "name": "learn without an answer asks for it",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "learn: photosynthesis",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T03:30:00.000Z",
+ "tz": "Asia/Kolkata",
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "I need the answer too",
+    "learn: photosynthesis = …"
+   ]
+  },
+  "memory": {
+   "cards": {
+    "exists": false
+   }
+  }
+ }
+}

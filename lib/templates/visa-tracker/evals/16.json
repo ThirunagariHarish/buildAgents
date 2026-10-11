@@ -1,0 +1,364 @@
+{
+ "name": "country philippines with a family category",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "country philippines",
+   "from": "Priya"
+  }
+ },
+ "now": "2026-10-16T09:00:00.000Z",
+ "tz": "America/Chicago",
+ "settings": {
+  "category": "F4",
+  "country": "India",
+  "priorityDate": "2006-01-10"
+ },
+ "memory": {
+  "hist": [
+   {
+    "m": "2026-10",
+    "u": "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin/2027/visa-bulletin-for-october-2026.html",
+    "fa": {
+     "F1": [
+      "08NOV16",
+      "08NOV16",
+      "08NOV16",
+      "01APR05",
+      "01MAR13"
+     ],
+     "F2A": [
+      "01FEB24",
+      "01FEB24",
+      "01FEB24",
+      "01MAR22",
+      "01FEB24"
+     ],
+     "F2B": [
+      "22SEP16",
+      "22SEP16",
+      "22SEP16",
+      "15JUN07",
+      "22OCT12"
+     ],
+     "F3": [
+      "01JUL11",
+      "01JUL11",
+      "01JUL11",
+      "15SEP00",
+      "08APR03"
+     ],
+     "F4": [
+      "08JAN08",
+      "08JAN08",
+      "01NOV06",
+      "01FEB01",
+      "15APR06"
+     ],
+     "EB1": [
+      "C",
+      "15NOV22",
+      "01APR22",
+      "C",
+      "C"
+     ],
+     "EB2": [
+      "01APR24",
+      "01SEP21",
+      "01OCT12",
+      "01APR24",
+      "01APR24"
+     ],
+     "EB3": [
+      "01JUN23",
+      "01MAY21",
+      "15JUN13",
+      "01JUN23",
+      "01AUG22"
+     ],
+     "EW": [
+      "01JUN21",
+      "01SEP17",
+      "15JUN13",
+      "01JUN21",
+      "01JUN21"
+     ],
+     "EB4": [
+      "01JAN21",
+      "01JAN21",
+      "01JAN21",
+      "01JAN21",
+      "01JAN21"
+     ],
+     "EB5": [
+      "C",
+      "22JAN14",
+      "01MAY19",
+      "C",
+      "C"
+     ]
+    },
+    "df": {
+     "F1": [
+      "01SEP17",
+      "01SEP17",
+      "01SEP17",
+      "01APR06",
+      "22APR15"
+     ],
+     "F2A": [
+      "01OCT23",
+      "01OCT23",
+      "01OCT23",
+      "01SEP23",
+      "01OCT23"
+     ],
+     "F2B": [
+      "01JAN17",
+      "01JAN17",
+      "01JAN17",
+      "01OCT08",
+      "01OCT13"
+     ],
+     "F3": [
+      "22JUL11",
+      "22JUL11",
+      "22JUL11",
+      "01APR01",
+      "01MAY04"
+     ],
+     "F4": [
+      "08JAN09",
+      "08JAN09",
+      "01AUG06",
+      "01APR01",
+      "01JUL07"
+     ],
+     "EB1": [
+      "C",
+      "01JAN23",
+      "01APR22",
+      "C",
+      "C"
+     ],
+     "EB2": [
+      "01JUL24",
+      "01OCT21",
+      "01DEC13",
+      "01JUL24",
+      "01JUL24"
+     ],
+     "EB3": [
+      "01JAN24",
+      "01JAN22",
+      "01OCT14",
+      "01JAN24",
+      "01NOV23"
+     ],
+     "EW": [
+      "01JUL21",
+      "01JAN18",
+      "01OCT14",
+      "01JUL21",
+      "01JUL21"
+     ],
+     "EB4": [
+      "15MAR21",
+      "15MAR21",
+      "15MAR21",
+      "15MAR21",
+      "15MAR21"
+     ],
+     "EB5": [
+      "C",
+      "01OCT16",
+      "01APR22",
+      "C",
+      "C"
+     ]
+    }
+   },
+   {
+    "m": "2026-11",
+    "u": "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin/2027/visa-bulletin-for-november-2026.html",
+    "fa": {
+     "F1": [
+      "08NOV16",
+      "08NOV16",
+      "08NOV16",
+      "01APR05",
+      "01MAR13"
+     ],
+     "F2A": [
+      "01FEB24",
+      "01FEB24",
+      "01FEB24",
+      "01APR22",
+      "01FEB24"
+     ],
+     "F2B": [
+      "22SEP16",
+      "22SEP16",
+      "22SEP16",
+      "15JUN07",
+      "22OCT12"
+     ],
+     "F3": [
+      "01JUL11",
+      "01JUL11",
+      "01JUL11",
+      "15SEP00",
+      "08APR03"
+     ],
+     "F4": [
+      "08JAN08",
+      "08JAN08",
+      "01NOV06",
+      "01FEB01",
+      "15APR06"
+     ],
+     "EB1": [
+      "C",
+      "15NOV22",
+      "01APR22",
+      "C",
+      "C"
+     ],
+     "EB2": [
+      "01APR24",
+      "01SEP21",
+      "01JAN13",
+      "01APR24",
+      "01APR24"
+     ],
+     "EB3": [
+      "01JUN23",
+      "01MAY21",
+      "15AUG13",
+      "01JUN23",
+      "01AUG22"
+     ],
+     "EW": [
+      "01JUN21",
+      "01SEP17",
+      "15AUG13",
+      "01JUN21",
+      "01JUN21"
+     ],
+     "EB4": [
+      "01JAN21",
+      "01JAN21",
+      "01JAN21",
+      "01JAN21",
+      "01JAN21"
+     ],
+     "EB5": [
+      "C",
+      "22JAN14",
+      "01MAY19",
+      "C",
+      "C"
+     ]
+    },
+    "df": {
+     "F1": [
+      "01SEP17",
+      "01SEP17",
+      "01SEP17",
+      "01APR06",
+      "22APR15"
+     ],
+     "F2A": [
+      "01OCT23",
+      "01OCT23",
+      "01OCT23",
+      "01SEP23",
+      "01OCT23"
+     ],
+     "F2B": [
+      "01JAN17",
+      "01JAN17",
+      "01JAN17",
+      "01OCT08",
+      "01OCT13"
+     ],
+     "F3": [
+      "22JUL11",
+      "22JUL11",
+      "22JUL11",
+      "01APR01",
+      "01MAY04"
+     ],
+     "F4": [
+      "08JAN09",
+      "08JAN09",
+      "01AUG06",
+      "01APR01",
+      "01JUL07"
+     ],
+     "EB1": [
+      "C",
+      "01JAN23",
+      "01APR22",
+      "C",
+      "C"
+     ],
+     "EB2": [
+      "01JUL24",
+      "01OCT21",
+      "01MAR14",
+      "01JUL24",
+      "01JUL24"
+     ],
+     "EB3": [
+      "01JAN24",
+      "01JAN22",
+      "15NOV14",
+      "01JAN24",
+      "01NOV23"
+     ],
+     "EW": [
+      "01JUL21",
+      "01JAN18",
+      "15NOV14",
+      "01JUL21",
+      "01JUL21"
+     ],
+     "EB4": [
+      "15MAR21",
+      "15MAR21",
+      "15MAR21",
+      "15MAR21",
+      "15MAR21"
+     ],
+     "EB5": [
+      "C",
+      "01OCT16",
+      "01APR22",
+      "C",
+      "C"
+     ]
+    }
+   }
+  ],
+  "seen": "2026-11"
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Now following F4 Philippines",
+    "F4 Philippines Final Action 15APR06 (no movement)",
+    "Your date 10JAN06 is CURRENT"
+   ]
+  },
+  "memory": {
+   "prefs": {
+    "cty": "Philippines",
+    "b": {
+     "cty": "India"
+    }
+   }
+  }
+ }
+}

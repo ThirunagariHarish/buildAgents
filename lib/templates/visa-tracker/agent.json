@@ -1,0 +1,19 @@
+{
+  "id": "visa-tracker",
+  "name": "Green Card Tracker",
+  "icon": "🛂",
+  "version": "1.0.0",
+  "description": "Watches the US Visa Bulletin for your category, country and priority date, tells you each month where you stand on both charts, and answers status, history and rough ETA questions.",
+  "permissions": ["notify", "memory", "http"],
+  "http": { "allow": ["travel.state.gov"] },
+  "triggers": [
+    { "type": "interval", "minutes": 720 },
+    { "type": "message", "examples": ["status", "history", "eta", "my date 2014-03-15", "category eb3", "country india", "check now", "help"] }
+  ],
+  "settings": [
+    { "key": "category", "label": "Visa category", "type": "text", "help": "EB1, EB2, EB3, EW (Other Workers), EB4, EB5, F1, F2A, F2B, F3 or F4.", "placeholder": "EB2", "optional": true, "default": "EB2" },
+    { "key": "country", "label": "Country of chargeability", "type": "text", "help": "India, China, Mexico, Philippines, or All (every other country).", "placeholder": "India", "optional": true, "default": "All" },
+    { "key": "priorityDate", "label": "Your priority date", "type": "text", "help": "From your I-797 receipt, as YYYY-MM-DD, e.g. 2014-03-15. Leave empty to just follow the dates.", "placeholder": "2014-03-15", "optional": true }
+  ],
+  "budget": { "steps": 40 }
+}

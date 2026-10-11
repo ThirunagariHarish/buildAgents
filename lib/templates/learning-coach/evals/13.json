@@ -1,0 +1,66 @@
+{
+ "name": "quiz: nothing due today",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "quiz me",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T03:30:00.000Z",
+ "tz": "Asia/Kolkata",
+ "memory": {
+  "cards": [
+   {
+    "i": 1,
+    "q": "hola",
+    "a": "hello",
+    "d": "2026-10-14",
+    "v": 3,
+    "e": 250,
+    "r": 2,
+    "l": 0
+   }
+  ],
+  "log": [
+   {
+    "d": "2026-10-03",
+    "r": 10,
+    "c": 2,
+    "nw": 0
+   },
+   {
+    "d": "2026-10-09",
+    "r": 5,
+    "c": 4,
+    "nw": 2
+   },
+   {
+    "d": "2026-10-10",
+    "r": 6,
+    "c": 5,
+    "nw": 1
+   },
+   {
+    "d": "2026-10-11",
+    "r": 4,
+    "c": 3,
+    "nw": 1
+   }
+  ]
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Nothing due right now",
+    "Next review Oct 14"
+   ]
+  },
+  "memory": {
+   "quiz": {
+    "exists": false
+   }
+  }
+ }
+}

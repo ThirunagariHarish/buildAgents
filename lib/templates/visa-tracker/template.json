@@ -1,0 +1,23 @@
+{
+  "name": "Green Card Tracker",
+  "icon": "🛂",
+  "category": "Immigration",
+  "tier": "life",
+  "summary": "Reads the US Visa Bulletin the day it comes out and tells you exactly where your priority date stands, so you never have to decode the charts again.",
+  "handles": [
+    "Checks travel.state.gov on its own schedule and spots the new month's bulletin",
+    "Reads your row and column on both charts: Final Action and Dates for Filing",
+    "Tells you how far the line moved and how many months you are from current",
+    "Says plainly when you can file your I-485 or when your date is current",
+    "Keeps a month-by-month history and gives a clearly labelled rough ETA",
+    "Stays quiet when nothing changed, and tells you once if the page is down"
+  ],
+  "talk": ["status", "history", "eta", "my date 2014-03-15", "category eb3", "country india"],
+  "fields": [
+    { "key": "category", "label": "Visa category", "type": "text", "help": "EB1, EB2, EB3, EW (Other Workers), EB4, EB5, F1, F2A, F2B, F3 or F4.", "placeholder": "EB2", "optional": true, "default": "EB2" },
+    { "key": "country", "label": "Country of chargeability", "type": "text", "help": "India, China, Mexico, Philippines, or All (every other country).", "placeholder": "India", "optional": true, "default": "All" },
+    { "key": "priorityDate", "label": "Your priority date", "type": "text", "help": "From your I-797 receipt, as YYYY-MM-DD, e.g. 2014-03-15. Leave empty to just follow the dates.", "placeholder": "2014-03-15", "optional": true }
+  ],
+  "when": { "type": "interval", "choices": [360, 720, 1440], "default": 720 },
+  "after": "Say \"status\" to see this month's dates for your category now. If you skipped the priority date, tell it \"my date 2014-03-15\"."
+}

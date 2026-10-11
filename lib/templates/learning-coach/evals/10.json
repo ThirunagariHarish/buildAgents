@@ -1,0 +1,28 @@
+{
+ "name": "topic: no model available, explains and adds nothing",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "topic: 10 cards on french verbs",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T03:30:00.000Z",
+ "tz": "Asia/Kolkata",
+ "memory": {},
+ "model": [],
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "can't make cards right now",
+    "learn: hola = hello"
+   ]
+  },
+  "memory": {
+   "cards": {
+    "exists": false
+   }
+  }
+ }
+}

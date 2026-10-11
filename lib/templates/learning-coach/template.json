@@ -1,0 +1,21 @@
+{
+  "name": "Learning Coach",
+  "icon": "🧠",
+  "category": "Learning",
+  "tier": "life",
+  "summary": "Remembers what you want to learn and quizzes you on each card right before you'd forget it, so words, exam facts and interview answers actually stick.",
+  "handles": [
+    "Turns plain messages and pasted lists into flashcards",
+    "Makes a starter deck on any topic when a model is available",
+    "Runs quizzes in the chat and grades your answers, forgiving small typos",
+    "Schedules every card with spaced repetition: 1 day, 3 days, then longer and longer",
+    "Nudges you each morning with how many cards are due and your streak",
+    "Tracks cards learned, streak days and 7-day accuracy"
+  ],
+  "talk": ["learn: capital of australia = canberra", "add: hola - hello", "topic: 10 cards on spanish greetings", "quiz", "stats", "cards"],
+  "fields": [
+    { "key": "newPerDay", "label": "New cards a day", "type": "number", "help": "How many never-seen cards a day's quiz brings in, so reviews don't pile up. 10 is a good start.", "placeholder": "10", "optional": true, "default": "10" }
+  ],
+  "when": { "type": "schedule", "default": "09:00" },
+  "after": "Add your first cards, e.g. \"learn: capital of australia = canberra\" or paste a list with one \"word - meaning\" per line, then say \"quiz\"."
+}

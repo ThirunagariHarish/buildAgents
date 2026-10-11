@@ -1,0 +1,31 @@
+{
+ "name": "Unknown message: helpful reply, no error",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "will it rain tomorrow",
+   "from": "Priya"
+  }
+ },
+ "now": "2026-10-16T09:00:00.000Z",
+ "tz": "America/Chicago",
+ "settings": {
+  "category": "EB2",
+  "country": "India",
+  "priorityDate": "2014-03-15"
+ },
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "not sure what you meant",
+    "status",
+    "eta"
+   ]
+  },
+  "http": {
+   "max": 0
+  }
+ }
+}

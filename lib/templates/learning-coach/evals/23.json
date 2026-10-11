@@ -1,0 +1,82 @@
+{
+ "name": "Last due card answered: round summary, streak grows to 4 days",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "1945",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T03:30:00.000Z",
+ "tz": "Asia/Kolkata",
+ "memory": {
+  "cards": [
+   {
+    "i": 1,
+    "q": "hola",
+    "a": "hello",
+    "d": "2026-10-15",
+    "v": 3,
+    "e": 250,
+    "r": 2,
+    "l": 0
+   },
+   {
+    "i": 2,
+    "q": "What year did WW2 end?",
+    "a": "1945",
+    "d": "2026-10-12",
+    "v": 1,
+    "e": 250,
+    "r": 1,
+    "l": 0
+   }
+  ],
+  "log": [
+   {
+    "d": "2026-10-03",
+    "r": 10,
+    "c": 2,
+    "nw": 0
+   },
+   {
+    "d": "2026-10-09",
+    "r": 5,
+    "c": 4,
+    "nw": 2
+   },
+   {
+    "d": "2026-10-10",
+    "r": 6,
+    "c": 5,
+    "nw": 1
+   },
+   {
+    "d": "2026-10-11",
+    "r": 4,
+    "c": 3,
+    "nw": 1
+   }
+  ],
+  "quiz": {
+   "c": 2,
+   "n": 3,
+   "ok": 2,
+   "sk": []
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "✅ Right: 1945",
+    "Done for today: 4 reviewed, 3 correct (75%)",
+    "Streak: 4 days",
+    "Next review Oct 15"
+   ]
+  },
+  "memory": {
+   "quiz": null
+  }
+ }
+}
