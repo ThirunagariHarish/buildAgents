@@ -1,0 +1,36 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "Unknown merchant, model unavailable: files under Other and asks to teach",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "spent 23 at fernwood",
+   "from": "Sam"
+  }
+ },
+ "model": [],
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged $23.00 Fernwood → Other",
+    "\"fernwood is dining\""
+   ]
+  },
+  "memory": {
+   "ledger": [
+    [
+     20740,
+     2300,
+     11,
+     "Fernwood",
+     0,
+     1
+    ]
+   ]
+  }
+ }
+}

@@ -1,0 +1,25 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "\"undo\" with an empty ledger says so",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "undo",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Nothing to undo"
+   ]
+  },
+  "notify": {
+   "count": 0
+  }
+ }
+}

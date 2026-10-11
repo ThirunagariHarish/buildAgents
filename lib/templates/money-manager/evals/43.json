@@ -1,0 +1,60 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {
+  "ledger": [
+   [
+    20698,
+    3000,
+    3,
+    "Target",
+    0,
+    1
+   ],
+   [
+    20716,
+    4000,
+    3,
+    "Amazon",
+    0,
+    2
+   ],
+   [
+    20728,
+    5000,
+    3,
+    "Amazon",
+    0,
+    3
+   ]
+  ],
+  "state": {
+   "n": 4
+  }
+ },
+ "name": "Inbox: an unusually large charge notifies",
+ "trigger": {
+  "type": "inbox",
+  "input": {
+   "text": "Chase: A charge of $400.00 at BEST BUY #455 was authorized."
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged $400.00 Best Buy → Shopping"
+   ]
+  },
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Large charge: $400.00 at Best Buy"
+   ],
+   "bodyIncludes": [
+    "10.0× your usual Shopping charge ($40.00)"
+   ]
+  }
+ }
+}

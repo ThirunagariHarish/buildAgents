@@ -1,0 +1,15 @@
+{
+ "now": "2026-10-12T15:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "08:00: nothing set up and nothing logged, stays quiet",
+ "trigger": {
+  "type": "schedule"
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  }
+ }
+}

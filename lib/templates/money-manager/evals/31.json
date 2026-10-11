@@ -1,0 +1,43 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {
+  "budgets": "Shopping 200"
+ },
+ "memory": {
+  "ledger": [
+   [
+    20728,
+    19000,
+    3,
+    "Amazon",
+    0,
+    1
+   ]
+  ],
+  "state": {
+   "n": 2
+  }
+ },
+ "name": "A message that crosses 100% says so in the reply",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "spent 25 at target",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged $25.00 Target → Shopping",
+    "Shopping: $215 of $200 (108%)",
+    "That's $15 over your Shopping budget with 18 days to go"
+   ]
+  },
+  "notify": {
+   "count": 0
+  }
+ }
+}

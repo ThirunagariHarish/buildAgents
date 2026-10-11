@@ -1,0 +1,35 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "\"got paid 3200\" is income, not spending",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "got paid 3200",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged income $3,200.00 (Paycheck)",
+    "Income this month: $3,200"
+   ]
+  },
+  "memory": {
+   "ledger": [
+    [
+     20740,
+     320000,
+     10,
+     "Paycheck",
+     0,
+     1
+    ]
+   ]
+  }
+ }
+}

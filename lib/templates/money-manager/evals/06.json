@@ -1,0 +1,59 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {
+  "budgets": "Shopping 200"
+ },
+ "memory": {
+  "ledger": [
+   [
+    20731,
+    20000,
+    3,
+    "Amazon",
+    0,
+    1
+   ]
+  ],
+  "state": {
+   "n": 2
+  }
+ },
+ "name": "\"refund 20 amazon\" lowers Shopping",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "refund 20 amazon",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged refund $20.00 Amazon → Shopping",
+    "Shopping: $180 of $200 (90%)"
+   ]
+  },
+  "memory": {
+   "ledger": [
+    [
+     20731,
+     20000,
+     3,
+     "Amazon",
+     0,
+     1
+    ],
+    [
+     20740,
+     -2000,
+     3,
+     "Amazon",
+     2,
+     2
+    ]
+   ]
+  }
+ }
+}

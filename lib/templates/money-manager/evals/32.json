@@ -1,0 +1,60 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {
+  "budgets": "Groceries 400"
+ },
+ "memory": {
+  "ledger": [
+   [
+    20729,
+    20000,
+    0,
+    "Costco",
+    0,
+    1
+   ]
+  ],
+  "state": {
+   "n": 2
+  }
+ },
+ "name": "Inbox: Chase text is logged with a one-line note, no notification",
+ "trigger": {
+  "type": "inbox",
+  "input": {
+   "text": "Chase: A charge of $42.15 at COSTCO WHSE #123 was authorized on 10/14/2026."
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged $42.15 Costco → Groceries (Groceries $242 of $400, 61%)"
+   ]
+  },
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "ledger": [
+    [
+     20729,
+     20000,
+     0,
+     "Costco",
+     0,
+     1
+    ],
+    [
+     20740,
+     4215,
+     0,
+     "Costco",
+     1,
+     2
+    ]
+   ]
+  }
+ }
+}

@@ -1,0 +1,36 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "Inbox: Apple Pay Shortcut text payload",
+ "trigger": {
+  "type": "inbox",
+  "input": {
+   "text": "Merchant: Starbucks\nAmount: $5.45\nCard: Apple Card"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged $5.45 Starbucks → Dining"
+   ]
+  },
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "ledger": [
+    [
+     20740,
+     545,
+     1,
+     "Starbucks",
+     1,
+     1
+    ]
+   ]
+  }
+ }
+}

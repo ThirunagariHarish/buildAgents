@@ -1,0 +1,24 @@
+{
+  "id": "money-manager",
+  "name": "Money Manager",
+  "icon": "💰",
+  "version": "1.0.0",
+  "description": "Runs your day-to-day money: logs spending from your messages, bank texts and Apple Pay, tracks budgets, bills and subscriptions, and tells you each morning what's safe to spend.",
+  "permissions": ["notify", "memory", "model"],
+  "triggers": [
+    {
+      "type": "message",
+      "examples": ["spent 42 at costco", "uber 18.50", "how much on food this month", "safe to spend", "costco is groceries", "budget", "subscriptions", "help"]
+    },
+    { "type": "inbox" },
+    { "type": "schedule", "at": "08:00" }
+  ],
+  "settings": [
+    { "key": "currency", "label": "Currency symbol", "type": "text", "help": "Shown before every amount, e.g. $, ₹, € or £.", "placeholder": "$", "optional": true },
+    { "key": "budgets", "label": "Monthly budgets", "type": "text", "help": "One per line: a category and a monthly amount, e.g. \"Food 400\" or \"Shopping 200\". Food covers groceries and dining.", "placeholder": "Groceries 400\nDining 200\nShopping 150", "multiline": true, "optional": true },
+    { "key": "income", "label": "Monthly income", "type": "number", "help": "Take-home pay per month. Used for your daily safe-to-spend; without it I use the sum of your budgets.", "placeholder": "4200", "optional": true },
+    { "key": "payday", "label": "Payday (day of month)", "type": "number", "help": "The day your pay usually lands, e.g. 15.", "placeholder": "15", "optional": true },
+    { "key": "bills", "label": "Bills", "type": "text", "help": "One per line: name, amount, \"on\" the day it's due, and an optional pay link. E.g. \"Rent 1800 on 1\" or \"Phone 45 on 15 https://pay.example.com\".", "placeholder": "Rent 1800 on 1\nPhone 45 on 15 https://www.verizon.com/payment", "multiline": true, "optional": true }
+  ],
+  "budget": { "steps": 30, "handoffsPerRun": 0 }
+}

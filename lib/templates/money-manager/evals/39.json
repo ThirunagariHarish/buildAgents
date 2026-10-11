@@ -1,0 +1,30 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "Inbox: a promotion is not a transaction",
+ "trigger": {
+  "type": "inbox",
+  "input": {
+   "text": "Get 20% cashback up to Rs 500 on your next purchase with your HDFC card! Use code SAVE20. T&C apply."
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Not a transaction",
+    "promotion"
+   ]
+  },
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "ledger": {
+    "exists": false
+   }
+  }
+ }
+}

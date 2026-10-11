@@ -1,0 +1,45 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {
+  "ledger": [
+   [
+    20708,
+    999,
+    4,
+    "Spotify",
+    1,
+    1
+   ]
+  ],
+  "state": {
+   "n": 2
+  }
+ },
+ "name": "Inbox: Spotify billed again a month later is a new subscription with a cancel link",
+ "trigger": {
+  "type": "inbox",
+  "input": {
+   "text": "Your card ending 1234 was charged $9.99 by SPOTIFY USA"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged $9.99 Spotify → Subscriptions"
+   ]
+  },
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "New subscription: Spotify $9.99/month"
+   ],
+   "bodyIncludes": [
+    "$120 a year"
+   ],
+   "link": "spotify.com/account/subscription"
+  }
+ }
+}

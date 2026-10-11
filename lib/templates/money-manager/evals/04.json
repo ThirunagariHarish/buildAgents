@@ -1,0 +1,34 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "\"$12.99 netflix\" files a subscription; \"oct 3\" sets the date",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "$12.99 netflix oct 3",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged $12.99 Netflix → Subscriptions (Oct 3)"
+   ]
+  },
+  "memory": {
+   "ledger": [
+    [
+     20729,
+     1299,
+     4,
+     "Netflix",
+     0,
+     1
+    ]
+   ]
+  }
+ }
+}

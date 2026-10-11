@@ -1,0 +1,56 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {
+  "ledger": [
+   [
+    20740,
+    4215,
+    0,
+    "Costco",
+    1,
+    1
+   ]
+  ],
+  "state": {
+   "n": 2,
+   "seen": [
+    [
+     29866678,
+     "4215|costco"
+    ]
+   ]
+  }
+ },
+ "name": "Inbox: the same charge twice within 5 minutes is ignored",
+ "trigger": {
+  "type": "inbox",
+  "input": {
+   "text": "Chase: A charge of $42.15 at COSTCO WHSE #123 was authorized."
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Already logged $42.15 Costco 2 min ago"
+   ]
+  },
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "ledger": [
+    [
+     20740,
+     4215,
+     0,
+     "Costco",
+     1,
+     1
+    ]
+   ]
+  }
+ }
+}

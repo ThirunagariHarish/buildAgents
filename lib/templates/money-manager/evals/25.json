@@ -1,0 +1,23 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "\"add bill netflix 15.49 on 7\" remembers the bill",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "add bill netflix 15.49 on 7",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Added bill Netflix $15.49 due on the 7th",
+    "Next: Sat Nov 7 (in 24 days)"
+   ]
+  }
+ }
+}

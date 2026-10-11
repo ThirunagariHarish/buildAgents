@@ -1,0 +1,46 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {
+  "budgets": "Dining 200"
+ },
+ "memory": {
+  "ledger": [
+   [
+    20731,
+    15000,
+    1,
+    "Zomato",
+    0,
+    1
+   ]
+  ],
+  "state": {
+   "n": 2
+  }
+ },
+ "name": "Inbox: Dining crosses 80% and notifies once",
+ "trigger": {
+  "type": "inbox",
+  "input": {
+   "text": "Your card ending 1234 was charged $15.00 by CHIPOTLE 2231"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged $15.00 Chipotle → Dining (Dining $165 of $200, 83%)"
+   ]
+  },
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Dining budget at 83%"
+   ],
+   "bodyIncludes": [
+    "$35 left for 18 days"
+   ]
+  }
+ }
+}

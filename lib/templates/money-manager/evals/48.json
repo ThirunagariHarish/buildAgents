@@ -1,0 +1,87 @@
+{
+ "now": "2026-10-11T15:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {
+  "ledger": [
+   [
+    20724,
+    10000,
+    0,
+    "Costco",
+    0,
+    1
+   ],
+   [
+    20728,
+    2000,
+    1,
+    "Starbucks",
+    0,
+    2
+   ],
+   [
+    20730,
+    15000,
+    0,
+    "Costco",
+    0,
+    3
+   ],
+   [
+    20732,
+    4500,
+    1,
+    "Chipotle",
+    0,
+    4
+   ],
+   [
+    20734,
+    3000,
+    2,
+    "Uber",
+    0,
+    5
+   ],
+   [
+    20735,
+    1000,
+    9,
+    "AMC",
+    0,
+    6
+   ],
+   [
+    20737,
+    999,
+    3,
+    "Target",
+    0,
+    7
+   ]
+  ],
+  "state": {
+   "n": 8
+  }
+ },
+ "name": "08:00 Sunday: weekly review",
+ "trigger": {
+  "type": "schedule"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Your week: $235 spent"
+   ],
+   "bodyIncludes": [
+    "Last 7 days: $235.00 spent vs $120 the week before (+96%)",
+    "Top: Groceries $150, Dining $45, Transport $30"
+   ],
+   "bodyExcludes": [
+    "Target"
+   ]
+  }
+ }
+}

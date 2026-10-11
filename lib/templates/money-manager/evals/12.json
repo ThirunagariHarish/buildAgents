@@ -1,0 +1,77 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {
+  "ledger": [
+   [
+    20736,
+    4200,
+    0,
+    "Trader Joe's",
+    0,
+    4
+   ],
+   [
+    20738,
+    4800,
+    1,
+    "Chipotle",
+    1,
+    5
+   ],
+   [
+    20739,
+    5000,
+    2,
+    "Uber",
+    0,
+    6
+   ]
+  ],
+  "state": {
+   "n": 7,
+   "ll": [
+    6,
+    5,
+    4
+   ]
+  }
+ },
+ "name": "\"delete 2\" removes the 2nd entry of the last list",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "delete 2",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Deleted #2: $48.00 Chipotle (Dining, Oct 12)"
+   ]
+  },
+  "memory": {
+   "ledger": [
+    [
+     20736,
+     4200,
+     0,
+     "Trader Joe's",
+     0,
+     4
+    ],
+    [
+     20739,
+     5000,
+     2,
+     "Uber",
+     0,
+     6
+    ]
+   ]
+  }
+ }
+}

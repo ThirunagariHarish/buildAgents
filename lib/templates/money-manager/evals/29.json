@@ -1,0 +1,38 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "Unknown merchant, model guesses Dining",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "spent 23 at fernwood",
+   "from": "Sam"
+  }
+ },
+ "model": [
+  "Dining"
+ ],
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged $23.00 Fernwood → Dining",
+    "My guess"
+   ]
+  },
+  "memory": {
+   "ledger": [
+    [
+     20740,
+     2300,
+     1,
+     "Fernwood",
+     0,
+     1
+    ]
+   ]
+  }
+ }
+}

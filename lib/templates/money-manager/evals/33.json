@@ -1,0 +1,38 @@
+{
+ "now": "2026-10-11T06:00:00.000Z",
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "currency": "₹"
+ },
+ "memory": {},
+ "name": "Inbox: Indian bank SMS in rupees, dated 03-10-26",
+ "trigger": {
+  "type": "inbox",
+  "input": {
+   "text": "Rs. 1,250.00 debited from a/c XX1234 on 03-10-26 at SWIGGY. Avl Bal Rs. 22,310.55"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged ₹1,250.00 Swiggy → Dining on Oct 3"
+   ]
+  },
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "ledger": [
+    [
+     20729,
+     125000,
+     1,
+     "Swiggy",
+     1,
+     1
+    ]
+   ]
+  }
+ }
+}

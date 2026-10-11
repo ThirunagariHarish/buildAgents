@@ -1,0 +1,36 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "Inbox: payroll deposit is income",
+ "trigger": {
+  "type": "inbox",
+  "input": {
+   "text": "Chase: $3,200.00 deposited into your account ending 5678 from ACME CORP PAYROLL."
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged income $3,200.00"
+   ]
+  },
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "ledger": [
+    [
+     20740,
+     320000,
+     10,
+     "Acme Payroll",
+     1,
+     1
+    ]
+   ]
+  }
+ }
+}

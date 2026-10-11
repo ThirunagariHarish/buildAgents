@@ -1,0 +1,105 @@
+{
+ "now": "2026-12-01T16:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {
+  "budgets": "Groceries 400\nFood 700"
+ },
+ "memory": {
+  "ledger": [
+   [
+    20731,
+    30000,
+    0,
+    "Costco",
+    0,
+    1
+   ],
+   [
+    20733,
+    1549,
+    4,
+    "Netflix",
+    0,
+    2
+   ],
+   [
+    20746,
+    10000,
+    1,
+    "Zomato",
+    0,
+    3
+   ],
+   [
+    20760,
+    32000,
+    0,
+    "Costco",
+    0,
+    4
+   ],
+   [
+    20764,
+    1549,
+    4,
+    "Netflix",
+    0,
+    5
+   ],
+   [
+    20769,
+    12000,
+    1,
+    "Chipotle",
+    0,
+    6
+   ],
+   [
+    20772,
+    13000,
+    0,
+    "Whole Foods",
+    0,
+    7
+   ],
+   [
+    20772,
+    320000,
+    10,
+    "Paycheck",
+    0,
+    8
+   ]
+  ],
+  "state": {
+   "n": 9
+  }
+ },
+ "name": "08:00 on the 1st: last month report",
+ "trigger": {
+  "type": "schedule"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "November: $585 spent"
+   ],
+   "bodyIncludes": [
+    "November report",
+    "Total $585.49 spent, $3,200 came in (saved $2,615)",
+    "vs October: $415 (+41%)",
+    "Groceries $450 (113% of $400)",
+    "Food $570 of $700 (81%)",
+    "Biggest merchants: Costco $320, Whole Foods $130, Chipotle $120",
+    "Subscriptions: $15.49/month",
+    "Safe to spend today"
+   ]
+  },
+  "memory": {
+   "state": {
+    "exists": true
+   }
+  }
+ }
+}

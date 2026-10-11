@@ -1,0 +1,78 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {
+  "budgets": "Groceries 400\nDining 200\nTransport 40"
+ },
+ "memory": {
+  "ledger": [
+   [
+    20727,
+    180000,
+    6,
+    "Rent",
+    0,
+    1
+   ],
+   [
+    20729,
+    27000,
+    0,
+    "Costco",
+    0,
+    2
+   ],
+   [
+    20733,
+    1549,
+    4,
+    "Netflix",
+    1,
+    3
+   ],
+   [
+    20736,
+    4200,
+    0,
+    "Trader Joe's",
+    0,
+    4
+   ],
+   [
+    20738,
+    4800,
+    1,
+    "Chipotle",
+    1,
+    5
+   ],
+   [
+    20739,
+    5000,
+    2,
+    "Uber",
+    0,
+    6
+   ]
+  ]
+ },
+ "name": "\"budget\" shows every budget with spent, limit and %",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "budget",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "October, 18 days left",
+    "Groceries: $312 of $400 (78%)",
+    "Dining: $48 of $200 (24%)",
+    "Transport: $50 of $40 (125%) over"
+   ]
+  }
+ }
+}

@@ -1,0 +1,43 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {
+  "ledger": [],
+  "state": {
+   "n": 1,
+   "r": {
+    "bobscorner": 0
+   }
+  }
+ },
+ "name": "A learned rule is used next time",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "spent 30 at bobs corner",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged $30.00 Bobs Corner → Groceries"
+   ]
+  },
+  "memory": {
+   "ledger": [
+    [
+     20740,
+     3000,
+     0,
+     "Bobs Corner",
+     0,
+     1
+    ]
+   ]
+  },
+  "maxSteps": 5
+ }
+}

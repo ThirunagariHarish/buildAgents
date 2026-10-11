@@ -1,0 +1,37 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "Inbox: Apple Pay Shortcut JSON payload",
+ "trigger": {
+  "type": "inbox",
+  "input": {
+   "data": {
+    "merchant": "SQ *BLUE BOTTLE COFFEE",
+    "amount": "6.25",
+    "card": "Apple Card"
+   }
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged $6.25 Blue Bottle → Dining"
+   ]
+  },
+  "memory": {
+   "ledger": [
+    [
+     20740,
+     625,
+     1,
+     "Blue Bottle",
+     1,
+     1
+    ]
+   ]
+  }
+ }
+}

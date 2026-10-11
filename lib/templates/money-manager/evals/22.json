@@ -1,0 +1,79 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {
+  "bills": "Rent 1800 on 1\nPhone 45 on 15 https://pay.example.com/phone",
+  "income": 4000,
+  "payday": 15
+ },
+ "memory": {
+  "ledger": [
+   [
+    20727,
+    180000,
+    6,
+    "Rent",
+    0,
+    1
+   ],
+   [
+    20729,
+    27000,
+    0,
+    "Costco",
+    0,
+    2
+   ],
+   [
+    20733,
+    1549,
+    4,
+    "Netflix",
+    1,
+    3
+   ],
+   [
+    20736,
+    4200,
+    0,
+    "Trader Joe's",
+    0,
+    4
+   ],
+   [
+    20738,
+    4800,
+    1,
+    "Chipotle",
+    1,
+    5
+   ],
+   [
+    20739,
+    5000,
+    2,
+    "Uber",
+    0,
+    6
+   ]
+  ]
+ },
+ "name": "\"safe to spend\" = (income − spent − bills still due) ÷ days left",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "safe to spend",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Safe to spend today: $96.",
+    "$4,000 (income) − $2,225 spent − $45 bills still due = $1,730 for 18 days",
+    "Next payday: Thu Oct 15"
+   ]
+  }
+ }
+}

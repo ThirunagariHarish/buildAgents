@@ -1,0 +1,63 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {
+  "budgets": "Groceries 400\nDining 200"
+ },
+ "memory": {
+  "ledger": [
+   [
+    20729,
+    27000,
+    0,
+    "Costco",
+    0,
+    1
+   ]
+  ],
+  "state": {
+   "n": 2
+  }
+ },
+ "name": "Logs \"spent 42 at costco\" with the budget line",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "spent 42 at costco",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged $42.00 Costco → Groceries.",
+    "Groceries: $312 of $400 (78%)"
+   ]
+  },
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "ledger": [
+    [
+     20729,
+     27000,
+     0,
+     "Costco",
+     0,
+     1
+    ],
+    [
+     20740,
+     4200,
+     0,
+     "Costco",
+     0,
+     2
+    ]
+   ]
+  },
+  "maxSteps": 6
+ }
+}

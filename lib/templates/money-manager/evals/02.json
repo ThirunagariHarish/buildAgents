@@ -1,0 +1,35 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "\"paid 60 for gas yesterday\" lands on yesterday under Transport",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "paid 60 for gas yesterday",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged $60.00 Gas → Transport (yesterday, Oct 13)",
+    "Transport this month: $60."
+   ]
+  },
+  "memory": {
+   "ledger": [
+    [
+     20739,
+     6000,
+     2,
+     "Gas",
+     0,
+     1
+    ]
+   ]
+  }
+ }
+}

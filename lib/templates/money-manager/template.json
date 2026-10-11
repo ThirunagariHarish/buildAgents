@@ -1,0 +1,37 @@
+{
+  "name": "Money Manager",
+  "icon": "💰",
+  "category": "Money",
+  "tier": "life",
+  "summary": "Takes over your day-to-day finances: every purchase logged and filed, budgets watched, bills and subscriptions caught, and a daily number for what's safe to spend.",
+  "handles": [
+    "Logs spending from plain messages, bank texts, bank emails and Apple Pay, and files each one in the right category",
+    "Learns your merchants (\"costco is groceries\") and fixes past entries",
+    "Watches your budgets and warns you at 80% and 100%",
+    "Spots new subscriptions and gives you the cancel page",
+    "Reminds you of bills 3 days before and on the day, with the pay link",
+    "Every morning: safe to spend today; Sundays a weekly review; on the 1st last month's report"
+  ],
+  "talk": [
+    "spent 42 at costco",
+    "paid 60 for gas yesterday",
+    "how much on food this month",
+    "that was groceries",
+    "safe to spend",
+    "add bill netflix 15.49 on 7"
+  ],
+  "setup": [
+    "Apple Pay: in the Shortcuts app, tap Automation → New → Wallet (Transaction), pick your cards, Run Immediately.",
+    "Add the action \"Get Contents of URL\": paste this agent's inbox address, method POST, Request Body Text: \"Merchant: [Merchant]\" new line \"Amount: [Amount]\" new line \"Card: [Card]\".",
+    "Bank texts: Automation → Message, Message Contains \"debited\" (or \"charged\"), then the same \"Get Contents of URL\" action with the message text as the body.",
+    "Bank emails: forward them with a mail rule or Zapier/IFTTT that posts the email text to the same inbox address."
+  ],
+  "fields": [
+    { "key": "currency", "label": "Currency symbol", "type": "text", "help": "Shown before every amount, e.g. $, ₹, € or £.", "placeholder": "$", "optional": true, "default": "$" },
+    { "key": "budgets", "label": "Monthly budgets", "type": "text", "help": "One per line: a category and a monthly amount, e.g. \"Food 400\" or \"Shopping 200\". Food covers groceries and dining.", "placeholder": "Groceries 400\nDining 200\nShopping 150", "multiline": true, "optional": true },
+    { "key": "income", "label": "Monthly income", "type": "number", "help": "Take-home pay per month. Used for your daily safe-to-spend; without it I use the sum of your budgets.", "placeholder": "4200", "optional": true },
+    { "key": "payday", "label": "Payday (day of month)", "type": "number", "help": "The day your pay usually lands, e.g. 15.", "placeholder": "15", "optional": true },
+    { "key": "bills", "label": "Bills", "type": "text", "help": "One per line: name, amount, \"on\" the day it's due, and an optional pay link. E.g. \"Rent 1800 on 1\" or \"Phone 45 on 15 https://pay.example.com\".", "placeholder": "Rent 1800 on 1\nPhone 45 on 15 https://www.verizon.com/payment", "multiline": true, "optional": true }
+  ],
+  "after": "Say \"spent 42 at costco\" to log your first purchase, or set up the Apple Pay shortcut so purchases log themselves. Add budgets and bills under Settings for alerts and a daily safe-to-spend."
+}

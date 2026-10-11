@@ -1,0 +1,29 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "\"help\" lists what it understands",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "help",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "spent 42 at costco",
+    "how much on food this month",
+    "costco is groceries",
+    "set budget food 450",
+    "safe to spend"
+   ]
+  },
+  "notify": {
+   "count": 0
+  }
+ }
+}

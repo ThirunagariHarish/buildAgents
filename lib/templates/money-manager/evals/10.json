@@ -1,0 +1,56 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {
+  "ledger": [
+   [
+    20729,
+    27000,
+    0,
+    "Costco",
+    0,
+    1
+   ],
+   [
+    20740,
+    4200,
+    1,
+    "Starbucks",
+    0,
+    2
+   ]
+  ],
+  "state": {
+   "n": 3
+  }
+ },
+ "name": "\"undo\" removes the last entry",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "undo",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Removed $42.00 Starbucks (Dining, Oct 14)"
+   ]
+  },
+  "memory": {
+   "ledger": [
+    [
+     20729,
+     27000,
+     0,
+     "Costco",
+     0,
+     1
+    ]
+   ]
+  }
+ }
+}

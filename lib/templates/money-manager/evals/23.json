@@ -1,0 +1,22 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "\"safe to spend\" without income or budgets asks for them",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "safe to spend",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Add your monthly income or budgets"
+   ]
+  }
+ }
+}

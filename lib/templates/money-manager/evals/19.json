@@ -1,0 +1,23 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "\"budget\" with none set explains how",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "budget",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "No budgets yet",
+    "set budget food 400"
+   ]
+  }
+ }
+}

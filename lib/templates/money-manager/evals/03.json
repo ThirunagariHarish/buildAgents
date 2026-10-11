@@ -1,0 +1,36 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "\"uber 18.50\" (merchant first) needs no model",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "uber 18.50",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Logged $18.50 Uber → Transport.",
+    "Transport this month: $18.50."
+   ]
+  },
+  "memory": {
+   "ledger": [
+    [
+     20740,
+     1850,
+     2,
+     "Uber",
+     0,
+     1
+    ]
+   ]
+  },
+  "maxSteps": 5
+ }
+}

@@ -1,0 +1,26 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "Message that is neither a log nor a question gets examples",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "blorp",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "didn't catch",
+    "spent 42 at costco"
+   ]
+  },
+  "notify": {
+   "count": 0
+  }
+ }
+}

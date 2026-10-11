@@ -1,0 +1,81 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {
+  "ledger": [
+   [
+    20708,
+    11000,
+    3,
+    "Costco",
+    0,
+    1
+   ],
+   [
+    20729,
+    4000,
+    3,
+    "Costco",
+    0,
+    2
+   ],
+   [
+    20730,
+    2500,
+    3,
+    "Target",
+    0,
+    3
+   ]
+  ],
+  "state": {
+   "n": 4
+  }
+ },
+ "name": "\"costco is groceries\" learns the rule and re-files past entries",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "costco is groceries",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Costco → Groceries from now on",
+    "Moved 2 past entries ($150.00)"
+   ]
+  },
+  "memory": {
+   "ledger": [
+    [
+     20708,
+     11000,
+     0,
+     "Costco",
+     0,
+     1
+    ],
+    [
+     20729,
+     4000,
+     0,
+     "Costco",
+     0,
+     2
+    ],
+    [
+     20730,
+     2500,
+     3,
+     "Target",
+     0,
+     3
+    ]
+   ]
+  }
+ }
+}

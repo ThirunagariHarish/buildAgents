@@ -1,0 +1,24 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {
+  "bills": "Rent 1800 on 1\nPhone 45 on 15 https://pay.example.com/phone"
+ },
+ "memory": {},
+ "name": "\"remove bill phone\" stops its reminders",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "remove bill phone",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Removed the Phone bill ($45.00 on the 15th)"
+   ]
+  }
+ }
+}

@@ -1,0 +1,30 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {},
+ "memory": {},
+ "name": "Inbox: an OTP text is not a transaction",
+ "trigger": {
+  "type": "inbox",
+  "input": {
+   "text": "482913 is your OTP for txn of Rs 1,250.00 at SWIGGY. Do not share it with anyone."
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Not a transaction",
+    "one-time code"
+   ]
+  },
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "ledger": {
+    "exists": false
+   }
+  }
+ }
+}

@@ -1,0 +1,67 @@
+{
+ "now": "2026-10-14T18:00:00.000Z",
+ "tz": "America/Los_Angeles",
+ "settings": {
+  "budgets": "Groceries 400"
+ },
+ "memory": {
+  "ledger": [
+   [
+    20729,
+    27000,
+    0,
+    "Costco",
+    0,
+    1
+   ],
+   [
+    20740,
+    4200,
+    3,
+    "Walgreens",
+    0,
+    2
+   ]
+  ],
+  "state": {
+   "n": 3
+  }
+ },
+ "name": "\"no, that was groceries\" fixes the last entry",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "no, that was groceries",
+   "from": "Sam"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Changed $42.00 Walgreens (Oct 14) from Shopping to Groceries",
+    "Groceries: $312 of $400 (78%)"
+   ]
+  },
+  "memory": {
+   "ledger": [
+    [
+     20729,
+     27000,
+     0,
+     "Costco",
+     0,
+     1
+    ],
+    [
+     20740,
+     4200,
+     0,
+     "Walgreens",
+     0,
+     2
+    ]
+   ]
+  }
+ }
+}
