@@ -1,0 +1,19 @@
+{
+ "name": "No holdings yet: the close stays quiet",
+ "trigger": {
+  "type": "schedule",
+  "at": "16:30"
+ },
+ "now": "2026-10-12T20:30:00.000Z",
+ "tz": "America/New_York",
+ "settings": {},
+ "memory": {},
+ "expect": {
+  "notify": {
+   "count": 0
+  },
+  "http": {
+   "max": 0
+  }
+ }
+}

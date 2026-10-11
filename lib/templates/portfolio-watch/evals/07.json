@@ -1,0 +1,51 @@
+{
+ "name": "Hourly check: NVDA down 7% alerts once",
+ "trigger": {
+  "type": "interval",
+  "minutes": 60
+ },
+ "now": "2026-10-12T18:00:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "NVDA 20 @ 120\nAAPL 10 @ 182.50",
+  "movePct": 5
+ },
+ "memory": {
+  "pc": {
+   "NVDA": {
+    "d": "2026-10-09",
+    "c": 190
+   },
+   "AAPL": {
+    "d": "2026-10-09",
+    "c": 250
+   }
+  }
+ },
+ "http": {
+  "https://stooq.com/q/l/?s=nvda.us,aapl.us&f=sd2t2ohlcv&h&e=csv": {
+   "status": 200,
+   "text": "Symbol,Date,Time,Open,High,Low,Close,Volume\r\nNVDA.US,2026-10-12,18:00:01,185,186,175.9,176.7,201334455\r\nAAPL.US,2026-10-12,18:00:01,251,253,250.5,252.5,30112233\r\n"
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "NVDA -7.00%"
+   ],
+   "bodyIncludes": [
+    "NVDA -7.00% at $176.70 (-$266.00 on your 20)",
+    "alert level: 5%"
+   ],
+   "bodyExcludes": [
+    "AAPL"
+   ]
+  },
+  "memory": {
+   "alerted": {
+    "NVDA": "2026-10-12"
+   }
+  }
+ }
+}

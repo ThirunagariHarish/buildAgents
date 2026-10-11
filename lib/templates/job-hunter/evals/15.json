@@ -1,0 +1,89 @@
+{
+ "name": "\"rejected stripe\" logs the rejection",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "rejected stripe",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T16:00:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "companies": "stripe greenhouse\nnetflix lever\nnotion ashby",
+  "keywords": "backend, platform",
+  "exclude": "intern",
+  "locations": "remote, san francisco"
+ },
+ "memory": {
+  "apps": [
+   {
+    "id": 1,
+    "c": "Stripe",
+    "t": "Backend Engineer, Payments",
+    "u": "https://stripe.com/jobs/search?gh_jid=7012345",
+    "st": "applied",
+    "ad": "2026-09-28",
+    "up": "2026-09-28"
+   },
+   {
+    "id": 2,
+    "c": "Notion",
+    "t": "Backend Engineer, Infrastructure",
+    "u": "https://jobs.ashbyhq.com/notion/a1b2c3d4-e5f6-4711-8899-aabbccddeeff",
+    "st": "applied",
+    "ad": "2026-10-09",
+    "up": "2026-10-09"
+   },
+   {
+    "id": 3,
+    "c": "Netflix",
+    "t": "Platform Engineer",
+    "u": "",
+    "st": "rejected",
+    "ad": "2026-09-20",
+    "up": "2026-10-01"
+   }
+  ]
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Sorry about Stripe",
+    "1 applied · 0 interview · 0 offer · 2 rejected"
+   ]
+  },
+  "memory": {
+   "apps": [
+    {
+     "id": 1,
+     "c": "Stripe",
+     "t": "Backend Engineer, Payments",
+     "u": "https://stripe.com/jobs/search?gh_jid=7012345",
+     "st": "rejected",
+     "ad": "2026-09-28",
+     "up": "2026-10-12"
+    },
+    {
+     "id": 2,
+     "c": "Notion",
+     "t": "Backend Engineer, Infrastructure",
+     "u": "https://jobs.ashbyhq.com/notion/a1b2c3d4-e5f6-4711-8899-aabbccddeeff",
+     "st": "applied",
+     "ad": "2026-10-09",
+     "up": "2026-10-09"
+    },
+    {
+     "id": 3,
+     "c": "Netflix",
+     "t": "Platform Engineer",
+     "u": "",
+     "st": "rejected",
+     "ad": "2026-09-20",
+     "up": "2026-10-01"
+    }
+   ]
+  }
+ }
+}

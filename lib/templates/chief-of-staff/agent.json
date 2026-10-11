@@ -1,0 +1,35 @@
+{
+  "id": "chief-of-staff",
+  "name": "Chief of Staff",
+  "icon": "🧭",
+  "version": "1.0.0",
+  "description": "Runs your day: reminders, tasks with deadlines, shopping lists and notes you set in plain words, a morning brief with weather and calendar, and an evening wrap.",
+  "permissions": ["notify", "memory", "http"],
+  "http": {
+    "allow": ["geocoding-api.open-meteo.com", "api.open-meteo.com"],
+    "allowFromSettings": ["icsUrl"]
+  },
+  "triggers": [
+    { "type": "schedule", "at": "07:30" },
+    {
+      "type": "message",
+      "examples": [
+        "remind me to call mom thursday 6pm",
+        "remind me in 2 hours to stretch",
+        "todo renew passport by dec 1",
+        "add milk to groceries",
+        "every monday 9am standup notes",
+        "today",
+        "list",
+        "top 3: gym; taxes; call bank"
+      ]
+    },
+    { "type": "interval", "minutes": 15 }
+  ],
+  "settings": [
+    { "key": "city", "label": "Your city", "type": "text", "optional": true, "help": "For the weather line in your morning brief. A city name, e.g. Hyderabad or Austin.", "placeholder": "e.g. Hyderabad" },
+    { "key": "icsUrl", "label": "Calendar iCal address", "type": "secret", "optional": true, "help": "Your calendar's secret iCal link (Google Calendar: Settings → your calendar → Secret address in iCal format). Starts with https:// (change webcal:// to https://).", "placeholder": "https://calendar.google.com/calendar/ical/…/basic.ics" },
+    { "key": "eveningAt", "label": "Evening wrap time", "type": "time", "optional": true, "help": "When the evening wrap-up arrives, 24-hour HH:MM. Default 20:30.", "placeholder": "20:30" }
+  ],
+  "budget": { "steps": 60, "handoffsPerRun": 0 }
+}

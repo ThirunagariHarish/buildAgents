@@ -1,0 +1,50 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {
+  "items": [
+   {
+    "n": 1,
+    "k": "t",
+    "t": "Renew passport",
+    "c": "2026-10-01"
+   }
+  ]
+ },
+ "name": "Reminder in 2 hours gets the next free number",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "remind me in 2 hours to stretch",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "today 12:00",
+    "Stretch",
+    "#2"
+   ]
+  },
+  "memory": {
+   "items": [
+    {
+     "n": 1,
+     "k": "t",
+     "t": "Renew passport",
+     "c": "2026-10-01"
+    },
+    {
+     "n": 2,
+     "k": "r",
+     "t": "Stretch",
+     "due": "2026-10-12T12:00",
+     "c": "2026-10-12"
+    }
+   ]
+  }
+ }
+}

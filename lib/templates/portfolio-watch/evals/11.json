@@ -1,0 +1,62 @@
+{
+ "name": "\"how am I doing\" replies with totals and each holding",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "How am I doing?",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T20:30:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50\nMSFT 4 @ 330\nBTC 0.25 @ 41000",
+  "movePct": 5
+ },
+ "memory": {
+  "pc": {
+   "AAPL": {
+    "d": "2026-10-09",
+    "c": 250
+   },
+   "MSFT": {
+    "d": "2026-10-09",
+    "c": 400
+   }
+  },
+  "ledger": {
+   "trades": [
+    {
+     "s": "AAPL",
+     "q": -2,
+     "p": 190,
+     "d": "2026-10-01"
+    }
+   ],
+   "base": {},
+   "realised": 0
+  }
+ },
+ "http": {
+  "https://stooq.com/q/l/?s=aapl.us,msft.us&f=sd2t2ohlcv&h&e=csv": {
+   "status": 200,
+   "text": "Symbol,Date,Time,Open,High,Low,Close,Volume\r\nAAPL.US,2026-10-12,20:30:05,251.1,256.4,250.5,255,40112233\r\nMSFT.US,2026-10-12,20:30:05,401,405.2,398.1,396,18223344\r\n"
+  },
+  "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true": {
+   "status": 200,
+   "text": "{\"bitcoin\":{\"usd\":60000,\"usd_24h_change\":2.5}}"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Value $18,624.00",
+    "Realised so far +$15.00",
+    "AAPL 8 × $255.00 = $2,040.00 (+2.00%) · P&L +$580.00",
+    "BTC 0.25 × $60,000.00 = $15,000.00 (+2.50%)",
+    "may be delayed"
+   ]
+  }
+ }
+}

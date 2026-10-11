@@ -1,0 +1,37 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {
+  "lists": {
+   "packing": [
+    "chargers"
+   ]
+  }
+ },
+ "name": "List with a colon, skipping what is already there",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "packing: passports, Chargers, chargers",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Added passports to packing",
+    "packing now has 2"
+   ]
+  },
+  "memory": {
+   "lists": {
+    "packing": [
+     "chargers",
+     "passports"
+    ]
+   }
+  }
+ }
+}

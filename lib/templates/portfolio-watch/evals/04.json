@@ -1,0 +1,34 @@
+{
+ "name": "Close already sent today: no repeat",
+ "trigger": {
+  "type": "schedule",
+  "at": "16:30"
+ },
+ "now": "2026-10-12T20:31:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50\nMSFT 4 @ 330\nBTC 0.25 @ 41000",
+  "movePct": 5
+ },
+ "memory": {
+  "lastClose": "2026-10-12",
+  "pc": {
+   "AAPL": {
+    "d": "2026-10-09",
+    "c": 250
+   },
+   "MSFT": {
+    "d": "2026-10-09",
+    "c": 400
+   }
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  },
+  "http": {
+   "max": 0
+  }
+ }
+}

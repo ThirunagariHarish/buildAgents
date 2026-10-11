@@ -1,0 +1,44 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "city": "Xyzzyville",
+  "icsUrl": "https://calendar.google.com/calendar/ical/me%40gmail.com/private-abc123/basic.ics"
+ },
+ "memory": {
+  "items": [
+   {
+    "n": 1,
+    "k": "t",
+    "t": "File taxes",
+    "c": "2026-10-01",
+    "by": "2026-10-13"
+   }
+  ]
+ },
+ "name": "Unknown city and a non-calendar page are explained, not crashed on",
+ "trigger": {
+  "type": "schedule",
+  "at": "07:30"
+ },
+ "now": "2026-10-12T02:00:00.000Z",
+ "http": {
+  "https://geocoding-api.open-meteo.com/v1/search?name=Xyzzyville&count=1": "{\"generationtime_ms\":0.62}",
+  "https://calendar.google.com/calendar/ical/me%40gmail.com/private-abc123/basic.ics": "<html><body>Sign in</body></html>"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "bodyIncludes": [
+    "couldn't find \"Xyzzyville\"",
+    "did not return a calendar",
+    "File taxes (tomorrow)"
+   ]
+  },
+  "memory": {
+   "geo": {
+    "q": "xyzzyville",
+    "miss": 1
+   }
+  }
+ }
+}

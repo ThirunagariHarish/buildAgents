@@ -1,0 +1,41 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {
+  "sent": {
+   "brief": "2026-10-12"
+  },
+  "items": [
+   {
+    "n": 1,
+    "k": "r",
+    "t": "Stretch",
+    "due": "2026-10-12T12:00",
+    "c": "2026-10-12",
+    "sent": "2026-10-12T12:00"
+   },
+   {
+    "n": 3,
+    "k": "r",
+    "t": "Call mom",
+    "due": "2026-10-15T18:00",
+    "c": "2026-10-10"
+   }
+  ]
+ },
+ "name": "Nothing due in the afternoon: no notification",
+ "trigger": {
+  "type": "interval",
+  "minutes": 15
+ },
+ "now": "2026-10-12T09:30:00.000Z",
+ "expect": {
+  "notify": {
+   "count": 0
+  },
+  "http": {
+   "max": 0
+  },
+  "maxSteps": 4
+ }
+}

@@ -1,0 +1,68 @@
+{
+ "name": "Price target hit: alerts once and marks it done",
+ "trigger": {
+  "type": "interval",
+  "minutes": 60
+ },
+ "now": "2026-10-12T18:00:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50"
+ },
+ "memory": {
+  "pc": {
+   "AAPL": {
+    "d": "2026-10-09",
+    "c": 250
+   }
+  },
+  "targets": [
+   {
+    "s": "TSLA",
+    "p": 200,
+    "dir": "below",
+    "d": "2026-10-05"
+   },
+   {
+    "s": "AAPL",
+    "p": 300,
+    "dir": "above",
+    "d": "2026-10-05"
+   }
+  ]
+ },
+ "http": {
+  "https://stooq.com/q/l/?s=aapl.us,tsla.us&f=sd2t2ohlcv&h&e=csv": {
+   "status": 200,
+   "text": "Symbol,Date,Time,Open,High,Low,Close,Volume\r\nAAPL.US,2026-10-12,18:00:01,251,253,250.5,252.5,30112233\r\nTSLA.US,2026-10-12,18:00:01,205,206,197.2,198.4,90112233\r\n"
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "TSLA fell to $198.40"
+   ],
+   "bodyIncludes": [
+    "TSLA below $200.00"
+   ]
+  },
+  "memory": {
+   "targets": [
+    {
+     "s": "TSLA",
+     "p": 200,
+     "dir": "below",
+     "d": "2026-10-05",
+     "hit": "2026-10-12"
+    },
+    {
+     "s": "AAPL",
+     "p": 300,
+     "dir": "above",
+     "d": "2026-10-05"
+    }
+   ]
+  }
+ }
+}

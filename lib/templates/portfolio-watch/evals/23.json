@@ -1,0 +1,29 @@
+{
+ "name": "Unknown message gets a helpful answer",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "tell me a joke please",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T20:30:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50\nMSFT 4 @ 330\nBTC 0.25 @ 41000",
+  "movePct": 5
+ },
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "didn't catch that",
+    "portfolio"
+   ]
+  },
+  "http": {
+   "max": 0
+  }
+ }
+}

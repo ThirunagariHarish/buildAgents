@@ -1,0 +1,30 @@
+{
+ "name": "Selling more than you hold is refused",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "sold 20 aapl at 190",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T20:30:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50\nMSFT 4 @ 330\nBTC 0.25 @ 41000",
+  "movePct": 5
+ },
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "You hold 10 AAPL, so I can't record selling 20"
+   ]
+  },
+  "memory": {
+   "ledger": {
+    "exists": false
+   }
+  }
+ }
+}

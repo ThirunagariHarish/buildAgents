@@ -1,0 +1,41 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {
+  "notes": [
+   {
+    "d": "2026-10-10",
+    "t": "Wifi password is on the router"
+   }
+  ]
+ },
+ "name": "Save a note and list notes",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "note: gift idea for Priya: a fountain pen",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Noted (2 notes)"
+   ]
+  },
+  "memory": {
+   "notes": [
+    {
+     "d": "2026-10-10",
+     "t": "Wifi password is on the router"
+    },
+    {
+     "d": "2026-10-12",
+     "t": "gift idea for Priya: a fountain pen"
+    }
+   ]
+  }
+ }
+}

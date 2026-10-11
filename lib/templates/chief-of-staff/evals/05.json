@@ -1,0 +1,35 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {},
+ "name": "Task with a deadline",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "todo renew passport by dec 1",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Renew passport",
+    "Tue 1 Dec",
+    "1 open task"
+   ]
+  },
+  "memory": {
+   "items": [
+    {
+     "n": 1,
+     "k": "t",
+     "t": "Renew passport",
+     "c": "2026-10-12",
+     "by": "2026-12-01"
+    }
+   ]
+  }
+ }
+}

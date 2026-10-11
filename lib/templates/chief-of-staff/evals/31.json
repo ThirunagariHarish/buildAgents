@@ -1,0 +1,27 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {},
+ "name": "A reminder with no time asks when",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "remind me to book flights",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "When should I remind you to book flights"
+   ]
+  },
+  "memory": {
+   "items": {
+    "exists": false
+   }
+  }
+ }
+}

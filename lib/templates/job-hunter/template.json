@@ -1,0 +1,27 @@
+{
+  "name": "Job Hunter",
+  "icon": "🧑‍💼",
+  "category": "Work",
+  "tier": "life",
+  "summary": "Finds new jobs that match you at the companies you care about and runs your whole application pipeline, from applied to offer.",
+  "handles": [
+    "Checks Greenhouse, Lever and Ashby boards every 6 hours",
+    "One digest of new matching roles, never the same job twice",
+    "Keeps your pipeline: applied, interview, offer, rejected",
+    "Reminds you the day before each interview",
+    "Spots applications gone quiet for a week and drafts the follow-up email",
+    "Monday 9:00 summary of your week"
+  ],
+  "talk": ["jobs", "applied 2", "interview stripe fri 2pm", "follow ups", "add company figma greenhouse", "keywords: backend, platform"],
+  "setup": [
+    "Open a company's careers page: boards.greenhouse.io/stripe means \"stripe greenhouse\", jobs.lever.co/netflix means \"netflix lever\", jobs.ashbyhq.com/notion means \"notion ashby\".",
+    "Put one company per line under Companies to watch, or tell it \"add company figma greenhouse\" any time."
+  ],
+  "fields": [
+    { "key": "companies", "label": "Companies to watch", "type": "text", "multiline": true, "optional": true, "default": "stripe greenhouse\nnetflix lever\nnotion ashby", "help": "One per line: the company's board name and where it posts jobs (greenhouse, lever or ashby). Example: stripe greenhouse", "placeholder": "stripe greenhouse" },
+    { "key": "keywords", "label": "Title keywords", "type": "text", "optional": true, "default": "engineer", "help": "Comma list; a job title must contain one of them. Example: backend, platform, data engineer", "placeholder": "backend, platform" },
+    { "key": "exclude", "label": "Skip titles with", "type": "text", "optional": true, "default": "intern", "help": "Comma list of words that rule a job out. Example: intern, staff, manager", "placeholder": "intern, manager" },
+    { "key": "locations", "label": "Locations", "type": "text", "optional": true, "help": "Comma list; leave empty for anywhere. \"remote\" matches remote jobs. Example: remote, new york, london", "placeholder": "remote, new york" }
+  ],
+  "after": "Say \"companies\" to check what it watches, then \"jobs\" after its first check. When you apply somewhere, tell it \"applied 2\"."
+}

@@ -1,0 +1,46 @@
+{
+ "name": "Same big move an hour later: already alerted, stays quiet",
+ "trigger": {
+  "type": "interval",
+  "minutes": 60
+ },
+ "now": "2026-10-12T19:00:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "NVDA 20 @ 120\nAAPL 10 @ 182.50",
+  "movePct": 5
+ },
+ "memory": {
+  "pc": {
+   "NVDA": {
+    "d": "2026-10-12",
+    "c": 176.7,
+    "p": 190
+   },
+   "AAPL": {
+    "d": "2026-10-12",
+    "c": 252.5,
+    "p": 250
+   }
+  },
+  "alerted": {
+   "NVDA": "2026-10-12"
+  }
+ },
+ "http": {
+  "https://stooq.com/q/l/?s=nvda.us,aapl.us&f=sd2t2ohlcv&h&e=csv": {
+   "status": 200,
+   "text": "Symbol,Date,Time,Open,High,Low,Close,Volume\r\nNVDA.US,2026-10-12,19:00:01,185,186,175.1,175.5,211334455\r\nAAPL.US,2026-10-12,19:00:01,251,253,250.5,252.6,31112233\r\n"
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "alerted": {
+    "NVDA": "2026-10-12"
+   }
+  }
+ }
+}

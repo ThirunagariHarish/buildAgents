@@ -1,0 +1,37 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {
+  "lists": {
+   "groceries": [
+    "milk",
+    "eggs"
+   ]
+  }
+ },
+ "name": "Got something ticks it off the list",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "got milk",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Ticked off milk",
+    "groceries: 1 left"
+   ]
+  },
+  "memory": {
+   "lists": {
+    "groceries": [
+     "eggs"
+    ]
+   }
+  }
+ }
+}

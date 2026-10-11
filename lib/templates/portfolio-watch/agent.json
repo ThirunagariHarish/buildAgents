@@ -1,0 +1,19 @@
+{
+  "id": "portfolio-watch",
+  "name": "Portfolio Watch",
+  "icon": "📈",
+  "version": "1.0.0",
+  "description": "Tracks your stocks and crypto: the daily close on weekdays at 4:30 PM, alerts on big moves and price targets, and answers how you're doing. Numbers only, never advice.",
+  "permissions": ["notify", "memory", "http"],
+  "http": { "allow": ["stooq.com", "api.coingecko.com"] },
+  "triggers": [
+    { "type": "schedule", "at": "16:30", "days": ["mon", "tue", "wed", "thu", "fri"] },
+    { "type": "interval", "minutes": 60 },
+    { "type": "message", "examples": ["how am I doing", "how's aapl", "bought 5 msft at 410", "sold 2 aapl at 190", "target nvda 150", "alert tsla below 200", "targets", "help"] }
+  ],
+  "settings": [
+    { "key": "holdings", "label": "Your holdings", "type": "text", "multiline": true, "optional": true, "help": "One per line: symbol, quantity, @ what you paid each. Stocks by US ticker; crypto BTC, ETH, SOL, DOGE, ADA, XRP. Example: AAPL 10 @ 182.50", "placeholder": "AAPL 10 @ 182.50" },
+    { "key": "movePct", "label": "Big move alert (%)", "type": "number", "optional": true, "help": "Alert me when a holding moves this much in a day, once per symbol per day. Example: 5", "placeholder": "5" }
+  ],
+  "budget": { "steps": 60 }
+}

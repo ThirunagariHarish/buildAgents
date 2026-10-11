@@ -1,0 +1,21 @@
+{
+  "name": "Portfolio Watch",
+  "icon": "📈",
+  "category": "Money",
+  "tier": "life",
+  "summary": "Keeps an eye on your stocks and crypto so you don't have to: the daily close, big moves and your price targets, with your real P&L.",
+  "handles": [
+    "Daily close at 4:30 PM on weekdays: value, day change, total P&L, top movers",
+    "Fridays add how the week went",
+    "Alerts once per symbol per day on big moves",
+    "Price target alerts that fire once",
+    "Keeps your trades: average cost and realised gains",
+    "Numbers only: never investment advice"
+  ],
+  "talk": ["how am I doing", "how's aapl", "bought 5 msft at 410", "sold 2 aapl at 190", "target nvda 150", "alert tsla below 200"],
+  "fields": [
+    { "key": "holdings", "label": "Your holdings", "type": "text", "multiline": true, "optional": true, "help": "One per line: symbol, quantity, @ what you paid each. Stocks by US ticker; crypto BTC, ETH, SOL, DOGE, ADA, XRP. Example: AAPL 10 @ 182.50", "placeholder": "AAPL 10 @ 182.50" },
+    { "key": "movePct", "label": "Big move alert (%)", "type": "number", "optional": true, "default": "5", "help": "Alert me when a holding moves this much in a day, once per symbol per day. Example: 5", "placeholder": "5" }
+  ],
+  "after": "Add your holdings in Settings, or just tell it \"bought 10 aapl at 182.50\". Then ask \"how am I doing\". Quotes may be delayed."
+}

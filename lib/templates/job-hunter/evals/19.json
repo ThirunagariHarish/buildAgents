@@ -1,0 +1,38 @@
+{
+ "name": "\"add company figma greenhouse\" adds a board",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "add company figma greenhouse",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T16:00:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "companies": "stripe greenhouse\nnetflix lever\nnotion ashby",
+  "keywords": "backend, platform",
+  "exclude": "intern",
+  "locations": "remote, san francisco"
+ },
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Added Figma (Greenhouse)"
+   ]
+  },
+  "memory": {
+   "co": {
+    "add": [
+     {
+      "b": "figma",
+      "s": "greenhouse"
+     }
+    ],
+    "rm": []
+   }
+  }
+ }
+}

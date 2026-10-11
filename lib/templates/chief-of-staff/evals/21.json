@@ -1,0 +1,58 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "city": "Hyderabad",
+  "icsUrl": "https://calendar.google.com/calendar/ical/me%40gmail.com/private-abc123/basic.ics"
+ },
+ "memory": {
+  "geo": {
+   "q": "hyderabad",
+   "lat": 17.38405,
+   "lon": 78.45636,
+   "name": "Hyderabad"
+  },
+  "items": [
+   {
+    "n": 1,
+    "k": "r",
+    "t": "Call mom",
+    "due": "2026-10-12T18:00",
+    "c": "2026-10-10"
+   }
+  ]
+ },
+ "name": "Brief still arrives when weather and calendar fail",
+ "trigger": {
+  "type": "schedule",
+  "at": "07:30"
+ },
+ "now": "2026-10-12T02:00:00.000Z",
+ "http": {
+  "https://api.open-meteo.com/v1/forecast?latitude=17.38405&longitude=78.45636*": {
+   "status": 500,
+   "text": "{\"error\":true,\"reason\":\"Internal\"}"
+  },
+  "https://calendar.google.com/calendar/ical/me%40gmail.com/private-abc123/basic.ics": {
+   "status": 503,
+   "text": "Service Unavailable"
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "bodyIncludes": [
+    "Weather unavailable",
+    "Couldn't read your calendar (status 503)",
+    "18:00 Call mom"
+   ]
+  },
+  "memory": {
+   "sent": {
+    "brief": "2026-10-12"
+   }
+  },
+  "http": {
+   "max": 2
+  }
+ }
+}

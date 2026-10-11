@@ -1,0 +1,38 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {},
+ "name": "Reminder on a weekday at a time",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "remind me to call mom thursday 6pm",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Thu 15 Oct 18:00",
+    "Call mom",
+    "#1"
+   ]
+  },
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "items": [
+    {
+     "n": 1,
+     "k": "r",
+     "t": "Call mom",
+     "due": "2026-10-15T18:00",
+     "c": "2026-10-12"
+    }
+   ]
+  }
+ }
+}

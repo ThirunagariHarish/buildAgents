@@ -1,0 +1,75 @@
+{
+ "name": "Weekday 16:30 close: value, day change vs previous close, P&L and movers",
+ "trigger": {
+  "type": "schedule",
+  "at": "16:30"
+ },
+ "now": "2026-10-12T20:30:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50\nMSFT 4 @ 330\nBTC 0.25 @ 41000",
+  "movePct": 5
+ },
+ "memory": {
+  "pc": {
+   "AAPL": {
+    "d": "2026-10-09",
+    "c": 250
+   },
+   "MSFT": {
+    "d": "2026-10-09",
+    "c": 400
+   }
+  }
+ },
+ "http": {
+  "https://stooq.com/q/l/?s=aapl.us,msft.us&f=sd2t2ohlcv&h&e=csv": {
+   "status": 200,
+   "text": "Symbol,Date,Time,Open,High,Low,Close,Volume\r\nAAPL.US,2026-10-12,20:30:05,251.1,256.4,250.5,255,40112233\r\nMSFT.US,2026-10-12,20:30:05,401,405.2,398.1,396,18223344\r\n"
+  },
+  "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true": {
+   "status": 200,
+   "text": "{\"bitcoin\":{\"usd\":60000,\"usd_24h_change\":2.5}}"
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Close: $19,134.00 (+$399.85)"
+   ],
+   "bodyIncludes": [
+    "Value $19,134.00 · today +$399.85 (+2.13%)",
+    "Total P&L +$5,739.00 (+42.84%) on $13,395.00 cost",
+    "Movers: BTC +2.50%, AAPL +2.00%, MSFT -1.00%",
+    "may be delayed"
+   ],
+   "bodyExcludes": [
+    "This week",
+    "first day"
+   ]
+  },
+  "memory": {
+   "lastClose": "2026-10-12",
+   "pc": {
+    "AAPL": {
+     "d": "2026-10-12",
+     "c": 255,
+     "p": 250
+    },
+    "MSFT": {
+     "d": "2026-10-12",
+     "c": 396,
+     "p": 400
+    }
+   },
+   "hist": [
+    {
+     "d": "2026-10-12",
+     "v": 19134
+    }
+   ]
+  },
+  "maxSteps": 12
+ }
+}

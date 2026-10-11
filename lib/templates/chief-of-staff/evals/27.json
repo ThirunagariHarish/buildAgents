@@ -1,0 +1,69 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "icsUrl": "https://calendar.google.com/calendar/ical/me%40gmail.com/private-abc123/basic.ics"
+ },
+ "memory": {
+  "sent": {
+   "brief": "2026-10-12"
+  },
+  "log": [
+   {
+    "d": "2026-10-11",
+    "t": "Old thing"
+   },
+   {
+    "d": "2026-10-12",
+    "t": "Call bank"
+   }
+  ],
+  "items": [
+   {
+    "n": 1,
+    "k": "t",
+    "t": "Renew passport",
+    "c": "2026-10-01",
+    "by": "2026-12-01"
+   },
+   {
+    "n": 2,
+    "k": "r",
+    "t": "Pay rent",
+    "due": "2026-10-13T09:00",
+    "c": "2026-10-10"
+   }
+  ]
+ },
+ "name": "Evening wrap after 20:30: done, open, tomorrow first event and reminders",
+ "trigger": {
+  "type": "interval",
+  "minutes": 15
+ },
+ "now": "2026-10-12T15:15:00.000Z",
+ "http": {
+  "https://calendar.google.com/calendar/ical/me%40gmail.com/private-abc123/basic.ics": "BEGIN:VCALENDAR\r\nPRODID:-//Google Inc//Google Calendar 70.9054//EN\r\nVERSION:2.0\r\nCALSCALE:GREGORIAN\r\nX-WR-TIMEZONE:Asia/Kolkata\r\nBEGIN:VTIMEZONE\r\nTZID:America/New_York\r\nBEGIN:DAYLIGHT\r\nTZOFFSETFROM:-0500\r\nTZOFFSETTO:-0400\r\nDTSTART:19700308T020000\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE\r\nBEGIN:VEVENT\r\nDTSTART:20261012T033000Z\r\nDTEND:20261012T040000Z\r\nUID:a1@google.com\r\nSUMMARY:Standup\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART;TZID=America/New_York:20261012T040000\r\nDTEND;TZID=America/New_York:20261012T050000\r\nUID:a2@google.com\r\nSUMMARY:Call with NY team\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART;VALUE=DATE:20261012\r\nDTEND;VALUE=DATE:20261013\r\nUID:a3@google.com\r\nSUMMARY:Priya's birthday\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART;TZID=Asia/Kolkata:20260907T190000\r\nDTEND;TZID=Asia/Kolkata:20260907T200000\r\nRRULE:FREQ=WEEKLY;BYDAY=MO\r\nUID:a4@google.com\r\nSUMMARY:Guitar class\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART;TZID=Asia/Kolkata:20261001T080000\r\nRRULE:FREQ=DAILY\r\nEXDATE;TZID=Asia/Kolkata:20261012T080000\r\nUID:a6@google.com\r\nSUMMARY:Daily yoga\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART:20261013T050000Z\r\nDTEND:20261013T060000Z\r\nUID:a5@google.com\r\nSUMMARY:Dentist\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART:20261013T083000Z\r\nUID:a7@google.com\r\nSUMMARY:Quarterly planning with\r\n  the finance team\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART:20261011T050000Z\r\nUID:a8@google.com\r\nSUMMARY:Brunch\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART:20261012T100000Z\r\nUID:a9@google.com\r\nSUMMARY:Cancelled sync\r\nSTATUS:CANCELLED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "1 done, 1 open"
+   ],
+   "bodyIncludes": [
+    "Call bank",
+    "1. Renew passport",
+    "Tomorrow first: 08:00 Daily yoga",
+    "09:00 Pay rent"
+   ],
+   "bodyExcludes": [
+    "Old thing"
+   ]
+  },
+  "memory": {
+   "sent": {
+    "brief": "2026-10-12",
+    "wrap": "2026-10-12"
+   }
+  }
+ }
+}

@@ -1,0 +1,57 @@
+{
+ "name": "\"alert tsla below 200\" sets a target even when quotes fail",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "alert tsla below 200",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T20:30:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50\nMSFT 4 @ 330\nBTC 0.25 @ 41000",
+  "movePct": 5
+ },
+ "memory": {
+  "targets": [
+   {
+    "s": "NVDA",
+    "p": 150,
+    "dir": "below",
+    "d": "2026-10-12"
+   }
+  ]
+ },
+ "http": {
+  "https://stooq.com/q/l/?s=tsla.us&f=sd2t2ohlcv&h&e=csv": {
+   "status": 500,
+   "text": ""
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "drops to $200.00 or lower",
+    "Alert #2"
+   ]
+  },
+  "memory": {
+   "targets": [
+    {
+     "s": "NVDA",
+     "p": 150,
+     "dir": "below",
+     "d": "2026-10-12"
+    },
+    {
+     "s": "TSLA",
+     "p": 200,
+     "dir": "below",
+     "d": "2026-10-12"
+    }
+   ]
+  }
+ }
+}

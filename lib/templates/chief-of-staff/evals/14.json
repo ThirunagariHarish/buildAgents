@@ -1,0 +1,76 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {
+  "items": [
+   {
+    "n": 1,
+    "k": "r",
+    "t": "Call mom",
+    "due": "2026-10-15T18:00",
+    "c": "2026-10-10"
+   },
+   {
+    "n": 2,
+    "k": "t",
+    "t": "Renew passport",
+    "c": "2026-10-01",
+    "by": "2026-12-01"
+   },
+   {
+    "n": 3,
+    "k": "r",
+    "t": "Standup notes",
+    "due": "2026-10-19T09:00",
+    "rep": "mon",
+    "tm": "09:00",
+    "c": "2026-10-05"
+   }
+  ]
+ },
+ "name": "Done with a number that does not exist",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "done 9",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "no #9",
+    "list"
+   ]
+  },
+  "memory": {
+   "items": [
+    {
+     "n": 1,
+     "k": "r",
+     "t": "Call mom",
+     "due": "2026-10-15T18:00",
+     "c": "2026-10-10"
+    },
+    {
+     "n": 2,
+     "k": "t",
+     "t": "Renew passport",
+     "c": "2026-10-01",
+     "by": "2026-12-01"
+    },
+    {
+     "n": 3,
+     "k": "r",
+     "t": "Standup notes",
+     "due": "2026-10-19T09:00",
+     "rep": "mon",
+     "tm": "09:00",
+     "c": "2026-10-05"
+    }
+   ]
+  }
+ }
+}

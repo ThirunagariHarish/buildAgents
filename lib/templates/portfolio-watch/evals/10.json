@@ -1,0 +1,53 @@
+{
+ "name": "Hourly check with the network down: quiet, no error",
+ "trigger": {
+  "type": "interval",
+  "minutes": 60
+ },
+ "now": "2026-10-12T18:00:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50\nMSFT 4 @ 330\nBTC 0.25 @ 41000",
+  "movePct": 5
+ },
+ "memory": {
+  "pc": {
+   "AAPL": {
+    "d": "2026-10-09",
+    "c": 250
+   },
+   "MSFT": {
+    "d": "2026-10-09",
+    "c": 400
+   }
+  }
+ },
+ "http": {
+  "https://stooq.com/q/l/?s=aapl.us,msft.us&f=sd2t2ohlcv&h&e=csv": {
+   "status": 0,
+   "text": ""
+  },
+  "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true": {
+   "status": 200,
+   "text": "<html>error</html>"
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 0
+  },
+  "error": false,
+  "memory": {
+   "pc": {
+    "AAPL": {
+     "d": "2026-10-09",
+     "c": 250
+    },
+    "MSFT": {
+     "d": "2026-10-09",
+     "c": 400
+    }
+   }
+  }
+ }
+}

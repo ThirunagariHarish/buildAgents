@@ -1,0 +1,42 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {
+  "sent": {
+   "brief": "2026-10-11",
+   "wrap": "2026-10-11"
+  },
+  "items": [
+   {
+    "n": 1,
+    "k": "r",
+    "t": "Call mom",
+    "due": "2026-10-12T18:00",
+    "c": "2026-10-10"
+   }
+  ]
+ },
+ "name": "Missed 07:30: the 15-minute check sends the brief once",
+ "trigger": {
+  "type": "interval",
+  "minutes": 15
+ },
+ "now": "2026-10-12T02:20:00.000Z",
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Good morning"
+   ],
+   "bodyIncludes": [
+    "18:00 Call mom"
+   ]
+  },
+  "memory": {
+   "sent": {
+    "brief": "2026-10-12",
+    "wrap": "2026-10-11"
+   }
+  }
+ }
+}

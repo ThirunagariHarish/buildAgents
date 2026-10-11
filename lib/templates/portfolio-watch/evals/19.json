@@ -1,0 +1,51 @@
+{
+ "name": "\"targets\" lists active alerts; \"remove target 1\" removes one",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "targets",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T20:30:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50\nMSFT 4 @ 330\nBTC 0.25 @ 41000",
+  "movePct": 5
+ },
+ "memory": {
+  "targets": [
+   {
+    "s": "TSLA",
+    "p": 200,
+    "dir": "below",
+    "d": "2026-10-05",
+    "hit": "2026-10-07"
+   },
+   {
+    "s": "NVDA",
+    "p": 150,
+    "dir": "below",
+    "d": "2026-10-12"
+   },
+   {
+    "s": "BTC",
+    "p": 80000,
+    "dir": "above",
+    "d": "2026-10-12"
+   }
+  ]
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "1. NVDA below $150.00",
+    "2. BTC above $80,000.00"
+   ],
+   "excludes": [
+    "TSLA"
+   ]
+  }
+ }
+}

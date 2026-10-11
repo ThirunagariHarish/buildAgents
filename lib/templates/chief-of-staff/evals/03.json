@@ -1,0 +1,34 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {},
+ "name": "Reminder tomorrow 9am with the words after the time",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "remind me tomorrow 9am pay rent",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "tomorrow 09:00",
+    "Pay rent"
+   ]
+  },
+  "memory": {
+   "items": [
+    {
+     "n": 1,
+     "k": "r",
+     "t": "Pay rent",
+     "due": "2026-10-13T09:00",
+     "c": "2026-10-12"
+    }
+   ]
+  }
+ }
+}

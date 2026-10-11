@@ -1,0 +1,32 @@
+{
+ "name": "\"how's aapl\" gives price, change and your position",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "how's aapl",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T20:30:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50\nMSFT 4 @ 330\nBTC 0.25 @ 41000",
+  "movePct": 5
+ },
+ "memory": {},
+ "http": {
+  "https://stooq.com/q/l/?s=aapl.us&f=sd2t2ohlcv&h&e=csv": {
+   "status": 200,
+   "text": "Symbol,Date,Time,Open,High,Low,Close,Volume\r\nAAPL.US,2026-10-12,20:30:05,251.1,256.4,250.5,255,40112233\r\n"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "AAPL $255.00, +1.55% vs today's open",
+    "You hold 10 = $2,550.00, today +$39.00, P&L +$725.00 (+39.73%) vs avg $182.50"
+   ]
+  }
+ }
+}

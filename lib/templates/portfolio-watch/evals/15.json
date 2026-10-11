@@ -1,0 +1,41 @@
+{
+ "name": "\"sold 2 aapl at 190\" records the realised gain",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "sold 2 aapl at 190",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T20:30:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50\nMSFT 4 @ 330\nBTC 0.25 @ 41000",
+  "movePct": 5
+ },
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "sold 2 AAPL at $190.00 = $380.00",
+    "Realised gain +$15.00 (avg cost $182.50)",
+    "You now hold 8 AAPL"
+   ]
+  },
+  "memory": {
+   "ledger": {
+    "trades": [
+     {
+      "s": "AAPL",
+      "q": -2,
+      "p": 190,
+      "d": "2026-10-12"
+     }
+    ],
+    "base": {},
+    "realised": 0
+   }
+  }
+ }
+}

@@ -1,0 +1,34 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "city": "Hyderabad"
+ },
+ "memory": {
+  "geo": {
+   "q": "hyderabad",
+   "lat": 17.38405,
+   "lon": 78.45636,
+   "name": "Hyderabad"
+  }
+ },
+ "name": "Malformed forecast JSON is handled",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "today",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "http": {
+  "https://api.open-meteo.com/v1/forecast?latitude=17.38405&longitude=78.45636*": "{\"daily\": {\"time\": ["
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Weather unavailable"
+   ]
+  }
+ }
+}

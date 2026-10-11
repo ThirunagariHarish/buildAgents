@@ -1,0 +1,97 @@
+{
+ "name": "A board answers 404 and another sends garbage: skipped, mentioned once",
+ "trigger": {
+  "type": "interval",
+  "minutes": 360
+ },
+ "now": "2026-10-12T16:00:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "companies": "stripe greenhouse\nnetflix lever\nnotion ashby",
+  "keywords": "backend, platform",
+  "exclude": "intern",
+  "locations": "remote, san francisco"
+ },
+ "memory": {
+  "seen": [
+   "g:stripe:7012399",
+   "g:stripe:7012345",
+   "l:netflix:8c2e4b6a-1d3f-4e5a-8b7c-9d0e1f2a3b4c",
+   "a:notion:a1b2c3d4-e5f6-4711-8899-aabbccddeeff"
+  ],
+  "matches": [
+   {
+    "k": "g:stripe:7012399",
+    "t": "Backend Engineer, Platform",
+    "c": "Stripe",
+    "l": "Remote - US",
+    "u": "https://stripe.com/jobs/search?gh_jid=7012399",
+    "d": "2026-10-11",
+    "f": "2026-10-08",
+    "s": 2
+   },
+   {
+    "k": "g:stripe:7012345",
+    "t": "Backend Engineer, Payments",
+    "c": "Stripe",
+    "l": "San Francisco, CA",
+    "u": "https://stripe.com/jobs/search?gh_jid=7012345",
+    "d": "2026-10-10",
+    "f": "2026-10-08",
+    "s": 1
+   },
+   {
+    "k": "l:netflix:8c2e4b6a-1d3f-4e5a-8b7c-9d0e1f2a3b4c",
+    "t": "Platform Engineer",
+    "c": "Netflix",
+    "l": "Remote, United States",
+    "u": "https://jobs.lever.co/netflix/8c2e4b6a-1d3f-4e5a-8b7c-9d0e1f2a3b4c",
+    "d": "2026-10-10",
+    "f": "2026-10-08",
+    "s": 1
+   },
+   {
+    "k": "a:notion:a1b2c3d4-e5f6-4711-8899-aabbccddeeff",
+    "t": "Backend Engineer, Infrastructure",
+    "c": "Notion",
+    "l": "San Francisco, California",
+    "u": "https://jobs.ashbyhq.com/notion/a1b2c3d4-e5f6-4711-8899-aabbccddeeff",
+    "d": "2026-10-07",
+    "f": "2026-10-08",
+    "s": 1
+   }
+  ]
+ },
+ "http": {
+  "https://boards-api.greenhouse.io/v1/boards/stripe/jobs": {
+   "status": 200,
+   "text": "{\"jobs\":[{\"absolute_url\":\"https://stripe.com/jobs/search?gh_jid=7012345\",\"data_compliance\":[{\"type\":\"gdpr\",\"requires_consent\":false,\"requires_processing_consent\":false,\"requires_retention_consent\":false,\"retention_period\":null}],\"internal_job_id\":5012345,\"location\":{\"name\":\"San Francisco, CA\"},\"metadata\":null,\"id\":7012345,\"updated_at\":\"2026-10-10T14:02:11-04:00\",\"requisition_id\":\"R-1201\",\"title\":\"Backend Engineer, Payments\",\"company_name\":\"Stripe\",\"first_published\":\"2026-10-09T10:00:00-04:00\"},{\"absolute_url\":\"https://stripe.com/jobs/search?gh_jid=7012399\",\"data_compliance\":[],\"internal_job_id\":5012399,\"location\":{\"name\":\"Remote - US\"},\"metadata\":null,\"id\":7012399,\"updated_at\":\"2026-10-11T09:15:00-04:00\",\"requisition_id\":\"R-1207\",\"title\":\"Backend Engineer, Platform\",\"company_name\":\"Stripe\",\"first_published\":\"2026-10-11T09:15:00-04:00\"},{\"absolute_url\":\"https://stripe.com/jobs/search?gh_jid=7012400\",\"data_compliance\":[],\"internal_job_id\":5012400,\"location\":{\"name\":\"San Francisco, CA\"},\"metadata\":null,\"id\":7012400,\"updated_at\":\"2026-10-11T09:15:00-04:00\",\"requisition_id\":\"R-1300\",\"title\":\"Backend Engineering Intern\",\"company_name\":\"Stripe\",\"first_published\":\"2026-10-11T09:15:00-04:00\"},{\"absolute_url\":\"https://stripe.com/jobs/search?gh_jid=7012401\",\"data_compliance\":[],\"internal_job_id\":5012401,\"location\":{\"name\":\"San Francisco, CA\"},\"metadata\":null,\"id\":7012401,\"updated_at\":\"2026-10-08T09:15:00-04:00\",\"requisition_id\":\"R-1301\",\"title\":\"Account Executive, Enterprise\",\"company_name\":\"Stripe\",\"first_published\":\"2026-10-08T09:15:00-04:00\"},{\"absolute_url\":\"https://stripe.com/jobs/search?gh_jid=7012402\",\"data_compliance\":[],\"internal_job_id\":5012402,\"location\":{\"name\":\"Dublin\"},\"metadata\":null,\"id\":7012402,\"updated_at\":\"2026-10-08T09:15:00-04:00\",\"requisition_id\":\"R-1302\",\"title\":\"Backend Engineer, Billing\",\"company_name\":\"Stripe\",\"first_published\":\"2026-10-08T09:15:00-04:00\"}],\"meta\":{\"total\":5}}"
+  },
+  "https://api.lever.co/v0/postings/netflix?mode=json": {
+   "status": 404,
+   "text": "{\"ok\":false,\"error\":\"Document not found\"}"
+  },
+  "https://api.ashbyhq.com/posting-api/job-board/notion": {
+   "status": 200,
+   "text": "<html><body>Bad gateway</body></html>"
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Couldn't read"
+   ],
+   "bodyIncludes": [
+    "Netflix (Lever, status 404)",
+    "Notion (Ashby, unreadable answer)"
+   ]
+  },
+  "memory": {
+   "down": {
+    "netflix": "status 404",
+    "notion": "unreadable answer"
+   }
+  }
+ }
+}

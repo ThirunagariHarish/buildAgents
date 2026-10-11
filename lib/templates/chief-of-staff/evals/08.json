@@ -1,0 +1,31 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {
+  "lists": {
+   "groceries": [
+    "milk",
+    "eggs"
+   ]
+  }
+ },
+ "name": "Show the groceries list",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "groceries",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "Groceries (2)",
+    "• milk",
+    "• eggs"
+   ]
+  }
+ }
+}

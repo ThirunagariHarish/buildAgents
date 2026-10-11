@@ -1,0 +1,35 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "eveningAt": "21:30"
+ },
+ "memory": {
+  "sent": {
+   "brief": "2026-10-12"
+  },
+  "items": [
+   {
+    "n": 1,
+    "k": "t",
+    "t": "Renew passport",
+    "c": "2026-10-01"
+   }
+  ]
+ },
+ "name": "Custom wrap time not reached yet: quiet",
+ "trigger": {
+  "type": "interval",
+  "minutes": 15
+ },
+ "now": "2026-10-12T15:15:00.000Z",
+ "expect": {
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "sent": {
+    "brief": "2026-10-12"
+   }
+  }
+ }
+}

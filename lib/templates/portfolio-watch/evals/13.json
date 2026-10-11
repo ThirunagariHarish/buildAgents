@@ -1,0 +1,31 @@
+{
+ "name": "\"how's zzzz\": unknown symbol (N/D) is explained",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "how is zzzz",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T20:30:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50\nMSFT 4 @ 330\nBTC 0.25 @ 41000",
+  "movePct": 5
+ },
+ "memory": {},
+ "http": {
+  "https://stooq.com/q/l/?s=zzzz.us&f=sd2t2ohlcv&h&e=csv": {
+   "status": 200,
+   "text": "Symbol,Date,Time,Open,High,Low,Close,Volume\r\nZZZZ.US,N/D,N/D,N/D,N/D,N/D,N/D,N/D\r\n"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "couldn't find a quote for ZZZZ"
+   ]
+  }
+ }
+}

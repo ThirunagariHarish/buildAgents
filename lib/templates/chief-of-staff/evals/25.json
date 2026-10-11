@@ -1,0 +1,85 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {
+  "sent": {
+   "brief": "2026-10-12"
+  },
+  "items": [
+   {
+    "n": 1,
+    "k": "r",
+    "t": "Stretch",
+    "due": "2026-10-12T12:00",
+    "c": "2026-10-12"
+   },
+   {
+    "n": 2,
+    "k": "r",
+    "t": "Take vitamins",
+    "due": "2026-10-12T12:00",
+    "rep": "daily",
+    "tm": "12:00",
+    "c": "2026-10-01"
+   },
+   {
+    "n": 3,
+    "k": "r",
+    "t": "Call mom",
+    "due": "2026-10-15T18:00",
+    "c": "2026-10-10"
+   }
+  ]
+ },
+ "name": "Due reminders fire once; a repeating one moves to its next time",
+ "trigger": {
+  "type": "interval",
+  "minutes": 15
+ },
+ "now": "2026-10-12T06:35:00.000Z",
+ "expect": {
+  "notify": {
+   "count": 2,
+   "titleIncludes": [
+    "Stretch",
+    "Take vitamins"
+   ],
+   "bodyIncludes": [
+    "done 1",
+    "tomorrow 12:00"
+   ],
+   "bodyExcludes": [
+    "Call mom"
+   ]
+  },
+  "memory": {
+   "items": [
+    {
+     "n": 1,
+     "k": "r",
+     "t": "Stretch",
+     "due": "2026-10-12T12:00",
+     "c": "2026-10-12",
+     "sent": "2026-10-12T12:00"
+    },
+    {
+     "n": 2,
+     "k": "r",
+     "t": "Take vitamins",
+     "due": "2026-10-13T12:00",
+     "rep": "daily",
+     "tm": "12:00",
+     "c": "2026-10-01",
+     "sent": "2026-10-12T12:00"
+    },
+    {
+     "n": 3,
+     "k": "r",
+     "t": "Call mom",
+     "due": "2026-10-15T18:00",
+     "c": "2026-10-10"
+    }
+   ]
+  }
+ }
+}

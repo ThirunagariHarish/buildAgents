@@ -1,0 +1,28 @@
+{
+ "name": "\"jobs\" with nothing found yet explains what happens next",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "new",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T16:00:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "companies": "stripe greenhouse\nnetflix lever\nnotion ashby",
+  "keywords": "backend, platform",
+  "exclude": "intern",
+  "locations": "remote, san francisco"
+ },
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "No matches yet",
+    "every 6 hours"
+   ]
+  }
+ }
+}

@@ -1,0 +1,36 @@
+{
+ "name": "First close for a new stock compares with the open and says so",
+ "trigger": {
+  "type": "schedule",
+  "at": "16:30"
+ },
+ "now": "2026-10-12T20:30:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50"
+ },
+ "memory": {},
+ "http": {
+  "https://stooq.com/q/l/?s=aapl.us&f=sd2t2ohlcv&h&e=csv": {
+   "status": 200,
+   "text": "Symbol,Date,Time,Open,High,Low,Close,Volume\r\nAAPL.US,2026-10-12,20:30:05,251.1,256.4,250.5,255,40112233\r\n"
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "bodyIncludes": [
+    "today +$39.00 (+1.55%)",
+    "AAPL: change is vs today's open (first day I see it)"
+   ]
+  },
+  "memory": {
+   "pc": {
+    "AAPL": {
+     "d": "2026-10-12",
+     "c": 255
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {},
+ "name": "A time that already passed is refused",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "remind me today 8am to water plants",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "already passed"
+   ]
+  },
+  "memory": {
+   "items": {
+    "exists": false
+   }
+  }
+ }
+}

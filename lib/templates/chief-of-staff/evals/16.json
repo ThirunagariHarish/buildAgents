@@ -1,0 +1,34 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {},
+ "name": "Today's priorities",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "top 3: gym; taxes; call bank",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "top 3",
+    "1. gym",
+    "3. call bank"
+   ]
+  },
+  "memory": {
+   "top": {
+    "d": "2026-10-12",
+    "l": [
+     "gym",
+     "taxes",
+     "call bank"
+    ]
+   }
+  }
+ }
+}

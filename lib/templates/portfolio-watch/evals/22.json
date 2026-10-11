@@ -1,0 +1,26 @@
+{
+ "name": "\"help\" lists what it understands",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "help",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T20:30:00.000Z",
+ "tz": "America/New_York",
+ "settings": {},
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "portfolio",
+    "how's aapl",
+    "bought 5 msft at 410",
+    "target nvda 150",
+    "never investment advice"
+   ]
+  }
+ }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "Chief of Staff",
+  "icon": "🧭",
+  "category": "Life",
+  "tier": "life",
+  "summary": "Runs your day: tell it what to remember in plain words and it reminds you on time, keeps your tasks and lists, and briefs you every morning and evening.",
+  "handles": [
+    "Reminders at a time or after a while (\"in 2 hours\"), and repeating ones (every Monday, weekdays)",
+    "Tasks with deadlines; flags what's overdue and due soon",
+    "Shopping and other lists, plus quick notes",
+    "07:30 morning brief: weather, today's calendar, reminders, deadlines, your top 3",
+    "Evening wrap: what you got done, what's still open, tomorrow's first event",
+    "Snooze, done and delete by number"
+  ],
+  "talk": [
+    "remind me to call mom thursday 6pm",
+    "every monday 9am standup notes",
+    "todo renew passport by dec 1",
+    "add milk, eggs to groceries",
+    "done 2",
+    "today"
+  ],
+  "setup": [
+    "Optional: add your city for the weather line in the morning brief.",
+    "Optional: paste your calendar's secret iCal address (Google Calendar → Settings → your calendar → Secret address in iCal format) so the brief lists today's events."
+  ],
+  "fields": [
+    { "key": "city", "label": "Your city", "type": "text", "help": "For the weather line in your morning brief, e.g. Hyderabad or Austin.", "placeholder": "e.g. Hyderabad", "optional": true },
+    { "key": "icsUrl", "label": "Calendar iCal address", "type": "secret", "help": "Your calendar's secret iCal link, starting with https:// (change webcal:// to https://).", "placeholder": "https://calendar.google.com/calendar/ical/…/basic.ics", "optional": true },
+    { "key": "eveningAt", "label": "Evening wrap time", "type": "time", "help": "24-hour HH:MM. Default 20:30.", "placeholder": "20:30", "optional": true, "default": "20:30" }
+  ],
+  "after": "Open its chat and say \"remind me in 1 hour to stretch\" or \"todo …\". Your first morning brief arrives at 07:30."
+}

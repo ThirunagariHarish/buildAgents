@@ -1,0 +1,24 @@
+{
+ "name": "Unknown message gets a helpful answer, not an error",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "what is the weather like",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T16:00:00.000Z",
+ "tz": "America/New_York",
+ "settings": {},
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "didn't catch that",
+    "applied 2"
+   ]
+  },
+  "error": false
+ }
+}

@@ -1,0 +1,76 @@
+{
+ "name": "\"jobs\" lists the latest matches, numbered",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "jobs",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T16:00:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "companies": "stripe greenhouse\nnetflix lever\nnotion ashby",
+  "keywords": "backend, platform",
+  "exclude": "intern",
+  "locations": "remote, san francisco"
+ },
+ "memory": {
+  "matches": [
+   {
+    "k": "g:stripe:7012399",
+    "t": "Backend Engineer, Platform",
+    "c": "Stripe",
+    "l": "Remote - US",
+    "u": "https://stripe.com/jobs/search?gh_jid=7012399",
+    "d": "2026-10-11",
+    "f": "2026-10-08",
+    "s": 2
+   },
+   {
+    "k": "g:stripe:7012345",
+    "t": "Backend Engineer, Payments",
+    "c": "Stripe",
+    "l": "San Francisco, CA",
+    "u": "https://stripe.com/jobs/search?gh_jid=7012345",
+    "d": "2026-10-10",
+    "f": "2026-10-08",
+    "s": 1
+   },
+   {
+    "k": "l:netflix:8c2e4b6a-1d3f-4e5a-8b7c-9d0e1f2a3b4c",
+    "t": "Platform Engineer",
+    "c": "Netflix",
+    "l": "Remote, United States",
+    "u": "https://jobs.lever.co/netflix/8c2e4b6a-1d3f-4e5a-8b7c-9d0e1f2a3b4c",
+    "d": "2026-10-10",
+    "f": "2026-10-08",
+    "s": 1
+   },
+   {
+    "k": "a:notion:a1b2c3d4-e5f6-4711-8899-aabbccddeeff",
+    "t": "Backend Engineer, Infrastructure",
+    "c": "Notion",
+    "l": "San Francisco, California",
+    "u": "https://jobs.ashbyhq.com/notion/a1b2c3d4-e5f6-4711-8899-aabbccddeeff",
+    "d": "2026-10-07",
+    "f": "2026-10-08",
+    "s": 1
+   }
+  ]
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "1. Backend Engineer, Platform — Stripe (Remote - US)",
+    "3. Platform Engineer — Netflix",
+    "4. Backend Engineer, Infrastructure — Notion"
+   ],
+   "link": "gh_jid=7012399"
+  },
+  "http": {
+   "max": 0
+  }
+ }
+}

@@ -1,0 +1,26 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {},
+ "name": "Help lists what it understands",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "help",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "remind me to call mom thursday 6pm",
+    "todo",
+    "groceries",
+    "snooze 1 30m",
+    "top 3"
+   ]
+  }
+ }
+}

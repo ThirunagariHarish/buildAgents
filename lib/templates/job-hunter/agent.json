@@ -1,0 +1,21 @@
+{
+  "id": "job-hunter",
+  "name": "Job Hunter",
+  "icon": "🧑‍💼",
+  "version": "1.0.0",
+  "description": "Checks the job boards of the companies you care about every 6 hours, sends one digest of new matching roles, and runs your application pipeline: interviews, follow-ups, offers.",
+  "permissions": ["notify", "memory", "http"],
+  "http": { "allow": ["boards-api.greenhouse.io", "api.lever.co", "api.ashbyhq.com"] },
+  "triggers": [
+    { "type": "interval", "minutes": 360 },
+    { "type": "schedule", "at": "09:00", "days": ["mon"] },
+    { "type": "message", "examples": ["jobs", "applied 2", "interview stripe fri 2pm", "pipeline", "follow ups", "add company figma greenhouse", "keywords: backend, platform", "help"] }
+  ],
+  "settings": [
+    { "key": "companies", "label": "Companies to watch", "type": "text", "multiline": true, "optional": true, "help": "One per line: the company's board name and where it posts jobs (greenhouse, lever or ashby). Example: stripe greenhouse", "placeholder": "stripe greenhouse" },
+    { "key": "keywords", "label": "Title keywords", "type": "text", "optional": true, "help": "Comma list; a job title must contain one of them. Example: backend, platform, data engineer", "placeholder": "backend, platform" },
+    { "key": "exclude", "label": "Skip titles with", "type": "text", "optional": true, "help": "Comma list of words that rule a job out. Example: intern, staff, manager", "placeholder": "intern, manager" },
+    { "key": "locations", "label": "Locations", "type": "text", "optional": true, "help": "Comma list; leave empty for anywhere. \"remote\" matches remote jobs. Example: remote, new york, london", "placeholder": "remote, new york" }
+  ],
+  "budget": { "steps": 120 }
+}

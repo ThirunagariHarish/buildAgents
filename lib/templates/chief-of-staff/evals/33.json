@@ -1,0 +1,28 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {},
+ "name": "Unknown message gets a helpful reply",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "blorp the flux capacitor",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "didn't catch",
+    "remind me",
+    "help"
+   ]
+  },
+  "notify": {
+   "count": 0
+  },
+  "error": false
+ }
+}

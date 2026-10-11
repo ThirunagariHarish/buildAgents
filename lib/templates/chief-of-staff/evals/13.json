@@ -1,0 +1,70 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {
+  "items": [
+   {
+    "n": 1,
+    "k": "r",
+    "t": "Call mom",
+    "due": "2026-10-15T18:00",
+    "c": "2026-10-10"
+   },
+   {
+    "n": 2,
+    "k": "t",
+    "t": "Renew passport",
+    "c": "2026-10-01",
+    "by": "2026-12-01"
+   },
+   {
+    "n": 3,
+    "k": "r",
+    "t": "Standup notes",
+    "due": "2026-10-19T09:00",
+    "rep": "mon",
+    "tm": "09:00",
+    "c": "2026-10-05"
+   }
+  ]
+ },
+ "name": "Delete by number does not count as done",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "delete 3",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "🗑 Standup notes",
+    "Deleted"
+   ]
+  },
+  "memory": {
+   "items": [
+    {
+     "n": 1,
+     "k": "r",
+     "t": "Call mom",
+     "due": "2026-10-15T18:00",
+     "c": "2026-10-10"
+    },
+    {
+     "n": 2,
+     "k": "t",
+     "t": "Renew passport",
+     "c": "2026-10-01",
+     "by": "2026-12-01"
+    }
+   ],
+   "log": {
+    "exists": false
+   }
+  }
+ }
+}

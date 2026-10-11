@@ -1,0 +1,43 @@
+{
+ "name": "\"target nvda 150\" works out the direction from the live price",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "target nvda 150",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T20:30:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50\nMSFT 4 @ 330\nBTC 0.25 @ 41000",
+  "movePct": 5
+ },
+ "memory": {},
+ "http": {
+  "https://stooq.com/q/l/?s=nvda.us&f=sd2t2ohlcv&h&e=csv": {
+   "status": 200,
+   "text": "Symbol,Date,Time,Open,High,Low,Close,Volume\r\nNVDA.US,2026-10-12,20:30:05,182,184,179,180.25,201334455\r\n"
+  }
+ },
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "NVDA is $180.25 now",
+    "drops to $150.00 or lower",
+    "Alert #1"
+   ]
+  },
+  "memory": {
+   "targets": [
+    {
+     "s": "NVDA",
+     "p": 150,
+     "dir": "below",
+     "d": "2026-10-12"
+    }
+   ]
+  }
+ }
+}

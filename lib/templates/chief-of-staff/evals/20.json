@@ -1,0 +1,86 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {
+  "city": "Hyderabad",
+  "icsUrl": "https://calendar.google.com/calendar/ical/me%40gmail.com/private-abc123/basic.ics"
+ },
+ "memory": {
+  "items": [
+   {
+    "n": 1,
+    "k": "r",
+    "t": "Call mom",
+    "due": "2026-10-12T18:00",
+    "c": "2026-10-10"
+   },
+   {
+    "n": 2,
+    "k": "t",
+    "t": "Renew passport",
+    "c": "2026-09-01",
+    "by": "2026-10-10"
+   },
+   {
+    "n": 3,
+    "k": "t",
+    "t": "File taxes",
+    "c": "2026-10-01",
+    "by": "2026-10-14"
+   }
+  ],
+  "sent": {
+   "brief": "2026-10-11",
+   "wrap": "2026-10-11"
+  }
+ },
+ "name": "Morning brief at 07:30 with weather, calendar, reminders and deadlines",
+ "trigger": {
+  "type": "schedule",
+  "at": "07:30"
+ },
+ "now": "2026-10-12T02:00:00.000Z",
+ "http": {
+  "https://geocoding-api.open-meteo.com/v1/search?name=Hyderabad&count=1": "{\"results\":[{\"id\":1269843,\"name\":\"Hyderabad\",\"latitude\":17.38405,\"longitude\":78.45636,\"elevation\":505,\"feature_code\":\"PPLA\",\"country_code\":\"IN\",\"admin1_id\":1254788,\"timezone\":\"Asia/Kolkata\",\"population\":3597816,\"country_id\":1269750,\"country\":\"India\",\"admin1\":\"Telangana\"}],\"generationtime_ms\":0.53}",
+  "https://api.open-meteo.com/v1/forecast?latitude=17.38405&longitude=78.45636*": "{\"latitude\":17.375,\"longitude\":78.5,\"generationtime_ms\":0.04,\"utc_offset_seconds\":19800,\"timezone\":\"Asia/Kolkata\",\"timezone_abbreviation\":\"GMT+5:30\",\"elevation\":505,\"daily_units\":{\"time\":\"iso8601\",\"temperature_2m_max\":\"°C\",\"temperature_2m_min\":\"°C\",\"precipitation_probability_max\":\"%\",\"weathercode\":\"wmo code\"},\"daily\":{\"time\":[\"2026-10-12\"],\"temperature_2m_max\":[30.4],\"temperature_2m_min\":[21.2],\"precipitation_probability_max\":[65],\"weathercode\":[61]}}",
+  "https://calendar.google.com/calendar/ical/me%40gmail.com/private-abc123/basic.ics": "BEGIN:VCALENDAR\r\nPRODID:-//Google Inc//Google Calendar 70.9054//EN\r\nVERSION:2.0\r\nCALSCALE:GREGORIAN\r\nX-WR-TIMEZONE:Asia/Kolkata\r\nBEGIN:VTIMEZONE\r\nTZID:America/New_York\r\nBEGIN:DAYLIGHT\r\nTZOFFSETFROM:-0500\r\nTZOFFSETTO:-0400\r\nDTSTART:19700308T020000\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE\r\nBEGIN:VEVENT\r\nDTSTART:20261012T033000Z\r\nDTEND:20261012T040000Z\r\nUID:a1@google.com\r\nSUMMARY:Standup\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART;TZID=America/New_York:20261012T040000\r\nDTEND;TZID=America/New_York:20261012T050000\r\nUID:a2@google.com\r\nSUMMARY:Call with NY team\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART;VALUE=DATE:20261012\r\nDTEND;VALUE=DATE:20261013\r\nUID:a3@google.com\r\nSUMMARY:Priya's birthday\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART;TZID=Asia/Kolkata:20260907T190000\r\nDTEND;TZID=Asia/Kolkata:20260907T200000\r\nRRULE:FREQ=WEEKLY;BYDAY=MO\r\nUID:a4@google.com\r\nSUMMARY:Guitar class\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART;TZID=Asia/Kolkata:20261001T080000\r\nRRULE:FREQ=DAILY\r\nEXDATE;TZID=Asia/Kolkata:20261012T080000\r\nUID:a6@google.com\r\nSUMMARY:Daily yoga\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART:20261013T050000Z\r\nDTEND:20261013T060000Z\r\nUID:a5@google.com\r\nSUMMARY:Dentist\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART:20261013T083000Z\r\nUID:a7@google.com\r\nSUMMARY:Quarterly planning with\r\n  the finance team\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART:20261011T050000Z\r\nUID:a8@google.com\r\nSUMMARY:Brunch\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTART:20261012T100000Z\r\nUID:a9@google.com\r\nSUMMARY:Cancelled sync\r\nSTATUS:CANCELLED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "Mon 12 Oct"
+   ],
+   "bodyIncludes": [
+    "21–30°C",
+    "65% chance of rain",
+    "umbrella",
+    "4 events",
+    "09:00 Standup",
+    "13:30 Call with NY team",
+    "All day Priya's birthday",
+    "18:00 Call mom",
+    "Overdue: Renew passport",
+    "File taxes (Wed 14 Oct)",
+    "top 3"
+   ],
+   "bodyExcludes": [
+    "Brunch",
+    "Dentist",
+    "Daily yoga",
+    "Cancelled"
+   ]
+  },
+  "memory": {
+   "sent": {
+    "brief": "2026-10-12",
+    "wrap": "2026-10-11"
+   },
+   "geo": {
+    "q": "hyderabad",
+    "lat": 17.38405,
+    "lon": 78.45636,
+    "name": "Hyderabad"
+   }
+  }
+ }
+}

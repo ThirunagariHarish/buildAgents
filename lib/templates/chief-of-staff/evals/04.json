@@ -1,0 +1,37 @@
+{
+ "tz": "Asia/Kolkata",
+ "settings": {},
+ "memory": {},
+ "name": "Repeating reminder every monday starts next week when today's time has passed",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "every monday 9am standup notes",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T04:30:00.000Z",
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "every Mon at 09:00",
+    "Mon 19 Oct",
+    "Standup notes"
+   ]
+  },
+  "memory": {
+   "items": [
+    {
+     "n": 1,
+     "k": "r",
+     "t": "Standup notes",
+     "due": "2026-10-19T09:00",
+     "rep": "mon",
+     "tm": "09:00",
+     "c": "2026-10-12"
+    }
+   ]
+  }
+ }
+}

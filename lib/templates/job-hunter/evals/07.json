@@ -1,0 +1,24 @@
+{
+ "name": "Weekly run with an empty pipeline and no matches stays quiet",
+ "trigger": {
+  "type": "schedule",
+  "at": "09:00"
+ },
+ "now": "2026-10-12T13:00:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "companies": "stripe greenhouse\nnetflix lever\nnotion ashby",
+  "keywords": "backend, platform",
+  "exclude": "intern",
+  "locations": "remote, san francisco"
+ },
+ "memory": {},
+ "expect": {
+  "notify": {
+   "count": 0
+  },
+  "memory": {
+   "lastWeekly": "2026-10-12"
+  }
+ }
+}

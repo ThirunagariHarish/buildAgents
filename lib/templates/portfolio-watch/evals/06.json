@@ -1,0 +1,60 @@
+{
+ "name": "Close with no network says quotes are unavailable, once",
+ "trigger": {
+  "type": "schedule",
+  "at": "16:30"
+ },
+ "now": "2026-10-12T20:30:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50\nMSFT 4 @ 330\nBTC 0.25 @ 41000",
+  "movePct": 5
+ },
+ "memory": {
+  "pc": {
+   "AAPL": {
+    "d": "2026-10-09",
+    "c": 250
+   },
+   "MSFT": {
+    "d": "2026-10-09",
+    "c": 400
+   }
+  }
+ },
+ "http": {
+  "https://stooq.com/q/l/?s=aapl.us,msft.us&f=sd2t2ohlcv&h&e=csv": {
+   "status": 503,
+   "text": "Service Unavailable"
+  },
+  "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true": {
+   "status": 429,
+   "text": "{\"status\":{\"error_code\":429,\"error_message\":\"You've exceeded the Rate Limit.\"}}"
+  }
+ },
+ "expect": {
+  "notify": {
+   "count": 1,
+   "titleIncludes": [
+    "quotes unavailable"
+   ],
+   "bodyIncludes": [
+    "status 503",
+    "status 429"
+   ]
+  },
+  "memory": {
+   "lastClose": "2026-10-12",
+   "pc": {
+    "AAPL": {
+     "d": "2026-10-09",
+     "c": 250
+    },
+    "MSFT": {
+     "d": "2026-10-09",
+     "c": 400
+    }
+   }
+  }
+ }
+}

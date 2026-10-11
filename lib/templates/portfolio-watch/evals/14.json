@@ -1,0 +1,43 @@
+{
+ "name": "\"bought 5 msft at 410\" updates the position and average cost",
+ "trigger": {
+  "type": "message",
+  "input": {
+   "text": "bought 5 msft at 410",
+   "from": "Sam"
+  }
+ },
+ "now": "2026-10-12T20:30:00.000Z",
+ "tz": "America/New_York",
+ "settings": {
+  "holdings": "AAPL 10 @ 182.50\nMSFT 4 @ 330\nBTC 0.25 @ 41000",
+  "movePct": 5
+ },
+ "memory": {},
+ "expect": {
+  "reply": {
+   "count": 1,
+   "includes": [
+    "bought 5 MSFT at $410.00 = $2,050.00",
+    "You now hold 9 MSFT at an average $374.44"
+   ]
+  },
+  "memory": {
+   "ledger": {
+    "trades": [
+     {
+      "s": "MSFT",
+      "q": 5,
+      "p": 410,
+      "d": "2026-10-12"
+     }
+    ],
+    "base": {},
+    "realised": 0
+   }
+  },
+  "http": {
+   "max": 0
+  }
+ }
+}
