@@ -101,7 +101,7 @@ echo "local /: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http:/
 echo "local /runtime: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:$PORT/runtime)"
 echo "api without sign-in: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:$PORT/api/agents) (401 = sign-in enforced)"
 echo "worker policy: $(curl -s -D - -o /dev/null --max-time 8 http://localhost:$PORT/agent-worker.js | grep -i '^content-security-policy' | tr -d '\r')"
-echo "accounts: $(node -e "try{const u=JSON.parse(require('fs').readFileSync('$DATA/users.json'));console.log(u.length+' user(s): '+u.map(x=>x.email+' ('+x.role+', '+x.status+')').join(', '))}catch(e){console.log('none yet')}")"
+echo "accounts: $(node -e "try{const u=JSON.parse(require('fs').readFileSync('$DATA/users.json'));console.log(u.length+' user(s): '+u.map(x=>x.email+' ('+x.role+(x.primary?', owner':'')+', '+x.status+')').join(', '))}catch(e){console.log('none yet')}")"
 echo "service sees hidden dirs: $(tr '\0' '\n' < /proc/$(systemctl show -p MainPID --value pocketbox)/environ 2>/dev/null | grep '^PB_HIDE_DIRS=' || echo none)"
 echo "mail: $(set -a; . "$ENV_FILE"; set +a; timeout 30 node -e "require('./lib/mail').verify().then(r=>console.log(r.ok?'SMTP login OK as '+process.env.PB_SMTP_USER+' via '+process.env.PB_SMTP_HOST:'NOT working: '+r.error))")"
 echo "customers' AI key: $(grep -q '^PB_ANTHROPIC_API_KEY=' "$ENV_FILE" && echo set || echo 'not set (only the owner can build)')"
