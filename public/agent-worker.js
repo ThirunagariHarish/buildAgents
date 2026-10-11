@@ -28,6 +28,7 @@ const host = {
   notify: (n) => call('notify', n),
   httpGet: (u) => call('httpGet', u),
   webhook: (k, d) => call('webhook', k, d),
+  reply: (r) => call('reply', r),
   location: () => call('location'),
   model: (p, o) => call('model', p, o),
   handoff: (p) => call('handoff', p),

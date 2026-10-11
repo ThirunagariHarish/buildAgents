@@ -295,6 +295,7 @@
     const here = r.name === 'a' && r.id === m.agentId && S.agent;
     if (!here) { if (r.name === 'home') softRefresh(600); return; }
     if (m.event === 'deleted') { toast('That agent was deleted.'); return go('#/'); }
+    if (m.event === 'chat') { if (S.tab === 'chat') appendChat(m.entries || []); return; }
     if (m.event === 'message') {
       if (!S.agent.messages.some((x) => x.id === m.message.id)) S.agent.messages.push(m.message);
       S.agent.thinking = null;
@@ -457,11 +458,15 @@
       <div class="row wrap rise" style="margin-top:14px;gap:8px">
         ${meta.templates.map((t) => `<button class="chip ${tpl === t.id ? 'on' : ''}" data-act="template" data-id="${esc(t.id)}" title="${esc(t.hint)}">${esc(t.emoji)} ${esc(t.name)}</button>`).join('')}
       </div>
+      ${S.templates.some((t) => t.tier === 'life') ? `<section style="margin-top:36px" class="rise">
+        <div class="row between" style="margin:0 4px 12px"><div class="eyebrow">Agents that run part of your life</div><a class="link small" href="#/templates">See all</a></div>
+        <div class="stack">${S.templates.filter((t) => t.tier === 'life').map(lifeCard).join('')}</div>
+      </section>` : ''}
       <section style="margin-top:36px" class="rise">
-        <div class="row between" style="margin:0 4px 12px"><div class="eyebrow">Ready in one tap</div><a class="link small" href="#/templates">See all ${S.templates.length}</a></div>
+        <div class="row between" style="margin:0 4px 12px"><div class="eyebrow">Quick alerts</div><a class="link small" href="#/templates">See all ${S.templates.length}</a></div>
         <a href="#/watch" class="glass card row watch-hero" style="text-decoration:none;gap:14px;margin-bottom:12px">
           <div class="avatar">👀</div><div style="flex:1;min-width:0"><div class="h3">Watch a page for me</div><div class="small muted">Visa bulletin, results, prices, restocks, any page. Paste a link; we tell you when it changes.</div></div><span class="faint">›</span></a>
-        <div class="tpl-grid">${S.templates.filter((t) => !['watch-page', 'price-drop', 'back-in-stock'].includes(t.id)).slice(0, 6).map(templateCard).join('')}</div>
+        <div class="tpl-grid">${S.templates.filter((t) => t.tier !== 'life' && !['watch-page', 'price-drop', 'back-in-stock'].includes(t.id)).slice(0, 4).map(templateCard).join('')}</div>
       </section>
       ${S.devices.length ? '' : `<a href="#/phones" class="glass card row rise" style="margin-top:28px;text-decoration:none;gap:14px">
         <div class="avatar">📱</div><div class="grow" style="flex:1"><div class="h3">Put Pocket Box on your phone</div><div class="small muted">Agents run on your phone, not here. Pair it once; it takes a minute.</div></div><span class="faint">›</span></a>`}
@@ -477,6 +482,12 @@
     if (!S.templates) S.templates = (await api('/api/templates')).templates;
     return S.templates;
   }
+  const lifeCard = (t) => `<a class="glass card life-card" href="#/t/${esc(t.id)}" style="text-decoration:none;display:block">
+      <div class="row" style="gap:14px;align-items:flex-start"><div class="avatar">${esc(t.icon)}</div><div style="flex:1;min-width:0">
+        <div class="h3">${esc(t.name)}</div><div class="small muted" style="margin-top:4px">${esc(t.summary)}</div>
+        ${(t.handles || []).length ? `<ul class="small" style="margin:10px 0 0;padding-left:18px;color:var(--ink-2)">${t.handles.slice(0, 3).map((h) => `<li>${esc(h)}</li>`).join('')}</ul>` : ''}
+        ${(t.talk || []).length ? `<div class="row wrap" style="gap:6px;margin-top:10px">${t.talk.slice(0, 2).map((x) => `<span class="pill">“${esc(x)}”</span>`).join('')}</div>` : ''}
+      </div><span class="faint">›</span></div></a>`;
   const templateCard = (t) => `<a class="glass tpl-card" href="#/t/${esc(t.id)}"><div class="row" style="gap:10px"><div class="avatar sm">${esc(t.icon)}</div><div class="h3">${esc(t.name)}</div></div><div class="small muted" style="margin-top:8px">${esc(t.summary)}</div></a>`;
 
   async function templatesView(cat) {
@@ -487,7 +498,8 @@
       <section style="padding:28px 0 18px" class="rise"><h1 class="display" style="font-size:clamp(36px,8vw,52px)">Ready-made <em>agents</em></h1>
         <p class="lede">Tested and signed already. Fill in a detail or two and it starts working: no build, no wait.</p></section>
       <div class="row wrap rise" style="gap:8px;margin-bottom:16px"><a class="chip ${!cat ? 'on' : ''}" href="#/templates">All</a>${cats.map((c) => `<a class="chip ${cat && decodeURIComponent(cat) === c ? 'on' : ''}" href="#/templates/${encodeURIComponent(c)}">${esc(c)}</a>`).join('')}</div>
-      <div class="tpl-grid rise">${shown.map(templateCard).join('')}</div>
+      ${shown.some((t) => t.tier === 'life') ? `<div class="eyebrow" style="margin:6px 4px 12px">Agents that run part of your life</div><div class="stack rise">${shown.filter((t) => t.tier === 'life').map(lifeCard).join('')}</div>` : ''}
+      ${shown.some((t) => t.tier !== 'life') ? `<div class="eyebrow" style="margin:28px 4px 12px">Quick alerts</div><div class="tpl-grid rise">${shown.filter((t) => t.tier !== 'life').map(templateCard).join('')}</div>` : ''}
       <p class="small muted rise" style="margin-top:24px;text-align:center">Want something else? <a class="link" href="#/">Describe it</a> and the room will design it.</p>
     </div>`;
   }
@@ -505,9 +517,11 @@
   }
   function fieldInput(f) {
     const type = f.type === 'number' ? 'number' : f.type === 'url' ? 'url' : f.type === 'secret' ? 'password' : f.type === 'time' ? 'time' : 'text';
+    const box = f.multiline && f.type !== 'secret'
+      ? `<textarea class="input" name="v_${esc(f.key)}" rows="4" data-grow placeholder="${esc(f.placeholder || '')}" ${f.optional ? '' : 'required'}>${esc(f.default || '')}</textarea>`
+      : `<input class="input" name="v_${esc(f.key)}" type="${type}" ${type === 'number' ? 'inputmode="decimal" step="any"' : ''} value="${esc(f.default || '')}" placeholder="${esc(f.placeholder || '')}" ${f.optional ? '' : 'required'} autocomplete="off">`;
     return `<label class="field"><span>${esc(f.label)}${f.optional ? ' <span class="faint">(optional)</span>' : ''}</span>
-      <input class="input" name="v_${esc(f.key)}" type="${type}" ${type === 'number' ? 'inputmode="decimal" step="any"' : ''} value="${esc(f.default || '')}" placeholder="${esc(f.placeholder || '')}" ${f.optional ? '' : 'required'} autocomplete="off">
-      ${f.help ? `<p class="tiny faint" style="margin:6px 4px 0">${esc(f.help)}</p>` : ''}</label>`;
+      ${f.help ? `<span class="small muted" style="display:block;margin:2px 4px 8px;font-weight:400">${esc(f.help)}</span>` : ''}${box}</label>`;
   }
   const runsOnPicker = () => `<div class="field"><span>Where it runs</span><div class="tabs" style="background:var(--line)" data-runs><button type="button" class="tab on" data-runs-on="cloud">In the cloud</button><button type="button" class="tab" data-runs-on="phone">On my phone</button></div>
     <p class="tiny faint" style="margin:6px 4px 0">Cloud runs on time even when your phone is off; you get a notification, or an email if no device is set up.</p></div>`;
@@ -521,10 +535,18 @@
       <section class="rise" style="padding:4px 0 18px"><div class="row" style="gap:16px"><div class="avatar xl">${esc(t.icon)}</div><div><h1 class="h2" style="font-size:26px">${esc(t.name)}</h1><div class="small muted" style="margin-top:4px">${esc(t.category)} · tested and signed</div></div></div>
         <p class="lede" style="margin-top:16px">${esc(t.summary)}</p>
         ${t.examples ? `<div class="row wrap" style="gap:6px;margin-top:12px">${t.examples.map((e) => `<span class="pill">${esc(e)}</span>`).join('')}</div>` : ''}</section>
+      ${(t.handles || []).length ? `<section class="glass card stack rise" style="margin-bottom:14px"><div class="h3">What it takes care of</div>
+        <ul class="stack small" style="margin:0;padding-left:20px;gap:6px">${t.handles.map((h) => `<li>${esc(h)}</li>`).join('')}</ul></section>` : ''}
+      ${(t.talk || []).length ? `<section class="glass card stack rise" style="margin-bottom:14px"><div class="h3">Talk to it like this</div>
+        <div class="row wrap" style="gap:8px">${t.talk.map((x) => `<span class="pill">“${esc(x)}”</span>`).join('')}</div>
+        <p class="small muted" style="margin:0">After you start it, open its Chat tab and just type.</p></section>` : ''}
+      ${(t.setup || []).length ? `<section class="glass card stack rise" style="margin-bottom:14px"><div class="h3">Connect your data (optional)</div>
+        <ol class="stack small" style="margin:0;padding-left:20px;gap:6px">${t.setup.map((x) => `<li>${esc(x)}</li>`).join('')}</ol></section>` : ''}
       <form data-form="install" data-id="${esc(t.id)}" class="glass card stack rise">
+        ${(t.fields || []).length ? '' : '<p class="small muted" style="margin:0">Nothing to fill in: it learns from what you tell it.</p>'}
         ${(t.fields || []).map(fieldInput).join('')}
         ${whenPicker(t.when)}
-        ${runsOnPicker()}
+        ${t.talks ? '<p class="small muted" style="margin:0">It runs in Pocket Box\'s cloud so it\'s always there to answer, even when your phone is off.</p>' : runsOnPicker()}
         <label class="row" style="gap:10px"><input type="checkbox" name="live" checked style="width:20px;height:20px"><span>Notify me for real right away <span class="small faint">(untick to watch it quietly first)</span></span></label>
         <div class="small muted">It may: ${(t.permissions || []).map((x) => esc((S.meta?.permissions || {})[x] || x).toLowerCase()).join('; ')}.</div>
         <div class="row"><button class="btn accent">Start ${esc(t.name)}</button></div>
@@ -632,11 +654,14 @@
 
   // ---- an agent ------------------------------------------------------------------
   async function agentView(id, tab) {
-    if (!S.agent || S.agent.id !== id) { S.tab = 'thread'; S.runs = null; S.files = null; S.file = null; S.open = new Set(); }
+    if (!S.agent || S.agent.id !== id) { S.tab = 'thread'; S.runs = null; S.files = null; S.file = null; S.open = new Set(); S.chat = null; S.firstOpen = id; }
     // A link straight to a tab (#/a/<id>/settings) opens it once, then the address goes back to the agent.
     if (['thread', 'runs', 'settings', 'code'].includes(tab)) { S.tab = tab; history.replaceState(null, '', `#/a/${id}`); }
     const [a, meta] = await Promise.all([api(`/api/agents/${id}`), S.meta ? S.meta : api('/api/meta')]);
     S.agent = a; S.meta = meta;
+    if (S.firstOpen === a.id && talks(a) && S.tab === 'thread' && !tab) S.tab = 'chat';
+    S.firstOpen = null;
+    if (S.tab === 'chat') await loadChat();
     if (S.tab === 'runs' && !S.runs) await loadRuns(false);
     if (S.tab === 'code' && !S.files) await loadFiles(false);
     return `<div class="shell has-dock">
@@ -651,6 +676,10 @@
     </div>
     <div class="dock"><div class="dock-inner">
       ${ctaView(a)}
+      ${talks(a) && a.talk.message ? `<form data-form="chat" class="composer glass slim">
+        <textarea name="text" data-grow rows="1" placeholder="Talk to ${esc(a.title)}…"></textarea>
+        <div class="bar"><span class="spacer"></span>${micButton()}<button class="send" aria-label="Send" disabled>${icon.send}</button></div>
+      </form>` : ''}
       ${a.ownerId === S.session.user.id ? `<form data-form="message" class="composer glass slim">
         <textarea name="text" data-grow rows="1" placeholder="${esc(placeholderFor(a))}"></textarea>
         <div class="bar"><span class="spacer"></span>${micButton()}<button class="send" aria-label="Send" disabled>${icon.send}</button></div>
@@ -685,19 +714,67 @@
     </section>`;
   }
 
+  const talks = (a) => !!(a.package && a.talk && (a.talk.message || a.talk.inbox));
   function tabsView(a) {
-    const tabs = [['thread', 'Thread']];
-    if (a.package) tabs.push(['runs', 'Runs'], ['settings', 'Settings']);
+    const tabs = talks(a) ? [['chat', 'Chat'], ['runs', 'Runs'], ['settings', 'Settings'], ['thread', 'Build']] : [['thread', 'Thread']];
+    if (a.package && !talks(a)) tabs.push(['runs', 'Runs'], ['settings', 'Settings']);
     if (a.stage !== 'room' && a.stage !== 'brief') tabs.push(['code', 'Code']);
     if (!tabs.some(([k]) => k === S.tab)) S.tab = 'thread';
     return `<div id="tabs" class="tabs glass" role="tablist" style="margin-top:18px">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''}" role="tab" aria-selected="${S.tab === k}" data-act="tab" data-tab="${k}">${l}</button>`).join('')}</div>`;
   }
 
   function tabBody(a) {
+    if (S.tab === 'chat') return chatTab(a);
     if (S.tab === 'runs') return runsTab(a);
     if (S.tab === 'settings') return settingsTab(a);
     if (S.tab === 'code') return codeTab(a);
     return `${tasksView(a)}<div class="thread" id="thread">${a.messages.map((m) => msgView(m)).join('')}</div><div id="thinking-slot" style="margin-top:14px">${a.running ? thinkingView(a.thinking) : ''}</div>`;
+  }
+
+  // ---- talking to an agent ----
+  async function loadChat() {
+    try { S.chat = (await api(`/api/agents/${S.agent.id}/chat`)).entries; } catch (e) { S.chat = []; toast(e.message, 'bad'); }
+  }
+  const linkBtn = (l) => (l && /^(https|mailto|tel|sms):/.test(l.url) ? `<a class="btn soft sm" style="margin-top:8px" href="${esc(l.url)}" ${l.url.startsWith('https') ? 'target="_blank" rel="noopener"' : ''}>${esc(l.label || 'Open')}</a>` : '');
+  function chatEntry(e, a) {
+    const when = new Date(e.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    if (e.role === 'you') return `<div class="chat-row you" data-id="${esc(e.id)}"><div class="bubble you">${esc(e.text)}</div><div class="tiny faint">${a.role === 'member' || (a.members || []).length ? `${esc(e.name || '')} · ` : ''}${when}</div></div>`;
+    if (e.role === 'inbox') return `<div class="chat-row inbox" data-id="${esc(e.id)}"><div class="tiny faint">📥 Arrived in its inbox · ${when}</div><div class="small muted bubble-inbox">${esc(e.text.slice(0, 280))}${e.text.length > 280 ? '…' : ''}</div></div>`;
+    return `<div class="chat-row agent" data-id="${esc(e.id)}"><div class="avatar sm">${esc(a.icon || '✳︎')}</div><div style="min-width:0"><div class="bubble agent ${e.error ? 'bad' : ''}">${esc(e.text)}</div>${linkBtn(e.link)}<div class="tiny faint">${when}</div></div></div>`;
+  }
+  function chatTab(a) {
+    const entries = S.chat || [];
+    const ex = (a.talk && a.talk.examples) || [];
+    const intro = !entries.length ? `<section class="glass card stack" style="margin-bottom:14px"><div class="h3">Talk to ${esc(a.title)}</div>
+      <p class="small muted" style="margin:0">${a.talk.message ? 'Tell it things in plain words, or ask it anything about what it keeps track of. Try one of these:' : 'Things sent to its inbox show up here, with what it did about them.'}</p></section>` : '';
+    return `${intro}<div class="chat" id="chat">${entries.map((e) => chatEntry(e, a)).join('')}</div>
+      <div id="chat-typing" class="chat-row agent" hidden><div class="avatar sm">${esc(a.icon || '✳︎')}</div><div class="bubble agent"><span class="dots"><i></i><i></i><i></i></span></div></div>
+      ${a.talk.message && ex.length ? `<div class="row wrap" style="gap:8px;margin-top:14px">${ex.map((x) => `<button class="chip" data-act="say" data-text="${esc(x)}">${esc(x)}</button>`).join('')}</div>` : ''}`;
+  }
+  function appendChat(entries) {
+    const list = $('#chat');
+    if (!list || !S.agent) return;
+    S.chat = S.chat || [];
+    for (const e of entries) {
+      if (S.chat.some((x) => x.id === e.id)) continue;
+      S.chat.push(e);
+      list.insertAdjacentHTML('beforeend', chatEntry(e, S.agent));
+    }
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  }
+  async function sayToAgent(text) {
+    const a = S.agent;
+    if (!a || !text.trim()) return;
+    const tmp = { id: `tmp${Date.now()}`, at: Date.now(), role: 'you', name: S.session.user.firstName, text };
+    appendChat([tmp]);
+    const typing = $('#chat-typing'); if (typing) typing.hidden = false;
+    try {
+      const r = await api(`/api/agents/${a.id}/chat`, { method: 'POST', body: { text } });
+      document.querySelector(`[data-id="${tmp.id}"]`)?.remove();
+      S.chat = S.chat.filter((x) => x.id !== tmp.id);
+      appendChat(r.entries);
+    } catch (e) { toast(e.message, 'bad'); }
+    finally { const t = $('#chat-typing'); if (t) t.hidden = true; }
   }
 
   const DOC_KINDS = new Set(['brief', 'plan', 'evaluation']);
@@ -802,6 +879,12 @@
         ${a.settings.map(settingField(mine)).join('')}
         ${mine ? '<div class="row"><button class="btn accent sm">Save</button></div>' : ''}
       </form>` : ''}
+      ${mine && a.inboxUrl ? `<section class="glass card stack">
+        <div class="h3">Its private inbox</div>
+        <p class="small muted" style="margin:0">Anything sent to this address goes straight to ${esc(a.title)}: bank texts, Apple Pay purchases, forwarded emails. Keep it to yourself; anyone with it can send it things.</p>
+        <input class="input mono" readonly value="${esc(a.inboxUrl)}" data-inbox-url style="font-size:13px">
+        <div class="row wrap" style="gap:8px"><button class="btn accent sm" data-act="inbox-copy">Copy address</button><button class="btn soft sm" data-act="inbox-help">Set it up on my phone</button><button class="btn ghost sm" data-act="inbox-rotate">New address</button></div>
+      </section>` : ''}
       ${mine ? `<section class="glass card stack">
         <div class="row between wrap"><div class="h3">Where it runs</div>
           <div class="tabs" style="background:var(--line)">${[['phone', 'On my phone'], ['cloud', 'In the cloud']].map(([k, l]) => `<button class="tab ${a.runsOn === k ? 'on' : ''}" data-act="where" data-where="${k}">${l}</button>`).join('')}</div></div>
@@ -1053,12 +1136,12 @@
   document.addEventListener('input', (e) => {
     const ta = e.target.closest('textarea[data-grow]');
     if (ta) grow(ta);
-    const form = e.target.closest('form[data-form="new"], form[data-form="message"]');
+    const form = e.target.closest('form[data-form="new"], form[data-form="message"], form[data-form="chat"]');
     if (form) form.querySelector('.send').disabled = !form.querySelector('textarea').value.trim();
   });
 
   document.addEventListener('keydown', (e) => {
-    const ta = e.target.closest('form[data-form="new"] textarea, form[data-form="message"] textarea');
+    const ta = e.target.closest('form[data-form="new"] textarea, form[data-form="message"] textarea, form[data-form="chat"] textarea');
     if (ta && e.key === 'Enter' && !e.shiftKey && !e.isComposing && matchMedia('(hover: hover)').matches) { e.preventDefault(); ta.form.requestSubmit(); }
     if (e.key === 'Escape') $('.scrim')?.click();
   });
@@ -1097,6 +1180,13 @@
         store.set('pb.template', null);
         S.agent = null;
         go(`#/a/${a.id}`);
+      } else if (kind === 'chat') {
+        const ta = form.querySelector('textarea');
+        const text = String(data.text || '').trim();
+        if (!text) return;
+        ta.value = ''; grow(ta); form.querySelector('.send').disabled = true;
+        if (S.tab !== 'chat') { S.tab = 'chat'; await render({ transition: false }); }
+        await sayToAgent(text);
       } else if (kind === 'message') {
         const text = String(data.text || '').trim();
         if (!text) return;
@@ -1204,6 +1294,7 @@
         { const b = $('#tab-body'); if (b) { b.innerHTML = tabBody(a); b.classList.remove('rise'); void b.offsetWidth; b.classList.add('rise'); for (const ta of b.querySelectorAll('textarea[data-grow]')) grow(ta); } }
         if (S.tab === 'settings') $('#values')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         if (S.tab === 'runs') loadRuns();
+        if (S.tab === 'chat') loadChat().then(() => { const b = $('#tab-body'); if (b && S.tab === 'chat') { b.innerHTML = chatTab(S.agent); window.scrollTo({ top: document.body.scrollHeight }); } });
         if (S.tab === 'code' && !S.files) loadFiles();
         if (S.tab === 'thread') window.scrollTo({ top: document.body.scrollHeight });
         break;
@@ -1301,6 +1392,34 @@
           <button class="btn ghost" style="width:100%" data-close>Done</button></div>`);
         break;
       }
+      case 'say': await sayToAgent(el.dataset.text); break;
+      case 'inbox-copy': { const v = $('[data-inbox-url]')?.value || ''; try { await navigator.clipboard.writeText(v); toast('Address copied.'); } catch { $('[data-inbox-url]')?.select(); } break; }
+      case 'inbox-rotate': {
+        if (!confirm('Make a new address? The old one stops working, so update your Shortcuts.')) break;
+        const r = await post(`/api/agents/${a.id}/inbox-rotate`);
+        if (r) { S.agent.inboxUrl = r.url; const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(S.agent); toast('New address ready.'); }
+        break;
+      }
+      case 'inbox-help':
+        sheet(`<div class="stack"><div class="h3">Send things to ${esc(a.title)} automatically</div>
+          <div class="small" style="font-weight:600">iPhone: every Apple Pay purchase</div>
+          <ol class="small stack" style="margin:0;padding-left:20px;gap:6px">
+            <li>Open <strong>Shortcuts</strong> → <strong>Automation</strong> → <strong>+</strong> → <strong>Transaction</strong>. Pick your cards, choose <strong>Run Immediately</strong>, tap Next.</li>
+            <li>Tap <strong>New Blank Automation</strong> → add the action <strong>Get Contents of URL</strong>.</li>
+            <li>URL: paste the address. Tap the arrow to show more: Method <strong>POST</strong>, Request Body <strong>Form</strong>, add a text field named <strong>text</strong> with: <em>Merchant</em> <em>Amount</em> <em>Card</em> (tap each to insert it from the transaction).</li>
+          </ol>
+          <div class="small" style="font-weight:600">iPhone: your bank's texts</div>
+          <ol class="small stack" style="margin:0;padding-left:20px;gap:6px">
+            <li>Shortcuts → Automation → + → <strong>Message</strong>. Sender: your bank (or Message Contains "debited"/"charged"). Run Immediately.</li>
+            <li>Add <strong>Get Contents of URL</strong> the same way, with the field <strong>text</strong> = <em>Shortcut Input</em> (the message).</li>
+          </ol>
+          <div class="small" style="font-weight:600">Android</div>
+          <p class="small muted" style="margin:0">Use an automation app (MacroDroid, Tasker, or "HTTP Shortcuts"): when an SMS from your bank arrives, send an HTTP POST to the address with the message as the body.</p>
+          <div class="small" style="font-weight:600">Email</div>
+          <p class="small muted" style="margin:0">With Zapier or IFTTT: "new email matching…" → "Webhooks: POST" to the address, body = the email text.</p>
+          <p class="tiny faint" style="margin:0">Test it: send anything to the address; it shows up in the Chat tab within seconds.</p>
+          <button class="btn ghost" style="width:100%" data-close>Done</button></div>`);
+        break;
       case 'pause-all': {
         const f = el.dataset.for;
         let until = null;

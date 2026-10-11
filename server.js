@@ -28,6 +28,8 @@ const plans = require('./lib/plans');
 const billing = require('./lib/billing');
 const shares = require('./lib/shares');
 const telegram = require('./lib/telegram');
+const chat = require('./lib/chat');
+const inbox = require('./lib/inbox');
 const mineCount = (userId) => store.listAgents().filter((x) => x.ownerId === userId).length;
 const prefs = require('./lib/prefs');
 const { deliver } = require('./lib/deliver');
@@ -40,6 +42,35 @@ function afterRun(agentId, run) {
   const fresh = store.patch(agentId, { lastRun: { at: run.at, ok: run.ok, channel: run.channel, where: run.deviceName, summary: run.notifications[0] ? run.notifications[0].title : run.ok ? 'Ran, nothing to say' : 'Failed' } });
   bus.publish(fresh || a, { event: 'run', run });
 }
+/** What an agent lets people do besides run it: talk to it, and send things to its inbox. */
+function talkOf(manifest) {
+  const ts = (manifest && manifest.triggers) || [];
+  const m = ts.find((t) => t.type === 'message');
+  return { message: !!m, examples: (m && m.examples) || [], label: (m && m.label) || '', inbox: ts.some((t) => t.type === 'inbox') };
+}
+
+/**
+ * Run an agent for something said to it (a chat) or posted to its inbox, and
+ * keep the conversation. Chat runs answer in the chat; inbox runs notify as
+ * usual and leave a note in the chat of what arrived and what it did.
+ */
+async function converse(a, { text, data, via, user }) {
+  const name = `${a.icon ? `${a.icon} ` : ''}${a.title}`;
+  const entries = [];
+  entries.push(chat.add(a.id, via === 'inbox' ? { role: 'inbox', name: 'Inbox', text } : { role: 'you', name: user.firstName, userId: user.id, text }));
+  const trigger = { type: via === 'inbox' ? 'inbox' : 'message', input: { text, ...(data ? { data } : {}), from: user ? user.firstName : 'inbox' } };
+  const run = await cloudrun.run(a, trigger, { quiet: via !== 'inbox', onRun: (r) => afterRun(a.id, r) }).catch((e) => ({ ok: false, error: e.message, replies: [], notifications: [] }));
+  if (!run) entries.push(chat.add(a.id, { role: 'agent', name, text: 'It can\'t answer yet: it is switched off or still needs its settings (Settings tab).' }));
+  else {
+    for (const r of run.replies || []) entries.push(chat.add(a.id, { role: 'agent', name, text: r.text, ...(r.link ? { link: r.link } : {}) }));
+    if (via !== 'inbox') for (const n of run.notifications || []) entries.push(chat.add(a.id, { role: 'agent', name, text: `${n.title}${n.body ? `\n${n.body}` : ''}`, ...(n.link ? { link: n.link } : {}) }));
+    if (!run.ok) entries.push(chat.add(a.id, { role: 'agent', name, error: true, text: `That didn't work: ${String(run.error || '').slice(0, 300)}` }));
+    else if (via !== 'inbox' && !(run.replies || []).length && !(run.notifications || []).length) entries.push(chat.add(a.id, { role: 'agent', name, text: 'Done.' }));
+  }
+  bus.publish(store.loadAgent(a.id) || a, { event: 'chat', entries });
+  return entries;
+}
+
 const { askClaude } = require('./lib/claude');
 const { PERMISSIONS } = require('./lib/kit/core');
 
@@ -172,6 +203,8 @@ function agentView(a, user) {
     package: rec ? { version: manifest.version, channel: rec.channel, publishedAt: rec.publishedAt, permissions: manifest.permissions, triggers: manifest.triggers, http: manifest.http || null, evals: rec.package.evals, history: rec.history, commit: rec.package.commit } : null,
     settings: manifest ? settings.view(a.id, manifest) : [],
     missingSettings: manifest ? settings.missing(a.id, manifest) : (a.missingSettings || []),
+    talk: talkOf(manifest),
+    inboxUrl: manifest && talkOf(manifest).inbox && a.ownerId === user.id ? inbox.urlFor(a.id) : null,
   };
 }
 
@@ -264,6 +297,23 @@ const server = http.createServer(async (req, res) => {
       console.log(`stripe ${event.type}: ${what}`);
       bus.broadcast({ event: 'users' }, { adminsOnly: true });
       return json(res, 200, { received: true });
+    }
+    // ---- an agent's private inbox address (the secret in the path is the key) ----
+    const inm = p.match(/^\/in\/([\w-]{20,40})$/);
+    if (inm) {
+      if (req.method !== 'POST') return json(res, 405, { error: 'Send it with POST.' });
+      const agentId = inbox.agentFor(inm[1]);
+      const a = agentId && store.loadAgent(agentId);
+      const rec = a && packages.load(a.id);
+      if (!a || !rec || !talkOf(rec.package.manifest).inbox) return json(res, 404, { error: 'No such inbox.' });
+      if (auth.limited(`inbox:${a.id}`, 120, 3600 * 1000) || auth.limited(`inbox:ip:${ip}`, 600, 3600 * 1000)) return json(res, 429, { error: 'Too many messages this hour.' });
+      const raw = await readRaw(req, 64000).catch(() => null);
+      if (raw === null) return json(res, 413, { error: 'Too large.' });
+      const got = inbox.parse(raw, req.headers['content-type']);
+      if (!got.text.trim()) return json(res, 400, { error: 'Nothing to read: send some text.' });
+      json(res, 202, { ok: true, agent: a.title });
+      converse(a, { text: got.text, data: got.data, via: 'inbox' }).catch((e) => console.error(`inbox ${a.id}: ${e.message}`));
+      return;
     }
     // ---- a native app pairing with a code from the Studio (no token yet) ----
     if (p === '/api/device/pair-code' && req.method === 'POST') {
@@ -561,7 +611,7 @@ async function studioApi(req, res, p, url, user) {
   // People it is shared with may look, see its runs, run it, and leave.
   const memberOnly = !canManage(user, a);
   const memberMay = (!action && req.method === 'GET') || (action === 'runs' && req.method === 'GET' && !sub) || (action === 'run' && req.method === 'POST')
-    || (action === 'members' && req.method === 'DELETE' && sub === user.id);
+    || (action === 'members' && req.method === 'DELETE' && sub === user.id) || action === 'chat';
   if (memberOnly && !memberMay) return json(res, 403, { error: 'Only the agent\'s owner can do that.' });
 
   if (!action && req.method === 'GET') return json(res, 200, agentView(a, user));
@@ -574,6 +624,8 @@ async function studioApi(req, res, p, url, user) {
     bus.stop(a.id);
     try { packages.setChannel(a.id, 'off'); } catch {}
     shares.revoke(a.id);
+    inbox.revoke(a.id);
+    chat.remove(a.id);
     store.deleteAgent(a.id);
     bus.publish(a, { event: 'deleted' });
     return json(res, 200, { ok: true });
@@ -657,6 +709,20 @@ async function studioApi(req, res, p, url, user) {
     } catch (e) { return json(res, e.status || 500, { error: e.message }); }
     finally { bus.finish(a.id); }
   }
+  if (action === 'chat' && req.method === 'GET') return json(res, 200, { entries: chat.list(a.id) });
+  if (action === 'chat' && req.method === 'POST') {
+    const rec = packages.load(a.id);
+    if (!rec || !talkOf(rec.package.manifest).message) return json(res, 409, { error: 'This agent doesn\'t take messages. Tell the crew instead.' });
+    const b = await readBody(req).catch(() => ({}));
+    const text = String(b.text || '').trim().slice(0, 4000);
+    if (!text) return json(res, 400, { error: 'Write something first.' });
+    if (auth.limited(`chat:${a.id}:${user.id}`, 120, 3600 * 1000)) return json(res, 429, { error: 'That\'s a lot of messages this hour. Try again in a bit.' });
+    return json(res, 200, { entries: await converse(a, { text, via: 'chat', user }) });
+  }
+  if (action === 'inbox-rotate' && req.method === 'POST') {
+    if (a.ownerId !== user.id) return json(res, 403, { error: 'Only the agent\'s owner can change its inbox.' });
+    return json(res, 200, { url: inbox.rotate(a.id) });
+  }
   if (action === 'share' && req.method === 'POST') {
     if (a.ownerId !== user.id) return json(res, 403, { error: 'Only the agent\'s owner can share a copy.' });
     if (!packages.load(a.id)) return json(res, 409, { error: 'It has to be built before it can be shared.' });
@@ -679,6 +745,7 @@ async function studioApi(req, res, p, url, user) {
     if (a.ownerId !== user.id) return json(res, 403, { error: 'Only the agent\'s owner chooses where it runs.' });
     const b = await readBody(req).catch(() => ({}));
     if (!['phone', 'cloud'].includes(b.runsOn)) return json(res, 400, { error: 'Choose phone or cloud.' });
+    { const rec = packages.load(a.id); const t = rec ? talkOf(rec.package.manifest) : {}; if (b.runsOn === 'phone' && (t.message || t.inbox)) return json(res, 409, { error: 'You talk to this agent and it keeps one memory, so it runs in the cloud.' }); }
     a = store.patch(a.id, { runsOn: b.runsOn });
     return json(res, 200, agentView(a, user));
   }
@@ -859,6 +926,22 @@ setTimeout(() => {
   }
 }, 8000);
 scheduler.start({ onCloudRun: afterRun });
+telegram.onTalk({
+  // The agents a person can talk to: their own and ones shared with them that take messages.
+  list: (userId) => {
+    const u = auth.getUser(userId);
+    return store.listAgents().filter((a) => canSee(u, a) && (a.ownerId === userId || isMember(u, a)))
+      .filter((a) => { const rec = packages.load(a.id); return rec && rec.channel !== 'off' && talkOf(rec.package.manifest).message; })
+      .map((a) => ({ id: a.id, title: a.title, icon: a.icon }));
+  },
+  say: async (userId, agentId, text) => {
+    const u = auth.getUser(userId);
+    const a = store.loadAgent(agentId);
+    if (!u || u.status !== 'approved' || !a) return ['That agent is no longer available.'];
+    const entries = await converse(a, { text, via: 'chat', user: u });
+    return entries.filter((e) => e.role === 'agent').map((e) => `${e.text}${e.link ? `\n${e.link.label}: ${e.link.url}` : ''}`);
+  },
+});
 telegram.start().catch((e) => console.error(`telegram: ${e.message}`));
 
 let stopping = false;

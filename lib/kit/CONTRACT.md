@@ -25,7 +25,7 @@ An agent is three things in this repository. Pocket Box signs them into a packag
 ```
 
 - `permissions`: only what the code uses. `notify`, `memory`, `location`, `http` (with `http.allow` host names), `model`, `handoff`, `webhook` (with `webhook.settings`).
-- `triggers`: `schedule` (`at` "HH:MM" in the phone's time zone, optional `days`), `interval` (`minutes`, 15 to 1440), `manual` (a button, optional `label`), `open` (each time the Runtime opens).
+- `triggers`: `schedule` (`at` "HH:MM" in the phone's time zone, optional `days`), `interval` (`minutes`, 15 to 1440), `manual` (a button, optional `label`), `open` (each time the Runtime opens), `message` (the owner talks to it: `ctx.input.text` is what they wrote, `ctx.input.from` their first name; optional `examples`, up to 8 short messages shown as suggestions), `inbox` (it has a private web address; text posted there, such as a bank text forwarded by an iPhone Shortcut or an Apple Pay transaction, arrives as `ctx.input.text`, and JSON as `ctx.input.data`). An agent with `message` or `inbox` runs in Pocket Box's cloud, keeping one memory.
 - `triggers[].inputs` (manual trigger only, at most 5): questions asked when the owner taps Run, e.g. `{ "type": "manual", "label": "Log it", "inputs": [{ "key": "amount", "label": "How many?", "type": "number" }, { "key": "how", "label": "How was it?", "type": "choice", "options": ["Good", "Bad"] }] }`. Types: `text`, `number`, `choice` (2-8 `options`). The code reads `ctx.input.amount`; scenarios set `"trigger": { "type": "manual", "input": { "amount": 2 } }`.
 - `http.allowFromSettings`: setting keys (type `url` or `secret`) whose https address the agent may also read, e.g. a page the owner chooses. Prefer `http.allow` when the host is fixed.
 - `webhook.settings`: setting keys (type `url` or `secret`) holding hook addresses the owner pastes in (a Slack or Discord incoming webhook, Home Assistant, IFTTT, Zapier). The agent names the setting, never an address: `ctx.webhook.send("slackHook", { text: "..." })`. Slack and Discord take `{ "text": ... }` / `{ "content": ... }`.
@@ -60,18 +60,34 @@ function parseIcs(text, day) { /* plain JavaScript helpers are fine */ return []
 | `ctx.input` | | what the owner typed or chose when they tapped Run (see inputs below), else `{}` |
 | `ctx.log(...)` | | writes to the run history |
 | `await ctx.memory.get(key)` / `set(key, value)` | `memory` | JSON values, kept on the phone |
-| `await ctx.notify({ title, body })` | `notify` | shows a notification (in shadow mode it is only recorded) |
+| `await ctx.notify({ title, body, link })` | `notify` | shows a notification (in shadow mode it is only recorded). Optional `link: { url, label }` (https, mailto, tel or sms) is a one-tap action: a prefilled email, a call, a payment page |
 | `await ctx.http.get(url)` | `http` | `{ status, text }`, https only, hosts in `http.allow` |
 | `await ctx.webhook.send(key, data)` | `webhook` | POSTs `data` as JSON to the address in setting `key` (listed in `webhook.settings`); `{ status, sent, held }`. In shadow mode (or while snoozed) nothing is sent: `held` is `true`. `status` 0 with `held` false means the hook could not be reached. At most 10 per run |
+| `await ctx.reply(text, { link })` | | answers the person who messaged it, in the chat (at most 5 per run); for `inbox` runs it is a note in the chat |
 | `await ctx.location.current()` | `location` | `{ lat, lon }` or `null` |
 | `await ctx.model.generate(prompt, { maxWords })` | `model` | text, or `null` when no model is available: always handle `null` |
 | `await ctx.handoff(prompt)` | `handoff` | text from the owner's Studio, or `null`; use only for hard reasoning |
+
+Memory: up to 300 KB per key and 1 MB per agent in the cloud. Keep records compact (short keys, numbers not strings, trim old entries).
+
+## Agents that run part of someone's life
+
+The best agents take a whole job off the owner, not one alert. They:
+
+- **Take input in plain words.** With a `message` trigger the owner types "spent 42 at Costco", "remind me to call mom Thursday 6pm", "how much on food this month?". Parse with rules first (numbers, dates, keywords) and use `ctx.model.generate` only when the rules can't tell, always handling `null`. Understand corrections ("no, that was groceries") and "undo".
+- **Keep a running record in memory** (a ledger, a task list, a pipeline) and answer questions about it with `ctx.reply`.
+- **Act on their own schedule**: a morning brief, a check every 15 minutes for due reminders, a weekly review, an alert the moment something crosses a line. Say only what matters; never repeat yourself.
+- **Prepare the action, let the owner finish it with one tap**: a `link` to a prefilled email (`mailto:...?subject=...&body=...`), a phone call (`tel:`), the page to pay or cancel. Never pretend to have done something it can't do.
+- **Explain themselves**: replies are short, specific and use the owner's numbers ("Food: $312 of $400, 78%"). Every reply says what changed.
+- **Have a "help" answer** listing what you can say to them, with 3-4 examples.
 
 Rules: prefer plain code and rules over models. Handle every failure (no network, empty data, `null` model) with a clear message or by doing nothing. Never notify the same thing twice: use memory. Keep runs short.
 
 ## evals/*.json
 
-At least three scenarios: a normal run, an edge case, and a failure the agent must handle.
+At least three scenarios: a normal run, an edge case, and a failure the agent must handle. Agents you talk to need a scenario for each kind of message they understand.
+
+A message scenario: `"trigger": { "type": "message", "input": { "text": "spent 42 at costco", "from": "Sam" } }` with `"expect": { "reply": { "count": 1, "includes": ["42", "Groceries"] } }` (`reply` also takes `min`, `excludes` and `link`: text the reply's link must contain). An inbox scenario uses `"type": "inbox"` the same way. `notify` takes `link` too.
 
 For a webhook agent: scenarios record what `ctx.webhook.send` sent; check it with `"expect": { "webhook": { "count": 1, "includes": ["Standup"] } }` (also `min`, `max`). `"webhookStatus": 500` makes every send fail, to test that case.
 

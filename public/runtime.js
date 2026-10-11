@@ -539,7 +539,8 @@
           <div style="flex:1;min-width:0"><div class="h3" style="font-size:16.5px">${esc(a.title)}</div><div class="small muted" style="overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical">${esc(line)}</div></div>
           ${pill}
         </div>
-        ${miss ? `<div class="row" style="margin-top:14px;justify-content:flex-end"><a class="btn accent sm" href="/#/a/${esc(a.agentId)}/settings">Fill them in</a></div>` : ''}
+        ${miss ? `<div class="row" style="margin-top:14px;justify-content:flex-end"><a class="btn accent sm" href="/#/a/${esc(a.agentId)}/settings">Fill them in</a></div>`
+          : (a.package?.manifest?.triggers || []).some((t) => t.type === 'message') ? `<div class="row" style="margin-top:14px;justify-content:flex-end"><a class="btn sm" href="/#/a/${esc(a.agentId)}/chat">Talk to it</a></div>` : ''}
         ${runnable(a) ? `<div class="row" style="margin-top:14px;justify-content:space-between"><span class="tiny faint">v${esc(a.package.manifest.version)} · signed ✓</span><button class="btn sm" data-act="run" data-id="${esc(a.agentId)}" ${R.running.has(a.agentId) ? 'disabled' : ''}>${R.running.has(a.agentId) ? '<span class="spin"></span>' : 'Run now'}</button></div>` : ''}
       </article>`;
     }).join('')}</div>`;
