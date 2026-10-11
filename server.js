@@ -30,6 +30,7 @@ const shares = require('./lib/shares');
 const telegram = require('./lib/telegram');
 const chat = require('./lib/chat');
 const inbox = require('./lib/inbox');
+const updates = require('./lib/updates');
 const mineCount = (userId) => store.listAgents().filter((x) => x.ownerId === userId).length;
 const prefs = require('./lib/prefs');
 const { deliver } = require('./lib/deliver');
@@ -39,7 +40,7 @@ const { cleanInputs } = require('./lib/kit/core');
 function afterRun(agentId, run) {
   const a = store.loadAgent(agentId);
   if (!a) return;
-  const fresh = store.patch(agentId, { lastRun: { at: run.at, ok: run.ok, channel: run.channel, where: run.deviceName, summary: run.notifications[0] ? run.notifications[0].title : run.ok ? 'Ran, nothing to say' : 'Failed' } });
+  const fresh = store.patch(agentId, { lastRun: { at: run.at, ok: run.ok, channel: run.channel, where: run.deviceName, summary: run.notifications[0] ? run.notifications[0].title : (run.replies || [])[0] ? String(run.replies[0].text).split('\n')[0].slice(0, 80) : run.ok ? 'Checked, nothing new' : 'Failed' } });
   bus.publish(fresh || a, { event: 'run', run });
 }
 /** What an agent lets people do besides run it: talk to it, and send things to its inbox. */
@@ -204,6 +205,7 @@ function agentView(a, user) {
     settings: manifest ? settings.view(a.id, manifest) : [],
     missingSettings: manifest ? settings.missing(a.id, manifest) : (a.missingSettings || []),
     talk: talkOf(manifest),
+    updates: updates.list(user.id, { agentId: a.id, limit: 60 }),
     inboxUrl: manifest && talkOf(manifest).inbox && a.ownerId === user.id ? inbox.urlFor(a.id) : null,
   };
 }
@@ -523,6 +525,12 @@ async function studioApi(req, res, p, url, user) {
 
   // ---- push (Studio notifications and agent wake-ups) ----
   if (p === '/api/push/key' && req.method === 'GET') return json(res, 200, { publicKey: push.publicKey(), devices: push.count(user.id) });
+  if (p === '/api/updates' && req.method === 'GET') return json(res, 200, { updates: updates.list(user.id, { limit: 150 }), unread: updates.unread(user.id), devices: push.count(user.id) });
+  if (p === '/api/updates/seen' && req.method === 'POST') { updates.markSeen(user.id); return json(res, 200, { ok: true }); }
+  if (p === '/api/push/test' && req.method === 'POST') {
+    const r = await push.broadcast({ title: '🔔 Pocket Box', body: 'Notifications work. Your agents will reach you like this.', url: '/#/', tag: `test:${Date.now()}`, telegram: false }, [user.id]).catch(() => ({ sent: 0 }));
+    return json(res, 200, { sent: r.sent || 0, devices: push.count(user.id) });
+  }
   if (p === '/api/push/subscribe' && req.method === 'POST') {
     const b = await readBody(req).catch(() => ({}));
     try { push.subscribe(b.subscription, { userId: user.id, ua: req.headers['user-agent'] }); return json(res, 200, { ok: true }); }
@@ -626,6 +634,7 @@ async function studioApi(req, res, p, url, user) {
     shares.revoke(a.id);
     inbox.revoke(a.id);
     chat.remove(a.id);
+    updates.removeAgent(a.id, [a.ownerId, ...(a.members || []).map((m) => m.userId)]);
     store.deleteAgent(a.id);
     bus.publish(a, { event: 'deleted' });
     return json(res, 200, { ok: true });
@@ -925,6 +934,12 @@ setTimeout(() => {
     try { crew.resume(a); console.log(`  resumed ${a.title}`); } catch (e) { console.error(`resume ${a.id}: ${e.message}`); }
   }
 }, 8000);
+// Phones can't run anything in the background, so an agent that doesn't need
+// the phone's location runs in the cloud, where it runs on time and notifies.
+for (const a of store.listAgents()) {
+  const rec = packages.load(a.id);
+  if (rec && a.runsOn !== 'cloud' && !(rec.package.manifest.permissions || []).includes('location')) store.patch(a.id, { runsOn: 'cloud' });
+}
 scheduler.start({ onCloudRun: afterRun });
 telegram.onTalk({
   // The agents a person can talk to: their own and ones shared with them that take messages.

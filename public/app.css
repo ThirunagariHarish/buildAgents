@@ -400,3 +400,47 @@ body:not([data-tab="thread"]):not([data-tab="chat"]) .shell.has-dock { padding-b
 .dots { display: inline-flex; gap: 4px; } .dots i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .35; animation: blink 1.2s infinite; } .dots i:nth-child(2) { animation-delay: .2s; } .dots i:nth-child(3) { animation-delay: .4s; }
 @keyframes blink { 50% { opacity: 1; } }
 body[data-tab="chat"] .cta [data-act="channel"][data-channel="shadow"] { display: none; }
+
+/* ===== The simple app ===== */
+.avatar.lg { width: 60px; height: 60px; border-radius: 20px; font-size: 32px; }
+.ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Bottom tab bar */
+body.has-nav .shell { padding-bottom: calc(108px + env(safe-area-inset-bottom)); }
+.nav { position: fixed; z-index: 40; left: 50%; transform: translateX(-50%); bottom: calc(12px + env(safe-area-inset-bottom)); width: min(460px, calc(100vw - 24px));
+  display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px; border-radius: 26px;
+  background: var(--glass-strong); backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  box-shadow: inset 0 0 0 1px var(--glass-edge), var(--shadow-lift); }
+.nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 0 6px; border-radius: 20px; color: var(--muted); text-decoration: none; font-size: 11.5px; font-weight: 600; }
+.nav a.on { color: var(--ink); background: var(--line); }
+.nav .ni { position: relative; display: grid; place-items: center; height: 24px; }
+.nav .badge { position: absolute; top: -5px; right: -11px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--bad); color: #fff; font-size: 11px; line-height: 18px; text-align: center; font-weight: 700; }
+
+/* Updates */
+.update { cursor: pointer; transition: transform .15s ease; }
+.update:active { transform: scale(.985); }
+.u-title { font-weight: 650; font-size: 16px; margin-top: 3px; line-height: 1.3; }
+.u-body { color: var(--ink-2); font-size: 14.5px; margin-top: 3px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
+.todo-row { gap: 12px; text-decoration: none; padding: 14px 16px; }
+.agent-row { gap: 14px; text-decoration: none; color: inherit; }
+.attn { margin-bottom: 14px; border: 1.5px solid var(--accent-soft); }
+.notify-card { margin-bottom: 16px; border: 1.5px solid var(--accent-soft); }
+
+/* A notification that arrives while the app is open */
+.banner { position: fixed; z-index: 60; left: 50%; top: calc(10px + env(safe-area-inset-top)); width: min(460px, calc(100vw - 24px));
+  transform: translate(-50%, -140%); transition: transform .35s cubic-bezier(.2,.8,.2,1);
+  display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 22px; cursor: pointer;
+  background: var(--glass-strong); backdrop-filter: blur(24px) saturate(1.5); -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  box-shadow: inset 0 0 0 1px var(--glass-edge), var(--shadow-lift); color: var(--ink); }
+.banner.in { transform: translate(-50%, 0); }
+
+/* Agent page */
+.chips-scroll { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; padding-bottom: 2px; }
+.chips-scroll::-webkit-scrollbar { display: none; }
+.chips-scroll .chip { flex: none; }
+.chips-scroll:empty { display: none; }
+.customize .cz-sec { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 10px; }
+.customize .cz-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.customize .cz-t { font-weight: 650; }
+.sheet:has(.customize) { max-height: 88vh; overflow-y: auto; }

@@ -97,6 +97,10 @@
     send: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
     phone: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M11 18.5h2"/></svg>',
     people: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.8a3.4 3.4 0 010 6.4M18 14.8c1.8.8 3 2.6 3.5 5.2"/></svg>',
+    bell: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 1112 0c0 5 2 6.5 2 6.5H4S6 14 6 9z"/><path d="M10 19.5a2.2 2.2 0 004 0"/></svg>',
+    grid: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>',
+    plus: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
+    me: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.2-6 8-6s7 2 8 6"/></svg>',
     user: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.2-6 8-6s7 2 8 6"/></svg>',
   };
 
@@ -220,6 +224,8 @@
 
     let html;
     try { html = await view(r); } catch (e) { html = errorView(e); }
+    const navOn = S.session?.authed && NAV_ON[r.name] !== undefined && !(r.name === 'a');
+    if (navOn) html += bottomNav(NAV_ON[r.name]);
     if (ticket !== rendering) return;
     const swap = () => { app.innerHTML = html; after(r); };
     if (transition && document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(swap);
@@ -232,7 +238,9 @@
       case 'signup': return signupView();
       case 'forgot': return forgotView();
       case 'reset': return resetView(r.id);
-      case 'a': return agentView(r.id, r.rest[0]);
+      case 'a': return agentPage(r.id, r.rest[0]);
+      case 'agents': return agentsListView();
+      case 'new': return newView();
       case 'phones': return phonesView();
       case 'people': return peopleView();
       case 'me': return meView();
@@ -242,11 +250,12 @@
       case 't': return templateView(r.id);
       case 'watch': return watchView();
       case 's': return shareView(r.id);
-      default: return homeView();
+      default: return updatesView();
     }
   }
 
   function after(r) {
+    document.body.classList.toggle('has-nav', !!(S.session?.authed && NAV_ON[r.name] !== undefined && r.name !== 'a'));
     document.body.dataset.tab = r.name === 'a' ? S.tab : 'thread';
     window.scrollTo({ top: r.name === 'a' && S.tab === 'thread' ? document.body.scrollHeight : 0, behavior: 'instant' });
     for (const ta of app.querySelectorAll('textarea[data-grow]')) grow(ta);
@@ -291,6 +300,7 @@
     const r = route();
     if (m.event === 'users' && r.name === 'people') return render({ transition: false });
     if (m.event === 'prefs' && r.name === 'me') return render({ transition: false });
+    if (m.event === 'update') return onUpdate(m.update);
     if (!m.agentId) return;
     const here = r.name === 'a' && r.id === m.agentId && S.agent;
     if (!here) { if (r.name === 'home') softRefresh(600); return; }
@@ -299,6 +309,12 @@
     if (m.event === 'message') {
       if (!S.agent.messages.some((x) => x.id === m.message.id)) S.agent.messages.push(m.message);
       S.agent.thinking = null;
+      // The simple agent page shows your change requests and Pocket Box's answers in its conversation.
+      if (!$('#thread') && $('#chat')) {
+        const mm = m.message;
+        if (mm.kind === 'owner' || mm.agentId === 'system' || mm.kind === 'answer') appendConvo([{ kind: 'crew', id: mm.id, at: mm.ts, mine: mm.kind === 'owner', text: mm.kind === 'owner' ? mm.content : (mm.summary || mm.content) }]);
+        return;
+      }
       const list = $('#thread');
       if (list && S.tab === 'thread') {
         const near = innerHeight + scrollY > document.body.scrollHeight - 240;
@@ -321,7 +337,8 @@
       return;
     }
     if (m.event === 'tasks') { S.agent.tasks = m.tasks; const t = $('#tasks'); if (t) t.outerHTML = tasksView(S.agent); return; }
-    if (m.event === 'run') { if (S.tab === 'runs') { S.runs = null; softRefresh(100); loadRuns(); } else toast(`${S.agent.icon || '⚡'} New run from ${m.run.deviceName}`); return; }
+    // What a run said arrives as an update (banner and conversation); the run itself needs no toast.
+    if (m.event === 'run') { if (S.tab === 'runs' && $('#tab-body')) { S.runs = null; softRefresh(100); loadRuns(); } return; }
     softRefresh();
   }
 
@@ -402,10 +419,7 @@
     const u = S.session?.user;
     return `<header class="top">
       <a class="brand" href="#/"><span class="mark"></span><span>Pocket Box</span></a>
-      <span class="spacer"></span>${extra}
-      <a class="btn ghost icon" href="#/phones" title="Your phones" aria-label="Your phones">${icon.phone}</a>
-      ${u?.role === 'admin' ? `<a class="btn ghost icon" href="#/people" title="People" aria-label="People">${icon.people}</a>` : ''}
-      <a class="btn ghost icon" href="#/me" title="You" aria-label="You">${icon.user}</a>
+      <span class="spacer"></span>${extra}${u ? '' : ''}
     </header>`;
   }
 
@@ -531,26 +545,22 @@
     const t = S.templates.find((x) => x.id === id);
     if (!t) return errorView(new Error('No such ready-made agent.'));
     return `<div class="shell">
-      <header class="top"><a class="btn ghost icon" href="#/templates" aria-label="Back">${icon.back}</a></header>
+      <header class="top"><a class="btn ghost icon" href="#/new" aria-label="Back">${icon.back}</a></header>
       <section class="rise" style="padding:4px 0 18px"><div class="row" style="gap:16px"><div class="avatar xl">${esc(t.icon)}</div><div><h1 class="h2" style="font-size:26px">${esc(t.name)}</h1><div class="small muted" style="margin-top:4px">${esc(t.category)} · tested and signed</div></div></div>
         <p class="lede" style="margin-top:16px">${esc(t.summary)}</p>
         ${t.examples ? `<div class="row wrap" style="gap:6px;margin-top:12px">${t.examples.map((e) => `<span class="pill">${esc(e)}</span>`).join('')}</div>` : ''}</section>
-      ${(t.handles || []).length ? `<section class="glass card stack rise" style="margin-bottom:14px"><div class="h3">What it takes care of</div>
-        <ul class="stack small" style="margin:0;padding-left:20px;gap:6px">${t.handles.map((h) => `<li>${esc(h)}</li>`).join('')}</ul></section>` : ''}
-      ${(t.talk || []).length ? `<section class="glass card stack rise" style="margin-bottom:14px"><div class="h3">Talk to it like this</div>
-        <div class="row wrap" style="gap:8px">${t.talk.map((x) => `<span class="pill">“${esc(x)}”</span>`).join('')}</div>
-        <p class="small muted" style="margin:0">After you start it, open its Chat tab and just type.</p></section>` : ''}
-      ${(t.setup || []).length ? `<section class="glass card stack rise" style="margin-bottom:14px"><div class="h3">Connect your data (optional)</div>
-        <ol class="stack small" style="margin:0;padding-left:20px;gap:6px">${t.setup.map((x) => `<li>${esc(x)}</li>`).join('')}</ol></section>` : ''}
+      ${(t.handles || []).length ? `<section class="glass card stack rise" style="margin-bottom:14px"><div class="h3">What it does</div>
+        <ul class="stack small" style="margin:0;padding-left:20px;gap:6px">${t.handles.slice(0, 5).map((h) => `<li>${esc(h)}</li>`).join('')}</ul>
+        ${(t.talk || []).length ? `<div class="small muted" style="margin-top:4px">You can tell it things like:</div><div class="row wrap" style="gap:6px">${t.talk.slice(0, 4).map((x) => `<span class="pill">“${esc(x)}”</span>`).join('')}</div>` : ''}</section>` : ''}
       <form data-form="install" data-id="${esc(t.id)}" class="glass card stack rise">
-        ${(t.fields || []).length ? '' : '<p class="small muted" style="margin:0">Nothing to fill in: it learns from what you tell it.</p>'}
-        ${(t.fields || []).map(fieldInput).join('')}
+        ${(t.fields || []).filter((f) => !f.optional).map(fieldInput).join('')}
         ${whenPicker(t.when)}
-        ${t.talks ? '<p class="small muted" style="margin:0">It runs in Pocket Box\'s cloud so it\'s always there to answer, even when your phone is off.</p>' : runsOnPicker()}
-        <label class="row" style="gap:10px"><input type="checkbox" name="live" checked style="width:20px;height:20px"><span>Notify me for real right away <span class="small faint">(untick to watch it quietly first)</span></span></label>
-        <div class="small muted">It may: ${(t.permissions || []).map((x) => esc((S.meta?.permissions || {})[x] || x).toLowerCase()).join('; ')}.</div>
-        <div class="row"><button class="btn accent">Start ${esc(t.name)}</button></div>
+        ${(t.fields || []).some((f) => f.optional) ? `<details><summary class="small" style="cursor:pointer;font-weight:600">More options</summary><div class="stack" style="margin-top:12px">${(t.fields || []).filter((f) => f.optional).map(fieldInput).join('')}</div></details>` : ''}
+        <button class="btn accent" style="width:100%">Start ${esc(t.name)}</button>
+        <p class="tiny faint" style="margin:0;text-align:center">You can change all of this later.</p>
       </form>
+      ${(t.setup || []).length ? `<details class="glass card rise" style="margin-top:14px"><summary class="h3" style="cursor:pointer;font-size:16px">Connect your bank texts or email (optional)</summary>
+        <ol class="stack small" style="margin:12px 0 0;padding-left:20px;gap:6px">${t.setup.map((x) => `<li>${esc(x)}</li>`).join('')}</ol></details>` : ''}
     </div>`;
   }
 
@@ -1004,8 +1014,15 @@
     const u = S.session.user;
     const theme = store.get('pb.theme', 'system');
     return `<div class="shell">${topBar()}
-      <section style="padding:28px 0 20px" class="rise"><h1 class="display" style="font-size:clamp(36px,8vw,52px)">${esc(u.firstName)}<em>.</em></h1><p class="lede">${esc(u.email)}</p></section>
+      <section style="padding:14px 0 16px" class="rise"><h1 class="display" style="font-size:clamp(36px,10vw,52px)">${esc(u.firstName)}<em>.</em></h1><p class="lede" style="margin-top:4px">${esc(u.email)}</p></section>
       <div class="stack-lg">
+        <section class="glass card stack rise">
+          <div class="h3">Notifications</div>
+          ${'Notification' in window && Notification.permission === 'granted' && pk.devices
+            ? `<p class="small muted" style="margin:0">On for ${pk.devices} device${pk.devices === 1 ? '' : 's'}. Not seeing them? Send a test.</p><div class="row wrap" style="gap:8px"><button class="btn soft sm" data-act="push-test">Send a test</button><button class="btn ghost sm" data-act="push-on">Turn on for this device again</button></div>`
+            : `<p class="small muted" style="margin:0">${/iPhone|iPad/.test(navigator.userAgent) && !standalone() ? 'On iPhone, add Pocket Box to your Home Screen first, open it from there, then turn notifications on.' : 'Turn them on so your agents can reach you on this device.'}</p><div class="row wrap" style="gap:8px">${/iPhone|iPad/.test(navigator.userAgent) && !standalone() ? '<button class="btn accent sm" data-act="install">Add to Home Screen</button>' : '<button class="btn accent sm" data-act="push-on">Turn on notifications</button>'}</div>`}
+        </section>
+        ${u.role === 'admin' ? '<a class="glass card row agent-row rise" href="#/people"><div class="avatar">👥</div><div style="flex:1"><div class="h3" style="font-size:16px">People</div><div class="small muted">Accounts, plans and invitations</div></div><span class="faint">›</span></a>' : ''}
         ${pl ? planSection(pl) : ''}
         <form data-form="about" class="glass card stack rise">
           <div class="h3">About me</div>
@@ -1023,11 +1040,7 @@
           <p class="small muted" style="margin:0">During quiet hours agents still run; only urgent ones buzz. Time zone: ${esc(S.prefs?.tz || Intl.DateTimeFormat().resolvedOptions().timeZone)}.</p>
           <div class="row"><button class="btn sm">Save</button></div>
         </form>
-        <section class="glass card stack rise">
-          <div class="h3">Studio notifications</div>
-          <p class="small muted" style="margin:0">Hear when a brief or plan is ready, or a build finishes. ${pk.devices ? `${pk.devices} device${pk.devices === 1 ? '' : 's'} subscribed.` : ''}</p>
-          <div class="row"><button class="btn soft sm" data-act="push">Turn on for this device</button></div>
-        </section>
+        <a class="glass card row agent-row rise" href="#/phones"><div class="avatar">📱</div><div style="flex:1"><div class="h3" style="font-size:16px">Run agents on this phone</div><div class="small muted">Only for agents that need your location. Everything else runs in the cloud.</div></div><span class="faint">›</span></a>
         <section class="glass card stack rise">
           <div class="h3">Appearance</div>
           <div class="row wrap" style="gap:8px">${['system', 'light', 'dark'].map((t) => `<button class="chip ${theme === t ? 'on' : ''}" data-act="theme" data-theme="${t}">${t[0].toUpperCase()}${t.slice(1)}</button>`).join('')}</div>
@@ -1082,6 +1095,248 @@
       <p><strong>Changes.</strong> We may change these terms; we'll tell you in the app first.</p>`;
     return `<div class="shell"><header class="top"><a class="btn ghost icon" href="${back}" aria-label="Back">${icon.back}</a></header>
       <article class="glass card prose rise" style="font-size:16px">${kind === 'privacy' ? privacy : terms}<p class="small muted">Last updated October 2026.</p></article></div>`;
+  }
+
+  // ===================== The simple app: Updates · Agents · New · You =====================
+  const NAV_ON = { home: 'home', agents: 'agents', new: 'new', templates: 'new', t: 'new', watch: 'new', me: 'me', people: 'me', phones: 'me', s: 'new' };
+  function bottomNav(active) {
+    const items = [['home', '#/', 'Updates', icon.bell], ['agents', '#/agents', 'Agents', icon.grid], ['new', '#/new', 'New', icon.plus], ['me', '#/me', 'You', icon.me]];
+    return `<nav class="nav" aria-label="Main">${items.map(([k, href, label, ic]) => `<a href="${href}" class="${active === k ? 'on' : ''}" ${active === k ? 'aria-current="page"' : ''}><span class="ni">${ic}${k === 'home' && S.unread ? `<b class="badge">${Math.min(S.unread, 99)}</b>` : ''}</span><span>${label}</span></a>`).join('')}</nav>`;
+  }
+  function setBadge() {
+    const n = document.querySelector('.nav a[href="#/"] .ni');
+    if (!n) return;
+    n.querySelector('.badge')?.remove();
+    if (S.unread) n.insertAdjacentHTML('beforeend', `<b class="badge">${Math.min(S.unread, 99)}</b>`);
+  }
+
+  /** An agent's state in plain words. */
+  function plainStatus(a) {
+    const ch = (a.package || a.release || {}).channel;
+    if (a.status === 'running' || a.running) return { word: 'Working…', tone: 'accent' };
+    if (a.status === 'error') return { word: 'Needs a look', tone: 'bad' };
+    if (!ch) return { word: a.stage === 'brief' || a.stage === 'plan_review' ? 'Plan ready' : 'Being made', tone: 'accent' };
+    if (ch === 'off') return { word: 'Paused', tone: '' };
+    if ((a.missingSettings || []).length || (a.needsYou && /settings/.test(a.needsYou))) return { word: 'Needs answers', tone: 'warn' };
+    if (ch === 'shadow') return { word: 'Testing', tone: 'accent' };
+    return { word: 'On', tone: 'good' };
+  }
+  const statusChip = (a) => { const s = plainStatus(a); return `<span class="pill ${s.tone}">${s.tone === 'good' ? '<span class="dot"></span>' : ''}${s.word}</span>`; };
+  /** When it runs, in plain words. */
+  function whenText(triggers = []) {
+    const parts = [];
+    const order = { schedule: 0, interval: 1, message: 2, inbox: 3 };
+    for (const t of [...triggers].sort((x, y) => (order[x.type] ?? 9) - (order[y.type] ?? 9))) {
+      if (t.type === 'schedule') parts.push(`${t.days && t.days.length && t.days.length < 7 ? (t.days.length === 5 && !t.days.includes('sat') && !t.days.includes('sun') ? 'weekdays' : t.days.map((d) => d[0].toUpperCase() + d.slice(1)).join(', ')) : 'every day'} at ${t.at}`);
+      if (t.type === 'interval') parts.push(`every ${t.minutes >= 60 ? (t.minutes === 60 ? 'hour' : `${t.minutes / 60} hours`) : `${t.minutes} minutes`}`);
+      if (t.type === 'message') parts.push('when you message it');
+      if (t.type === 'inbox') parts.push('when something arrives');
+    }
+    return parts.length ? parts.slice(0, 2).join(' · ') : 'when you tap Run';
+  }
+  const heldText = { testing: 'Testing: shown here only', snoozed: 'Snoozed', paused: 'You paused all agents', 'quiet hours': 'Quiet hours', 'in your daily digest': 'Saved for your daily digest' };
+  const viaText = (v) => (!v ? '' : v === 'app only' ? 'Only here: notifications aren\'t on yet' : `Sent: ${v.split('+').map((x) => ({ push: 'phone', email: 'email', telegram: 'Telegram', phone: 'phone' }[x] || x)).join(' + ')}`);
+
+  function updateCard(u) {
+    return `<article class="glass card update rise" data-act="open-agent" data-id="${esc(u.agentId)}" data-uid="${esc(u.id)}">
+      <div class="row" style="gap:12px;align-items:flex-start">
+        <div class="avatar sm">${esc(u.icon || '✳︎')}</div>
+        <div style="flex:1;min-width:0">
+          <div class="row between" style="gap:8px"><span class="small" style="font-weight:600">${esc(u.agent || '')}</span><span class="tiny faint" style="flex:none">${ago(u.at)}</span></div>
+          <div class="u-title">${esc(u.title)}</div>
+          ${u.body ? `<div class="u-body">${esc(u.body)}</div>` : ''}
+          ${u.link ? linkBtn(u.link) : ''}
+          <div class="tiny faint" style="margin-top:6px">${u.held ? esc(heldText[u.held] || u.held) : esc(viaText(u.via))}</div>
+        </div>
+      </div></article>`;
+  }
+
+  function notifyCard(devices) {
+    const granted = 'Notification' in window && Notification.permission === 'granted';
+    if (granted && devices) return '';
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    if (ios && !standalone()) {
+      return `<section class="glass card stack rise notify-card"><div class="row" style="gap:14px"><div class="avatar">🔔</div><div style="flex:1"><div class="h3">Get updates on your iPhone</div>
+        <div class="small muted">iPhone only shows notifications for apps on the Home Screen. Add Pocket Box first, then open it from there.</div></div></div>
+        <div class="row"><button class="btn accent sm" data-act="install">Add to Home Screen</button></div></section>`;
+    }
+    return `<section class="glass card stack rise notify-card"><div class="row" style="gap:14px"><div class="avatar">🔔</div><div style="flex:1"><div class="h3">Turn on notifications</div>
+      <div class="small muted">So your agents can reach you on this ${ios ? 'iPhone' : 'device'}. You'll get a test right away.</div></div></div>
+      <div class="row"><button class="btn accent sm" data-act="push-on">Turn on</button></div></section>`;
+  }
+
+  async function updatesView() {
+    const [r] = await Promise.all([
+      api('/api/updates').catch(() => ({ updates: [], unread: 0, devices: 0 })),
+      api('/api/me/todo').then((x) => { S.todo = x.items; }).catch(() => { S.todo = []; }),
+      api('/api/me/prefs').then((x) => { S.prefs = x.prefs; }).catch(() => {}),
+    ]);
+    S.updates = r.updates; S.unread = 0; S.pushDevices = r.devices;
+    if (r.unread) api('/api/updates/seen', { method: 'POST' }).catch(() => {});
+    const name = S.session.user?.firstName || '';
+    const todo = (S.todo || []).filter((t) => !t.owner).slice(0, 3);
+    return `<div class="shell">${topBar()}
+      <section class="rise" style="padding:14px 0 16px"><div class="eyebrow">${esc(greeting())}${name ? `, ${esc(name)}` : ''}</div><h1 class="display" style="font-size:clamp(36px,10vw,52px);margin-top:6px">Updates</h1></section>
+      ${pausedBanner()}
+      ${notifyCard(r.devices)}
+      ${todo.length ? `<section class="stack rise" style="margin-bottom:18px">${todo.map((t) => `<a class="glass card row todo-row" href="${esc(t.href || '#/me')}"><span style="flex:1;min-width:0"><span class="small" style="font-weight:600;display:block">${esc(t.title)}</span><span class="tiny muted">${esc(t.why)}</span></span><span class="btn accent sm" style="flex:none">${esc(t.action || 'Open')}</span></a>`).join('')}</section>` : ''}
+      <div class="stack" id="updates">${r.updates.map(updateCard).join('')}</div>
+      ${r.updates.length ? '' : `<section class="glass card stack rise empty-updates" style="text-align:center;padding:34px 22px">
+        <div style="font-size:40px">✨</div><div class="h3">Nothing yet</div>
+        <p class="small muted" style="margin:0">When your agents have something to tell you, it shows up here and on your phone.</p>
+        <div class="row" style="justify-content:center"><a class="btn accent" href="#/new">Add an agent</a></div></section>`}
+    </div>`;
+  }
+
+  /** A new update arrived: banner at the top, and into the list if it's on screen. */
+  function onUpdate(u) {
+    if (!u) return;
+    const r = route();
+    const here = r.name === 'a' && r.id === u.agentId;
+    if (r.name === 'home' || r.name === '' ) {
+      const list = $('#updates');
+      if (list && !list.querySelector(`[data-uid="${u.id}"]`)) { list.insertAdjacentHTML('afterbegin', updateCard(u)); $('.empty-updates')?.remove(); }
+      api('/api/updates/seen', { method: 'POST' }).catch(() => {});
+    } else if (here) {
+      appendConvo([{ kind: 'update', ...u }]);
+    } else {
+      S.unread = (S.unread || 0) + 1; setBadge();
+    }
+    if (!here) banner(u);
+  }
+  function banner(u) {
+    const b = document.createElement('div');
+    b.className = 'banner';
+    b.innerHTML = `<div class="avatar sm">${esc(u.icon || '✳︎')}</div><div style="flex:1;min-width:0"><div class="tiny" style="font-weight:600;opacity:.75">${esc(u.agent || 'Pocket Box')}</div><div class="small" style="font-weight:600">${esc(u.title)}</div>${u.body ? `<div class="tiny" style="opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.body)}</div>` : ''}</div>`;
+    b.addEventListener('click', () => { b.remove(); go(`#/a/${u.agentId}`); });
+    document.body.append(b);
+    requestAnimationFrame(() => b.classList.add('in'));
+    setTimeout(() => { b.classList.remove('in'); setTimeout(() => b.remove(), 400); }, 6000);
+  }
+
+  async function agentsListView() {
+    const list = await api('/api/agents');
+    S.agents = list.agents;
+    const row = (a) => {
+      const line = a.needsYou && a.mine ? a.needsYou.replace(/:.*$/, '') : a.lastRun ? `${a.lastRun.ok ? '' : 'Failed · '}${a.lastRun.summary || 'Ran'} · ${ago(a.lastRun.at)}` : a.shared ? 'Shared with you' : 'Hasn\'t said anything yet';
+      return `<a class="glass card row agent-row rise" href="#/a/${a.id}${a.mine && a.needsYou && /settings/.test(a.needsYou) ? '/settings' : ''}">
+        <div class="avatar">${esc(a.icon || '✳︎')}</div>
+        <div style="flex:1;min-width:0"><div class="h3" style="font-size:16.5px">${esc(a.title)}</div><div class="small muted ellipsis">${esc(line)}</div></div>
+        ${statusChip(a)}</a>`;
+    };
+    return `<div class="shell">${topBar()}
+      <section class="rise row between" style="padding:14px 0 16px;align-items:flex-end"><h1 class="display" style="font-size:clamp(36px,10vw,52px)">Agents</h1><a class="btn accent sm" href="#/new">${icon.plus.replace(/22/g, '16')} New</a></section>
+      ${S.agents.length ? `<div class="stack">${S.agents.map(row).join('')}</div>` : `<section class="glass card stack" style="text-align:center;padding:34px 22px"><div style="font-size:40px">🤖</div><div class="h3">No agents yet</div><p class="small muted" style="margin:0">Pick a ready-made one or describe your own. It takes a minute.</p><div class="row" style="justify-content:center"><a class="btn accent" href="#/new">Add an agent</a></div></section>`}
+    </div>`;
+  }
+
+  async function newView() {
+    await loadTemplates();
+    const life = S.templates.filter((t) => t.tier === 'life');
+    const quick = S.templates.filter((t) => t.tier !== 'life');
+    const tile = (t) => `<a class="glass card row agent-row" href="#/t/${esc(t.id)}"><div class="avatar">${esc(t.icon)}</div><div style="flex:1;min-width:0"><div class="h3" style="font-size:16.5px">${esc(t.name)}</div><div class="small muted clamp2">${esc(t.summary)}</div></div><span class="faint">›</span></a>`;
+    return `<div class="shell">${topBar()}
+      <section class="rise" style="padding:14px 0 14px"><h1 class="display" style="font-size:clamp(36px,10vw,52px)">New agent</h1></section>
+      <form data-form="new" class="composer glass rise">
+        <textarea name="idea" data-grow rows="3" placeholder="Describe what you want it to do, like you'd ask a friend…" required></textarea>
+        <div class="bar"><span class="small faint">We design, build and test it for you.</span><span class="spacer"></span>${micButton()}<button class="send" aria-label="Create" disabled>${icon.send}</button></div>
+      </form>
+      <div class="eyebrow" style="margin:30px 4px 12px">Or start with one of these</div>
+      <div class="stack rise">${life.map(tile).join('')}</div>
+      ${quick.length ? `<details class="glass card" style="margin-top:14px"><summary class="h3" style="cursor:pointer;font-size:16px">Simple alerts (${quick.length})</summary>
+        <div class="stack" style="margin-top:12px">${quick.map(tile).join('')}</div></details>` : ''}
+    </div>`;
+  }
+
+  // ---- one agent: a conversation, and a Customize sheet ----
+  async function agentPage(id, sub) {
+    if (['advanced', 'runs', 'code', 'thread'].includes(sub)) return agentView(id, sub === 'advanced' ? 'settings' : sub);
+    const a = await api(`/api/agents/${id}`);
+    if (!a.package) return agentView(id);
+    S.agent = a; S.firstOpen = null; S.runs = null; S.files = null;
+    const talks = !!(a.talk && a.talk.message);
+    S.tab = talks ? 'chat' : 'thread';
+    S.chat = a.talk && (a.talk.message || a.talk.inbox) ? (await api(`/api/agents/${id}/chat`).catch(() => ({ entries: [] }))).entries : [];
+    if (sub === 'settings') setTimeout(() => openCustomize(), 350);
+    const mine = a.ownerId === S.session.user.id;
+    const ch = a.package.channel;
+    const items = convoItems(a);
+    return `<div class="shell has-dock">
+      <header class="top"><a class="btn ghost icon" href="#/agents" aria-label="Back">${icon.back}</a><span class="spacer"></span>${mine ? '<button class="btn soft sm" data-act="customize">Customize</button>' : ''}</header>
+      <section class="rise" style="padding:4px 0 14px"><div class="row" style="gap:14px">
+        <div class="avatar lg">${esc(a.icon || '✳︎')}</div>
+        <div style="min-width:0"><h1 class="h2" style="font-size:24px;line-height:1.15">${esc(a.title)}</h1>
+          <div class="row wrap" style="gap:8px;margin-top:6px">${statusChip(a)}<span class="small muted">Runs ${esc(whenText(a.package.triggers))}</span></div></div></div></section>
+      ${mine && (a.missingSettings || []).length ? `<section class="glass card stack rise attn"><div class="h3">Answer ${a.missingSettings.length === 1 ? '1 question' : `${a.missingSettings.length} questions`} to start it</div><p class="small muted" style="margin:0">${esc(a.missingSettings.join(', '))}</p><div class="row"><button class="btn accent sm" data-act="customize">Answer now</button></div></section>` : ''}
+      ${mine && ch === 'shadow' && !(a.missingSettings || []).length ? `<section class="glass card stack rise attn"><div class="h3">It's in testing</div><p class="small muted" style="margin:0">It runs and shows what it would say here, but doesn't notify you yet.</p><div class="row"><button class="btn accent sm" data-act="power" data-on="1">Turn it on</button></div></section>` : ''}
+      ${mine && ch === 'off' ? `<section class="glass card stack rise attn"><div class="h3">It's paused</div><div class="row"><button class="btn accent sm" data-act="power" data-on="1">Turn it back on</button></div></section>` : ''}
+      <div class="chat" id="chat">${items.map(convoHtml).join('')}</div>
+      <div id="chat-typing" class="chat-row agent" hidden><div class="avatar sm">${esc(a.icon || '✳︎')}</div><div class="bubble agent"><span class="dots"><i></i><i></i><i></i></span></div></div>
+      ${items.length ? '' : `<p class="small muted empty-convo" style="text-align:center;margin:26px 0">${talks ? `Say hi, or try one of the suggestions below.` : `Nothing yet. It runs ${esc(whenText(a.package.triggers))}; you can also run it now.`}</p>`}
+    </div>
+    <div class="dock"><div class="dock-inner">
+      <div class="row chips-scroll" style="gap:8px;margin-bottom:10px">
+        ${ch !== 'off' && !(a.missingSettings || []).length ? '<button class="chip" data-act="run-now">▶ Run now</button>' : ''}
+        ${talks ? (a.talk.examples || []).slice(0, 6).map((x) => `<button class="chip" data-act="say" data-text="${esc(x)}">${esc(x)}</button>`).join('') : ''}
+      </div>
+      ${talks ? `<form data-form="chat" class="composer glass slim"><textarea name="text" data-grow rows="1" placeholder="Message ${esc(a.title)}…"></textarea><div class="bar"><span class="spacer"></span>${micButton()}<button class="send" aria-label="Send" disabled>${icon.send}</button></div></form>`
+        : mine ? `<form data-form="message" class="composer glass slim"><textarea name="text" data-grow rows="1" placeholder="Ask for a change, e.g. only on weekdays…"></textarea><div class="bar"><span class="spacer"></span>${micButton()}<button class="send" aria-label="Send" disabled>${icon.send}</button></div></form>` : ''}
+    </div></div>`;
+  }
+
+  /** Everything in an agent's conversation, oldest first: its updates, chat, and changes you asked for. */
+  function convoItems(a) {
+    const rel = a.package?.publishedAt || 0;
+    const firstRel = (a.package?.history || []).reduce((m, h) => Math.min(m, h.publishedAt || m), rel) || rel;
+    const crew = (a.messages || []).filter((m) => m.ts >= firstRel && (m.kind === 'owner' || m.agentId === 'system' || m.kind === 'answer')).map((m) => ({ kind: 'crew', id: m.id, at: m.ts, mine: m.kind === 'owner', text: m.kind === 'owner' ? m.content : (m.summary || m.content) }));
+    const ups = (a.updates || []).map((u) => ({ kind: 'update', ...u }));
+    const chats = (S.chat || []).map((e) => ({ kind: 'chat', ...e }));
+    return [...ups, ...chats, ...crew].sort((x, y) => x.at - y.at).slice(-150);
+  }
+  function convoHtml(x) {
+    const a = S.agent;
+    const time = new Date(x.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+    if (x.kind === 'chat') return chatEntry(x, a);
+    if (x.kind === 'crew') return x.mine
+      ? `<div class="chat-row you" data-id="${esc(x.id)}"><div class="bubble you">${esc(x.text)}</div><div class="tiny faint">Change request · ${time}</div></div>`
+      : `<div class="chat-row agent" data-id="${esc(x.id)}"><div class="avatar sm">📦</div><div style="min-width:0"><div class="bubble agent">${esc(x.text)}</div><div class="tiny faint">Pocket Box · ${time}</div></div></div>`;
+    return `<div class="chat-row agent" data-id="${esc(x.id)}"><div class="avatar sm">${esc(a.icon || '✳︎')}</div><div style="min-width:0"><div class="bubble agent"><strong>${esc(x.title)}</strong>${x.body ? `\n${esc(x.body)}` : ''}</div>${linkBtn(x.link)}<div class="tiny faint">${time} · ${x.held ? esc(heldText[x.held] || x.held) : esc(viaText(x.via))}</div></div></div>`;
+  }
+  function appendConvo(items) {
+    const list = $('#chat');
+    if (!list) return;
+    for (const x of items) { if (!list.querySelector(`[data-id="${x.id}"]`)) list.insertAdjacentHTML('beforeend', convoHtml(x)); }
+    $('.empty-convo')?.remove();
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  }
+
+  function openCustomize() {
+    const a = S.agent;
+    if (!a || !a.package) return;
+    const ch = a.package.channel;
+    const style = a.notifyStyle || 'normal';
+    const sched = (a.package.triggers || []).some((t) => t.type === 'schedule' || t.type === 'interval');
+    const close = sheet(`<form class="stack customize">
+      <div class="row between"><div class="h3">Customize ${esc(a.title)}</div><button type="button" class="btn ghost sm" data-close>Done</button></div>
+      <div class="cz-row"><div><div class="cz-t">It's ${ch === 'off' ? 'paused' : ch === 'shadow' ? 'testing' : 'on'}</div><div class="tiny muted">${ch === 'live' ? 'Running and notifying you.' : ch === 'shadow' ? 'Running, shown here only.' : 'Not running.'}</div></div>
+        ${ch === 'live' ? '<button type="button" class="btn soft sm" data-act="power" data-on="0">Pause</button>' : '<button type="button" class="btn accent sm" data-act="power" data-on="1">Turn on</button>'}</div>
+      ${a.settings.length ? `<div class="cz-sec">Its answers</div>${a.settings.map(settingField(true)).join('')}<div class="row"><button class="btn accent sm">Save answers</button></div>` : ''}
+      <div class="cz-sec">When it runs</div>
+      <div class="cz-row"><div class="small">${esc(whenText(a.package.triggers))}</div>${sched ? '<button type="button" class="btn soft sm" data-act="edit-when">Change</button>' : ''}</div>
+      <div class="cz-sec">How it tells you</div>
+      <div class="row wrap" style="gap:8px">${[['normal', '🔔 Notify me'], ['quiet', '🔕 Quietly'], ['urgent', '🚨 Urgent'], ['digest', '🗞 Daily digest']].map(([k, l]) => `<button type="button" class="chip ${style === k ? 'on' : ''}" data-act="cz-style" data-style="${k}">${l}</button>`).join('')}</div>
+      <div class="row wrap" style="gap:8px">${a.snoozeUntil && a.snoozeUntil > Date.now() ? `<span class="small muted">Snoozed until ${new Date(a.snoozeUntil).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })}</span><button type="button" class="chip" data-act="snooze" data-until="off">Unsnooze</button>` : '<button type="button" class="chip" data-act="snooze" data-minutes="60">Snooze 1 hour</button><button type="button" class="chip" data-act="snooze" data-until="today">Quiet for today</button>'}</div>
+      <div class="cz-sec">More</div>
+      <div class="row wrap" style="gap:8px"><a class="btn soft sm" href="#/a/${a.id}/advanced">Sharing, runs and advanced</a><button type="button" class="btn danger sm" data-act="cz-delete">Delete</button></div>
+    </form>`, async (fd) => {
+      const values = {};
+      for (const st of a.settings) { const v = fd.get(st.key); if (st.type === 'secret' && !v) continue; values[st.key] = v; }
+      const r = await api(`/api/agents/${a.id}/settings`, { method: 'POST', body: { values } });
+      toast(r.missing.length ? `Saved. Still needed: ${r.missing.join(', ')}.` : 'Saved. It can run now.');
+      render({ transition: false });
+    });
+    S.closeCustomize = close;
+    for (const ta of document.querySelectorAll('.customize textarea[data-grow]')) grow(ta);
   }
 
   function errorView(e) {
@@ -1193,7 +1448,8 @@
         const ta = form.querySelector('textarea');
         ta.value = ''; grow(ta); form.querySelector('.send').disabled = true;
         const msg = await api(`/api/agents/${S.agent.id}/message`, { method: 'POST', body: { text } });
-        if (!S.agent.messages.some((x) => x.id === msg.id)) {
+        if (!$('#thread') && $('#chat')) { appendConvo([{ kind: 'crew', id: msg.id, at: msg.ts, mine: true, text }]); toast('Got it. Pocket Box is making that change.'); }
+        else if (!S.agent.messages.some((x) => x.id === msg.id)) {
           S.agent.messages.push(msg);
           if (S.tab !== 'thread') { S.tab = 'thread'; render({ transition: false }); }
           else { $('#thread')?.insertAdjacentHTML('beforeend', msgView(msg, true)); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
@@ -1215,7 +1471,8 @@
         const ev = form.querySelector('[data-every] .on');
         if (ev) when.minutes = Number(ev.dataset.min);
         const runsOn = form.querySelector('[data-runs] .on')?.dataset.runsOn || 'cloud';
-        const a = await api(`/api/templates/${id}/install`, { method: 'POST', body: { values, when, live: !!data.live, runsOn } });
+        const live = form.querySelector('[name="live"]') ? !!data.live : true;
+        const a = await api(`/api/templates/${id}/install`, { method: 'POST', body: { values, when, live, runsOn } });
         toast(`${a.title} is on. ${a.runsOn === 'cloud' ? 'It runs in the cloud.' : 'Open the Runtime on your phone to start it.'}`);
         S.agent = null; go(`#/a/${a.id}`);
       } else if (kind === 'share-install') {
@@ -1393,6 +1650,31 @@
         break;
       }
       case 'say': await sayToAgent(el.dataset.text); break;
+      case 'open-agent': if (!e.target.closest('a')) go(`#/a/${el.dataset.id}`); break;
+      case 'customize': openCustomize(); break;
+      case 'push-on': await enablePush(el, { test: true }); render({ transition: false }); break;
+      case 'push-test': { const r = await post('/api/push/test'); if (r) toast(r.sent ? 'Sent. It should appear in a few seconds.' : r.devices ? 'Your devices didn\'t accept it. Turn notifications on again.' : 'No device has notifications on yet. Tap Turn on first.', r.sent ? '' : 'bad'); break; }
+      case 'power': {
+        const on = el.dataset.on === '1';
+        const r = await post(`/api/agents/${a.id}/channel`, { channel: on ? 'live' : 'off' });
+        if (r) { toast(on ? `${a.title} is on.` : `${a.title} is paused.`); S.closeCustomize?.(); render({ transition: false }); }
+        break;
+      }
+      case 'cz-style': {
+        const r = await post(`/api/agents/${a.id}/style`, { style: el.dataset.style });
+        if (r) { S.agent.notifyStyle = el.dataset.style; for (const c of document.querySelectorAll('[data-act="cz-style"]')) c.classList.toggle('on', c === el); toast({ normal: 'It will notify you normally.', quiet: 'It will arrive without sound.', urgent: 'It will stay on screen and get through quiet hours.', digest: 'Collected into your daily digest.' }[el.dataset.style]); }
+        break;
+      }
+      case 'cz-delete':
+        if (!confirm(`Delete ${a.title}? This can't be undone.`)) break;
+        try { await api(`/api/agents/${a.id}`, { method: 'DELETE' }); S.closeCustomize?.(); S.agent = null; toast('Deleted.'); go('#/agents'); } catch (err) { toast(err.message, 'bad'); }
+        break;
+      case 'run-now': {
+        if (a.inputs && a.inputs.length) { askRunInputs(a); break; }
+        const r = await post(`/api/agents/${a.id}/run`, {});
+        if (r && r.run) { if (!r.run.ok) toast(`It didn't work: ${r.run.error || 'unknown error'}`, 'bad'); else if (!r.run.notifications.length) toast('It ran: nothing to tell you right now.'); }
+        break;
+      }
       case 'inbox-copy': { const v = $('[data-inbox-url]')?.value || ''; try { await navigator.clipboard.writeText(v); toast('Address copied.'); } catch { $('[data-inbox-url]')?.select(); } break; }
       case 'inbox-rotate': {
         if (!confirm('Make a new address? The old one stops working, so update your Shortcuts.')) break;
@@ -1504,7 +1786,7 @@
     }
   });
 
-  async function enablePush(btn) {
+  async function enablePush(btn, { test = false } = {}) {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return toast('This browser cannot receive notifications. On iPhone, add Pocket Box to your Home Screen first.', 'bad');
     busy(btn, true);
     try {
@@ -1514,7 +1796,8 @@
       const { publicKey } = await api('/api/push/key');
       const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(publicKey) });
       await api('/api/push/subscribe', { method: 'POST', body: { subscription: sub.toJSON() } });
-      toast('Notifications are on for this device.');
+      if (test) { const r = await api('/api/push/test', { method: 'POST' }).catch(() => ({ sent: 0 })); toast(r.sent ? 'Notifications are on. A test is on its way.' : 'Notifications are on, but the test didn\'t arrive. Try again in a minute.', r.sent ? '' : 'bad'); }
+      else toast('Notifications are on for this device.');
     } catch (err) { toast(err.message, 'bad'); } finally { busy(btn, false); }
   }
   function b64u(s) { const p = '='.repeat((4 - (s.length % 4)) % 4); const raw = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(raw, (c) => c.charCodeAt(0)); }
