@@ -952,7 +952,7 @@
       const x = [];
       if (u.status === 'pending') x.push(['approve', 'Approve', 'btn sm'], ['decline', 'Decline', 'btn ghost sm']);
       if (u.status === 'approved') x.push(['resend', 'Send link', 'btn ghost sm'], ['disable', 'Disable', 'btn ghost sm']);
-      if (u.status === 'unverified') x.push(['disable', 'Disable', 'btn ghost sm']);
+      if (u.status === 'unverified') x.push(['resend', 'Send link', 'btn sm'], ['disable', 'Disable', 'btn ghost sm']);
       if (u.status === 'disabled' || u.status === 'declined') x.push(['enable', 'Enable', 'btn soft sm']);
       if (me.primary && u.status === 'approved') x.push(u.role === 'admin' ? ['remove-admin', 'Remove admin', 'btn ghost sm'] : ['make-admin', 'Make admin', 'btn ghost sm']);
       return x.map(([a, l, c]) => `<button class="${c}" data-act="user" data-op="${a}" data-id="${esc(u.id)}">${l}</button>`).join('');
@@ -1563,7 +1563,12 @@
         await api('/api/password', { method: 'POST', body: data });
         form.reset(); toast('Password changed. Other devices were signed out.');
       }
-    } catch (err) { say(err.message); } finally { if (document.contains(btn)) busy(btn, false); }
+    } catch (err) {
+      // Signed up but never opened the email: offer to send it again, right here.
+      if (kind === 'login' && err.status === 403 && /link we emailed/.test(err.message) && note) {
+        note.innerHTML = `<div class="note pop">You haven't finished setting up yet: open the link we emailed you (check Spam and Promotions too).<div class="row" style="margin-top:10px"><button type="button" class="btn sm" data-act="resend-signup" data-email="${esc(data.email || '')}">Send the link again</button></div></div>`;
+      } else say(err.message);
+    } finally { if (document.contains(btn)) busy(btn, false); }
   });
 
   document.addEventListener('click', (e) => {
@@ -1712,6 +1717,11 @@
         go(prev && prev !== location.hash ? prev : '#/');
         break;
       }
+      case 'resend-signup': {
+        try { await api('/api/forgot', { method: 'POST', body: { email: el.dataset.email } }); el.closest('.note').innerHTML = 'Sent. It comes from Pocket Box; look in Spam and Promotions if it isn\'t in your inbox in a minute.'; } catch (err) { toast(err.message, 'bad'); }
+        break;
+      }
+      case 'copy-setlink': { const v = $('[data-setlink]')?.value || ''; try { await navigator.clipboard.writeText(v); toast('Link copied.'); } catch { $('[data-setlink]')?.select(); } break; }
       case 'ask-custom': await makeCustom(S.askText || ''); break;
       case 'open-agent': if (!e.target.closest('a')) go(`#/a/${el.dataset.id}`); break;
       case 'customize': openCustomize(); break;
@@ -1831,7 +1841,14 @@
       case 'user': {
         const r = await post(`/api/admin/users/${el.dataset.id}/${el.dataset.op}`);
         if (r) {
-          if (r.link) sheet(`<div class="stack"><div class="h3">Email isn't set up</div><p class="small muted" style="margin:0">Send them this one-time link yourself (valid 24 hours):</p><input class="input mono" readonly value="${esc(r.link)}"><div class="row" style="justify-content:flex-end"><button class="btn sm" data-close>Done</button></div></div>`);
+          if (r.link) {
+            const msg = `Here's your link to set up Pocket Box (works once, for 24 hours): ${r.link}`;
+            sheet(`<div class="stack"><div class="h3">${r.emailed ? 'Emailed. Want to send it yourself too?' : 'The email didn\'t go out'}</div>
+              <p class="small muted" style="margin:0">${r.emailed ? 'If it\'s not in their inbox (check Spam and Promotions), send them this one-time link. It works once, for 24 hours.' : 'Send them this one-time link yourself. It works once, for 24 hours.'}</p>
+              <input class="input mono" readonly value="${esc(r.link)}" data-setlink>
+              <div class="row wrap" style="gap:8px"><button class="btn accent sm" data-act="copy-setlink">Copy link</button><a class="btn soft sm" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Send on WhatsApp</a><a class="btn soft sm" href="sms:?&body=${encodeURIComponent(msg)}">Text it</a></div>
+              <button class="btn ghost" style="width:100%" data-close>Done</button></div>`);
+          }
           else toast(r.emailed ? 'Done. They were emailed a link.' : 'Done.');
           render({ transition: false });
         }

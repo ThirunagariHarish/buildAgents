@@ -277,8 +277,10 @@ async function sendSetPasswordMail(u, token, reason) {
   const link = `${BASE_URL}/#/reset/${token}`;
   const text = reason === 'approved'
     ? `Hi ${u.firstName},\n\nYour access to Pocket Box was approved. Set your password here (one use, 24 hours):\n\n${link}\n`
-    : `Hi ${u.firstName},\n\nUse this link to set a new Pocket Box password (one use, 24 hours):\n\n${link}\n\nIf you did not ask for this, ignore this email.\n`;
-  const r = await mail.send({ to: u.email, subject: reason === 'approved' ? 'Your Pocket Box access is approved' : 'Reset your Pocket Box password', text });
+    : reason === 'welcome'
+      ? `Hi ${u.firstName},\n\nHere's your link to finish setting up Pocket Box. Choose a password and you're in (one use, 24 hours):\n\n${link}\n`
+      : `Hi ${u.firstName},\n\nUse this link to set a new Pocket Box password (one use, 24 hours):\n\n${link}\n\nIf you did not ask for this, ignore this email.\n`;
+  const r = await mail.send({ to: u.email, subject: reason === 'approved' ? 'Your Pocket Box access is approved' : reason === 'welcome' ? 'Finish setting up Pocket Box' : 'Reset your Pocket Box password', text });
   return { ...r, link };
 }
 
@@ -378,7 +380,7 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req).catch(() => ({}));
       try {
         const r = auth.forgot({ email: body.email, ip });
-        if (r) sendSetPasswordMail(r.user, r.token, 'reset').catch(() => {});
+        if (r) sendSetPasswordMail(r.user, r.token, r.user.status === 'unverified' ? 'welcome' : 'reset').catch(() => {});
         return json(res, 200, { ok: true, message: 'If that address has an approved account, a reset link is on its way.' });
       } catch (e) { return json(res, e.status || 500, { error: e.message }); }
     }
@@ -509,10 +511,13 @@ async function studioApi(req, res, p, url, user) {
           // A set-password link is shown on screen only for someone who has never set a password;
           // for an existing account it goes by email only, so it cannot be used to take the account over.
           const fresh = !target.hash;
-          const { user: u, token } = auth.approve(id);
-          const r = await sendSetPasswordMail(u, token, 'approved');
+          // Someone who signed up but hasn't confirmed gets a new link and stays unconfirmed until they use it.
+          const { user: u, token } = target.status === 'unverified' ? auth.relink(id) : auth.approve(id);
+          const r = await sendSetPasswordMail(u, token, target.status === 'unverified' ? 'welcome' : 'approved');
           bus.broadcast({ event: 'users' }, { adminsOnly: true });
-          return json(res, 200, { ok: true, emailed: r.sent, link: r.sent || !fresh ? null : r.link });
+          // For an account that has never had a password, the administrator also gets the link to pass on
+          // themselves (WhatsApp, text) in case the email lands in spam.
+          return json(res, 200, { ok: true, emailed: r.sent, link: fresh ? r.link : null });
         }
         if (act === 'decline') auth.decline(id);
         else auth.setStatus(id, act === 'disable' ? 'disabled' : 'approved');
