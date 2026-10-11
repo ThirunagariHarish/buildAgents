@@ -1,51 +1,79 @@
-// Pip, the Pocket Box mascot: a little box with a lid that never quite
-// closes, a sprout with a glowing bulb, and a lot of enthusiasm.
-// Pip.svg(mood, size) returns inline SVG. Moods: hi (waving), happy,
-// think, sleep, wow, idle. Animation lives in CSS (.pip ...).
+// Pip, the Pocket Box mascot: a round, fluffy little bunny in a pink hoodie
+// with a heart pocket and a bow on one ear. Drawn in SVG with soft shading
+// and fuzzy fur so it stays crisp at any size.
+// Pip.svg(mood, size) returns inline SVG. Moods: hi (waving), happy, think,
+// sleep, wow, idle. Animation lives in CSS (.pip ...).
 (function (root) {
   'use strict';
   let n = 0;
   function svg(mood = 'idle', size = 96, { still = false } = {}) {
-    const id = `pip${++n}`;
-    const ink = '#2b2442';
-    const eyes = {
-      happy: `<path d="M39 66 Q46 58 53 66" /><path d="M67 66 Q74 58 81 66" />`,
-      sleep: `<path d="M39 66 Q46 71 53 66" /><path d="M67 66 Q74 71 81 66" />`,
-      wow: `<ellipse cx="46" cy="64" rx="7.5" ry="9.5" class="fill"/><ellipse cx="74" cy="64" rx="7.5" ry="9.5" class="fill"/><circle cx="48.6" cy="60.4" r="2.8" fill="#fff"/><circle cx="76.6" cy="60.4" r="2.8" fill="#fff"/>`,
-      think: `<ellipse cx="47" cy="61" rx="6.4" ry="8.2" class="fill"/><ellipse cx="75" cy="61" rx="6.4" ry="8.2" class="fill"/><circle cx="49.5" cy="57" r="2.3" fill="#fff"/><circle cx="77.5" cy="57" r="2.3" fill="#fff"/>`,
-    }[mood] || `<g class="pip-eyes"><ellipse cx="45" cy="65" rx="7.6" ry="9.6" class="fill"/><ellipse cx="75" cy="65" rx="7.6" ry="9.6" class="fill"/><circle cx="47.8" cy="61" r="3" fill="#fff"/><circle cx="77.8" cy="61" r="3" fill="#fff"/><circle cx="43" cy="69" r="1.3" fill="#fff" opacity=".8"/><circle cx="73" cy="69" r="1.3" fill="#fff" opacity=".8"/></g>`;
+    const k = `pip${++n}`;
+    const ink = '#3b2626';
+    const closed = mood === 'happy' || mood === 'sleep';
+    const ey = mood === 'think' ? 71.5 : 74;
+    const ew = mood === 'wow' ? 8 : 7;
+    const eh = mood === 'wow' ? 9 : 8.2;
+    const eyes = closed
+      ? (mood === 'happy'
+        ? `<path d="M40.5 75 Q47 68.5 53.5 75" /><path d="M66.5 75 Q73 68.5 79.5 75" />`
+        : `<path d="M40.5 74 Q47 78.5 53.5 74" /><path d="M66.5 74 Q73 78.5 79.5 74" />`)
+      : `<g class="pip-eyes">
+          <ellipse cx="47" cy="${ey}" rx="${ew}" ry="${eh}" fill="url(#${k}e)" stroke="none"/>
+          <ellipse cx="73" cy="${ey}" rx="${ew}" ry="${eh}" fill="url(#${k}e)" stroke="none"/>
+          <circle cx="49.8" cy="${ey - 3.8}" r="2.9" fill="#fff" stroke="none"/><circle cx="75.8" cy="${ey - 3.8}" r="2.9" fill="#fff" stroke="none"/>
+          <circle cx="44.6" cy="${ey + 3.6}" r="1.3" fill="#fff" opacity=".85" stroke="none"/><circle cx="70.6" cy="${ey + 3.6}" r="1.3" fill="#fff" opacity=".85" stroke="none"/>
+          <path d="M38.8 ${ey - 3.5} l-2.6 -1.6 M39.6 ${ey - 5.6} l-2.2 -2.2" stroke-width="1.3" opacity=".7"/><path d="M81.2 ${ey - 3.5} l2.6 -1.6 M80.4 ${ey - 5.6} l2.2 -2.2" stroke-width="1.3" opacity=".7"/>
+        </g>`;
+    const brows = `<path d="M42.5 62.5 Q46 60.4 49.5 62" stroke-width="1.4" opacity=".55"/><path d="M70.5 62 Q74 60.4 77.5 62.5" stroke-width="1.4" opacity=".55"/>`;
     const mouth = {
-      happy: `<path d="M51 77 Q60 87 69 77 Q60 82 51 77Z" class="fill"/>`,
-      hi: `<path d="M51 77 Q60 87 69 77 Q60 82 51 77Z" class="fill"/>`,
-      sleep: `<ellipse cx="60" cy="79" rx="2.6" ry="2" class="fill"/>`,
-      wow: `<ellipse cx="60" cy="80" rx="4.2" ry="5" class="fill"/>`,
-      think: `<path d="M55 80 Q60 78 66 80" />`,
-    }[mood] || `<path d="M53 77 Q60 84 67 77" />`;
+      happy: `<path d="M55.2 85.4 Q60 92.6 64.8 85.4 Q60 87.6 55.2 85.4Z" fill="#c75b6b" stroke="#c75b6b" stroke-width="1"/>`,
+      hi: `<path d="M55.6 85.2 Q60 91.6 64.4 85.2 Q60 87.2 55.6 85.2Z" fill="#c75b6b" stroke="#c75b6b" stroke-width="1"/>`,
+      wow: `<ellipse cx="60" cy="87.4" rx="3" ry="3.6" fill="#c75b6b" stroke="none"/>`,
+      sleep: `<path d="M57.6 86.2 Q60 87.6 62.4 86.2" stroke-width="1.5"/>`,
+      think: `<path d="M57 86.6 Q60 85.4 63.4 86.8" stroke-width="1.5"/>`,
+    }[mood] || `<path d="M56.2 85 q1.9 2 3.8 0 q1.9 2 3.8 0" stroke-width="1.5"/>`;
+    // Paws: held at the chest, or one raised to wave.
+    const paw = (cx, cy, r = 6.6) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#${k}c)"/><path d="M${cx - 2.6} ${cy + 1.6} v2 M${cx} ${cy + 2.2} v2 M${cx + 2.6} ${cy + 1.6} v2" stroke="#e3cfc2" stroke-width="1.1" stroke-linecap="round"/>`;
+    const paws = mood === 'hi'
+      ? `${paw(51, 108)}<g class="pip-arm"><path d="M84 104 Q100 98 106 84" stroke="url(#${k}h)" stroke-width="11" fill="none" stroke-linecap="round"/>${paw(108, 78, 7.6)}</g>`
+      : mood === 'think' ? `${paw(51, 109)}<path d="M80 108 Q80 100 72 96" stroke="url(#${k}h)" stroke-width="10" fill="none" stroke-linecap="round"/>${paw(70, 95, 6.6)}`
+        : `${paw(51, 108)}${paw(69, 108)}`;
     const extra = {
-      hi: `<g class="pip-arm"><path d="M101 84 Q112 76 114 62" stroke="#c9a6f7" stroke-width="10" fill="none" stroke-linecap="round"/><circle cx="114.5" cy="59" r="6.8" fill="#d7b3f6"/></g>`,
-      sleep: `<g class="pip-z" fill="#9b84f5" font-family="ui-rounded, system-ui, sans-serif" font-weight="800"><text x="96" y="24" font-size="15">z</text><text x="108" y="12" font-size="10">z</text></g>`,
-      think: `<g class="pip-dots" fill="#9b84f5"><circle cx="98" cy="22" r="3.2"/><circle cx="107" cy="14" r="4"/><circle cx="116" cy="5" r="4.6"/></g>`,
-      wow: `<g fill="#ffcf5c"><path d="M14 40 l3 -7 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3z"/><path d="M104 30 l2 -5 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2z"/></g>`,
+      sleep: `<g class="pip-z" fill="#b59cf5" font-family="ui-rounded, system-ui, sans-serif" font-weight="800"><text x="92" y="44" font-size="15">z</text><text x="104" y="32" font-size="10">z</text></g>`,
+      think: `<g class="pip-dots" fill="#b59cf5"><circle cx="94" cy="50" r="3"/><circle cx="102" cy="42" r="3.8"/><circle cx="111" cy="33" r="4.6"/></g>`,
+      wow: `<g fill="#ffcf5c"><path d="M12 62 l3 -7 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3z"/><path d="M103 56 l2 -5 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2z"/></g>`,
     }[mood] || '';
-    return `<svg class="pip pip-${mood}${still ? ' still' : ''}" width="${size}" height="${size}" viewBox="-2 -9 124 134" role="img" aria-label="Pip">
+    const droop = mood === 'sleep' ? 1 : 0;
+    return `<svg class="pip pip-${mood}${still ? ' still' : ''}" width="${size}" height="${Math.round(size * 1.12)}" viewBox="0 0 120 134" role="img" aria-label="Pip">
   <defs>
-    <linearGradient id="${id}b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9b8ff"/><stop offset=".55" stop-color="#e9b8f0"/><stop offset="1" stop-color="#ffc2c7"/></linearGradient>
-    <linearGradient id="${id}l" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a68fff"/><stop offset="1" stop-color="#f59ec2"/></linearGradient>
-    <radialGradient id="${id}g" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff6c9"/><stop offset=".5" stop-color="#ffd76a"/><stop offset="1" stop-color="#ffb84d"/></radialGradient>
+    <radialGradient id="${k}c" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#fdf6ef"/><stop offset="1" stop-color="#e8d7cb"/></radialGradient>
+    <radialGradient id="${k}h" cx=".35" cy=".22" r=".85"><stop offset="0" stop-color="#ffe0e7"/><stop offset=".55" stop-color="#f8b9c8"/><stop offset="1" stop-color="#e595a9"/></radialGradient>
+    <radialGradient id="${k}i" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#ffd0da"/><stop offset="1" stop-color="#f3a2b5"/></radialGradient>
+    <radialGradient id="${k}e" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#7a5348"/><stop offset=".55" stop-color="#3e2723"/><stop offset="1" stop-color="#1e1212"/></radialGradient>
+    <radialGradient id="${k}b" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff8fa8" stop-opacity=".75"/><stop offset="1" stop-color="#ff8fa8" stop-opacity="0"/></radialGradient>
+    <filter id="${k}f" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="7" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="2.2" xChannelSelector="R" yChannelSelector="G"/></filter>
   </defs>
-  <ellipse cx="60" cy="118" rx="30" ry="4.5" fill="#2b2442" opacity=".09" class="pip-shadow"/>
+  <ellipse cx="60" cy="129" rx="28" ry="4" fill="#3b2626" opacity=".1" class="pip-shadow"/>
   <g class="pip-body">
-    <g class="pip-sprout" transform="rotate(-7 14 44)"><path d="M60 30 C60 22 60 18 60 13" stroke="#8f78f2" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M60 22 C66 16 72 17 74 20 C70 24 65 24 60 22Z" fill="#8fd6a8"/><circle cx="60" cy="10" r="6.2" fill="url(#${id}g)" class="pip-bulb"/></g>
-    <rect x="16" y="38" width="88" height="74" rx="30" fill="url(#${id}b)"/>
-    <ellipse cx="40" cy="52" rx="14" ry="7" fill="#fff" opacity=".35" transform="rotate(-18 40 52)"/>
-    <g class="pip-lid" transform="rotate(-7 14 44)"><rect x="10" y="27" width="100" height="21" rx="10.5" fill="url(#${id}l)"/><rect x="18" y="30.5" width="42" height="5" rx="2.5" fill="#fff" opacity=".4"/></g>
-    <g class="pip-pocket"><path d="M47 92 h26 v9 a8 8 0 0 1 -8 8 h-10 a8 8 0 0 1 -8 -8z" fill="#fff" opacity=".42"/><path d="M47 92 h26" stroke="#fff" stroke-width="2" opacity=".7" stroke-linecap="round"/><path d="M60 104.5 c-3.4 -2.4 -5.2 -4 -5.2 -6 a2.6 2.6 0 0 1 5.2 -0.6 a2.6 2.6 0 0 1 5.2 0.6 c0 2 -1.8 3.6 -5.2 6z" fill="#ff7aa2"/></g>
-    <g stroke="${ink}" stroke-width="3.2" stroke-linecap="round" fill="none">${eyes}${mouth}</g>
-    <ellipse cx="33" cy="79" rx="7.5" ry="4.6" fill="#ff6f9c" opacity=".5"/><ellipse cx="87" cy="79" rx="7.5" ry="4.6" fill="#ff6f9c" opacity=".5"/>
-    <ellipse cx="44" cy="112" rx="9" ry="4.6" fill="#a68fff"/><ellipse cx="76" cy="112" rx="9" ry="4.6" fill="#a68fff"/>
+    <g class="pip-ears" filter="url(#${k}f)">
+      <g transform="rotate(${-14 - droop * 30} 44 46)"><ellipse cx="44" cy="22" rx="11" ry="25" fill="url(#${k}c)"/><ellipse cx="44" cy="24" rx="5.6" ry="17" fill="url(#${k}i)"/></g>
+      <g transform="rotate(${16 + droop * 34} 76 46)"><ellipse cx="76" cy="22" rx="11" ry="25" fill="url(#${k}c)"/><ellipse cx="76" cy="24" rx="5.6" ry="17" fill="url(#${k}i)"/></g>
+    </g>
+    <g filter="url(#${k}f)">
+      <ellipse cx="44" cy="127" rx="10" ry="6" fill="url(#${k}c)"/><ellipse cx="76" cy="127" rx="10" ry="6" fill="url(#${k}c)"/>
+      <path d="M33 104 Q33 96 42 95 L78 95 Q87 96 87 104 L89 120 Q89 128 80 128 L40 128 Q31 128 31 120 Z" fill="url(#${k}h)"/>
+      <ellipse cx="60" cy="74" rx="45" ry="41" fill="url(#${k}h)"/>
+      <ellipse cx="60" cy="76" rx="35.5" ry="32.5" fill="url(#${k}c)"/>
+    </g>
+    <path d="M24 62 Q30 40 52 34" stroke="#fff" stroke-width="3.2" stroke-linecap="round" fill="none" opacity=".55"/>
+    <g class="pip-bow" transform="translate(88 40) rotate(18)"><path d="M0 0 C-10 -9 -14 4 -2 3 Z" fill="url(#${k}h)"/><path d="M0 0 C10 -9 14 4 2 3 Z" fill="url(#${k}h)"/><circle cx="0" cy="1" r="3" fill="#ee9db1"/></g>
+    <g class="pip-pocket"><path d="M49 112 h22 v6 a7 7 0 0 1 -7 7 h-8 a7 7 0 0 1 -7 -7z" fill="#fff" opacity=".45"/><path d="M60 122.4 c-3 -2.1 -4.6 -3.5 -4.6 -5.3 a2.3 2.3 0 0 1 4.6 -0.5 a2.3 2.3 0 0 1 4.6 0.5 c0 1.8 -1.6 3.2 -4.6 5.3z" fill="#ff6f93"/></g>
+    <ellipse cx="38" cy="85" rx="9" ry="6" fill="url(#${k}b)"/><ellipse cx="82" cy="85" rx="9" ry="6" fill="url(#${k}b)"/>
+    <g stroke="${ink}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none">${eyes}${brows}${mouth}</g>
+    <path d="M57.8 80.4 Q60 79.2 62.2 80.4 Q61.6 82.6 60 83 Q58.4 82.6 57.8 80.4Z" fill="#f48aa0"/>
+    ${paws}
     ${extra}
   </g>
-  <style>.pip .fill{fill:${ink};stroke:none}</style>
 </svg>`;
   }
   root.Pip = { svg };

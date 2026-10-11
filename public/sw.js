@@ -1,6 +1,6 @@
 // Pocket Box service worker: wake-up and Studio notifications, and an offline
 // copy of the Runtime so agents still run on a plane.
-const CACHE = 'pocket-v3';
+const CACHE = 'pocket-v4';
 const SHELL = ['/', '/runtime', '/app.js', '/app.css', '/runtime.js', '/pip.js', '/agent-worker.js', '/agent-core.js', '/icon.svg', '/icon-180.png', '/icon-192.png', '/manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
