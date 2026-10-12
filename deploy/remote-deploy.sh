@@ -113,6 +113,9 @@ else
   fi
 fi
 
+echo "== raw samples of free sources =="
+timeout 400 node deploy/peek.js
+
 echo "== desk smoke test (live data, no Claude) =="
 (set -a; . "$ENV_FILE"; set +a; timeout 300 node deploy/smoke.js)
 
