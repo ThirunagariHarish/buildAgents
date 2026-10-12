@@ -39,7 +39,7 @@
 
   // ---- routing --------------------------------------------------------------------------
   const route = () => (location.hash.replace(/^#\/?/, '') || 'today').split('/');
-  const TABS = [['today', 'Today', 'sun-horizon'], ['scenarios', 'Scenarios', 'list-dashes'], ['build', 'Build', 'plus-circle'], ['discover', 'Discover', 'compass'], ['markets', 'Markets', 'globe-hemisphere-west']];
+  const TABS = [['today', 'Today', 'sun-horizon'], ['scenarios', 'Scenarios', 'list-dashes'], ['build', 'Build', 'plus-circle'], ['trends', 'Trends', 'fire'], ['discover', 'Discover', 'compass'], ['markets', 'Markets', 'globe-hemisphere-west']];
   window.addEventListener('hashchange', () => { window.scrollTo(0, 0); render(); });
   window.addEventListener('scroll', () => { const t = $('.top'); if (t) t.classList.toggle('scrolled', window.scrollY > 4); }, { passive: true });
 
@@ -53,7 +53,7 @@
     const [r0, r1] = route();
     if (r0 === 'reset') return resetView(r1);
     if (!S.me) return r0 === 'signup' ? signupView() : r0 === 'forgot' ? forgotView() : loginView();
-    const views = { today: todayView, scenarios: scenariosView, build: buildView, discover: discoverView, markets: marketsView, you: youView, people: peopleView, sources: sourcesView };
+    const views = { today: todayView, scenarios: scenariosView, build: buildView, trends: trendsView, discover: discoverView, markets: marketsView, you: youView, people: peopleView, sources: sourcesView };
     if (r0 === 's' && r1) return dashView(r1);
     return (views[r0] || todayView)();
   }
@@ -405,6 +405,48 @@
       <div class="dact">${c.tracked ? `<a class="btn small quiet" href="#/s/${esc(c.tracked)}">${I('check', 14)}Tracking it</a>` : `<button class="btn small" data-act="disc-test" data-v="${i}">${I('lightning', 14)}Test it</button><button class="btn small quiet" data-act="disc-edit" data-v="${i}">Edit first</button>`}</div>
     </article>`;
   }
+
+  // ---- Trends ----------------------------------------------------------------------------------------
+  // At most three a day, picked from everything the desk pulls. Past days stay below.
+  if (!S.tr) S.tr = {};
+  async function trendsView() {
+    shell('trends', titleTop('Trends', S.me.owner ? `<button class="icon-btn" data-act="trends-rebuild" aria-label="Rewrite today's trends" title="Rewrite today's trends">${I('arrow-clockwise', 19)}</button>` : ''), `<div class="intro"><h1>Top trends today</h1><p>Only the two or three things that matter most, picked once a day from every claim, market, headline and price move the desk pulls.</p></div><div id="tr">${[1, 2].map(() => '<div class="trend"><div class="sk sk-line" style="width:30%"></div><div class="sk sk-line" style="height:24px;width:80%"></div><div class="sk sk-line"></div><div class="sk sk-line" style="width:70%"></div><div class="sk sk-line" style="height:48px;margin-top:14px"></div></div>').join('')}</div>`);
+    let d;
+    try { d = await api('/api/trends'); } catch (e) { $('#tr').innerHTML = `<p class="empty">${esc(e.message)}</p>`; return; }
+    if (route()[0] !== 'trends') return;
+    S.tr.data = d;
+    drawTrends();
+  }
+  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  const utcLocal = (hh) => { const n = new Date(); return new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), hh)).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); };
+  function drawTrends() {
+    const el = $('#tr'); const d = S.tr.data; if (!el || !d) return;
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const cur = d.days[0] && d.days[0].date === todayIso ? d.days[0] : null;
+    const past = d.days.filter((x) => x !== cur);
+    const head = cur ? `<p class="fine disc-meta">${d.building ? '<span class="inline"><span class="pulse"></span>Rewriting</span>' : `${esc(fmtDay(cur.date))}, written ${esc(ago(cur.at))}`}. ${cur.trends.length} picked from ${plural(cur.from.claims, 'claim')}, ${plural(cur.from.markets, 'prediction market')}, ${plural(cur.from.headlines, 'headline')} and ${plural(cur.from.movers, 'price move')}. ${cur.by === 'claude' ? 'Chosen and written by Claude, numbers checked on the web.' : 'Picked by buzz and size of move (Claude is off).'}</p>`
+      : `<div class="hero-empty">${d.building ? `<h2 class="inline"><span class="pulse"></span>Writing today's trends</h2><p>The desk is weighing today's claims, markets, headlines and moves to pick the few that matter. This takes a few minutes; the page fills in by itself.</p>` : `<h2>Today's trends come out at ${esc(utcLocal(13))}</h2><p>Once a day, before the US open, the desk picks the top ${d.max} at most. ${past.length ? 'The most recent set is below.' : 'Nothing has been written yet.'}</p>`}</div>`;
+    el.innerHTML = `${head}
+      ${cur ? `<section class="block tight">${cur.trends.map((t, i) => trendCard(t, 0, i)).join('') || '<p class="empty">Nothing was big enough to make the list today.</p>'}</section>` : ''}
+      ${past.length ? `<section class="block"><h2>Earlier</h2>${past.map((day) => { const di = d.days.indexOf(day); return `<details class="tday" ${!cur && di === d.days.indexOf(past[0]) ? 'open' : ''}><summary><span class="tday-date">${esc(fmtDay(day.date))}</span><span class="tday-list">${day.trends.map((t) => esc(t.title)).join('<i>/</i>')}</span></summary><div class="tday-body">${day.trends.map((t, i) => trendCard(t, di, i)).join('')}</div></details>`; }).join('')}</section>` : ''}
+      <p class="foot">A short list on purpose: no more than ${d.max} a day. Prices from Yahoo Finance; the odds are a quick Monte Carlo on the price history, not the full desk. Research, not advice.</p>`;
+  }
+  function trendCard(t, di, i) {
+    const m = t.market, q = t.quick;
+    const hasCase = t.bull || t.bear;
+    return `<article class="trend">
+      <div class="trend-top"><span class="trend-n num">${i + 1}</span><span class="dcat">${esc(t.category)}</span>${(t.tickers || []).length ? `<span class="trend-tk">${t.tickers.map((s) => `<button class="tk" data-act="track-symbol" data-v="${esc(s)}">${esc(s)}</button>`).join('')}</span>` : ''}</div>
+      <h3 class="trend-title">${esc(t.title)}</h3>
+      <p class="trend-sum">${esc(t.summary)}</p>
+      ${m ? `<button class="trend-mkt" data-act="track-symbol" data-v="${esc(m.symbol)}" aria-label="Build a scenario on ${esc(m.symbol)}"><span class="tm-l"><b>${esc(m.symbol)}</b><span class="num">${fmtN(m.last)}</span></span>${Chart.spark(m.spark, { w: 120, h: 34 })}<span class="tm-r"><span class="delta ${m.d1 > 0 ? 'up' : m.d1 < 0 ? 'down' : ''}">${pctS(m.d1)} 1D</span><span class="delta ${m.m1 > 0 ? 'up' : m.m1 < 0 ? 'down' : ''}">${pctS(m.m1)} 1M</span>${m.y1 !== null && m.y1 !== undefined ? `<span class="delta ${m.y1 > 0 ? 'up' : 'down'}">${pctS(m.y1, 0)} 1Y</span>` : ''}</span></button>` : ''}
+      ${t.why ? `<p class="trend-why"><b>Why it matters.</b> ${esc(t.why)}</p>` : ''}
+      ${hasCase ? `<div class="trend-cases">${t.bull ? `<div class="tc yes"><span>${I('trend-up', 13)}Up case</span><p>${esc(t.bull)}</p></div>` : ''}${t.bear ? `<div class="tc no"><span>${I('trend-down', 13)}Down case</span><p>${esc(t.bear)}</p></div>` : ''}</div>` : ''}
+      ${t.claim ? `<div class="trend-claim"><div><small>The claim to test</small><p>${esc(t.claim)}</p></div>${q ? `<div class="tq ${tone(q.p)}"><b class="num">${q.p < 1 ? '&lt;1' : q.p > 99 ? '&gt;99' : Math.round(q.p)}%</b><small>quick odds</small></div>` : ''}</div>` : ''}
+      ${(t.sources || []).length ? `<p class="trend-src">${I('newspaper', 13)}${t.sources.map((s) => `<a href="${safeUrl(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>`).join('')}</p>` : ''}
+      ${t.claim || m ? `<div class="dact">${t.claim && (S.me.claude || t.build) ? `<button class="btn small" data-act="trend-test" data-v="${di}:${i}">${I('lightning', 14)}Test it</button>` : ''}${t.claim ? `<button class="btn small quiet" data-act="trend-edit" data-v="${di}:${i}">Edit first</button>` : m ? `<button class="btn small quiet" data-act="track-symbol" data-v="${esc(m.symbol)}">Build on ${esc(m.symbol)}</button>` : ''}</div>` : ''}
+    </article>`;
+  }
+  const trendAt = (v) => { const [di, i] = String(v).split(':').map(Number); return S.tr.data.days[di].trends[i]; };
 
   // ---- Markets ---------------------------------------------------------------------------------------
   async function marketsView() {
@@ -867,6 +909,14 @@
       busy(t, true, 'Starting');
       try { const r = await api('/api/scenarios', { method: 'POST', body }); toast('Testing it now.'); location.hash = `#/s/${r.id}`; } catch (err) { busy(t, false); t.innerHTML = `${I('lightning', 14)}Test it`; toast(err.message, true); }
     }
+    else if (act === 'trends-rebuild') { try { await api('/api/trends/rebuild', { method: 'POST' }); if (S.tr.data) { S.tr.data.building = true; drawTrends(); } toast('Rewriting today\'s trends. This takes a few minutes.'); } catch (err) { toast(err.message, true); } }
+    else if (act === 'trend-edit') { const tr = trendAt(v); S.prefill = S.me.claude || !tr.build ? { claim: tr.claim } : { build: tr.build }; if (!S.me.claude && !tr.build) S.prefill = { build: { symbol: (tr.tickers || [])[0] || 'SPY', move: 'drawdown', value: 10, date: inMonths(6) } }; location.hash = '#/build'; }
+    else if (act === 'trend-test') {
+      const tr = trendAt(v);
+      const body = S.me.claude ? { claim: tr.claim, facts: [tr.summary, tr.why, tr.bull && `Up case: ${tr.bull}`, tr.bear && `Down case: ${tr.bear}`].filter(Boolean).join('\n') } : { build: tr.build };
+      busy(t, true, 'Starting');
+      try { const r = await api('/api/scenarios', { method: 'POST', body }); toast('Testing it now.'); location.hash = `#/s/${r.id}`; } catch (err) { busy(t, false); t.innerHTML = `${I('lightning', 14)}Test it`; toast(err.message, true); }
+    }
     else if (act === 'mic') toggleMic(t);
     else if (act === 'opt-depth') { document.querySelectorAll('[data-act="opt-depth"]').forEach((b) => b.setAttribute('aria-checked', String(b === t))); $('#depth-help').textContent = DEPTHS[v][1]; }
     else if (act === 'resend') { try { const r = await api('/api/forgot', { method: 'POST', body: { email: v }, anon: true }); toast(r.message); } catch (err) { toast(err.message, true); } }
@@ -950,6 +1000,7 @@
         const el = document.querySelector(`[data-qid="${ev.qid}"] .qtext`); if (el) el.textContent = ev.text;
       } else if (ev.event === 'question') { if (r0 === 's' && r1 === ev.id) refresh(); }
       else if (ev.event === 'discover') { if (r0 === 'discover') discoverView(); }
+      else if (ev.event === 'trends') { if (r0 === 'trends') { trendsView(); toast('Today\'s trends are in.'); } }
     };
     es.onerror = () => { es.close(); es = null; setTimeout(() => { if (S.me) connect(); }, 5000); };
   }

@@ -21,6 +21,7 @@ const insights = require('./lib/insights');
 const reading = require('./lib/reading');
 const voice = require('./lib/voice');
 const discover = require('./lib/discover');
+const trends = require('./lib/trends');
 const os = require('os');
 
 const { PORT, BASE_URL } = config;
@@ -226,8 +227,24 @@ function refreshDiscover() {
     .finally(() => { discovering = null; });
   return discovering;
 }
+// Trends: at most three a day, written once the midday Discover pass is in.
+let trending = null;
+function buildTrends(force = false) {
+  if (trending) return trending;
+  const owner = auth.admins().find((u) => u.primary);
+  trending = trends.build({ ai: canClaude(owner), force })
+    .then((r) => { emit({ event: 'trends' }); return r; })
+    .catch((e) => { console.error(`trends: ${e.message}`); return null; })
+    .finally(() => { trending = null; });
+  return trending;
+}
+function trendsDue(now = new Date()) {
+  const dl = discover.latest();
+  return now.getUTCHours() >= 13 && !trends.load(now.toISOString().slice(0, 10)) && dl && Date.now() - dl.at < 10 * 3600 * 1000;
+}
 function tick() {
   const now = new Date();
+  if (trendsDue(now) && !discovering) buildTrends();
   const dl = discover.latest();
   if (!dl || (Date.now() - dl.at > 6 * 3600 * 1000 && [12, 13, 21, 22].includes(now.getUTCHours()))) refreshDiscover();
   for (const sc of store.list()) {
@@ -410,6 +427,17 @@ async function api(req, res, p, url, user) {
     const words = (x) => (x.toLowerCase().match(/[a-z0-9$]{3,}/g) || []);
     const tracked = (c) => { const w = words(c.claim); const hit = mineClaims.find((m) => w.length && w.filter((x) => m.t.includes(x)).length / w.length > 0.7); return hit ? hit.id : null; };
     return json(res, 200, { ...d, claims: d.claims.map((c) => ({ ...c, tracked: tracked(c) })), refreshing: !!discovering });
+  }
+  if (p === '/api/trends' && req.method === 'GET') {
+    if (!trending && trendsDue()) buildTrends();
+    return json(res, 200, { days: trends.days(14), building: !!trending, max: trends.MAX, nextAt: `${String(13).padStart(2, '0')}:00 UTC` });
+  }
+  if (p === '/api/trends/rebuild' && req.method === 'POST') {
+    if (!user.primary) return json(res, 403, { error: 'Only the owner can rewrite today\'s trends.' });
+    if (auth.limited('trends:rebuild', 1, 3 * 3600 * 1000)) return json(res, 429, { error: 'Trends were rewritten recently. They are limited to keep them to the few that matter.' });
+    if (!discover.latest() || Date.now() - discover.latest().at > 6 * 3600 * 1000) await refreshDiscover();
+    buildTrends(true);
+    return json(res, 202, { building: true });
   }
   if (p === '/api/discover/refresh' && req.method === 'POST') {
     if (auth.limited('discover:refresh', 2, 30 * 60 * 1000)) return json(res, 429, { error: 'It refreshed recently. Try again in a little while.' });

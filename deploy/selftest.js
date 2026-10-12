@@ -143,6 +143,17 @@ const ok = (name) => { n++; console.log(`  ok ${name}`); };
   assert(discover.latest().at, 'saved');
   ok(`discover: ${dc.claims.length} claims with Claude, ${dn.claims.length} without`);
 
+  // Trends: at most three a day, with numbers and a quick read.
+  const trends = require('../lib/trends');
+  const inj = { claims: dc.claims, markets: [{ venue: 'Polymarket', question: 'Fed cut in October?', p: 0.01, volume24h: 5e6 }], tickers: { mentioned: [], trending: [] }, movers: [{ symbol: 'SPY', name: 'SPY', last: 620, d1: -0.021, m1: 0.01 }], news: [{ text: 'Stocks slide', where: 'Reuters' }] };
+  const tr = await trends.build({ ai: true, inject: inj });
+  assert(tr.trends.length >= 2 && tr.trends.length <= trends.MAX && tr.trends[0].market && tr.trends[0].quick && tr.trends[0].quick.p >= 0, `trends with Claude ${JSON.stringify(tr.trends[0]).slice(0, 300)}`);
+  assert(trends.build({ ai: true, inject: inj }).then((x) => x.at === tr.at), 'one set per day unless forced');
+  const tn = await trends.build({ ai: false, force: true, inject: inj });
+  assert(tn.trends.length >= 1 && tn.trends.length <= 3 && tn.trends.every((t) => t.by === 'auto'), 'trends without Claude');
+  assert(trends.days(5).length === 1, 'kept by day');
+  ok(`trends: ${tr.trends.length} picked; quick read ${tr.trends[0].quick.p}% on "${tr.trends[0].quick.claim}"`);
+
   // The free desk: a builder scenario run without Claude.
   const th2 = desk.buildThesis({ symbol: 'SPY', move: 'drawdown', value: 15, date: new Date(Date.now() + 200 * 864e5).toISOString().slice(0, 10) });
   const sc3 = store.create({ ownerId: 'u2', claim: th2.proposition }); store.patch(sc3.id, { thesis: th2 });
