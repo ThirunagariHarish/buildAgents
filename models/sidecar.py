@@ -30,8 +30,12 @@ def forecast(req):
     out = []
     for s in req["series"]:
         ctx = torch.tensor([float(x) for x in s[-1024:]], dtype=torch.float32)
-        q, m = pipe.predict_quantiles(context=ctx, prediction_length=horizon, quantile_levels=LEVELS)
-        q = q[0].tolist()  # [horizon][levels]
+        # Positional first argument: chronos 1.x calls it `context`, 2.x `inputs`.
+        q, _ = pipe.predict_quantiles([ctx], prediction_length=horizon, quantile_levels=LEVELS)
+        q = q[0]
+        q = q.tolist() if hasattr(q, "tolist") else q  # [horizon][levels]
+        if q and not isinstance(q[0], list):  # some versions drop the levels axis for a single series
+            raise ValueError("unexpected forecast shape")
         out.append({
             "horizon": horizon,
             "levels": LEVELS,
