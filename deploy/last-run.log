@@ -1,9 +1,9 @@
-run: 140  commit: a99d497  ssh step: success  at: 2026-10-12T22:54:12Z
+run: 141  commit: d6d8a12  ssh step: success  at: 2026-10-12T22:59:23Z
 
-HEAD: a99d497   domain: scenario.cashflowus.com   port: 3402
+HEAD: d6d8a12   domain: scenario.cashflowus.com   port: 3402
 == prerequisites ==
 node v22.23.3, claude 2.1.287 (Claude Code), python Python 3.12.3
-machine: 8 CPUs, 32094 MB RAM, 26626 MB available, disk free 293G
+machine: 8 CPUs, 32094 MB RAM, 26655 MB available, disk free 292G
 == env file ==
 keys in /etc/scenario.env: SC_PORT SC_DOMAIN SC_DATA_DIR SC_PYTHON CLAUDE_CODE_OAUTH_TOKEN SC_SMTP_HOST SC_SMTP_PORT SC_SMTP_USER SC_SMTP_PASS SC_MAIL_FROM 
 == data ==
@@ -11,50 +11,51 @@ accounts: 3 user(s): harishkumart1994@gmail.com (admin, owner, approved), sruthi
 scenarios: 2
 == service ==
 service: active
-   Oct 12 22:53:33 srv1349789 systemd[1]: scenario.service: Deactivated successfully.
-   Oct 12 22:53:33 srv1349789 systemd[1]: Stopped scenario.service - Run Scenario — market claims tested against data every day.
-   Oct 12 22:53:33 srv1349789 systemd[1]: scenario.service: Consumed 2min 5.689s CPU time, 533.7M memory peak, 0B memory swap peak.
-   Oct 12 22:53:33 srv1349789 systemd[1]: Started scenario.service - Run Scenario — market claims tested against data every day.
-   Oct 12 22:53:33 srv1349789 node[3829079]:   Run Scenario on http://localhost:3402 (public https://scenario.cashflowus.com)
+   Oct 12 22:58:51 srv1349789 systemd[1]: Stopping scenario.service - Run Scenario — market claims tested against data every day...
+   Oct 12 22:58:51 srv1349789 systemd[1]: scenario.service: Deactivated successfully.
+   Oct 12 22:58:51 srv1349789 systemd[1]: Stopped scenario.service - Run Scenario — market claims tested against data every day.
+   Oct 12 22:58:51 srv1349789 systemd[1]: Started scenario.service - Run Scenario — market claims tested against data every day.
+   Oct 12 22:58:51 srv1349789 node[3846900]:   Run Scenario on http://localhost:3402 (public https://scenario.cashflowus.com)
 local /: HTTP 200
 api without sign-in: HTTP 401 (401 = sign-in enforced)
 mail: SMTP login OK
 == data sources, as this server reaches them ==
-   OK   Yahoo prices   2512 days (227 ms)
-   FAIL Stooq prices   stooq.com said HTTP 403 (402 ms)
-   FAIL Nasdaq prices  no data (136 ms)
-   OK   FRED           71 points from FRED (St. Louis Fed) (0 ms)
-   OK   Macro via Yahoo 10y-3m spread 1.19 (302 weeks) (121 ms)
-   OK   Reddit         50 posts (1 ms)
+   OK   Yahoo prices   2512 days (170 ms)
+   FAIL Stooq prices   stooq.com said HTTP 403 (396 ms)
+   FAIL Nasdaq prices  no data (176 ms)
+   OK   FRED           71 points from FRED (St. Louis Fed) (1 ms)
+   OK   Macro via Yahoo 10y-3m spread 1.19 (302 weeks) (9 ms)
+   OK   Reddit         50 posts (0 ms)
    OK   StockTwits     30 posts (0 ms)
    OK   Hacker News    40 posts (1 ms)
-   OK   Google News    40 headlines (1 ms)
-   OK   SEC EDGAR      revenue TTM 458393000000 (136 ms)
+   OK   Google News    40 headlines (0 ms)
+   OK   SEC EDGAR      revenue TTM 458393000000 (50 ms)
    OK   Prediction markets 8 matching (Polymarket, Manifold) (0 ms)
-   OK   Options (Cboe) 32 expiries, put/call 1.29, IV 12%, P(SPY -10% by 2026-11-13) 2.0% (6 ms)
-   OK   Fear & Greed   46 (neutral) (0 ms)
+   OK   Options (Cboe) 32 expiries, put/call 1.29, IV 12%, P(SPY -10% by 2026-11-13) 2.0% (9 ms)
+   OK   Fear & Greed   46 (neutral) (1 ms)
    OK   Crypto F&G     69 (Greed) (0 ms)
    OK   US Treasury    2026-10-09: 2y 4.8, 10y 5.24 (0 ms)
-   OK   BLS            unemployment 4.2% (1 ms)
+   OK   BLS            unemployment 4.2% (0 ms)
    OK   Wikipedia      Nvidia: 180 days (0 ms)
    OK   Mastodon       27 posts (1 ms)
-   OK   Lemmy          30 posts (1 ms)
+   OK   Lemmy          30 posts (0 ms)
    OK   Ticker news    49 headlines (0 ms)
-   OK   Federal Reserve 12 releases (0 ms)
+   OK   Federal Reserve 12 releases (1 ms)
 == Hugging Face models ==
 ready: {"forecast":"amazon/chronos-bolt-small","sentiment":"ProsusAI/finbert","at":"2026-10-12T14:47:55Z"}
 == desk smoke test (live data, no Claude) ==
    SPY 778.10 on 2026-10-12 (Yahoo Finance): -0.1% from high, RSI 60, vol +10%
+   Technicals sheet: Bollinger %B 81%, typical day 0.42%, supports 752/728/705, volume -8% vs 100-day, up/down 0.82x, Oct avg 1.2%
    Monte Carlo: P(SPY falls 20% from its high by 2026-12-31) = 0.7%
    Markets tab: SPY 778.10, QQQ 746.04, IWM 277.90, ^VIX 15.21, ^TNX 5.24, GC=F 4196.10, CL=F 93.33, BTC-USD 82379.05; Fear & Greed 46; curve 0.44; 6 prediction markets
    Reading room (auto-sort, live news): 75 articles; 7 support, 1 against, 2 context, 20 off-topic
      for      Is the Stock Market Already Crashing Beneath the Surface? (The Acquirer's Multiple)
      for      Why the Investors Most Afraid of a Market Crash Aren't Moving Markets (Index Fund Advisors, Inc.)
      context  Afraid of a Stock Market Crash? 4 Great ETFs to Buy Regardless. (Yahoo Finance)
-   Chronos-Bolt 20-day: median 782.12, 80% band 749.74–811.84 (5s)
+   Chronos-Bolt 20-day: median 782.12, 80% band 749.74–811.84 (7s)
    FinBERT: 0.3512, -0.9574 (expect +, -)
 == speech to text (Whisper) ==
-warming up in the background (one-time model download)
+ready: {"model": "openai/whisper-small.en", "text": ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."}
 == route (k3s Traefik) ==
    namespace/scenario unchanged
    service/scenario unchanged
@@ -62,7 +63,7 @@ warming up in the background (one-time model download)
    ingress.networking.k8s.io/scenario unchanged
    certificate: scenario-tls ready=True 
 == claude ==
-haiku: OK (8s)
+haiku: OK (3s)
 == the domain, as the internet reaches it ==
 DNS: scenario.cashflowus.com -> 2.25.157.104 (agents.cashflowus.com -> 2.25.157.104 )
 https://scenario.cashflowus.com/ -> HTTP 200
