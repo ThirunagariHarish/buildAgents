@@ -19,6 +19,8 @@ const data = require('./lib/data');
 const models = require('./lib/models');
 const insights = require('./lib/insights');
 const reading = require('./lib/reading');
+const voice = require('./lib/voice');
+const os = require('os');
 
 const { PORT, BASE_URL } = config;
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -35,6 +37,14 @@ function readBody(req, limit = 64000) {
     let d = '', done = false;
     req.on('data', (c) => { if (done) return; d += c; if (d.length > limit) { done = true; reject(Object.assign(new Error('Too large.'), { status: 413 })); req.destroy(); } });
     req.on('end', () => { if (done) return; done = true; try { resolve(d ? JSON.parse(d) : {}); } catch { reject(Object.assign(new Error('Not valid JSON.'), { status: 400 })); } });
+    req.on('error', (e) => { if (!done) { done = true; reject(e); } });
+  });
+}
+function readBuffer(req, limit) {
+  return new Promise((resolve, reject) => {
+    const chunks = []; let n = 0, done = false;
+    req.on('data', (c) => { if (done) return; n += c.length; if (n > limit) { done = true; reject(Object.assign(new Error('That recording is too long.'), { status: 413 })); req.destroy(); return; } chunks.push(c); });
+    req.on('end', () => { if (!done) { done = true; resolve(Buffer.concat(chunks)); } });
     req.on('error', (e) => { if (!done) { done = true; reject(e); } });
   });
 }
@@ -65,6 +75,7 @@ function securityHeaders(req, res) {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'no-referrer');
   res.setHeader('Content-Security-Policy', CSP);
+  res.setHeader('Permissions-Policy', 'microphone=(self), camera=(), geolocation=(), payment=()');
   if (isHttps(req)) res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 }
 function crossSiteWrite(req) {
@@ -353,6 +364,29 @@ async function api(req, res, p, url, user) {
       return json(res, 200, { ok: true });
     } catch (e) { return json(res, e.status || 500, { error: e.message }); }
   }
+  // ---- voice ----
+  if (p === '/api/transcribe' && req.method === 'POST') {
+    // 16 kHz mono 16-bit PCM from the browser, up to about 60 seconds.
+    if (!(await models.available())) return json(res, 503, { error: 'Speech-to-text on the server is still being installed. Try Chrome or Safari, which have it built in.' });
+    if (auth.limited(`stt:${user.id}`, 60, 3600 * 1000)) return json(res, 429, { error: 'Too many recordings this hour.' });
+    const buf = await readBuffer(req, 2 * 1024 * 1024);
+    if (buf.length < 3200) return json(res, 400, { error: 'That was too short to hear anything.' });
+    const file = path.join(os.tmpdir(), `sc-voice-${crypto.randomBytes(6).toString('hex')}.pcm`);
+    fs.writeFileSync(file, buf, { mode: 0o600 });
+    try { const r = await models.call('transcribe', { path: file }, 180000); return json(res, 200, { text: r.text, model: r.model }); }
+    catch (e) { return json(res, 500, { error: `Couldn't transcribe: ${e.message.slice(0, 160)}` }); }
+    finally { fs.rm(file, { force: true }, () => {}); }
+  }
+  if (p === '/api/voice/tidy' && req.method === 'POST') {
+    const b = await readBody(req);
+    const text = String(b.text || '').trim().slice(0, 2000);
+    const mode = b.mode === 'build' ? 'build' : 'describe';
+    if (text.length < 3) return json(res, 400, { error: 'Say a little more.' });
+    if (canClaude(user) && !auth.limited(`tidy:${user.id}`, 80, 3600 * 1000)) {
+      try { return json(res, 200, { ...(await voice.tidy(text, mode)), by: 'claude' }); } catch {}
+    }
+    return json(res, 200, mode === 'build' ? { ...voice.parseBuild(text), by: 'rules' } : { claim: text, facts: '', by: 'none' });
+  }
   if (p === '/api/today' && req.method === 'GET') return json(res, 200, insights.today(store.list().filter((sc) => sc.ownerId === user.id), user.id));
   if (p === '/api/record' && req.method === 'GET') return json(res, 200, insights.record(store.list().filter((sc) => sc.ownerId === user.id)));
   if (p === '/api/pulse' && req.method === 'GET') {
@@ -410,6 +444,20 @@ async function api(req, res, p, url, user) {
     fresh.myCalls = [...(fresh.myCalls || []).filter((x) => x.date !== date), { date, p: Math.round(pv) }];
     store.save(fresh);
     return json(res, 200, { myCalls: fresh.myCalls });
+  }
+  const am = sub.match(/^\/agent\/([a-z]{3,20})$/);
+  if (am && req.method === 'GET') {
+    // One analyst's latest report, and how its lean moved run by run.
+    const latest = sc.latest ? store.loadRun(sc.id, sc.latest.id) : null;
+    const analyst = latest && latest.analysts.find((a) => a.id === am[1]);
+    if (!analyst) return json(res, 404, { error: 'That analyst has no report for this scenario yet.' });
+    const byDate = new Map();
+    for (const rid of store.runIds(sc.id)) {
+      const r = store.loadRun(sc.id, rid);
+      const a = r && r.analysts.find((x) => x.id === am[1]);
+      if (a) byDate.set(r.date, { date: r.date, stance: Math.round(a.stance * 100) / 100, confidence: Math.round(a.confidence * 100) / 100, p: a.probability !== undefined ? Math.round(a.probability * 1000) / 10 : null });
+    }
+    return json(res, 200, { analyst, runDate: latest.date, history: [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date)) });
   }
   if (sub === '/reading' && req.method === 'GET') return json(res, 200, reading.view(sc.id, user.id));
   if (sub === '/reading' && req.method === 'POST') {

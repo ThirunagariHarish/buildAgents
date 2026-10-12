@@ -114,6 +114,21 @@ const ok = (name) => { n++; console.log(`  ok ${name}`); };
   assert(reading.unreadCount(sc.id, 'u1') === all.length - 1, 'unread count');
   ok(`reading room: ${all.length} articles (${all.filter((x) => x.stance === 'for').length} for, ${all.filter((x) => x.stance === 'against').length} against)`);
 
+  // Voice: rules turn speech into Builder fields.
+  const voice = require('../lib/voice');
+  const v1 = voice.parseBuild('The S&P 500 crashes by the end of the year');
+  assert(v1.symbol === 'SPY' && v1.move === 'drawdown' && v1.value === 20, JSON.stringify(v1));
+  const v2 = voice.parseBuild('QQQ beats SPY by 5 percent by December 2027');
+  assert(v2.move === 'beat' && v2.vs === 'SPY' && v2.value === 5 && v2.date === '2027-12-31', JSON.stringify(v2));
+  const v3 = voice.parseBuild('Bitcoin hits 150000 in 6 months');
+  assert(v3.symbol === 'BTC-USD' && v3.move === 'touchAbove' && v3.value === 150000, JSON.stringify(v3));
+  ok('voice: spoken claims fill the builder');
+  const tech = r1.run.analysts.find((a) => a.id === 'technical');
+  assert(tech.chart && tech.chart.close.length > 200 && tech.sheet.bollinger && tech.sheet.seasonality.length === 12, 'technical chart and sheet');
+  const qa = r1.run.analysts.find((a) => a.id === 'quant');
+  assert(qa.fan && qa.fan.points.length === 24 && qa.fan.hist.length > 5 && Math.abs(qa.fan.hist.reduce((x, b) => x + b.share, 0) - 1) < 1e-6, 'quant fan and histogram');
+  ok('agent pages: price chart, sheet, fan, histogram');
+
   // The free desk: a builder scenario run without Claude.
   const th2 = desk.buildThesis({ symbol: 'SPY', move: 'drawdown', value: 15, date: new Date(Date.now() + 200 * 864e5).toISOString().slice(0, 10) });
   const sc3 = store.create({ ownerId: 'u2', claim: th2.proposition }); store.patch(sc3.id, { thesis: th2 });

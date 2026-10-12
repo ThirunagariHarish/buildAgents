@@ -14,6 +14,10 @@ process.stdin.on('data', (d) => (input += d)).on('end', () => {
     out = { stance: -0.2, confidence: 0.5, headline: 'Recent news leans against an imminent collapse, with real valuation risk.', evidence: [{ text: 'Q3 earnings growth came in at 9% year over year for the S&P 500.', for: false, source: 'FactSet', url: 'https://example.com/factset', date: '2026-10-09' }, { text: 'Forward P/E of 23 is in the top decile historically.', for: true, source: 'Reuters', url: 'https://example.com/reuters', date: '2026-10-08' }], factChecks: [{ claim: 'Unemployment is rising fast', verdict: 'partly', detail: 'Up 0.4 pts in 6 months to 4.3%; rising but not fast by historical standards.', source: 'BLS', url: 'https://www.bls.gov/' }], catalysts: [{ date: '2026-11-04', event: 'FOMC decision', why: 'A cut or hold sets the tone into year end.' }] };
   } else if (/judge/.test(sys)) {
     out = { probability: 14, verdict: 'Unlikely', call: 'A 20% fall before year end is unlikely: trend, credit and earnings don\'t show stress yet.', trend: 'steady', confidence: 'medium', bull: ['Valuations are stretched'], bear: ['Credit spreads are tight', 'Uptrend intact'], corrections: ['Unemployment is rising, but slowly.'], supports: ['Valuations are indeed high.'], watch: [{ signal: 'High-yield spread', threshold: 'above 4.5%', why: 'Credit leads equities.' }], changed: 'first run', summary: 'The numbers alone put it near 10%. Nothing in the news changes that much.' };
+  } else if (/spoken requests/.test(sys)) {
+    out = { symbol: 'NVDA', move: 'drawdown', value: 30, vs: '', date: '2027-06-30' };
+  } else if (/dictated speech/.test(sys)) {
+    out = { claim: 'Nvidia falls 30% by June 2027.', facts: 'Valuations are stretched.\nCapex is slowing.' };
   } else if (/sort financial news/.test(sys)) {
     const n = (input.match(/^\d+\. /gm) || []).length;
     out = { items: Array.from({ length: n }, (_, k) => ({ i: k + 1, stance: ['for', 'against', 'context'][k % 3], why: 'Test reason for the sort.' })) };

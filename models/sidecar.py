@@ -17,6 +17,7 @@ os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
 
 FORECAST_MODEL = os.environ.get("SC_FORECAST_MODEL", "amazon/chronos-bolt-small")
 SENTIMENT_MODEL = os.environ.get("SC_SENTIMENT_MODEL", "ProsusAI/finbert")
+SPEECH_MODEL = os.environ.get("SC_SPEECH_MODEL", "openai/whisper-small.en")
 LEVELS = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
 
 
@@ -67,6 +68,20 @@ def sentiment(req):
     return {"model": SENTIMENT_MODEL, "scores": scores}
 
 
+def transcribe(req):
+    """Speech to text with Whisper. The browser sends 16 kHz mono 16-bit PCM, so no ffmpeg is needed."""
+    import numpy as np
+    import torch
+    from transformers import pipeline
+
+    torch.set_num_threads(max(1, min(6, os.cpu_count() or 1)))
+    with open(req["path"], "rb") as f:
+        pcm = np.frombuffer(f.read(), dtype="<i2").astype(np.float32) / 32768.0
+    asr = pipeline("automatic-speech-recognition", model=SPEECH_MODEL, device="cpu")
+    out = asr({"raw": pcm, "sampling_rate": 16000}, generate_kwargs={"max_new_tokens": 220})
+    return {"model": SPEECH_MODEL, "text": (out.get("text") or "").strip()}
+
+
 def main():
     req = json.loads(sys.stdin.read() or "{}")
     mode = req.get("mode")
@@ -74,6 +89,8 @@ def main():
         res = forecast(req)
     elif mode == "sentiment":
         res = sentiment(req)
+    elif mode == "transcribe":
+        res = transcribe(req)
     elif mode == "check":
         res = {"forecast": forecast({"series": [[100 + i * 0.1 for i in range(300)]], "horizon": 5})["model"],
                "sentiment": sentiment({"texts": ["Revenue beat expectations", "The company missed and cut guidance"]})}

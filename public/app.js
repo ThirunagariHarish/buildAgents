@@ -31,6 +31,8 @@
   const delta = (c) => (c === null || c === undefined ? '' : c === 0 ? '<span class="delta">0</span>' : `<span class="delta ${c > 0 ? 'up' : 'down'}">${c > 0 ? '+' : ''}${c}</span>`);
   const pctS = (x, d = 1) => (x === null || x === undefined || !Number.isFinite(x) ? '-' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(d)}%`);
   const fmtN = (x) => (x === null || x === undefined ? '-' : Math.abs(x) >= 1000 ? Math.round(x).toLocaleString() : Math.abs(x) >= 10 ? x.toFixed(1) : x.toFixed(2));
+  /** A mic button that dictates into the field with id `target`. */
+  const mic = (target, mode = 'text') => (window.Voice && Voice.supported ? `<button type="button" class="mic" data-act="mic" data-target="${target}" data-mode="${mode}" aria-label="Speak instead of typing" title="Speak">${I('microphone', 18)}</button>` : '');
   const mark = () => `<span class="brand-mark">${I('chart-line-up', 16)}</span>`;
   const DEPTHS = { quick: ['Quick', 'Data analysts only. Free, about a minute.'], standard: ['Standard', 'Plus Claude research, fact-checks and a judge.'], deep: ['Deep', 'Plus social pulse, bull and bear advocates and the strongest judge.'] };
   const FREQS = { twice: 'Twice a day (before the open and after the close)', daily: 'Every day after the US close', weekly: 'Once a week', off: 'Only when I tap Run' };
@@ -242,12 +244,13 @@
   }
   const composerBody = () => (S.mode === 'templates' ? templatesHtml() : `<div class="composer">${S.mode === 'describe' ? describeForm() : buildForm()}${optionsHtml()}<button class="btn block" data-act="create" style="margin-top:16px">Run the desk</button></div>`);
   const describeForm = () => `<form id="describe" class="stack" novalidate>
-      <div class="field"><label for="f-claim">Your claim</label><textarea id="f-claim" name="claim" rows="2" maxlength="600" placeholder="The market crashes before the end of 2026">${esc(S.prefill && S.prefill.claim || '')}</textarea><div class="err" id="e-claim"></div></div>
-      <div class="field"><label for="f-facts">Your reasons <span class="muted">(optional, each one gets fact-checked)</span></label><textarea id="f-facts" name="facts" rows="3" maxlength="3000" placeholder="Unemployment is rising. Valuations are the highest since 2000."></textarea></div>
+      <div class="field"><label for="f-claim">Your claim</label><div class="with-mic"><textarea id="f-claim" name="claim" rows="2" maxlength="600" placeholder="${window.Voice && Voice.supported ? 'Type or tap the mic and say it' : 'The market crashes before the end of 2026'}">${esc(S.prefill && S.prefill.claim || '')}</textarea>${mic('f-claim', 'describe')}</div><div class="err" id="e-claim"></div><div class="mic-note" id="note-f-claim" hidden></div></div>
+      <div class="field"><label for="f-facts">Your reasons <span class="muted">(optional, each one gets fact-checked)</span></label><div class="with-mic"><textarea id="f-facts" name="facts" rows="3" maxlength="3000" placeholder="Unemployment is rising. Valuations are the highest since 2000."></textarea>${mic('f-facts')}</div><div class="mic-note" id="note-f-facts" hidden></div></div>
       <div class="ideas">${IDEAS.map((x) => `<button type="button" class="idea" data-act="idea" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div></form>`;
   function buildForm() {
     const p = (S.prefill && S.prefill.build) || {};
     return `<form id="build" class="stack" novalidate>
+      ${window.Voice && Voice.supported ? `<button type="button" class="say" data-act="mic" data-target="say-build" data-mode="build">${I('microphone', 18)}<span><b>Say it</b><small id="say-build">"Nvidia falls 30 percent by June"</small></span></button>` : ''}
       <div class="row2"><div class="field"><label for="f-symbol">Ticker</label><input id="f-symbol" name="symbol" autocapitalize="characters" autocomplete="off" value="${esc(p.symbol || 'SPY')}"><div class="err" id="e-symbol"></div></div>
       <div class="field"><label for="f-date">By</label><input id="f-date" name="date" type="date" value="${esc(p.date || inMonths(6))}" min="${inMonths(0)}"><div class="err" id="e-date"></div></div></div>
       <div class="field"><label for="f-move">What happens</label><select id="f-move" name="move">${MOVES.map(([v, t]) => `<option value="${v}" ${p.move === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
@@ -320,6 +323,53 @@
     }
   }
 
+  // ---- voice ----------------------------------------------------------------------------------------
+  let micStop = null, micBtn = null;
+  function toggleMic(btn) {
+    if (micStop) { micStop(); return; }
+    const target = btn.dataset.target, mode = btn.dataset.mode;
+    const field = document.getElementById(target);
+    const note = (msg) => { const n = document.getElementById(`note-${target}`); if (n) { n.hidden = !msg; n.textContent = msg || ''; } };
+    const before = field && 'value' in field ? field.value.replace(/\s+$/, '') : '';
+    micBtn = btn;
+    micStop = Voice.start({
+      onState(st) {
+        btn.classList.toggle('rec', st === 'listening'); btn.classList.toggle('busy', st === 'thinking');
+        if (st === 'listening') note(Voice.live ? 'Listening. Tap the mic again when you are done.' : 'Recording. Tap the mic again when you are done.');
+        if (st === 'thinking') note('Transcribing on the server');
+        if (st === 'idle') { micStop = null; micBtn = null; }
+      },
+      onText(text, final) {
+        if (mode === 'build') { if (field) field.textContent = text ? `"${text}"` : 'Listening'; if (final && text) fillBuild(text); return; }
+        if (field) { field.value = (before ? `${before} ` : '') + text; field.dispatchEvent(new Event('input', { bubbles: true })); }
+        if (final) { note(''); if (mode === 'describe' && text && S.me.claude) tidyClaim(field.value); }
+      },
+      onError(msg) { note(''); toast(msg, true); },
+    });
+  }
+  async function tidyClaim(text) {
+    const n = $('#note-f-claim'); if (n) { n.hidden = false; n.textContent = 'Claude is tidying it into a claim and your reasons'; }
+    try {
+      const r = await api('/api/voice/tidy', { method: 'POST', body: { text, mode: 'describe' } });
+      if ($('#f-claim') && r.claim) $('#f-claim').value = r.claim;
+      if ($('#f-facts') && r.facts) $('#f-facts').value = [$('#f-facts').value.trim(), r.facts].filter(Boolean).join('\n');
+      if (n) n.textContent = r.by === 'claude' ? 'Tidied by Claude. Edit anything before you run it.' : '';
+    } catch { if (n) n.hidden = true; }
+  }
+  async function fillBuild(text) {
+    const b = $('#build'); if (!b) return;
+    try {
+      const r = await api('/api/voice/tidy', { method: 'POST', body: { text, mode: 'build' } });
+      if (r.symbol) b.symbol.value = r.symbol;
+      if (r.move && MOVES.some((m) => m[0] === r.move)) b.move.value = r.move;
+      if (r.value !== undefined && r.value !== null && r.value !== '') b.value.value = r.value;
+      if (r.vs) b.vs.value = r.vs;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(r.date || '')) b.date.value = r.date;
+      b.dispatchEvent(new Event('change', { bubbles: true }));
+      toast(r.by === 'claude' ? 'Filled in by Claude. Check it, then run it.' : 'Filled in. Check it, then run it.');
+    } catch (err) { toast(err.message, true); }
+  }
+
   // ---- Markets ---------------------------------------------------------------------------------------
   async function marketsView() {
     shell('markets', titleTop('Markets'), `<div id="mk">${'<div class="qgrid">' + Array.from({ length: 8 }, () => '<div class="qtile"><div class="sk sk-line"></div><div class="sk sk-line" style="width:60%"></div></div>').join('') + '</div>'}</div>`);
@@ -381,11 +431,13 @@
     if (sc.progress) S.live[id] = sc.progress.steps;
     const y = window.scrollY;
     const nav = `<nav class="subnav" aria-label="Scenario sections"><div class="subnav-in">${SECTIONS.filter(([v]) => v !== 'ask' || S.me.claude).map(([v, t]) => `<a href="#/s/${sc.id}${v === 'overview' ? '' : `/${v}`}" ${section === v ? 'aria-current="page"' : ''}>${t}${v === 'evidence' && sc.unread ? `<span class="count">${sc.unread > 99 ? '99+' : sc.unread}</span>` : ''}</a>`).join('')}</div></nav>`;
-    const body = section === 'overview' ? overviewHtml(sc) : `${roomStrip(sc)}${section === 'evidence' ? '<div id="evidence">' + skLines(6) + '</div>' : section === 'desk' ? deskSection(sc) : section === 'ask' ? askSection(sc) : settingsSection(sc)}`;
+    const agentId = section === 'desk' ? route()[3] : null;
+    const body = section === 'overview' ? overviewHtml(sc) : `${roomStrip(sc)}${section === 'evidence' ? '<div id="evidence">' + skLines(6) + '</div>' : agentId ? `<div id="agent">${skLines(3)}<div class="sk sk-chart"></div></div>` : section === 'desk' ? deskSection(sc) : section === 'ask' ? askSection(sc) : settingsSection(sc)}`;
     shell('scenarios', backTop('#/scenarios', 'Scenarios', actions) + nav, body);
     $('main').classList.add('room');
     if (section === 'overview') drawChart();
     if (section === 'evidence') loadEvidence(sc.id);
+    if (agentId) loadAgent(sc, agentId);
     if (keep) window.scrollTo(0, y);
     if (sc.latest && section === 'overview') api(`/api/scenarios/${id}/seen`, { method: 'POST' }).catch(() => {});
   }
@@ -425,12 +477,127 @@
   function deskSection(sc) {
     const run = sc.latest;
     if (!run) return '<div class="empty"><b>No reading yet</b>The desk is still working on the first one.</div>';
-    return `${ladderHtml(run)}${deskHtml(run)}${factsHtml(run)}
+    return `${agentGrid(sc, run)}${factsHtml(run)}
       ${run.judge.watch.length ? `<section class="block"><h2>What would change the call</h2><div class="panel flat">${run.judge.watch.map((w) => `<div class="watch"><div class="watch-top"><b>${esc(w.signal)}</b><span class="thr">${esc(w.threshold)}</span></div><p>${esc(w.why)}</p></div>`).join('')}</div></section>` : ''}
       <p class="foot">Prices from ${esc((run.sources || []).join(', ') || 'n/a')}. Sentiment by ${esc(run.models.sentiment || 'n/a')}${run.models.forecast ? `, forecast by ${esc(run.models.forecast)}` : ''}${run.models.judge ? `, judged by Claude ${esc(run.models.judge)}` : ''}.${run.errors && run.errors.length ? ` ${run.errors.length} source${run.errors.length > 1 ? 's were' : ' was'} unavailable.` : ''}</p>`;
   }
   const askSection = (sc) => `${askHtml(sc)}${sc.theme.length ? `<section class="block"><h2>Same theme</h2>${sc.theme.map(rowHtml).join('')}</section>` : ''}`;
   const settingsSection = (sc) => `${settingsHtml(sc)}${sc.thesis ? measuredHtml(sc, sc.thesis) : ''}${historyHtml(sc)}`;
+
+  // ---- the desk: one cell per analyst, each opening its own evidence page ----------------------
+  const leanWord = (a) => (!a.confidence ? 'Context' : a.stance > 0.1 ? 'Supports' : a.stance < -0.1 ? 'Against' : 'Neutral');
+  const leanTone = (a) => (!a.confidence ? '' : a.stance > 0.1 ? 'yes' : a.stance < -0.1 ? 'no' : 'mid');
+  function miniViz(a) {
+    if (a.chart && a.chart.close) return Chart.spark(a.chart.close.slice(-120), { w: 140, h: 34 });
+    if (a.fan) return Chart.spark(a.fan.points.map((p) => p.p50), { w: 140, h: 34, fill: false });
+    if (a.series && a.series[0]) return Chart.spark(a.series[0].spark, { w: 140, h: 34 });
+    if (a.curve) return Chart.spark(a.curve.points.map((p) => p.p), { w: 140, h: 34, fill: false });
+    if (a.quarters && a.quarters.length) return Chart.spark(a.quarters.map((q) => q.revenue), { w: 140, h: 34 });
+    if (a.groups) { const b = a.groups.reduce((s, g) => s + g.bull, 0), r = a.groups.reduce((s, g) => s + g.bear, 0); return `<div class="split-bar"><span class="up" style="flex:${b || 0.01}"></span><span class="down" style="flex:${r || 0.01}"></span></div><small class="fine">${b} bullish, ${r} bearish posts</small>`; }
+    if (a.factChecks) return `<small class="fine">${a.points.length} sources, ${a.factChecks.length} fact-checks</small>`;
+    if (a.markets) return `<small class="fine">${a.markets.length} open markets</small>`;
+    if (a.quotes) return `<small class="fine">${a.quotes.length} posts</small>`;
+    return '';
+  }
+  function agentGrid(sc, run) {
+    return `<section class="block tight"><h2>The desk</h2><p class="fine" style="margin:-6px 0 12px">${run.analysts.length} analysts. Tap one for its evidence.</p><div class="cells">${run.analysts.map((a) => `<a class="cell" href="#/s/${sc.id}/desk/${esc(a.id)}">
+      <div class="cell-top"><span class="an-icon">${I(ICONS[a.id] || 'sparkle', 18)}</span><span class="lean-tag ${leanTone(a)}">${leanWord(a)}</span></div>
+      <div class="cell-name"><b>${esc(a.name)}</b>${a.probability !== undefined ? `<span class="num">${Math.round(a.probability * 100)}%</span>` : ''}</div>
+      <p class="cell-h">${esc(a.headline)}</p><div class="cell-viz">${miniViz(a)}</div></a>`).join('')}</div></section>`;
+  }
+  const METHOD = {
+    quant: 'Replays this asset\'s own daily moves from the last 10 years in 10-day blocks (crashes and all), 4,000 times, to the deadline. Today\'s volatility counts more for short horizons; the drift is shrunk toward an ordinary market return so past winners aren\'t assumed to keep winning. The share of paths where the claim comes true is the probability. When installed, Chronos-Bolt (a Hugging Face forecasting model) gives a second opinion.',
+    technical: 'Reads trend (price against its 50 and 200-day averages, and whether the 200-day is rising), momentum (3 and 12-month returns, MACD), stretch (RSI, Bollinger bands), volatility regime, strength against the S&P 500, support and resistance, seasonality and volume. Trend and momentum carry the most weight; the result is turned into a lean on your claim.',
+    macro: 'Applies rules with a track record to FRED, US Treasury and BLS data: yield-curve inversion and un-inversion, the Sahm rule on unemployment, credit spreads, the VIX, jobless claims, financial conditions and the Fed\'s path. Stress supports a "markets fall" claim and works against a "markets rise" one.',
+    sentiment: 'Scores what people post and publish this week (StockTwits, Reddit, Mastodon, Lemmy, Hacker News and headlines) with FinBERT, a finance language model, plus CNN\'s Fear & Greed and Wikipedia attention. Crowd mood is weak evidence and extreme agreement often marks turns, so this analyst carries little weight.',
+    fundamentals: 'Reads the company\'s filings at the SEC: revenue growth, margins and earnings, and prices them (P/E). Strong growth supports "up" claims; a rich valuation leaves less room for disappointment.',
+    options: 'Reads delayed option prices from Cboe. The slope of put prices across strikes gives the market\'s own odds of the price being below each level at expiry. Option buyers pay up for crash protection, so these odds run high for declines.',
+    markets: 'Searches Polymarket, Kalshi and Manifold for open markets on related questions. Real-money odds on the same question are strong evidence; loosely related ones are context for the judge.',
+    research: 'Claude searches the last two weeks of news and data, checks every fact you gave against sources, and lists upcoming catalysts. Every point carries its source.',
+    social: 'Claude searches X, Reddit, YouTube and forums through the web for this week\'s discussion, separating well-known voices from retail chatter.',
+  };
+  async function loadAgent(sc, aid) {
+    let r;
+    try { r = await api(`/api/scenarios/${sc.id}/agent/${aid}`); } catch (e) { $('#agent').innerHTML = `<div class="empty"><b>No report yet</b>${esc(e.message)}</div>`; return; }
+    const a = r.analyst;
+    const run = sc.latest;
+    $('#agent').innerHTML = `<a class="back-link" href="#/s/${sc.id}/desk">${I('arrow-left', 15)}All analysts</a>
+      <header class="agent-head"><span class="an-icon big">${I(ICONS[a.id] || 'sparkle', 24)}</span><div><h1>${esc(a.name)}</h1><p class="fine">Report from ${esc(fmtDay(r.runDate))}</p></div>${a.probability !== undefined ? `<div class="agent-p"><span class="num">${Math.round(a.probability * 100)}%</span><small>its own odds</small></div>` : ''}</header>
+      <p class="agent-line">${esc(a.headline)}</p>
+      <div class="agent-lean">${lean(a)}<span class="fine">${a.confidence ? `Weight in the desk: ${a.confidence >= 0.5 ? 'high' : a.confidence >= 0.3 ? 'medium' : 'low'} (${a.confidence.toFixed(2)})` : 'Context only: the judge reads it, the pool does not count it'}</span></div>
+      ${agentViz(a, sc)}
+      <section class="block"><h2>The evidence</h2>${analystBody(a)}</section>
+      ${a.factChecks && a.factChecks.length ? factsHtml({ analysts: [a], judge: { corrections: [], supports: [] } }) : ''}
+      ${a.catalysts && a.catalysts.length ? catalystsHtml({ analysts: [a] }) : ''}
+      <section class="block"><h2>Its lean over time</h2>${r.history.length > 1 ? '<div id="lean-chart" class="pchart-wrap"></div><p class="fine">Above the line it supports the claim, below it works against it.</p>' : '<p class="muted">This builds up as the desk re-runs the scenario.</p>'}</section>
+      <section class="block"><h2>How this analyst works</h2><p class="method">${esc(METHOD[a.id] || '')}</p></section>`;
+    drawAgentCharts(a, r.history);
+  }
+  function agentViz(a) {
+    const box = (id, title, legend = '', note = '') => `<section class="block"><h2>${title}</h2><div id="${id}" class="pchart-wrap"></div>${legend ? `<div class="legend">${legend}</div>` : ''}${note ? `<p class="fine" style="margin-top:6px">${note}</p>` : ''}</section>`;
+    let h = '';
+    if (a.id === 'technical' && a.chart) {
+      const sh = a.sheet || {};
+      h += box('px-chart', `${esc(a.chart.symbol)}, last 12 months`, `<span><i class="key"></i>Price</span><span><i class="key" style="border-top-color:var(--series-2)"></i>50-day</span><span><i class="key" style="border-top-color:var(--series-3)"></i>200-day</span>${a.chart.level ? '<span><i class="key dash" style="border-top-color:var(--no)"></i>Your line</span>' : ''}`);
+      const tiles = [
+        ['RSI (14)', sh.rsi14 !== undefined && sh.rsi14 !== null ? sh.rsi14.toFixed(0) : '-', sh.rsi14 > 70 ? 'Overbought' : sh.rsi14 < 30 ? 'Oversold' : 'Neutral'],
+        ['Bollinger %B', sh.bollinger ? `${Math.round(sh.bollinger.pctB * 100)}%` : '-', sh.bollinger ? `Band ${fmtN(sh.bollinger.lower)} to ${fmtN(sh.bollinger.upper)}` : ''],
+        ['Typical day', sh.avgMove ? `${(sh.avgMove * 100).toFixed(2)}%` : '-', 'Average absolute move'],
+        ['From 52-wk high', pctS(sh.fromHigh), `High ${fmtN(sh.hi52)}`],
+        ...(sh.relative ? [['vs S&P 500 (3M)', pctS(sh.relative.m3), `1 year ${pctS(sh.relative.y1)}`]] : []),
+        ...(sh.volume ? [['Volume', `${Math.round((sh.volume.avg20 / sh.volume.avg100 - 1) * 100)}%`, `vs 100-day avg${sh.volume.upDownRatio ? `, up/down ${sh.volume.upDownRatio.toFixed(2)}x` : ''}`]] : []),
+        ['MACD', sh.macd ? (sh.macd.hist > 0 ? 'Above' : 'Below') : '-', 'vs its signal line'],
+        ['Volatility', sh.vol20 ? `${Math.round(sh.vol20 * 100)}%` : '-', `1 year ${sh.vol1y ? Math.round(sh.vol1y * 100) + '%' : '-'}`],
+      ];
+      h += `<div class="stat-grid">${tiles.map(([k, v, sub]) => `<div class="st"><small>${k}</small><b class="num">${v}</b><span>${esc(sub)}</span></div>`).join('')}</div>`;
+      if ((sh.supports || []).length || (sh.resistances || []).length) h += `<section class="block"><h2>Levels</h2><div class="levels">${(sh.resistances || []).slice().reverse().map((x) => `<div class="lv res"><span>Resistance</span><b class="num">${fmtN(x)}</b></div>`).join('')}<div class="lv now"><span>Now</span><b class="num">${fmtN(sh.last)}</b></div>${(sh.supports || []).map((x) => `<div class="lv sup"><span>Support</span><b class="num">${fmtN(x)}</b></div>`).join('')}</div></section>`;
+      if (sh.seasonality) h += box('season-chart', 'Seasonality', '', 'Average return of each calendar month over the history. The next three months are highlighted.');
+    }
+    if (a.id === 'quant' && a.fan) {
+      h += box('fan-chart', 'Where the paths end up', `<span><i class="key"></i>Median path</span><span><i class="sq" style="background:color-mix(in srgb,var(--series-1) 35%,transparent)"></i>Middle 50%</span><span><i class="sq" style="background:color-mix(in srgb,var(--series-1) 15%,transparent)"></i>90% of paths</span>${a.fan.level ? '<span><i class="key dash" style="border-top-color:var(--no)"></i>Your line</span>' : ''}`);
+      if (a.fan.hist) h += box('hist-chart', 'Spread of outcomes at the deadline', '', a.fan.threshold !== null ? 'Colored bars are the outcomes past your line.' : '');
+      if (a.ladder && a.ladder.length > 2) h += ladderHtml({ analysts: [a] });
+      if (a.forecast) h += `<section class="block"><h2>Chronos-Bolt forecast</h2><div class="tiles"><div class="tile"><b>Median path</b>${Chart.spark(a.forecast.median, { w: 240, h: 44, fill: false })}<small>${esc(a.forecast.model)}, ${a.forecast.horizon} trading days</small></div></div></section>`;
+    }
+    if (a.id === 'options' && a.curve) h += box('opt-chart', `Odds of being below each price on ${esc(fmtShort(a.curve.expiry))}`, '', 'From put prices. Move along the line to read the odds at a level.');
+    if (a.id === 'fundamentals' && a.quarters && a.quarters.length) h += box('rev-chart', 'Revenue by quarter');
+    if (a.id === 'sentiment') {
+      if (a.groups && a.groups.length) h += `<section class="block"><h2>By source</h2><div class="srcbars">${a.groups.map((g) => { const t = g.bull + g.bear + g.neutral || 1; return `<div class="sb"><span>${esc(g.name)}</span><div class="split-bar"><span class="up" style="flex:${g.bull || 0.001}"></span><span class="mid" style="flex:${g.neutral || 0.001}"></span><span class="down" style="flex:${g.bear || 0.001}"></span></div><small class="num">${g.bull}/${g.bear}</small></div>`; }).join('')}</div><div class="legend"><span><i class="sq" style="background:var(--accent)"></i>Bullish</span><span><i class="sq" style="background:var(--line-strong)"></i>Neutral</span><span><i class="sq" style="background:var(--no)"></i>Bearish</span></div></section>`;
+      if (a.fearGreed && a.fearGreed.history && a.fearGreed.history.length > 5) h += box('fg-chart', `Fear & Greed: ${Math.round(a.fearGreed.score)} (${esc(a.fearGreed.rating)})`);
+      if (a.attention && a.attention.points.length > 5) h += box('att-chart', `Attention: "${esc(a.attention.title)}" Wikipedia views`);
+    }
+    return h;
+  }
+  function drawAgentCharts(a, history) {
+    const el = (id) => document.getElementById(id);
+    if (a.id === 'technical' && a.chart && el('px-chart')) {
+      const c = a.chart;
+      Chart.xy(el('px-chart'), { label: 'Price with moving averages', series: [{ values: c.close, color: 'var(--series-1)' }, { values: c.sma50, color: 'var(--series-2)', width: 1.6 }, { values: c.sma200, color: 'var(--series-3)', width: 1.6 }], hlines: [...(c.level ? [{ y: c.level, label: `Your line ${fmtN(c.level)}`, color: 'var(--no)' }] : []), { y: c.hi52, label: `52-wk high ${fmtN(c.hi52)}` }], xlabels: [fmtShort(c.dates[0]), fmtShort(c.dates[c.dates.length - 1])], tip: (i) => `<b>${fmtN(c.close[i])}</b> on ${esc(fmtShort(c.dates[i]))}<span>50-day ${fmtN(c.sma50[i])}, 200-day ${fmtN(c.sma200[i])}</span>` });
+      const sh = a.sheet || {};
+      if (sh.seasonality && el('season-chart')) {
+        const now = new Date().getUTCMonth() + 1, next = [now, (now % 12) + 1, ((now + 1) % 12) + 1];
+        Chart.bars(el('season-chart'), { label: 'Average return by month', items: sh.seasonality.map((m) => ({ label: 'JFMAMJJASOND'[m.month - 1], value: (m.avg || 0) * 100, color: next.includes(m.month) ? 'var(--series-1)' : 'var(--line-strong)', title: `${new Date(Date.UTC(2000, m.month - 1, 1)).toLocaleString(undefined, { month: 'long', timeZone: 'UTC' })}: ${m.avg !== null ? pctS(m.avg) : '-'} average, up ${m.up !== null ? Math.round(m.up * 100) : '-'}% of ${m.years} years` })), yfmt: (v) => `${v.toFixed(1)}%` });
+      }
+    }
+    if (a.id === 'quant' && a.fan && el('fan-chart')) {
+      const f = a.fan, pts = [{ p05: f.last, p25: f.last, p50: f.last, p75: f.last, p95: f.last, t: 0 }, ...f.points];
+      Chart.xy(el('fan-chart'), { label: 'Simulated price paths', series: [{ values: pts.map((p) => p.p50), color: 'var(--series-1)' }], bands: [{ lo: pts.map((p) => p.p05), hi: pts.map((p) => p.p95), color: 'var(--series-1)', opacity: 0.12 }, { lo: pts.map((p) => p.p25), hi: pts.map((p) => p.p75), color: 'var(--series-1)', opacity: 0.25 }], hlines: [...(f.level ? [{ y: f.level, label: `Your line ${fmtN(f.level)}`, color: 'var(--no)' }] : []), { y: f.last, label: `Now ${fmtN(f.last)}` }], xlabels: ['Today', fmtShort(f.horizon)], tip: (i) => `<b>${fmtN(pts[i].p50)}</b> median<span>Middle 50%: ${fmtN(pts[i].p25)} to ${fmtN(pts[i].p75)}</span>` });
+      if (f.hist && el('hist-chart')) {
+        const th = f.threshold;
+        Chart.bars(el('hist-chart'), { label: 'Distribution of outcomes', items: f.hist.map((b) => ({ label: Math.abs(b.from % 0.1) < 0.001 ? `${Math.round(b.from * 100)}%` : '', value: b.share * 100, color: th !== null && (th < 0 ? b.from + 0.025 <= th + 1e-9 : b.from >= th - 1e-9) ? 'var(--series-1)' : 'var(--line-strong)', title: `${Math.round(b.from * 1000) / 10}% to ${Math.round((b.from + 0.025) * 1000) / 10}%: ${(b.share * 100).toFixed(1)}% of paths` })), yfmt: (v) => `${v.toFixed(1)}%` });
+      }
+    }
+    if (a.id === 'options' && a.curve && el('opt-chart')) {
+      const c = a.curve;
+      Chart.xy(el('opt-chart'), { label: 'Option-implied odds by price', series: [{ values: c.points.map((p) => p.p * 100), color: 'var(--series-2)' }], hlines: [{ y: 50, label: '50%' }], ymin: 0, ymax: 100, yfmt: (v) => `${Math.round(v)}%`, xlabels: [fmtN(c.points[0].k), fmtN(c.points[c.points.length - 1].k)], tip: (i) => `<b>${(c.points[i].p * 100).toFixed(1)}%</b> below ${fmtN(c.points[i].k)}<span>Spot ${fmtN(c.spot)}${c.level ? `, your line ${fmtN(c.level)}` : ''}</span>` });
+    }
+    if (a.id === 'fundamentals' && a.quarters && el('rev-chart')) Chart.bars(el('rev-chart'), { label: 'Revenue by quarter', items: a.quarters.map((q) => ({ label: `Q${Math.ceil(Number(q.end.slice(5, 7)) / 3)}'${q.end.slice(2, 4)}`, value: q.revenue / 1e9, title: `${q.end}: $${(q.revenue / 1e9).toFixed(2)}B revenue${q.netIncome !== null ? `, $${(q.netIncome / 1e9).toFixed(2)}B net income` : ''}` })), yfmt: (v) => `$${v.toFixed(1)}B` });
+    if (a.id === 'sentiment') {
+      if (a.fearGreed && el('fg-chart')) { const hh = a.fearGreed.history; Chart.xy(el('fg-chart'), { series: [{ values: hh.map((x) => x[1]), color: 'var(--series-2)' }], ymin: 0, ymax: 100, hlines: [{ y: 50, label: 'Neutral' }], xlabels: [fmtShort(hh[0][0]), fmtShort(hh[hh.length - 1][0])], yfmt: (v) => Math.round(v), tip: (i) => `<b>${Math.round(hh[i][1])}</b> on ${esc(fmtShort(hh[i][0]))}` }); }
+      if (a.attention && el('att-chart')) { const hh = a.attention.points; Chart.xy(el('att-chart'), { series: [{ values: hh.map((x) => x[1]), color: 'var(--series-2)' }], xlabels: [fmtShort(hh[0][0]), fmtShort(hh[hh.length - 1][0])], tip: (i) => `<b>${hh[i][1].toLocaleString()}</b> views on ${esc(fmtShort(hh[i][0]))}` }); }
+    }
+    if (history.length > 1 && el('lean-chart')) Chart.xy(el('lean-chart'), { label: 'Lean over time', series: [{ values: history.map((x) => x.stance), color: 'var(--ink-2)' }], ymin: -1, ymax: 1, hlines: [{ y: 0, label: 'Neutral' }], yfmt: (v) => (v > 0.05 ? `+${v.toFixed(1)}` : v.toFixed(1)), xlabels: [fmtShort(history[0].date), fmtShort(history[history.length - 1].date)], height: 150, tip: (i) => `<b>${history[i].stance >= 0 ? '+' : ''}${history[i].stance}</b> on ${esc(fmtShort(history[i].date))}${history[i].p !== null ? `<span>${history[i].p}% odds</span>` : ''}` });
+  }
 
   // ---- the reading room ----------------------------------------------------------------------
   const STANCE = { for: ['Supports', 'trend-up'], against: ['Against', 'trend-down'], context: ['Context', 'arrow-up-right'] };
@@ -567,7 +734,7 @@
   function askHtml(sc) {
     const qs = (sc.questions || []).slice().reverse();
     return `<section class="block"><h2>Ask the desk</h2>
-      <form id="ask" class="ask-row"><label class="sr" for="f-q">Question</label><input id="f-q" name="q" maxlength="600" placeholder="What happened to chip stocks in 2000?" autocomplete="off"><button class="btn small">Ask</button></form>
+      <form id="ask" class="ask-row"><label class="sr" for="f-q">Question</label><div class="with-mic grow"><input id="f-q" name="q" maxlength="600" placeholder="What happened to chip stocks in 2000?" autocomplete="off">${mic('f-q')}</div><button class="btn small">Ask</button></form>
       ${qs.map((q) => `<div class="qa"><div class="q">${esc(q.q)}</div>${q.status === 'thinking' ? `<div class="a" data-qid="${esc(q.id)}"><span class="sk" style="display:inline-block;width:12px;height:12px;vertical-align:-1px;border-radius:50%"></span> <span class="qtext">${esc(S.live[`q:${q.id}`] || 'Researching')}</span></div>` : `<div class="a">${esc(q.answer).replace(/\n/g, '<br>')}</div>${(q.sources || []).length ? `<div class="srcs">${q.sources.map((s) => `<a href="${safeUrl(s.url)}" target="_blank" rel="noopener">${esc(s.title || host(s.url))}</a>`).join('')}</div>` : ''}${q.track ? `<button class="btn small quiet track-btn" data-act="track" data-v="${esc(q.track)}">${I('plus', 14)}Track: ${esc(q.track)}</button>` : ''}`}</div>`).join('')}
       ${sc.thesis && sc.thesis.followUps.length ? `<p class="sub">Related claims to track</p><div class="follow">${sc.thesis.followUps.map((f) => `<button class="idea" style="max-width:none" data-act="track" data-v="${esc(f)}">${esc(f)}</button>`).join('')}</div>` : ''}</section>`;
   }
@@ -654,6 +821,7 @@
     else if (act === 'idea') { const ta = $('#f-claim'); ta.value = v; ta.focus(); }
     else if (act === 'template') { const tp = TEMPLATES[Number(v)]; S.prefill = tp.build ? { build: tp.build } : { claim: tp.claim }; S.mode = tp.build ? 'build' : 'describe'; $('#composer-body').innerHTML = composerBody(); document.querySelectorAll('.tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.v === S.mode))); wireComposer(); window.scrollTo(0, 0); }
     else if (act === 'create') create();
+    else if (act === 'mic') toggleMic(t);
     else if (act === 'opt-depth') { document.querySelectorAll('[data-act="opt-depth"]').forEach((b) => b.setAttribute('aria-checked', String(b === t))); $('#depth-help').textContent = DEPTHS[v][1]; }
     else if (act === 'resend') { try { const r = await api('/api/forgot', { method: 'POST', body: { email: v }, anon: true }); toast(r.message); } catch (err) { toast(err.message, true); } }
     else if (act === 'logout') { await api('/api/logout', { method: 'POST' }).catch(() => {}); S.me = null; location.hash = '#/today'; render(); }

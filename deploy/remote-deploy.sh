@@ -121,6 +121,13 @@ if [ -f deploy/FULL_SMOKE ]; then
   (set -a; . "$ENV_FILE"; set +a; timeout 900 node deploy/full-smoke.js)
 fi
 
+echo "== speech to text (Whisper) =="
+if [ -f "$DATA/models-ready" ]; then
+  if [ -f "$DATA/speech-ready" ]; then echo "ready: $(cat "$DATA/speech-ready")";
+  elif pgrep -f warm-speech.sh >/dev/null; then echo "downloading the model in the background";
+  else [ -f /var/log/scenario-speech.log ] && echo "last try: $(tail -1 /var/log/scenario-speech.log)"; setsid nohup bash "$APP_DIR/deploy/warm-speech.sh" >> /var/log/scenario-speech.log 2>&1 < /dev/null & echo "warming up in the background (one-time model download)"; fi
+else echo "waits for the Hugging Face models"; fi
+
 echo "== route (k3s Traefik) =="
 if [ -f /etc/box-kubeconfig ]; then
   K="kubectl --kubeconfig /etc/box-kubeconfig"
