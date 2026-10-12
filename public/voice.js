@@ -60,7 +60,8 @@
           const r = await fetch('/api/transcribe', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: pcm, credentials: 'same-origin' });
           const j = await r.json().catch(() => ({}));
           if (!r.ok) throw new Error(j.error || 'Transcription failed.');
-          onText(j.text || '', true);
+          if (!j.text) throw new Error("Didn't catch that. Try again a little closer to the mic.");
+          onText(j.text, true);
         } catch (e) { onError(e.message); }
         onState('idle');
       };

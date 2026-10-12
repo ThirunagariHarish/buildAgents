@@ -373,7 +373,7 @@ async function api(req, res, p, url, user) {
     if (buf.length < 3200) return json(res, 400, { error: 'That was too short to hear anything.' });
     const file = path.join(os.tmpdir(), `sc-voice-${crypto.randomBytes(6).toString('hex')}.pcm`);
     fs.writeFileSync(file, buf, { mode: 0o600 });
-    try { const r = await models.call('transcribe', { path: file }, 180000); return json(res, 200, { text: r.text, model: r.model }); }
+    try { const r = await models.call('transcribe', { path: file }, 180000); const text = /[a-z0-9]/i.test(r.text || '') ? r.text.replace(/(\s*\.){3,}/g, '.').trim() : ''; return json(res, 200, { text, model: r.model }); }
     catch (e) { return json(res, 500, { error: `Couldn't transcribe: ${e.message.slice(0, 160)}` }); }
     finally { fs.rm(file, { force: true }, () => {}); }
   }
