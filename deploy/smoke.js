@@ -10,6 +10,8 @@ const models = require('../lib/models');
   const end = `${new Date().getUTCFullYear()}-12-31`;
   const sim = quant.simulate({ series: s, target: { type: 'drawdown', value: 0.2 }, horizonDays: quant.tradingDaysUntil(end), seed: 'smoke' });
   console.log(`   Monte Carlo: P(SPY falls 20% from its high by ${end}) = ${(sim.probability * 100).toFixed(1)}%`);
+  const pl = await require('../lib/insights').pulse();
+  console.log(`   Markets tab: ${pl.quotes.map((q) => `${q.symbol} ${q.last.toFixed(2)}`).join(', ')}; Fear & Greed ${pl.fearGreed ? Math.round(pl.fearGreed.score) : 'n/a'}; curve ${pl.curve ? pl.curve.spread : 'n/a'}; ${pl.markets.length} prediction markets`);
   if (await models.available()) {
     const t = Date.now();
     const f = await models.call('forecast', { series: [s.close.slice(-512)], horizon: 20 });
