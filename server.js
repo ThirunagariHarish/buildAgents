@@ -350,14 +350,15 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/signup' && req.method === 'POST') {
       const body = await readBody(req).catch(() => ({}));
       try {
-        const { user, duplicate } = auth.signup({ ...body, ip });
-        if (!duplicate) {
-          tellAdmins({ title: 'Access request', body: `${user.firstName} ${user.lastName} (${user.email}) asked to join Box.`, tag: `signup:${user.id}`, url: '/#/people' });
-          for (const a of auth.admins()) {
-            mail.send({ to: a.email, subject: `Box access request: ${user.firstName} ${user.lastName}`, text: `${user.firstName} ${user.lastName} asked for access to Box.\n\nEmail: ${user.email}\nPhone: ${user.phone}\n\nApprove or decline in Box → People: ${BASE_URL}/#/people\n` }).catch(() => {});
-          }
+        const { user, duplicate, token } = auth.signup({ ...body, ip });
+        if (!duplicate && token) {
+          mail.send({ to: user.email, subject: 'Confirm your email for Box', text: `Hi ${user.firstName},\n\nConfirm your email and choose your Box password with this link (it works once, for 24 hours):\n\n${RESET_PATH(token)}\n\nAfter that, the owner approves new accounts and you get an email.\n\nIf you didn't sign up, ignore this email.\n` }).catch(() => {});
+        } else if (duplicate && ['approved', 'unverified', 'pending'].includes(user.status)) {
+          // Same reply either way; the inbox owner gets a link to set a password.
+          const r = auth.forgot({ email: user.email, ip });
+          if (r) sendSetPasswordMail(r.user, r.token, { reason: 'reset' }).catch(() => {});
         }
-        return json(res, 200, { ok: true, message: 'Thanks. Your request is with the administrator; you will get an email with a link to set your password once it is approved.' });
+        return json(res, 200, { ok: true, message: 'Check your inbox: we sent a link to confirm your email and choose a password. It works once, for 24 hours (check Spam too).' });
       } catch (e) { return json(res, e.status || 500, { error: e.status ? e.message : 'Could not send the request.' }); }
     }
     if (p === '/api/forgot' && req.method === 'POST') {
@@ -377,7 +378,12 @@ const server = http.createServer(async (req, res) => {
       if (auth.limited(`reset:ip:${ip}`, 10, 3600 * 1000)) return json(res, 429, { error: 'Too many attempts.' });
       try {
         const u = auth.resetPassword({ token: body.token, password: body.password });
-        return json(res, 200, { ok: true, email: u.email });
+        if (u.status === 'pending' && Date.now() - (u.emailVerifiedAt || 0) < 10000) {
+          tellAdmins({ title: 'New account to approve', body: `${u.firstName} ${u.lastName} (${u.email}) confirmed their email and is waiting for you.`, tag: `signup:${u.id}`, url: '/#/people' });
+          for (const a of auth.admins()) mail.send({ to: a.email, subject: `Approve ${u.firstName} ${u.lastName} for Box?`, text: `${u.firstName} ${u.lastName} (${u.email}) created a Box account and confirmed their email. Box runs on your Claude plan, so they wait for you.\n\nApprove or decline in Box, People: ${BASE_URL}/#/people\n` }).catch(() => {});
+          bus.broadcast({ event: 'users_changed' });
+        }
+        return json(res, 200, { ok: true, email: u.email, pending: u.status === 'pending' });
       } catch (e) { return json(res, e.status || 500, { error: e.message }); }
     }
 
@@ -424,9 +430,15 @@ const server = http.createServer(async (req, res) => {
             return json(res, 200, { ok: true });
           }
           if (id === user.id) return json(res, 400, { error: 'You cannot change your own account here.' });
-          if (act === 'approve' || act === 'resend') {
-            const { user: u, token } = auth.approve(id); // (re)issues a one-time set-password link
-            const r = await sendSetPasswordMail(u, token, { reason: 'approved' });
+          if (act === 'resend') {
+            const { user: u, token } = auth.relink(id);
+            const r = await sendSetPasswordMail(u, token, { reason: 'reset' });
+            return json(res, 200, { ok: true, user: auth.publicUser(u), emailed: r.sent, link: r.sent ? null : r.link, error: r.sent ? null : r.error });
+          }
+          if (act === 'approve') {
+            const { user: u, token } = auth.approve(id); // a set-password link only if they have no password yet
+            const r = token ? await sendSetPasswordMail(u, token, { reason: 'approved' })
+              : await mail.send({ to: u.email, subject: 'You are in: Box approved your account', text: `Hi ${u.firstName},\n\nYour Box account is approved. Sign in at ${BASE_URL} with ${u.email} and the password you chose.\n` });
             bus.broadcast({ event: 'users_changed' });
             return json(res, 200, { ok: true, user: auth.publicUser(u), emailed: r.sent, link: r.sent ? null : r.link, error: r.sent ? null : r.error });
           }

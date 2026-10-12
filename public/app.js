@@ -2755,15 +2755,15 @@ function showLogin(view = 'login', ctx = {}) {
       ${field('lg-pw', 'Password', 'password', 'autocomplete="current-password" required')}
       <div class="form-error hidden" id="login-err"></div>
       <button class="wide-btn" type="submit">Sign in</button>
-      <div class="login-links"><button type="button" data-view="forgot">Forgot password</button><button type="button" data-view="signup">Request access</button></div>`,
-    signup: `<h1>Request access</h1><p>The administrator approves requests. You get an email with a link to set your password.</p>
+      <div class="login-links"><button type="button" data-view="forgot">Forgot password</button><button type="button" data-view="signup">Create an account</button></div>`,
+    signup: `<h1>Create your account</h1><p>We email you a link to confirm your address and choose a password. Box runs on the owner's Claude plan, so the owner approves new accounts.</p>
       <div class="field-row">${field('su-first', 'First name', 'text', 'autocomplete="given-name" maxlength="60" required')}${field('su-last', 'Last name', 'text', 'autocomplete="family-name" maxlength="60" required')}</div>
-      ${field('su-phone', 'Contact number', 'tel', 'autocomplete="tel" inputmode="tel" required')}
+      ${field('su-phone', 'Phone (optional)', 'tel', 'autocomplete="tel" inputmode="tel"')}
       ${field('su-email', 'Email', 'email', 'autocomplete="email" inputmode="email" required')}
       <div class="form-error hidden" id="login-err"></div>
-      <button class="wide-btn" type="submit">Send request</button>
+      <button class="wide-btn" type="submit">Create account</button>
       <div class="login-links"><button type="button" data-view="login">Back to sign in</button></div>`,
-    forgot: `<h1>Reset password</h1><p>Enter your email. If it has an approved account, a reset link follows.</p>
+    forgot: `<h1>Reset password</h1><p>Enter your email. If it has an account, a link to choose a new password follows.</p>
       ${field('fg-email', 'Email', 'email', 'autocomplete="username" inputmode="email" required')}
       <div class="form-error hidden" id="login-err"></div>
       <button class="wide-btn" type="submit">Send link</button>
@@ -2792,13 +2792,13 @@ function showLogin(view = 'login', ctx = {}) {
     };
     try {
       if (view === 'login') { await post('/api/login', { email: $('lg-email').value, password: $('lg-pw').value }); location.hash = location.hash.startsWith('#/reset') ? '#/' : location.hash; location.reload(); }
-      else if (view === 'signup') { const r = await post('/api/signup', { firstName: $('su-first').value, lastName: $('su-last').value, phone: $('su-phone').value, email: $('su-email').value }); showLogin('done', { title: 'Request sent', text: r.message }); }
+      else if (view === 'signup') { const r = await post('/api/signup', { firstName: $('su-first').value, lastName: $('su-last').value, phone: $('su-phone').value, email: $('su-email').value }); showLogin('done', { title: 'Check your inbox', text: r.message }); }
       else if (view === 'forgot') { const r = await post('/api/forgot', { email: $('fg-email').value }); showLogin('done', { title: 'Check your email', text: r.message }); }
       else if (view === 'reset') {
         if ($('rs-pw').value !== $('rs-pw2').value) throw new Error('The two passwords differ.');
-        await post('/api/reset', { token: ctx.token, password: $('rs-pw').value });
+        const r = await post('/api/reset', { token: ctx.token, password: $('rs-pw').value });
         history.replaceState(null, '', '/#/');
-        showLogin('done', { title: 'Password saved', text: 'Sign in with your email and new password.' });
+        showLogin('done', r.pending ? { title: 'Email confirmed', text: 'Your password is saved. The owner approves new accounts before they can use Box; you will get an email as soon as that happens.' } : { title: 'Password saved', text: 'Sign in with your email and new password.' });
       } else if (view === 'done') { showLogin('login'); }
     } catch (ex) { err(ex.message); btn.disabled = false; }
   };
@@ -2882,15 +2882,15 @@ function openPeopleSheet() {
         const pending = r.users.filter((u) => u.status === 'pending');
         const members = r.users.filter((u) => u.status !== 'pending');
         const row = (u) => `<div class="ag-row"><span class="a-avatar">${esc((u.firstName || '?')[0].toUpperCase())}</span><span class="ag-main">
-            <span class="ag-top"><span class="a-name">${esc(u.name)}</span><span class="ag-tag">${u.primary ? 'primary administrator' : u.role === 'admin' ? `administrator · ${u.status}` : u.status}</span></span>
-            <span class="ag-desc">${esc(u.email)}${u.phone ? ` · ${esc(u.phone)}` : ''} · ${u.status === 'pending' ? `asked ${new Date(u.createdAt).toLocaleDateString()}` : u.lastLoginAt ? `last sign-in ${new Date(u.lastLoginAt).toLocaleDateString()}` : 'never signed in'}</span>
+            <span class="ag-top"><span class="a-name">${esc(u.name)}</span><span class="ag-tag">${u.primary ? 'primary administrator' : u.role === 'admin' ? `administrator · ${u.status}` : u.status === 'unverified' ? 'confirming email' : u.status === 'pending' ? 'email confirmed' : u.status}</span></span>
+            <span class="ag-desc">${esc(u.email)}${u.phone ? ` · ${esc(u.phone)}` : ''} · ${u.status === 'pending' ? `signed up ${new Date(u.createdAt).toLocaleDateString()}` : u.lastLoginAt ? `last sign-in ${new Date(u.lastLoginAt).toLocaleDateString()}` : 'never signed in'}</span>
             <span class="ag-actions">${u.status === 'pending'
               ? `<button class="chip-btn on" data-u="${u.id}" data-act="approve">Approve</button><button class="chip-btn" data-u="${u.id}" data-act="decline">Decline</button>`
               : u.primary || u.id === ME.id ? '' : `${ME.primary ? (u.role === 'admin' ? `<button class="chip-btn" data-u="${u.id}" data-act="remove-admin">Remove admin</button>` : `<button class="chip-btn on" data-u="${u.id}" data-act="make-admin">Make admin</button>`) : ''}<button class="chip-btn" data-u="${u.id}" data-act="resend">Send set-password link</button>${u.status === 'disabled' ? `<button class="chip-btn" data-u="${u.id}" data-act="enable">Enable</button>` : `<button class="chip-btn" data-u="${u.id}" data-act="disable">Disable</button>`}<button class="chip-btn" data-u="${u.id}" data-act="decline">Remove</button>`}</span>
           </span></div>`;
         s.body.innerHTML = `<p class="sheet-intro">Members see only their own ideas and projects. Administrators see everyone's and can approve people.${ME.primary ? ' Only you can make or remove administrators.' : ''}</p>${r.mailConfigured ? '' : '<div class="system-note"><strong>Email is not set up</strong>Approvals still work: the set-password link is shown here for you to send by hand. Add the SMTP secrets to send it automatically.</div>'}
-          <div class="sb-label" style="padding:6px 6px 8px">Access requests${pending.length ? ` <span class="sb-count">${pending.length}</span>` : ''}</div>
-          ${pending.map(row).join('') || '<p class="sheet-intro">No requests waiting.</p>'}
+          <div class="sb-label" style="padding:6px 6px 8px">Waiting for your approval${pending.length ? ` <span class="sb-count">${pending.length}</span>` : ''}</div>
+          ${pending.map(row).join('') || '<p class="sheet-intro">No one is waiting.</p>'}
           <div class="sb-label" style="padding:14px 6px 8px">Members</div>${members.map(row).join('')}`;
       };
       draw();
