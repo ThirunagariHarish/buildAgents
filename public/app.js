@@ -388,14 +388,14 @@
     return authShell(`
       <a class="btn ghost sm" href="#/login" style="margin:-8px 0 12px -10px">${icon.back} Back</a>
       <h1 class="display" style="font-size:40px">Create your <em>account</em></h1>
-      <p class="muted" style="margin:10px 0 22px">${S.session?.openSignup === false ? 'The administrator approves each new account. Once approved, you\'ll get a link to set your password.' : 'We\'ll email you a link to set your password. That\'s it.'}</p>
+      <p class="muted" style="margin:10px 0 22px">${S.session?.openSignup === false ? 'The administrator approves each new account. Once approved, you\'ll get a link to set your password.' : 'We\'ll email you a link to confirm your address and choose a password. That\'s it.'}</p>
       <form data-form="signup" class="stack">
         <div class="row" style="gap:10px">
           <label class="field" style="flex:1"><span>First name</span><input class="input" name="firstName" autocomplete="given-name" required autofocus></label>
           <label class="field" style="flex:1"><span>Last name</span><input class="input" name="lastName" autocomplete="family-name" required></label>
         </div>
         <label class="field"><span>Email</span><input class="input" name="email" type="email" autocomplete="email" required></label>
-        <label class="field"><span>Phone</span><input class="input" name="phone" type="tel" autocomplete="tel" required></label>
+        <label class="field"><span>Phone <span class="faint">(optional)</span></span><input class="input" name="phone" type="tel" autocomplete="tel"></label>
         <div id="form-note"></div>
         <button class="btn" style="width:100%">Create account</button>
       </form>`);
