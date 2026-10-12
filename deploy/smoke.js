@@ -7,6 +7,8 @@ const models = require('../lib/models');
   const s = await data.prices('SPY');
   const i = quant.indicators(s);
   console.log(`   SPY ${i.last.toFixed(2)} on ${i.asOf} (${s.source}): ${quant.pct(i.fromHigh)} from high, RSI ${i.rsi14.toFixed(0)}, vol ${quant.pct(i.vol20, 0)}`);
+  const adv = quant.advanced({ ...s, symbol: 'SPY' }, null);
+  console.log(`   Technicals sheet: Bollinger %B ${Math.round(adv.bollinger.pctB * 100)}%, typical day ${(adv.avgMove * 100).toFixed(2)}%, supports ${adv.supports.map((x) => x.toFixed(0)).join('/')}, ${adv.volume ? `volume ${Math.round((adv.volume.avg20 / adv.volume.avg100 - 1) * 100)}% vs 100-day, up/down ${adv.volume.upDownRatio.toFixed(2)}x` : 'no volume'}, Oct avg ${(adv.seasonality[9].avg * 100).toFixed(1)}%`);
   const end = `${new Date().getUTCFullYear()}-12-31`;
   const sim = quant.simulate({ series: s, target: { type: 'drawdown', value: 0.2 }, horizonDays: quant.tradingDaysUntil(end), seed: 'smoke' });
   console.log(`   Monte Carlo: P(SPY falls 20% from its high by ${end}) = ${(sim.probability * 100).toFixed(1)}%`);
