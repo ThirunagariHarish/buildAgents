@@ -50,8 +50,11 @@ const clientIp = (req) => {
   for (let i = hops.length - 1; i >= 0; i--) if (!isOurs(hops[i]) || i === 0) return hops[i].replace(/^::ffff:/, '');
   return peer.replace(/^::ffff:/, '');
 };
-// The desk runs on the owner's Claude login, so it is for administrators only.
-const allowed = (u) => !!u && (u.role === 'admin' || process.env.SC_ALLOW_ALL === '1');
+// Anyone with a confirmed account can use the free desk (data, simulation,
+// Hugging Face models). The Claude analysts run on the owner's Claude login,
+// so they are for the owner and the people the owner turns them on for.
+const allowed = (u) => !!u && u.status === 'approved';
+const canClaude = (u) => !!u && (u.role === 'admin' || u.claude === true);
 const currentUser = (req) => auth.userForSession(cookies(req)[COOKIE]);
 
 const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
@@ -71,7 +74,7 @@ function crossSiteWrite(req) {
 }
 
 // ---- static -----------------------------------------------------------------
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2' };
 const VERSION = (() => { const h = crypto.createHash('sha256'); for (const f of fs.readdirSync(PUBLIC_DIR)) { try { h.update(fs.readFileSync(path.join(PUBLIC_DIR, f))); } catch {} } return h.digest('hex').slice(0, 12); })();
 function serveStatic(req, res, p) {
   const rel = p === '/' ? '/index.html' : p;
@@ -116,7 +119,8 @@ async function pump() {
   if (!next) return;
   busy = true;
   try {
-    const r = await desk.run(next.id, { emit, reason: next.reason });
+    const sc0 = store.load(next.id);
+    const r = await desk.run(next.id, { emit, reason: next.reason, claude: canClaude(sc0 && auth.getUser(sc0.ownerId)) });
     if (r && next.reason === 'daily') await alert(r).catch((e) => console.error(`alert ${next.id}: ${e.message}`));
   } catch (e) { console.error(`run ${next.id}: ${e.message}`); }
   busy = false;
@@ -196,7 +200,7 @@ const server = http.createServer(async (req, res) => {
     const ip = clientIp(req);
     if (p === '/api/session' && req.method === 'GET') {
       const u = currentUser(req);
-      return json(res, 200, { authed: !!u, allowed: allowed(u), user: auth.publicUser(u), version: VERSION });
+      return json(res, 200, { authed: !!u, allowed: allowed(u), claude: canClaude(u), owner: !!(u && u.primary), user: auth.publicUser(u), version: VERSION, openSignup: config.OPEN_SIGNUP });
     }
     if (p === '/api/login' && req.method === 'POST') {
       const b = await readBody(req).catch(() => ({}));
@@ -210,6 +214,22 @@ const server = http.createServer(async (req, res) => {
       auth.destroySession(cookies(req)[COOKIE]);
       res.setHeader('Set-Cookie', sessionCookie(req, '', 0));
       return json(res, 200, { ok: true });
+    }
+    if (p === '/api/signup' && req.method === 'POST') {
+      const b = await readBody(req).catch(() => ({}));
+      if (!config.OPEN_SIGNUP) return json(res, 403, { error: 'Sign-up is closed right now.' });
+      try {
+        const { user: nu, duplicate, token } = auth.signup({ ...b, ip });
+        if (!duplicate && token) {
+          mail.send({ to: nu.email, subject: 'Confirm your email for Run Scenario', text: `Hi ${nu.firstName},\n\nConfirm your email and choose a password with this link (one use, 24 hours):\n\n${BASE_URL}/#/reset/${token}\n\nIf you didn't sign up, ignore this email and nothing happens.\n` }).catch(() => {});
+          for (const ad of auth.admins().filter((a) => a.primary)) mail.send({ to: ad.email, subject: `New Run Scenario sign-up: ${nu.firstName} ${nu.lastName}`, text: `${nu.firstName} ${nu.lastName} (${nu.email}) signed up. They can use the free desk once they confirm their email. To give them the Claude desk, open ${BASE_URL}/#/people\n` }).catch(() => {});
+        } else if (duplicate) {
+          // Same reply either way; the inbox owner gets a sign-in or reset link.
+          const r = auth.forgot({ email: nu.email, ip });
+          if (r) mail.send({ to: nu.email, subject: 'Your Run Scenario account', text: `Hi ${nu.firstName},\n\nYou already have an account. Sign in at ${BASE_URL}, or set a new password here (one use, 24 hours):\n\n${BASE_URL}/#/reset/${r.token}\n` }).catch(() => {});
+        }
+        return json(res, 200, { ok: true, message: 'Check your inbox. We sent a link to confirm your email and set your password. It works once, for 24 hours (check Spam too).' });
+      } catch (e) { return json(res, e.status || 500, { error: e.status ? e.message : 'Could not create the account.' }); }
     }
     if (p === '/api/forgot' && req.method === 'POST') {
       const b = await readBody(req).catch(() => ({}));
@@ -229,7 +249,7 @@ const server = http.createServer(async (req, res) => {
 
     const user = currentUser(req);
     if (!user) return json(res, 401, { error: 'Sign in to continue.', login: true });
-    if (!allowed(user)) return json(res, 403, { error: 'Run Scenario is invite-only for now.' });
+    if (!allowed(user)) return json(res, 403, { error: 'Confirm your email first.' });
     return await api(req, res, p, url, user);
   } catch (e) {
     console.error(`${req.method} ${p}: ${e.stack || e.message}`);
@@ -247,18 +267,36 @@ async function api(req, res, p, url, user) {
     return;
   }
   if (p === '/api/status' && req.method === 'GET') return json(res, 200, await status(url.searchParams.get('fresh') === '1'));
+  if (p === '/api/people' && req.method === 'GET') {
+    if (!user.primary) return json(res, 403, { error: 'Only the owner manages people.' });
+    return json(res, 200, { people: auth.listUsers().map((x) => ({ id: x.id, name: x.name, email: x.email, status: x.status, role: x.role, primary: !!x.primary, claude: x.role === 'admin' || x.claude === true, createdAt: x.createdAt, scenarios: store.list().filter((sc) => sc.ownerId === x.id).length })) });
+  }
+  const pm = p.match(/^\/api\/people\/([a-f0-9]{12})$/);
+  if (pm && req.method === 'POST') {
+    if (!user.primary) return json(res, 403, { error: 'Only the owner manages people.' });
+    const b = await readBody(req);
+    try {
+      if (typeof b.claude === 'boolean') auth.setClaude(pm[1], b.claude);
+      if (['approved', 'disabled'].includes(b.status)) auth.setStatus(pm[1], b.status);
+      return json(res, 200, { ok: true });
+    } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+  }
   if (p === '/api/scenarios' && req.method === 'GET') {
     const list = store.list().filter((sc) => mine(user, sc)).map(card).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     return json(res, 200, { scenarios: list, running: queue.length + (busy ? 1 : 0) });
   }
   if (p === '/api/scenarios' && req.method === 'POST') {
     const b = await readBody(req);
-    const claim = String(b.claim || '').trim().slice(0, 600);
+    let thesis = null;
+    if (b.build) { try { thesis = desk.buildThesis(b.build); } catch (e) { return json(res, 400, { error: e.message }); } }
+    else if (!canClaude(user)) return json(res, 403, { error: 'Use the builder: pick the asset, the move and the date.' });
+    const claim = String(b.claim || (thesis && thesis.proposition) || '').trim().slice(0, 600);
     const facts = String(b.facts || '').trim().slice(0, 3000);
     if (claim.length < 6) return json(res, 400, { error: 'Say the claim in a sentence.' });
     if (auth.limited(`create:${user.id}`, 30, 24 * 3600 * 1000)) return json(res, 429, { error: 'That\'s a lot of new scenarios today. Try again tomorrow.' });
     const parent = b.parentId ? store.load(b.parentId) : null;
     const sc = store.create({ ownerId: user.id, claim, facts, themeId: parent && mine(user, parent) ? parent.themeId : null, parentId: parent ? parent.id : null });
+    if (thesis) store.patch(sc.id, { thesis });
     enqueue(sc.id, 'new');
     return json(res, 200, { id: sc.id });
   }
@@ -292,6 +330,7 @@ async function api(req, res, p, url, user) {
     const b = await readBody(req);
     const q = String(b.q || '').trim().slice(0, 600);
     if (q.length < 4) return json(res, 400, { error: 'Ask a question.' });
+    if (!canClaude(user)) return json(res, 403, { error: 'Questions use the Claude desk, which the owner turns on per person.' });
     if (auth.limited(`ask:${user.id}`, 40, 24 * 3600 * 1000)) return json(res, 429, { error: 'Too many questions today.' });
     const item = { id: crypto.randomBytes(5).toString('hex'), q, at: Date.now(), status: 'thinking', steps: [] };
     const fresh = store.load(sc.id); fresh.questions = [...(fresh.questions || []), item].slice(-40); store.save(fresh);

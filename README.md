@@ -33,7 +33,25 @@ SC_DATA_DIR=./data SC_ADMIN_PASSWORD=... node server.js        # http://localhos
 node deploy/selftest.js                                         # offline test (synthetic data, fake Claude)
 ```
 
-## Optional keys (GitHub secrets)
+## Everything is free
+
+| Source | What it adds |
+| --- | --- |
+| Yahoo Finance | Prices (10 years daily), ticker headlines |
+| Cboe delayed quotes | Option chains: implied odds of a price level, put/call, implied volatility |
+| Polymarket, Kalshi, Manifold | Open prediction markets on related questions |
+| FRED, US Treasury, BLS | Yield curve, credit spreads, unemployment, claims (with fallbacks) |
+| CNN Fear & Greed, alternative.me | Market and crypto mood |
+| StockTwits, Reddit (RSS), Mastodon, Lemmy, Hacker News | The crowd |
+| Google News, Seeking Alpha, Federal Reserve | Headlines and policy releases |
+| Wikipedia pageviews | Public attention |
+| SEC EDGAR | Revenue, margins, earnings |
+| Hugging Face (on the server) | Chronos-Bolt forecasts, FinBERT sentiment |
+| Claude (owner's plan) | Strategist, research and fact-check, social pulse (X and Reddit via web search), bull and bear advocates, judge, follow-up answers |
+
+Anyone can create an account (email link, then a password). Everyone gets the data desk; the owner turns on the Claude analysts per person under People.
+
+## Optional keys (GitHub secrets, not needed)
 
 | Secret | What it adds |
 | --- | --- |

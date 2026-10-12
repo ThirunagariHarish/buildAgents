@@ -92,7 +92,7 @@ if command -v ufw >/dev/null && ufw status 2>/dev/null | grep -q 'Status: active
 fi
 
 echo "== data sources, as this server reaches them =="
-(set -a; . "$ENV_FILE"; set +a; timeout 240 node -e "require('./lib/data').probe().then(r=>r.forEach(x=>console.log('   '+(x.ok?'OK  ':'FAIL')+' '+x.name.padEnd(14)+' '+x.detail+' ('+x.ms+' ms)')))")
+(set -a; . "$ENV_FILE"; set +a; timeout 400 node -e "require('./lib/data').probe().then(r=>r.forEach(x=>console.log('   '+(x.ok?'OK  ':'FAIL')+' '+x.name.padEnd(14)+' '+x.detail+' ('+x.ms+' ms)')))")
 
 echo "== Hugging Face models =="
 if [ -f "$DATA/models-ready" ]; then
@@ -112,9 +112,6 @@ else
     echo "skipped: needs 1.8 GB RAM and 6 GB disk (have ${MEM} MB, ${DISK} GB); the desk uses its own simulation and word list"
   fi
 fi
-
-echo "== raw samples of free sources =="
-timeout 400 node deploy/peek.js
 
 echo "== desk smoke test (live data, no Claude) =="
 (set -a; . "$ENV_FILE"; set +a; timeout 300 node deploy/smoke.js)

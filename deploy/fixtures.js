@@ -48,6 +48,27 @@ function write(dir) {
   put('news', { source: 'Google News', posts: [{ text: 'Stocks rally to record as inflation cools', at: now, url: 'https://example.com/a', where: 'Reuters' }, { text: 'Strategist warns of bubble in tech shares', at: now, url: 'https://example.com/b', where: 'Bloomberg' }] });
   put('gdelt', { source: 'GDELT', points: Array.from({ length: 90 }, (_, i) => [new Date(now - (90 - i) * 86400000).toISOString().slice(0, 10), -1.2 + Math.sin(i / 9) * 0.4]) });
   put('sec-NVDA', { name: 'NVIDIA CORP', cik: '0001045810', source: 'SEC EDGAR', url: 'https://www.sec.gov/', revenueAnnual: [], netIncomeAnnual: [], revenueTTM: 1.6e11, netIncomeTTM: 8.5e10, epsTTM: 3.4, revenueYoY: 0.55, lastQuarter: '2026-07-31' });
+  put('markets', { source: 'Polymarket, Kalshi, Manifold', markets: [{ venue: 'Polymarket', question: 'US recession in 2026?', p: 0.18, volume: 2400000, closes: '2026-12-31', url: 'https://polymarket.com/event/us-recession-in-2026', score: 0.67 }, { venue: 'Manifold', question: 'Will the S&P 500 drop 20% in 2026?', p: 0.09, volume: 5000, closes: '2026-12-31', url: 'https://manifold.markets/x/sp', playMoney: true, score: 0.5 }], errors: [] });
+  put('feargreed', { source: 'CNN Fear & Greed', score: 46.1, rating: 'neutral', weekAgo: 43.7, monthAgo: 32.7, yearAgo: 30.1, history: [], url: 'https://www.cnn.com/markets/fear-and-greed' });
+  put('wiki', { source: 'Wikipedia pageviews', title: 'Nvidia', points: Array.from({ length: 120 }, (_, i) => [new Date(now - (120 - i) * 864e5).toISOString().slice(0, 10), i > 112 ? 15000 : 6000]), url: 'https://en.wikipedia.org/wiki/Nvidia' });
+  put('mastodon', { source: 'Mastodon', posts: [{ text: '$SPY looks heavy here, breadth is weak', score: 3, at: now, url: 'https://mastodon.social/@a/1', where: '#spy' }] });
+  put('tickernews', { source: 'Yahoo Finance, Seeking Alpha', posts: [{ text: 'S&P 500 hits record as earnings beat', at: now, url: 'https://finance.yahoo.com/x', where: 'Yahoo Finance' }] });
+  // A synthetic SPY option chain around the fixture's last price.
+  const spy = JSON.parse(fs.readFileSync(path.join(dir, 'prices-SPY.json'), 'utf8'));
+  const S = spy.close[spy.close.length - 1];
+  const exp = (days) => { const d = new Date(now + days * 864e5); return { expiry: d.toISOString().slice(0, 10), days } };
+  const N = (x) => 0.5 * (1 + Math.tanh(Math.sqrt(Math.PI / 8) * x * 1.6));
+  const chainExp = [exp(30), exp(81), exp(200)].map((e) => {
+    const sig = 0.18 * Math.sqrt(e.days / 365);
+    const strikes = [];
+    for (let k = Math.round(S * 0.5); k <= S * 1.5; k += Math.max(1, Math.round(S / 100))) {
+      const d2 = Math.log(S / k) / sig - sig / 2;
+      const put = Math.max(0.01, k * N(-d2) - S * N(-d2 - sig));
+      strikes.push({ k, put, call: put + S - k, putVol: 100, callVol: 120, putOi: 1000, callOi: 900, putIv: 0.18, callIv: 0.18 });
+    }
+    return { ...e, strikes };
+  });
+  put('options-SPY', { root: 'SPY', spot: S, asOf: new Date().toISOString(), expiries: chainExp, source: 'Cboe delayed quotes' });
   return dir;
 }
 

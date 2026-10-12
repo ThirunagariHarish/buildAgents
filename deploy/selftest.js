@@ -80,6 +80,23 @@ const ok = (name) => { n++; console.log(`  ok ${name}`); };
   assert(r3.run.analysts.find((a) => a.id === 'fundamentals'), 'fundamentals from NVDA, the first company among the instruments');
   ok(`AI scenario: ${r3.run.probability}%`);
 
+  assert(r1.run.analysts.find((a) => a.id === 'options' && a.probability !== undefined), `options analyst reads the chain (${r1.run.errors.join('; ')})`);
+  assert(r1.run.analysts.find((a) => a.id === 'markets'), 'prediction markets card');
+  assert(r1.run.analysts.find((a) => a.id === 'social'), 'social pulse (Claude)');
+  assert(r1.run.advocates && r1.run.advocates.yes.case.length, 'advocates ran');
+  ok(`new sources: options ${(r1.run.analysts.find((a) => a.id === 'options').probability * 100).toFixed(0)}%, markets, social, advocates`);
+
+  // The free desk: a builder scenario run without Claude.
+  const th2 = desk.buildThesis({ symbol: 'SPY', move: 'drawdown', value: 15, date: new Date(Date.now() + 200 * 864e5).toISOString().slice(0, 10) });
+  const sc3 = store.create({ ownerId: 'u2', claim: th2.proposition }); store.patch(sc3.id, { thesis: th2 });
+  const r4 = await desk.run(sc3.id, { claude: false });
+  assert(!r4.run.claude && r4.run.costUsd === 0 && r4.run.judge.call.includes('%'), 'free desk pools without Claude');
+  assert(!r4.run.analysts.some((a) => ['research', 'social'].includes(a.id)), 'no Claude analysts on the free desk');
+  ok(`free desk: ${r4.run.probability}% ${r4.run.verdict}, no Claude`);
+  const sc4 = store.create({ ownerId: 'u2', claim: 'free text claim' });
+  await assert.rejects(desk.run(sc4.id, { claude: false }), /builder/);
+  ok('free text without Claude asks for the builder');
+
   // Settlement: a drawdown that already happened resolves YES.
   const s = store.load(sc.id);
   s.createdAt = Date.now() - 400 * 86400000;
