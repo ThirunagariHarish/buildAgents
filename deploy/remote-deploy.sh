@@ -113,6 +113,9 @@ else
   fi
 fi
 
+echo "== desk smoke test (live data, no Claude) =="
+(set -a; . "$ENV_FILE"; set +a; timeout 300 node deploy/smoke.js)
+
 echo "== route (k3s Traefik) =="
 if [ -f /etc/box-kubeconfig ]; then
   K="kubectl --kubeconfig /etc/box-kubeconfig"
