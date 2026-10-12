@@ -21,6 +21,10 @@ const models = require('../lib/models');
   const n = (st) => sorted.filter((x) => x.stance === st).length;
   console.log(`   Reading room (auto-sort, live news): ${cands.length} articles; ${n('for')} support, ${n('against')} against, ${n('context')} context, ${n('skip')} off-topic`);
   for (const x of sorted.filter((y) => y.stance !== 'skip').slice(0, 3)) console.log(`     ${x.stance.padEnd(8)} ${x.title.slice(0, 90)} (${x.source})`);
+  const dsc = require('../lib/discover');
+  const [drd, dst, dpm, dnw] = await Promise.all([dsc.redditTop().catch((e) => e), dsc.stocktwitsTrending().catch((e) => e), dsc.hotMarkets().catch((e) => e), dsc.businessNews().catch((e) => e)]);
+  const cnt = (x) => (x instanceof Error ? `FAILED (${x.message.slice(0, 60)})` : x.length);
+  console.log(`   Discover sources: Reddit top ${cnt(drd)}, StockTwits trending ${cnt(dst)}, hot markets ${cnt(dpm)}, business news ${cnt(dnw)}${Array.isArray(dpm) && dpm[0] ? `; busiest: "${dpm[0].question.slice(0, 70)}" ${Math.round(dpm[0].p * 100)}%` : ''}`);
   if (await models.available()) {
     const t = Date.now();
     const f = await models.call('forecast', { series: [s.close.slice(-512)], horizon: 20 });

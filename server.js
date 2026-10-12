@@ -20,6 +20,7 @@ const models = require('./lib/models');
 const insights = require('./lib/insights');
 const reading = require('./lib/reading');
 const voice = require('./lib/voice');
+const discover = require('./lib/discover');
 const os = require('os');
 
 const { PORT, BASE_URL } = config;
@@ -213,8 +214,22 @@ function dueSlot(sc, now) {
   if (sc.schedule === 'weekly' && sc.lastRunDate && Date.parse(date) - Date.parse(sc.lastRunDate) < 6.5 * 86400000) return null;
   return slot;
 }
+// Discover refreshes around midday and after the close (UTC), or on request.
+let discovering = null;
+function refreshDiscover() {
+  if (discovering) return discovering;
+  const owner = auth.admins().find((u) => u.primary);
+  const existing = store.list().map((sc) => (sc.thesis ? sc.thesis.title : sc.claim));
+  discovering = discover.refresh({ ai: canClaude(owner), existing })
+    .then((r) => { emit({ event: 'discover' }); return r; })
+    .catch((e) => { console.error(`discover: ${e.message}`); return null; })
+    .finally(() => { discovering = null; });
+  return discovering;
+}
 function tick() {
   const now = new Date();
+  const dl = discover.latest();
+  if (!dl || (Date.now() - dl.at > 6 * 3600 * 1000 && [12, 13, 21, 22].includes(now.getUTCHours()))) refreshDiscover();
   for (const sc of store.list()) {
     if (sc.archived || ['resolved', 'running', 'queued'].includes(sc.status) || !sc.thesis) continue;
     const slot = dueSlot(sc, now);
@@ -386,6 +401,20 @@ async function api(req, res, p, url, user) {
       try { return json(res, 200, { ...(await voice.tidy(text, mode)), by: 'claude' }); } catch {}
     }
     return json(res, 200, mode === 'build' ? { ...voice.parseBuild(text), by: 'rules' } : { claim: text, facts: '', by: 'none' });
+  }
+  if (p === '/api/discover' && req.method === 'GET') {
+    const d = discover.latest();
+    if (!d && !discovering) refreshDiscover();
+    if (!d) return json(res, 200, { pending: true });
+    const mineClaims = store.list().filter((sc) => sc.ownerId === user.id).map((sc) => ({ id: sc.id, t: `${sc.claim} ${sc.thesis ? sc.thesis.title : ''}`.toLowerCase() }));
+    const words = (x) => (x.toLowerCase().match(/[a-z0-9$]{3,}/g) || []);
+    const tracked = (c) => { const w = words(c.claim); const hit = mineClaims.find((m) => w.length && w.filter((x) => m.t.includes(x)).length / w.length > 0.7); return hit ? hit.id : null; };
+    return json(res, 200, { ...d, claims: d.claims.map((c) => ({ ...c, tracked: tracked(c) })), refreshing: !!discovering });
+  }
+  if (p === '/api/discover/refresh' && req.method === 'POST') {
+    if (auth.limited('discover:refresh', 2, 30 * 60 * 1000)) return json(res, 429, { error: 'It refreshed recently. Try again in a little while.' });
+    refreshDiscover();
+    return json(res, 202, { refreshing: true });
   }
   if (p === '/api/today' && req.method === 'GET') return json(res, 200, insights.today(store.list().filter((sc) => sc.ownerId === user.id), user.id));
   if (p === '/api/record' && req.method === 'GET') return json(res, 200, insights.record(store.list().filter((sc) => sc.ownerId === user.id)));

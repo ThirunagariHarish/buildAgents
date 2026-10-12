@@ -129,6 +129,20 @@ const ok = (name) => { n++; console.log(`  ok ${name}`); };
   assert(qa.fan && qa.fan.points.length === 24 && qa.fan.hist.length > 5 && Math.abs(qa.fan.hist.reduce((x, b) => x + b.share, 0) - 1) < 1e-6, 'quant fan and histogram');
   ok('agent pages: price chart, sheet, fan, histogram');
 
+  // Discover: claims from today's posts, with and without Claude.
+  const discover = require('../lib/discover');
+  const posts = [
+    { platform: 'Reddit', where: 'r/CryptoCurrency', text: 'Bitcoin will hit $150k before the year is out, ETF flows are insane', url: 'https://www.reddit.com/r/x/1', at: Date.now() },
+    { platform: 'Reddit', where: 'r/stocks', text: 'SPY is going to crash 10% by December, valuations are nuts', url: 'https://www.reddit.com/r/x/2', at: Date.now() },
+    { platform: 'News', where: 'Reuters', text: 'Bitcoin climbs as ETF inflows accelerate', url: 'https://example.com/3', at: Date.now() },
+  ];
+  const dc = await discover.refresh({ ai: true, inject: { posts, tickers: [{ symbol: 'NVDA', watchers: 10 }], markets: [] } });
+  assert(dc.claims.length === 2 && dc.claims[0].buzz === 2 && dc.claims[0].sources.length === 2 && dc.claims[0].build.symbol === 'BTC-USD', `discover with Claude ${JSON.stringify(dc.claims[0])}`);
+  const dn = await discover.refresh({ ai: false, inject: { posts } });
+  assert(dn.claims.length >= 2 && dn.claims.every((c) => c.by === 'auto') && dn.claims.some((c) => c.build && c.build.symbol === 'SPY'), `discover without Claude ${JSON.stringify(dn.claims)}`);
+  assert(discover.latest().at, 'saved');
+  ok(`discover: ${dc.claims.length} claims with Claude, ${dn.claims.length} without`);
+
   // The free desk: a builder scenario run without Claude.
   const th2 = desk.buildThesis({ symbol: 'SPY', move: 'drawdown', value: 15, date: new Date(Date.now() + 200 * 864e5).toISOString().slice(0, 10) });
   const sc3 = store.create({ ownerId: 'u2', claim: th2.proposition }); store.patch(sc3.id, { thesis: th2 });

@@ -39,7 +39,7 @@
 
   // ---- routing --------------------------------------------------------------------------
   const route = () => (location.hash.replace(/^#\/?/, '') || 'today').split('/');
-  const TABS = [['today', 'Today', 'sun-horizon'], ['scenarios', 'Scenarios', 'list-dashes'], ['build', 'Build', 'plus-circle'], ['markets', 'Markets', 'globe-hemisphere-west'], ['you', 'You', 'user-circle']];
+  const TABS = [['today', 'Today', 'sun-horizon'], ['scenarios', 'Scenarios', 'list-dashes'], ['build', 'Build', 'plus-circle'], ['discover', 'Discover', 'compass'], ['markets', 'Markets', 'globe-hemisphere-west']];
   window.addEventListener('hashchange', () => { window.scrollTo(0, 0); render(); });
   window.addEventListener('scroll', () => { const t = $('.top'); if (t) t.classList.toggle('scrolled', window.scrollY > 4); }, { passive: true });
 
@@ -53,7 +53,7 @@
     const [r0, r1] = route();
     if (r0 === 'reset') return resetView(r1);
     if (!S.me) return r0 === 'signup' ? signupView() : r0 === 'forgot' ? forgotView() : loginView();
-    const views = { today: todayView, scenarios: scenariosView, build: buildView, markets: marketsView, you: youView, people: peopleView, sources: sourcesView };
+    const views = { today: todayView, scenarios: scenariosView, build: buildView, discover: discoverView, markets: marketsView, you: youView, people: peopleView, sources: sourcesView };
     if (r0 === 's' && r1) return dashView(r1);
     return (views[r0] || todayView)();
   }
@@ -62,7 +62,9 @@
       <nav class="tabbar" aria-label="Main">${TABS.map(([id, label, ic]) => `<a href="#/${id}" class="tab${id === 'build' ? ' tab-build' : ''}" ${tab === id ? 'aria-current="page"' : ''}>${I(ic, id === 'build' ? 26 : 22)}<span>${label}</span></a>`).join('')}</nav>`;
   }
   const top = (inner) => `<header class="top"><div class="top-in">${inner}</div></header>`;
-  const titleTop = (title, extra = '') => top(`<a class="brand" href="#/today">${mark()}<span class="sr">Run Scenario</span></a><h1 class="top-title">${title}</h1><span class="spacer"></span>${extra}`);
+  // You (track record, settings, people) lives behind the avatar in the top corner.
+  const avatar = () => `<a class="avatar" href="#/you" aria-label="You: track record and settings" title="You">${esc(((S.me.firstName || S.me.email || '?')[0] || '?').toUpperCase())}</a>`;
+  const titleTop = (title, extra = '') => top(`<a class="brand" href="#/today">${mark()}<span class="sr">Run Scenario</span></a><h1 class="top-title">${title}</h1><span class="spacer"></span>${extra}${avatar()}`);
   const backTop = (to, label, extra = '') => top(`<a class="back" href="${to}">${I('arrow-left', 18)}${label}</a><span class="spacer"></span>${extra}`);
 
   // ---- accounts ----------------------------------------------------------------------------
@@ -368,6 +370,40 @@
       b.dispatchEvent(new Event('change', { bubbles: true }));
       toast(r.by === 'claude' ? 'Filled in by Claude. Check it, then run it.' : 'Filled in. Check it, then run it.');
     } catch (err) { toast(err.message, true); }
+  }
+
+  // ---- Discover --------------------------------------------------------------------------------------
+  if (!S.disc) S.disc = { cat: 'All' };
+  async function discoverView() {
+    shell('discover', titleTop('Discover', `<button class="icon-btn" data-act="disc-refresh" aria-label="Refresh" title="Look again">${I('arrow-clockwise', 19)}</button>`), `<div class="intro"><h1>What people are claiming today</h1><p>Testable calls from Reddit, Hacker News, Mastodon and the news, plus the prediction markets with the most money moving.</p></div><div id="disc">${[1, 2, 3].map(() => '<div class="dcard"><div class="sk sk-line" style="width:40%"></div><div class="sk sk-line" style="height:20px"></div><div class="sk sk-line" style="width:70%"></div></div>').join('')}</div>`);
+    let d;
+    try { d = await api('/api/discover'); } catch (e) { $('#disc').innerHTML = `<p class="empty">${esc(e.message)}</p>`; return; }
+    if (route()[0] !== 'discover') return;
+    S.disc.data = d;
+    drawDiscover();
+  }
+  function drawDiscover() {
+    const el = $('#disc'); const d = S.disc.data; if (!el || !d) return;
+    if (d.pending) { el.innerHTML = `<div class="hero-empty"><h2>Reading today's posts</h2><p>The desk is gathering posts from Reddit, Hacker News, Mastodon and the news and pulling out the claims. This takes a minute; the page fills in by itself.</p></div>`; return; }
+    const cats = ['All', ...new Set(d.claims.map((c) => c.category))];
+    const list = d.claims.filter((c) => S.disc.cat === 'All' || c.category === S.disc.cat);
+    const n = Object.values(d.sources || {}).reduce((a, b) => a + b, 0);
+    el.innerHTML = `<p class="fine disc-meta">${d.refreshing ? '<span class="inline"><span class="pulse"></span>Looking again</span>' : `Updated ${esc(ago(d.at))}`} from ${n} posts and headlines. ${d.by === 'claude' ? 'Claims pulled out by Claude.' : 'Claims picked by keyword (Claude is off).'}</p>
+      ${cats.length > 2 ? `<div class="chips" role="group" aria-label="Category" style="margin:12px 0 4px">${cats.map((c) => `<button class="fchip" aria-pressed="${S.disc.cat === c}" data-act="disc-cat" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div>` : ''}
+      <section class="block tight">${list.map((c) => claimCard(c, d.claims.indexOf(c))).join('') || '<p class="empty">No claims in this category today.</p>'}</section>
+      ${(d.tickers && (d.tickers.trending.length || d.tickers.mentioned.length)) ? `<section class="block"><h2>Tickers people are talking about</h2><div class="tick-chips">${[...d.tickers.mentioned.map((t) => ({ symbol: t.symbol, note: `${t.mentions} post${t.mentions > 1 ? 's' : ''}` })), ...d.tickers.trending.filter((t) => !d.tickers.mentioned.some((m) => m.symbol === t.symbol)).map((t) => ({ symbol: t.symbol, note: 'trending on StockTwits' }))].slice(0, 18).map((t) => `<button class="tick" data-act="track-symbol" data-v="${esc(t.symbol)}"><b>${esc(t.symbol)}</b><small>${esc(t.note)}</small></button>`).join('')}</div><p class="fine" style="margin-top:8px">Tap one to build a scenario on it.</p></section>` : ''}
+      ${d.markets && d.markets.length ? `<section class="block"><h2>Where the money is betting</h2><p class="fine" style="margin:-6px 0 10px">Busiest open markets on Polymarket and Kalshi.</p>${d.markets.map((x) => `<div class="pm"><div><a href="${safeUrl(x.url)}" target="_blank" rel="noopener">${esc(x.question)}</a><p class="fine">${esc(x.venue)}${x.closes ? `, closes ${esc(fmtShort(x.closes))}` : ''}${x.volume24h ? `, $${Math.round(x.volume24h).toLocaleString()} traded today` : ''}</p></div><div class="pm-side"><b class="num">${Math.round(x.p * 100)}%</b>${S.me.claude ? `<button class="link" data-act="track-claim" data-v="${esc(x.question)}">Test it</button>` : ''}</div></div>`).join('')}</section>` : ''}
+      <p class="foot">What people say online is not evidence. Testing it is the point: each claim runs through the full desk.</p>`;
+  }
+  function claimCard(c, i) {
+    const bull = c.lean === 'bullish';
+    return `<article class="dcard">
+      <div class="dcard-top"><span class="dcat">${esc(c.category)}</span><span class="lean-tag ${bull ? 'yes' : 'no'}">${I(bull ? 'trend-up' : 'trend-down', 12)} ${bull ? 'Bullish' : 'Bearish'}</span><span class="buzz">${I('chats-circle', 13)}${c.buzz} post${c.buzz === 1 ? '' : 's'}${c.platforms && c.platforms.length ? ` on ${esc(c.platforms.join(', '))}` : ''}</span></div>
+      <h3 class="dclaim">${esc(c.claim)}</h3>
+      ${c.why ? `<p class="dwhy">${esc(c.why)}</p>` : ''}
+      ${(c.sources || []).length ? `<div class="dsrc">${c.sources.slice(0, 3).map((x) => `<a href="${safeUrl(x.url)}" target="_blank" rel="noopener"><small>${esc(x.where || x.platform)}</small>${esc(x.text)}</a>`).join('')}</div>` : ''}
+      <div class="dact">${c.tracked ? `<a class="btn small quiet" href="#/s/${esc(c.tracked)}">${I('check', 14)}Tracking it</a>` : `<button class="btn small" data-act="disc-test" data-v="${i}">${I('lightning', 14)}Test it</button><button class="btn small quiet" data-act="disc-edit" data-v="${i}">Edit first</button>`}</div>
+    </article>`;
   }
 
   // ---- Markets ---------------------------------------------------------------------------------------
@@ -821,6 +857,16 @@
     else if (act === 'idea') { const ta = $('#f-claim'); ta.value = v; ta.focus(); }
     else if (act === 'template') { const tp = TEMPLATES[Number(v)]; S.prefill = tp.build ? { build: tp.build } : { claim: tp.claim }; S.mode = tp.build ? 'build' : 'describe'; $('#composer-body').innerHTML = composerBody(); document.querySelectorAll('.tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.v === S.mode))); wireComposer(); window.scrollTo(0, 0); }
     else if (act === 'create') create();
+    else if (act === 'disc-cat') { S.disc.cat = v; drawDiscover(); }
+    else if (act === 'disc-refresh') { try { await api('/api/discover/refresh', { method: 'POST' }); if (S.disc.data) { S.disc.data.refreshing = true; drawDiscover(); } toast('Looking at today\'s posts again. This takes a minute.'); } catch (err) { toast(err.message, true); } }
+    else if (act === 'disc-edit') { const c = S.disc.data.claims[Number(v)]; S.prefill = S.me.claude || !c.build ? { claim: c.claim } : { build: c.build }; if (!S.me.claude && !c.build) { S.prefill = { build: { symbol: 'SPY', move: 'drawdown', value: 10, date: '' } }; } location.hash = '#/build'; }
+    else if (act === 'disc-test') {
+      const c = S.disc.data.claims[Number(v)];
+      const body = S.me.claude ? { claim: c.claim, facts: (c.sources || []).map((x) => `${x.where}: ${x.text}`).join('\n') } : c.build ? { build: c.build } : null;
+      if (!body) { S.prefill = { build: { symbol: 'SPY', move: 'drawdown', value: 10 } }; location.hash = '#/build'; return; }
+      busy(t, true, 'Starting');
+      try { const r = await api('/api/scenarios', { method: 'POST', body }); toast('Testing it now.'); location.hash = `#/s/${r.id}`; } catch (err) { busy(t, false); t.innerHTML = `${I('lightning', 14)}Test it`; toast(err.message, true); }
+    }
     else if (act === 'mic') toggleMic(t);
     else if (act === 'opt-depth') { document.querySelectorAll('[data-act="opt-depth"]').forEach((b) => b.setAttribute('aria-checked', String(b === t))); $('#depth-help').textContent = DEPTHS[v][1]; }
     else if (act === 'resend') { try { const r = await api('/api/forgot', { method: 'POST', body: { email: v }, anon: true }); toast(r.message); } catch (err) { toast(err.message, true); } }
@@ -903,6 +949,7 @@
         S.live[`q:${ev.qid}`] = ev.text;
         const el = document.querySelector(`[data-qid="${ev.qid}"] .qtext`); if (el) el.textContent = ev.text;
       } else if (ev.event === 'question') { if (r0 === 's' && r1 === ev.id) refresh(); }
+      else if (ev.event === 'discover') { if (r0 === 'discover') discoverView(); }
     };
     es.onerror = () => { es.close(); es = null; setTimeout(() => { if (S.me) connect(); }, 5000); };
   }
