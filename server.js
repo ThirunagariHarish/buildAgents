@@ -17,6 +17,7 @@ const store = require('./lib/store');
 const desk = require('./lib/desk');
 const data = require('./lib/data');
 const models = require('./lib/models');
+const insights = require('./lib/insights');
 
 const { PORT, BASE_URL } = config;
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -120,41 +121,94 @@ async function pump() {
   busy = true;
   try {
     const sc0 = store.load(next.id);
-    const r = await desk.run(next.id, { emit, reason: next.reason, claude: canClaude(sc0 && auth.getUser(sc0.ownerId)) });
-    if (r && next.reason === 'daily') await alert(r).catch((e) => console.error(`alert ${next.id}: ${e.message}`));
+    const r = await desk.run(next.id, { emit, reason: next.reason, claude: canClaude(sc0 && auth.getUser(sc0.ownerId)), depth: (sc0 && sc0.depth) || 'deep' });
+    if (r) await alert(r, next.reason).catch((e) => console.error(`alert ${next.id}: ${e.message}`));
+    if (next.reason === 'scheduled') batchDone = true;
   } catch (e) { console.error(`run ${next.id}: ${e.message}`); }
   busy = false;
+  // When the scheduled batch is through, send each person one digest for the day.
+  if (!queue.length && batchDone) { batchDone = false; digests().catch((e) => console.error(`digest: ${e.message}`)); }
   setImmediate(pump);
 }
+let batchDone = false;
 
-/** Email the owner when a daily run moved the needle. */
-async function alert({ sc, run, prev }) {
-  if (!sc.alerts || !sc.alerts.email || !prev) return;
-  const dp = run.probability - prev.probability;
-  const moved = Math.abs(dp) >= (sc.alerts.move || 5) || prev.verdict !== run.verdict || sc.status === 'resolved';
-  if (!moved) return;
+/**
+ * Email the owner when a run did something they asked to hear about: a big
+ * move, a verdict flip, crossing their level, or the scenario settling.
+ */
+async function alert({ sc, run, prev }, reason) {
+  const a = sc.alerts || {};
+  if (!a.email) return;
+  const why = [];
+  if (sc.status === 'resolved' && a.settle !== false) why.push(`it settled ${sc.resolved ? sc.resolved.outcome.toUpperCase() : ''}`.trim());
+  if (prev && reason !== 'new') {
+    const dp = run.probability - prev.probability;
+    if (Math.abs(dp) >= (a.move || 5)) why.push(`it moved ${dp > 0 ? 'up' : 'down'} ${Math.abs(dp)} points`);
+    if (a.flip !== false && prev.verdict !== run.verdict) why.push(`the verdict changed from ${prev.verdict} to ${run.verdict}`);
+    if (Number.isFinite(a.cross) && (prev.probability - a.cross) * (run.probability - a.cross) < 0) why.push(`it crossed your ${a.cross}% line`);
+  }
+  if (!why.length) return;
   const u = auth.getUser(sc.ownerId);
   if (!u) return;
+  const dp = prev ? run.probability - prev.probability : 0;
   const lines = [
-    `${sc.thesis.title}`, '',
-    `${prev.probability}% → ${run.probability}%  (${dp >= 0 ? '+' : ''}${dp} pts)  ${run.verdict}`, '',
+    sc.thesis.title, '',
+    `${prev ? `${prev.probability}% to ` : ''}${run.probability}%, ${run.verdict}. You're getting this because ${why.join(' and ')}.`, '',
     run.call, '',
-    ...(run.changes || []).slice(0, 6).map((c) => `• ${c.text}`), '',
-    `Open the dashboard: ${BASE_URL}/#/s/${sc.id}`, '',
-    'Research, not financial advice.',
+    ...(run.changes || []).slice(0, 6).map((c) => `- ${c.text}`), '',
+    `Open it: ${BASE_URL}/#/s/${sc.id}`, '',
+    'Research, not financial advice. Change alerts in the scenario\'s settings.',
   ];
-  await mail.send({ to: u.email, subject: `${sc.thesis.title}: ${run.probability}% (${dp >= 0 ? '+' : ''}${dp})`, text: lines.join('\n') });
+  await mail.send({ to: u.email, subject: `${sc.thesis.title}: ${run.probability}%${prev ? ` (${dp >= 0 ? '+' : ''}${dp})` : ''}`, text: lines.join('\n') });
 }
 
-// ---- daily schedule ------------------------------------------------------------
+/** One email per person per day: every active scenario, biggest moves first. */
+async function digests() {
+  const date = new Date().toISOString().slice(0, 10);
+  const byOwner = new Map();
+  for (const sc of store.list()) { if (!byOwner.has(sc.ownerId)) byOwner.set(sc.ownerId, []); byOwner.get(sc.ownerId).push(sc); }
+  for (const [uid, list] of byOwner) {
+    const pr = insights.prefs(uid);
+    const u = auth.getUser(uid);
+    if (!u || !pr.digest || pr.lastDigest === date) continue;
+    const active = list.filter((sc) => !sc.archived && (sc.history || []).length);
+    if (!active.length) continue;
+    const t = insights.today(list, uid);
+    const lines = [`Your scenarios on ${date}`, ''];
+    for (const sc of active.sort((a, b) => Math.abs(chg(b)) - Math.abs(chg(a)))) {
+      const h = sc.history, last = h[h.length - 1];
+      lines.push(`${last.p}%${h.length > 1 ? ` (${chg(sc) >= 0 ? '+' : ''}${chg(sc)})` : ''}  ${sc.thesis.title}${sc.status === 'resolved' ? `  [settled ${sc.resolved.outcome.toUpperCase()}]` : ''}`);
+    }
+    if (t.catalysts.length) lines.push('', 'Coming up', ...t.catalysts.slice(0, 5).map((c) => `${c.date}  ${c.event}`));
+    lines.push('', `Open Run Scenario: ${BASE_URL}`, '', 'Turn this email off under You.');
+    const r = await mail.send({ to: u.email, subject: `Run Scenario: ${active.length} scenario${active.length > 1 ? 's' : ''}, ${date}`, text: lines.join('\n') });
+    if (r.sent) insights.setPrefs(uid, { lastDigest: date });
+  }
+}
+const chg = (sc) => { const h = sc.history || []; return h.length > 1 ? Math.round((h[h.length - 1].p - h[h.length - 2].p) * 10) / 10 : 0; };
+
+// ---- schedule ---------------------------------------------------------------------
+// Slots in UTC: before the US open (13:00) and after the close (DAILY_HOUR_UTC).
+const PRE_OPEN_UTC = 13;
+function dueSlot(sc, now) {
+  const date = now.toISOString().slice(0, 10), hour = now.getUTCHours();
+  const slots = sc.schedule === 'twice' ? [PRE_OPEN_UTC, config.DAILY_HOUR_UTC] : ['daily', 'weekly'].includes(sc.schedule) ? [config.DAILY_HOUR_UTC] : [];
+  const passed = slots.filter((h) => hour >= h).pop();
+  if (passed === undefined) return null;
+  const slot = `${date}@${String(passed).padStart(2, '0')}`;
+  const last = sc.lastSlot || (sc.lastRunDate ? `${sc.lastRunDate}@${String(config.DAILY_HOUR_UTC).padStart(2, '0')}` : '');
+  if (last >= slot) return null;
+  if (sc.schedule === 'weekly' && sc.lastRunDate && Date.parse(date) - Date.parse(sc.lastRunDate) < 6.5 * 86400000) return null;
+  return slot;
+}
 function tick() {
   const now = new Date();
-  const date = now.toISOString().slice(0, 10);
-  if (now.getUTCHours() < config.DAILY_HOUR_UTC) return;
   for (const sc of store.list()) {
-    if (sc.schedule !== 'daily' || ['resolved', 'running', 'queued'].includes(sc.status) || !sc.thesis) continue;
-    if ((sc.lastRunDate || '') >= date) continue;
-    enqueue(sc.id, 'daily');
+    if (sc.archived || ['resolved', 'running', 'queued'].includes(sc.status) || !sc.thesis) continue;
+    const slot = dueSlot(sc, now);
+    if (!slot) continue;
+    store.patch(sc.id, { lastSlot: slot });
+    enqueue(sc.id, 'scheduled');
   }
 }
 
@@ -167,6 +221,8 @@ function card(sc) {
     probability: last ? last.p : null, change: last && prev ? Math.round((last.p - prev.p) * 10) / 10 : null, verdict: sc.latest ? sc.latest.verdict : null,
     horizonDate: sc.thesis ? sc.thesis.horizonDate : null, spark: [...(sc.backfill || []).map((b) => b.p), ...h.map((x) => x.p)].slice(-40),
     updatedAt: sc.latest ? sc.latest.at : sc.createdAt, createdAt: sc.createdAt,
+    archived: !!sc.archived, schedule: sc.schedule, depth: sc.depth || 'deep', myCall: (sc.myCalls || []).length ? sc.myCalls[sc.myCalls.length - 1].p : null,
+    kind: sc.thesis ? sc.thesis.kind : null, primary: sc.thesis ? sc.thesis.primary : null,
   };
 }
 function fullView(sc, user) {
@@ -179,9 +235,23 @@ function fullView(sc, user) {
   }
   const runs = (sc.history || []).map((h) => ({ date: h.date, p: h.p, runId: h.runId }));
   const theme = store.list().filter((x) => x.themeId === sc.themeId && x.id !== sc.id).map(card);
-  return { ...card(sc), thesis: sc.thesis, facts: sc.facts, history: sc.history, backfill: sc.backfill, questions: sc.questions, schedule: sc.schedule, alerts: sc.alerts, resolved: sc.resolved || null, latest, sinceVisit, runs, theme, progress: desk.progress(sc.id), queued: queue.some((q) => q.id === sc.id) };
+  return { ...card(sc), thesis: sc.thesis, facts: sc.facts, history: sc.history, backfill: sc.backfill, questions: sc.questions, schedule: sc.schedule, alerts: sc.alerts, depth: sc.depth || 'deep', myCalls: sc.myCalls || [], resolved: sc.resolved || null, latest, sinceVisit, runs, theme, progress: desk.progress(sc.id), queued: queue.some((q) => q.id === sc.id) };
 }
 const mine = (u, sc) => !!sc && (sc.ownerId === u.id || u.role === 'admin');
+
+/** How a scenario runs: frequency, depth, alerts. People without Claude always run Quick. */
+function runOptions(b, user, sc = null) {
+  const f = {};
+  if (['twice', 'daily', 'weekly', 'off'].includes(b.schedule)) f.schedule = b.schedule;
+  if (['quick', 'standard', 'deep'].includes(b.depth)) f.depth = canClaude(user) ? b.depth : 'quick';
+  else if (!sc && !canClaude(user)) f.depth = 'quick';
+  if (b.alerts && typeof b.alerts === 'object') {
+    const a = b.alerts, cur = (sc && sc.alerts) || {};
+    const cross = a.cross === null || a.cross === '' ? null : Number.isFinite(Number(a.cross)) ? Math.max(1, Math.min(99, Math.round(Number(a.cross)))) : cur.cross ?? null;
+    f.alerts = { email: a.email !== undefined ? !!a.email : cur.email !== false, move: Math.max(1, Math.min(50, Number(a.move ?? cur.move) || 5)), flip: a.flip !== undefined ? !!a.flip : cur.flip !== false, settle: a.settle !== undefined ? !!a.settle : cur.settle !== false, cross };
+  }
+  return f;
+}
 
 let statusCache = null;
 async function status(force) {
@@ -281,6 +351,20 @@ async function api(req, res, p, url, user) {
       return json(res, 200, { ok: true });
     } catch (e) { return json(res, e.status || 500, { error: e.message }); }
   }
+  if (p === '/api/today' && req.method === 'GET') return json(res, 200, insights.today(store.list().filter((sc) => sc.ownerId === user.id), user.id));
+  if (p === '/api/record' && req.method === 'GET') return json(res, 200, insights.record(store.list().filter((sc) => sc.ownerId === user.id)));
+  if (p === '/api/pulse' && req.method === 'GET') {
+    const [pl, wl] = await Promise.all([insights.pulse(), insights.watchlist(insights.prefs(user.id).watchlist)]);
+    return json(res, 200, { ...pl, watchlist: wl });
+  }
+  if (p === '/api/prefs' && req.method === 'GET') return json(res, 200, insights.prefs(user.id));
+  if (p === '/api/prefs' && req.method === 'POST') {
+    const b = await readBody(req);
+    const patch = {};
+    if (typeof b.digest === 'boolean') patch.digest = b.digest;
+    if (Array.isArray(b.watchlist)) patch.watchlist = [...new Set(b.watchlist.map((x) => String(x).trim().toUpperCase()).filter((x) => /^[\^A-Z0-9.=\-]{1,15}$/.test(x)))].slice(0, 12);
+    return json(res, 200, insights.setPrefs(user.id, patch));
+  }
   if (p === '/api/scenarios' && req.method === 'GET') {
     const list = store.list().filter((sc) => mine(user, sc)).map(card).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     return json(res, 200, { scenarios: list, running: queue.length + (busy ? 1 : 0) });
@@ -296,7 +380,8 @@ async function api(req, res, p, url, user) {
     if (auth.limited(`create:${user.id}`, 30, 24 * 3600 * 1000)) return json(res, 429, { error: 'That\'s a lot of new scenarios today. Try again tomorrow.' });
     const parent = b.parentId ? store.load(b.parentId) : null;
     const sc = store.create({ ownerId: user.id, claim, facts, themeId: parent && mine(user, parent) ? parent.themeId : null, parentId: parent ? parent.id : null });
-    if (thesis) store.patch(sc.id, { thesis });
+    store.patch(sc.id, { ...(thesis ? { thesis } : {}), ...runOptions(b.options || {}, user) });
+    if (Number.isFinite(Number(b.myCall)) && b.myCall !== '' && b.myCall !== null) store.patch(sc.id, { myCalls: [{ date: new Date().toISOString().slice(0, 10), p: Math.max(1, Math.min(99, Math.round(Number(b.myCall)))) }] });
     enqueue(sc.id, 'new');
     return json(res, 200, { id: sc.id });
   }
@@ -309,10 +394,20 @@ async function api(req, res, p, url, user) {
   if (sub === '' && req.method === 'DELETE') { store.remove(sc.id); return json(res, 200, { ok: true }); }
   if (sub === '' && req.method === 'PATCH') {
     const b = await readBody(req);
-    const f = {};
-    if (['daily', 'off'].includes(b.schedule)) f.schedule = b.schedule;
-    if (b.alerts && typeof b.alerts === 'object') f.alerts = { email: !!b.alerts.email, move: Math.max(1, Math.min(50, Number(b.alerts.move) || 5)) };
+    const f = runOptions(b, user, sc);
+    if (typeof b.archived === 'boolean') f.archived = b.archived;
     return json(res, 200, card(store.patch(sc.id, f)));
+  }
+  if (sub === '/call' && req.method === 'POST') {
+    // The person's own probability, kept beside the desk's (one per day).
+    const b = await readBody(req);
+    const pv = Number(b.p);
+    if (!Number.isFinite(pv) || pv < 1 || pv > 99) return json(res, 400, { error: 'Pick a number from 1 to 99.' });
+    const date = new Date().toISOString().slice(0, 10);
+    const fresh = store.load(sc.id);
+    fresh.myCalls = [...(fresh.myCalls || []).filter((x) => x.date !== date), { date, p: Math.round(pv) }];
+    store.save(fresh);
+    return json(res, 200, { myCalls: fresh.myCalls });
   }
   if (sub === '/seen' && req.method === 'POST') {
     if (sc.latest) { const fresh = store.load(sc.id); fresh.seen = { ...(fresh.seen || {}), [user.id]: sc.latest.id }; store.save(fresh); }

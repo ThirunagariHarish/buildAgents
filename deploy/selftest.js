@@ -86,6 +86,25 @@ const ok = (name) => { n++; console.log(`  ok ${name}`); };
   assert(r1.run.advocates && r1.run.advocates.yes.case.length, 'advocates ran');
   ok(`new sources: options ${(r1.run.analysts.find((a) => a.id === 'options').probability * 100).toFixed(0)}%, markets, social, advocates`);
 
+  const lad = r1.run.analysts.find((a) => a.id === 'quant').ladder;
+  assert(lad && lad.length >= 5 && lad.some((x) => x.claimed), 'odds ladder includes the claimed level');
+  assert(lad.filter((x) => /Falls/.test(x.label)).every((x, i, a) => i === 0 || x.p <= a[i - 1].p + 0.5), 'bigger falls are less likely');
+  ok(`odds ladder: ${lad.map((x) => `${x.label} ${x.p}%`).join(', ')}`);
+  const r5 = await desk.run(sc.id, { depth: 'standard' });
+  assert(!r5.run.analysts.some((a) => a.id === 'social') && !r5.run.advocates && r5.run.analysts.some((a) => a.id === 'research'), 'standard: research + judge only');
+  const r6 = await desk.run(sc.id, { depth: 'quick' });
+  assert(!r6.run.claude && r6.run.costUsd === 0, 'quick: no Claude');
+  ok('depth: standard and quick');
+
+  // Insights: today, record.
+  const insights = require('../lib/insights');
+  const tv = insights.today(store.list(), 'u1');
+  assert(tv.total >= 2 && Array.isArray(tv.catalysts), 'today view');
+  const fake = { ...store.load(sc.id), status: 'resolved', resolved: { outcome: 'no' }, history: [{ date: '2026-01-01', p: 20 }, { date: '2026-01-02', p: 10 }, { date: '2026-01-03', p: 1 }], myCalls: [{ date: '2026-01-01', p: 60 }] };
+  const rec = insights.record([fake]);
+  assert(Math.abs(rec.brier - (0.04 + 0.01) / 2) < 1e-9 && Math.abs(rec.myBrier - 0.36) < 1e-9, `brier ${rec.brier} ${rec.myBrier}`);
+  ok(`track record: desk Brier ${rec.brier.toFixed(3)}, yours ${rec.myBrier.toFixed(2)}`);
+
   // The free desk: a builder scenario run without Claude.
   const th2 = desk.buildThesis({ symbol: 'SPY', move: 'drawdown', value: 15, date: new Date(Date.now() + 200 * 864e5).toISOString().slice(0, 10) });
   const sc3 = store.create({ ownerId: 'u2', claim: th2.proposition }); store.patch(sc3.id, { thesis: th2 });

@@ -40,6 +40,12 @@
       const lead = i === series.length - 1;
       const d = s.points.map((p, k) => `${k ? 'L' : 'M'}${x(p.date).toFixed(1)} ${y(p.p).toFixed(1)}`).join('');
       if (lead && s.points.length > 1) svg += `<path d="${d}L${x(s.points[s.points.length - 1].date).toFixed(1)} ${y(0)}L${x(s.points[0].date).toFixed(1)} ${y(0)}Z" fill="${s.color}" opacity=".1"/>`;
+      if (s.dots) {
+        // Marker series (the person's own calls): dots with a surface ring, joined by a thin line.
+        if (s.points.length > 1) svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="1.2" opacity=".6"/>`;
+        for (const pt of s.points) svg += `<circle cx="${x(pt.date).toFixed(1)}" cy="${y(pt.p).toFixed(1)}" r="4" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`;
+        return;
+      }
       svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" ${s.dashed ? 'stroke-dasharray="5 4"' : ''} stroke-linejoin="round" stroke-linecap="round"/>`;
       if (lead) {
         const l = s.points[s.points.length - 1];
