@@ -1,0 +1,64 @@
+# Routes scenario.cashflowus.com through the cluster's Traefik to Run
+# Scenario, a systemd service on the worker node (69.62.86.166:3402), next to
+# Pocket Box. Applied by deploy/remote-deploy.sh.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scenario
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scenario
+  namespace: scenario
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3402
+      protocol: TCP
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: scenario-host
+  namespace: scenario
+  labels:
+    kubernetes.io/service-name: scenario
+    endpointslice.kubernetes.io/managed-by: scenario-manual
+addressType: IPv4
+ports:
+  - name: http
+    port: 3402
+    protocol: TCP
+endpoints:
+  - addresses:
+      - 69.62.86.166
+    conditions:
+      ready: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: scenario
+  namespace: scenario
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: scenario.cashflowus.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: scenario
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - scenario.cashflowus.com
+      secretName: scenario-tls
