@@ -1,9 +1,9 @@
-run: 143  commit: 9ef4115  ssh step: success  at: 2026-10-12T23:31:05Z
+run: 144  commit: 660efe8  ssh step: success  at: 2026-10-12T23:37:45Z
 
-HEAD: 9ef4115   domain: scenario.cashflowus.com   port: 3402
+HEAD: 660efe8   domain: scenario.cashflowus.com   port: 3402
 == prerequisites ==
 node v22.23.3, claude 2.1.287 (Claude Code), python Python 3.12.3
-machine: 8 CPUs, 32094 MB RAM, 26541 MB available, disk free 292G
+machine: 8 CPUs, 32094 MB RAM, 26592 MB available, disk free 292G
 == env file ==
 keys in /etc/scenario.env: SC_PORT SC_DOMAIN SC_DATA_DIR SC_PYTHON CLAUDE_CODE_OAUTH_TOKEN SC_SMTP_HOST SC_SMTP_PORT SC_SMTP_USER SC_SMTP_PASS SC_MAIL_FROM 
 == data ==
@@ -11,34 +11,34 @@ accounts: 3 user(s): harishkumart1994@gmail.com (admin, owner, approved), sruthi
 scenarios: 2
 == service ==
 service: active
-   Oct 12 23:30:22 srv1349789 systemd[1]: Stopping scenario.service - Run Scenario — market claims tested against data every day...
-   Oct 12 23:30:22 srv1349789 systemd[1]: scenario.service: Deactivated successfully.
-   Oct 12 23:30:22 srv1349789 systemd[1]: Stopped scenario.service - Run Scenario — market claims tested against data every day.
-   Oct 12 23:30:22 srv1349789 systemd[1]: Started scenario.service - Run Scenario — market claims tested against data every day.
-   Oct 12 23:30:22 srv1349789 node[3951240]:   Run Scenario on http://localhost:3402 (public https://scenario.cashflowus.com)
+   Oct 12 23:37:15 srv1349789 systemd[1]: scenario.service: Deactivated successfully.
+   Oct 12 23:37:15 srv1349789 systemd[1]: Stopped scenario.service - Run Scenario — market claims tested against data every day.
+   Oct 12 23:37:15 srv1349789 systemd[1]: scenario.service: Consumed 2.474s CPU time, 159.4M memory peak, 0B memory swap peak.
+   Oct 12 23:37:15 srv1349789 systemd[1]: Started scenario.service - Run Scenario — market claims tested against data every day.
+   Oct 12 23:37:15 srv1349789 node[3973773]:   Run Scenario on http://localhost:3402 (public https://scenario.cashflowus.com)
 local /: HTTP 200
 api without sign-in: HTTP 401 (401 = sign-in enforced)
 mail: SMTP login OK
 == data sources, as this server reaches them ==
-   OK   Yahoo prices   2512 days (205 ms)
-   FAIL Stooq prices   stooq.com said HTTP 403 (418 ms)
-   FAIL Nasdaq prices  no data (364 ms)
+   OK   Yahoo prices   2512 days (201 ms)
+   FAIL Stooq prices   stooq.com said HTTP 403 (403 ms)
+   FAIL Nasdaq prices  no data (157 ms)
    OK   FRED           71 points from FRED (St. Louis Fed) (1 ms)
-   OK   Macro via Yahoo 10y-3m spread 1.19 (302 weeks) (15 ms)
-   OK   Reddit         50 posts (2 ms)
+   OK   Macro via Yahoo 10y-3m spread 1.19 (302 weeks) (12 ms)
+   OK   Reddit         50 posts (1 ms)
    OK   StockTwits     30 posts (0 ms)
    OK   Hacker News    40 posts (0 ms)
-   OK   Google News    40 headlines (1 ms)
-   OK   SEC EDGAR      revenue TTM 458393000000 (108 ms)
-   OK   Prediction markets 8 matching (Polymarket, Manifold) (1 ms)
-   OK   Options (Cboe) 32 expiries, put/call 1.29, IV 12%, P(SPY -10% by 2026-11-13) 2.0% (11 ms)
+   OK   Google News    40 headlines (0 ms)
+   OK   SEC EDGAR      revenue TTM 458393000000 (38 ms)
+   OK   Prediction markets 8 matching (Polymarket, Manifold) (0 ms)
+   OK   Options (Cboe) 32 expiries, put/call 1.29, IV 12%, P(SPY -10% by 2026-11-13) 2.0% (5 ms)
    OK   Fear & Greed   46 (neutral) (1 ms)
    OK   Crypto F&G     69 (Greed) (0 ms)
-   OK   US Treasury    2026-10-09: 2y 4.8, 10y 5.24 (1 ms)
-   OK   BLS            unemployment 4.2% (1 ms)
+   OK   US Treasury    2026-10-09: 2y 4.8, 10y 5.24 (0 ms)
+   OK   BLS            unemployment 4.2% (0 ms)
    OK   Wikipedia      Nvidia: 180 days (0 ms)
-   OK   Mastodon       27 posts (0 ms)
-   OK   Lemmy          30 posts (1 ms)
+   OK   Mastodon       27 posts (1 ms)
+   OK   Lemmy          30 posts (0 ms)
    OK   Ticker news    49 headlines (0 ms)
    OK   Federal Reserve 12 releases (0 ms)
 == Hugging Face models ==
@@ -53,7 +53,7 @@ ready: {"forecast":"amazon/chronos-bolt-small","sentiment":"ProsusAI/finbert","a
      for      Why the Investors Most Afraid of a Market Crash Aren't Moving Markets (Index Fund Advisors, Inc.)
      context  Afraid of a Stock Market Crash? 4 Great ETFs to Buy Regardless. (Yahoo Finance)
    Discover sources: Reddit top 60, StockTwits trending 20, hot markets 12, business news 40; busiest: "Fed Decision in October?: 25 bps decrease" 1%
-   Chronos-Bolt 20-day: median 782.12, 80% band 749.74–811.84 (8s)
+   Chronos-Bolt 20-day: median 782.12, 80% band 749.74–811.84 (5s)
    FinBERT: 0.3512, -0.9574 (expect +, -)
 == speech to text (Whisper) ==
 ready: {"model": "openai/whisper-small.en", "text": ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."}
@@ -64,7 +64,7 @@ ready: {"model": "openai/whisper-small.en", "text": ". . . . . . . . . . . . . .
    ingress.networking.k8s.io/scenario unchanged
    certificate: scenario-tls ready=True 
 == claude ==
-haiku: OK (4s)
+haiku: OK (3s)
 == the domain, as the internet reaches it ==
 DNS: scenario.cashflowus.com -> 2.25.157.104 (agents.cashflowus.com -> 2.25.157.104 )
 https://scenario.cashflowus.com/ -> HTTP 200
