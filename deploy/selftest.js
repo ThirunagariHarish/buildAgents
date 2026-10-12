@@ -105,12 +105,22 @@ const ok = (name) => { n++; console.log(`  ok ${name}`); };
   assert(Math.abs(rec.brier - (0.04 + 0.01) / 2) < 1e-9 && Math.abs(rec.myBrier - 0.36) < 1e-9, `brier ${rec.brier} ${rec.myBrier}`);
   ok(`track record: desk Brier ${rec.brier.toFixed(3)}, yours ${rec.myBrier.toFixed(2)}`);
 
+  // Reading room: articles sorted for and against, with marks per person.
+  const reading = require('../lib/reading');
+  const rv = reading.view(sc.id, 'u1');
+  const all = rv.days.flatMap((x) => x.items);
+  assert(all.length >= 3 && all.some((x) => x.stance === 'for') && all.some((x) => x.stance === 'against'), `reading room sorted (${all.map((x) => x.stance).join(',')})`);
+  assert(reading.mark(sc.id, 'u1', all[0].key, { read: true, saved: true }) && reading.view(sc.id, 'u1').saved.length === 1, 'mark read and save');
+  assert(reading.unreadCount(sc.id, 'u1') === all.length - 1, 'unread count');
+  ok(`reading room: ${all.length} articles (${all.filter((x) => x.stance === 'for').length} for, ${all.filter((x) => x.stance === 'against').length} against)`);
+
   // The free desk: a builder scenario run without Claude.
   const th2 = desk.buildThesis({ symbol: 'SPY', move: 'drawdown', value: 15, date: new Date(Date.now() + 200 * 864e5).toISOString().slice(0, 10) });
   const sc3 = store.create({ ownerId: 'u2', claim: th2.proposition }); store.patch(sc3.id, { thesis: th2 });
   const r4 = await desk.run(sc3.id, { claude: false });
   assert(!r4.run.claude && r4.run.costUsd === 0 && r4.run.judge.call.includes('%'), 'free desk pools without Claude');
   assert(!r4.run.analysts.some((a) => ['research', 'social'].includes(a.id)), 'no Claude analysts on the free desk');
+  assert(reading.view(sc3.id, 'u2').days.flatMap((x) => x.items).every((x) => x.by === 'auto'), 'free desk sorts articles automatically');
   ok(`free desk: ${r4.run.probability}% ${r4.run.verdict}, no Claude`);
   const sc4 = store.create({ ownerId: 'u2', claim: 'free text claim' });
   await assert.rejects(desk.run(sc4.id, { claude: false }), /builder/);

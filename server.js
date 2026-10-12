@@ -18,6 +18,7 @@ const desk = require('./lib/desk');
 const data = require('./lib/data');
 const models = require('./lib/models');
 const insights = require('./lib/insights');
+const reading = require('./lib/reading');
 
 const { PORT, BASE_URL } = config;
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -213,7 +214,7 @@ function tick() {
 }
 
 // ---- views ---------------------------------------------------------------------
-function card(sc) {
+function card(sc, user = null) {
   const h = sc.history || [];
   const last = h[h.length - 1], prev = h[h.length - 2];
   return {
@@ -223,6 +224,7 @@ function card(sc) {
     updatedAt: sc.latest ? sc.latest.at : sc.createdAt, createdAt: sc.createdAt,
     archived: !!sc.archived, schedule: sc.schedule, depth: sc.depth || 'deep', myCall: (sc.myCalls || []).length ? sc.myCalls[sc.myCalls.length - 1].p : null,
     kind: sc.thesis ? sc.thesis.kind : null, primary: sc.thesis ? sc.thesis.primary : null,
+    unread: user ? reading.unreadCount(sc.id, user.id) : 0,
   };
 }
 function fullView(sc, user) {
@@ -235,7 +237,7 @@ function fullView(sc, user) {
   }
   const runs = (sc.history || []).map((h) => ({ date: h.date, p: h.p, runId: h.runId }));
   const theme = store.list().filter((x) => x.themeId === sc.themeId && x.id !== sc.id).map(card);
-  return { ...card(sc), thesis: sc.thesis, facts: sc.facts, history: sc.history, backfill: sc.backfill, questions: sc.questions, schedule: sc.schedule, alerts: sc.alerts, depth: sc.depth || 'deep', myCalls: sc.myCalls || [], resolved: sc.resolved || null, latest, sinceVisit, runs, theme, progress: desk.progress(sc.id), queued: queue.some((q) => q.id === sc.id) };
+  return { ...card(sc, user), thesis: sc.thesis, facts: sc.facts, history: sc.history, backfill: sc.backfill, questions: sc.questions, schedule: sc.schedule, alerts: sc.alerts, depth: sc.depth || 'deep', myCalls: sc.myCalls || [], resolved: sc.resolved || null, latest, sinceVisit, runs, theme, progress: desk.progress(sc.id), queued: queue.some((q) => q.id === sc.id) };
 }
 const mine = (u, sc) => !!sc && (sc.ownerId === u.id || u.role === 'admin');
 
@@ -366,7 +368,7 @@ async function api(req, res, p, url, user) {
     return json(res, 200, insights.setPrefs(user.id, patch));
   }
   if (p === '/api/scenarios' && req.method === 'GET') {
-    const list = store.list().filter((sc) => mine(user, sc)).map(card).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    const list = store.list().filter((sc) => mine(user, sc)).map((sc) => card(sc, user)).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     return json(res, 200, { scenarios: list, running: queue.length + (busy ? 1 : 0) });
   }
   if (p === '/api/scenarios' && req.method === 'POST') {
@@ -408,6 +410,15 @@ async function api(req, res, p, url, user) {
     fresh.myCalls = [...(fresh.myCalls || []).filter((x) => x.date !== date), { date, p: Math.round(pv) }];
     store.save(fresh);
     return json(res, 200, { myCalls: fresh.myCalls });
+  }
+  if (sub === '/reading' && req.method === 'GET') return json(res, 200, reading.view(sc.id, user.id));
+  if (sub === '/reading' && req.method === 'POST') {
+    const b = await readBody(req);
+    const patch = {};
+    if (typeof b.read === 'boolean') patch.read = b.read;
+    if (typeof b.saved === 'boolean') patch.saved = b.saved;
+    if (!reading.mark(sc.id, user.id, b.all ? '*' : String(b.key || ''), patch)) return json(res, 404, { error: 'No such article.' });
+    return json(res, 200, { ok: true });
   }
   if (sub === '/seen' && req.method === 'POST') {
     if (sc.latest) { const fresh = store.load(sc.id); fresh.seen = { ...(fresh.seen || {}), [user.id]: sc.latest.id }; store.save(fresh); }

@@ -164,6 +164,7 @@
     $('#today').innerHTML = `
       <div class="stats"><a class="stat" href="#/scenarios"><span class="num">${t.total}</span><small>scenarios</small></a><div class="stat"><span class="num">${t.working}</span><small>${t.working === 1 ? 'running now' : 'running now'}</small></div><div class="stat"><span class="num">${unseen.length}</span><small>new readings</small></div></div>
       ${t.movers.length ? `<section class="block"><h2>What moved</h2>${t.movers.map((m) => `<a class="mover" href="#/s/${m.id}"><span class="mover-t">${esc(m.title)}${m.unseen ? '<span class="new-dot" title="New since you looked"></span>' : ''}</span><span class="mover-p num">${m.from}% ${I('arrow-left', 12, 'flip')} ${m.p}%</span>${delta(m.change)}</a>`).join('')}</section>` : ''}
+      ${t.evidence && t.evidence.length ? `<section class="block"><h2>New in your reading rooms</h2>${t.evidence.map((e) => `<a class="room-card" href="#/s/${e.id}/evidence"><div class="room-top"><b>${esc(e.title)}</b><span class="count">${e.unread}</span></div><div class="room-split"><span class="up">${e.for} support</span><span class="down">${e.against} against</span></div>${e.top.map((x) => `<div class="room-art ${x.stance}">${esc(x.title)}<small>${esc(x.source)}</small></div>`).join('')}</a>`).join('')}</section>` : ''}
       ${t.catalysts.length ? `<section class="block"><h2>Coming up</h2><div class="cats">${t.catalysts.map((c) => `<div class="cat"><div class="cat-d">${esc(fmtShort(c.date))}</div><div><b>${esc(c.event)}</b><p>${esc(c.why || '')}</p><p class="fine">${c.scenarios.map((x) => `<a href="#/s/${x.id}">${esc(x.title)}</a>`).join(', ')}</p></div></div>`).join('')}</div></section>` : ''}
       ${t.settled.length ? `<section class="block"><h2>Settled</h2>${t.settled.map((x) => `<a class="mover" href="#/s/${x.id}"><span class="mover-t">${esc(x.title)}</span><span class="tag ${x.outcome === 'yes' ? 'yes' : 'no'}">${x.outcome.toUpperCase()}</span></a>`).join('')}</section>` : ''}
       <p class="foot">Research, not financial advice.</p>`;
@@ -193,7 +194,7 @@
   function rowHtml(s) {
     const waiting = ['running', 'queued', 'new'].includes(s.status) && s.probability === null;
     const status = s.status === 'running' ? `<span class="inline"><span class="pulse"></span>Desk is working</span>` : s.status === 'queued' ? 'Queued' : s.status === 'error' ? '<span style="color:var(--no)">Needs a retry</span>' : s.status === 'resolved' ? 'Settled' : esc(s.verdict || '');
-    return `<a class="srow" href="#/s/${s.id}"><div><div class="srow-title">${esc(s.title)}</div><div class="srow-meta">${status}${s.horizonDate && s.status !== 'resolved' ? `<span>${daysTo(s.horizonDate) > 0 ? `${daysTo(s.horizonDate)} days left` : 'Deadline passed'}</span>` : ''}${s.myCall !== null && s.myCall !== undefined ? `<span class="you-chip">You ${s.myCall}%</span>` : ''}${s.schedule === 'off' ? `<span class="inline">${I('pause', 12)}Manual</span>` : ''}</div></div>
+    return `<a class="srow" href="#/s/${s.id}"><div><div class="srow-title">${esc(s.title)}</div><div class="srow-meta">${status}${s.horizonDate && s.status !== 'resolved' ? `<span>${daysTo(s.horizonDate) > 0 ? `${daysTo(s.horizonDate)} days left` : 'Deadline passed'}</span>` : ''}${s.myCall !== null && s.myCall !== undefined ? `<span class="you-chip">You ${s.myCall}%</span>` : ''}${s.unread ? `<span class="new-badge">${s.unread} new</span>` : ''}${s.schedule === 'off' ? `<span class="inline">${I('pause', 12)}Manual</span>` : ''}</div></div>
       <div class="srow-side">${waiting ? '<div class="sk" style="width:48px;height:24px"></div>' : `<div class="srow-p">${s.probability === null ? '-' : `${Math.round(s.probability)}%`}</div>${delta(s.change)}`}</div></a>`;
   }
 
@@ -364,28 +365,40 @@
 
   // ---- scenario ---------------------------------------------------------------------------------
   const ICONS = { quant: 'dice-five', technical: 'chart-line-up', macro: 'bank', sentiment: 'chats-circle', fundamentals: 'receipt', research: 'newspaper', options: 'chart-scatter', markets: 'target', social: 'broadcast' };
-  const SEATS = [['Strategist', 'compass'], ['Data', 'database'], ['Quant', 'dice-five'], ['Technicals', 'chart-line-up'], ['Macro', 'bank'], ['Sentiment', 'chats-circle'], ['Options', 'chart-scatter'], ['Research', 'newspaper'], ['Social', 'broadcast'], ['Judge', 'scales']];
+  const SEATS = [['Strategist', 'compass'], ['Data', 'database'], ['Quant', 'dice-five'], ['Technicals', 'chart-line-up'], ['Macro', 'bank'], ['Sentiment', 'chats-circle'], ['Options', 'chart-scatter'], ['Research', 'newspaper'], ['Social', 'broadcast'], ['Reading', 'list-dashes'], ['Judge', 'scales']];
 
+  // A scenario is a room with its own sections; the main tab bar stays on Scenarios.
+  const SECTIONS = [['overview', 'Overview'], ['evidence', 'Evidence'], ['desk', 'Desk'], ['ask', 'Ask'], ['settings', 'Settings']];
+  const kinds = { market: 'Market', stock: 'Single stock', compare: 'Comparison', macro: 'Macro', crypto: 'Crypto', event: 'Event' };
   async function dashView(id, { keep } = {}) {
-    if (!keep || !S.cur || S.cur.id !== id) shell('scenarios', backTop('#/scenarios', 'Scenarios'), `<div class="hero"><div class="sk sk-line" style="width:30%"></div><div class="sk sk-line" style="width:85%;height:22px"></div><div class="sk sk-big"></div></div><div class="sk sk-chart"></div>`);
+    const section = SECTIONS.some(([v]) => v === route()[2]) ? route()[2] : 'overview';
+    const actions = `<button class="icon-btn" data-act="fork" title="Make a copy with changes" aria-label="Fork">${I('copy', 19)}</button><button class="icon-btn" data-act="share" title="Copy link" aria-label="Copy link">${I('share-network', 19)}</button>`;
+    if (!keep || !S.cur || S.cur.id !== id) shell('scenarios', backTop('#/scenarios', 'Scenarios', actions), `<div class="hero"><div class="sk sk-line" style="width:30%"></div><div class="sk sk-line" style="width:85%;height:22px"></div><div class="sk sk-big"></div></div><div class="sk sk-chart"></div>`);
     let sc;
     try { sc = await api(`/api/scenarios/${id}`); } catch (e) { $('main').innerHTML = `<div class="empty"><b>Can't open this scenario</b>${esc(e.message)}</div>`; return; }
     if (route()[1] !== id) return;
     S.cur = sc;
     if (sc.progress) S.live[id] = sc.progress.steps;
     const y = window.scrollY;
-    shell('scenarios', backTop('#/scenarios', 'Scenarios', `<button class="icon-btn" data-act="fork" title="Make a copy with changes" aria-label="Fork">${I('copy', 19)}</button><button class="icon-btn" data-act="share" title="Copy link" aria-label="Copy link">${I('share-network', 19)}</button>`), dashHtml(sc));
-    drawChart();
+    const nav = `<nav class="subnav" aria-label="Scenario sections"><div class="subnav-in">${SECTIONS.filter(([v]) => v !== 'ask' || S.me.claude).map(([v, t]) => `<a href="#/s/${sc.id}${v === 'overview' ? '' : `/${v}`}" ${section === v ? 'aria-current="page"' : ''}>${t}${v === 'evidence' && sc.unread ? `<span class="count">${sc.unread > 99 ? '99+' : sc.unread}</span>` : ''}</a>`).join('')}</div></nav>`;
+    const body = section === 'overview' ? overviewHtml(sc) : `${roomStrip(sc)}${section === 'evidence' ? '<div id="evidence">' + skLines(6) + '</div>' : section === 'desk' ? deskSection(sc) : section === 'ask' ? askSection(sc) : settingsSection(sc)}`;
+    shell('scenarios', backTop('#/scenarios', 'Scenarios', actions) + nav, body);
+    $('main').classList.add('room');
+    if (section === 'overview') drawChart();
+    if (section === 'evidence') loadEvidence(sc.id);
     if (keep) window.scrollTo(0, y);
-    if (sc.latest) api(`/api/scenarios/${id}/seen`, { method: 'POST' }).catch(() => {});
+    if (sc.latest && section === 'overview') api(`/api/scenarios/${id}/seen`, { method: 'POST' }).catch(() => {});
   }
-
-  function dashHtml(sc) {
+  /** A slim reminder of where you are, on every section but Overview. */
+  function roomStrip(sc) {
+    const p = sc.latest ? sc.latest.probability : null;
+    return `<div class="strip"><div class="strip-t">${esc(sc.thesis ? sc.thesis.title : sc.claim)}</div>${p !== null ? `<div class="strip-p"><span class="num">${p}%</span><span class="tag ${tone(p)}">${esc(sc.latest.verdict)}</span></div>` : ''}</div>`;
+  }
+  function overviewHtml(sc) {
     const run = sc.latest, th = sc.thesis;
     const working = ['running', 'queued', 'new'].includes(sc.status) || sc.queued;
     const p = run ? run.probability : null;
     const prevH = sc.history.length > 1 ? sc.history[sc.history.length - 2] : null;
-    const kinds = { market: 'Market', stock: 'Single stock', compare: 'Comparison', macro: 'Macro', crypto: 'Crypto', event: 'Event' };
     const my = sc.myCalls.length ? sc.myCalls[sc.myCalls.length - 1].p : null;
     return `
       <section class="hero">
@@ -402,20 +415,73 @@
       ${working ? liveHtml(sc, S.live[sc.id] || []) : ''}
       ${sc.status === 'error' ? `<div class="notice bad" style="margin-top:20px">The desk stopped: ${esc(sc.error || 'unknown error')} <button class="btn small quiet" data-act="run" style="margin-left:6px">Try again</button></div>` : ''}
       ${run || sc.backfill.length ? chartHtml(sc) : ''}
+      ${run && run.reading && run.reading.added ? `<a class="evi-cta" href="#/s/${sc.id}/evidence">${I('newspaper', 20)}<span><b>${run.reading.added} new article${run.reading.added > 1 ? 's' : ''} today</b><small>${run.reading.for} support, ${run.reading.against} against, ${run.reading.context} context</small></span>${I('arrow-up-right', 16)}</a>` : sc.unread ? `<a class="evi-cta" href="#/s/${sc.id}/evidence">${I('newspaper', 20)}<span><b>${sc.unread} unread in the reading room</b><small>Articles for and against, sorted daily</small></span>${I('arrow-up-right', 16)}</a>` : ''}
       ${run && sc.status !== 'resolved' ? callHtml(sc, my) : ''}
       ${changesHtml(sc)}
-      ${run ? ladderHtml(run) : ''}
-      ${run ? deskHtml(run) : ''}
-      ${run ? factsHtml(run) : ''}
       ${run ? casesHtml(run) : ''}
-      ${run && run.judge.watch.length ? `<section class="block"><h2>What would change the call</h2><div class="panel flat">${run.judge.watch.map((w) => `<div class="watch"><div class="watch-top"><b>${esc(w.signal)}</b><span class="thr">${esc(w.threshold)}</span></div><p>${esc(w.why)}</p></div>`).join('')}</div></section>` : ''}
       ${catalystsHtml(run)}
-      ${S.me.claude ? askHtml(sc) : ''}
-      ${th ? measuredHtml(sc, th) : ''}
-      ${sc.theme.length ? `<section class="block"><h2>Same theme</h2>${sc.theme.map(rowHtml).join('')}</section>` : ''}
-      ${historyHtml(sc)}
-      ${settingsHtml(sc)}
-      ${run ? `<p class="foot">Read on ${esc(fmtDay(run.date))} in ${Math.round(run.durationMs / 1000)}s (${esc((DEPTHS[run.depth || (run.claude ? 'deep' : 'quick')] || ['Deep'])[0])}). Prices from ${esc((run.sources || []).join(', ') || 'n/a')}. Sentiment by ${esc(run.models.sentiment || 'n/a')}${run.models.forecast ? `, forecast by ${esc(run.models.forecast)}` : ''}${run.models.judge ? `, judged by Claude ${esc(run.models.judge)}` : ''}.${run.errors && run.errors.length ? ` ${run.errors.length} source${run.errors.length > 1 ? 's were' : ' was'} unavailable.` : ''}<br>Research, not financial advice.</p>` : ''}`;
+      ${run ? `<p class="foot">Read on ${esc(fmtDay(run.date))} in ${Math.round(run.durationMs / 1000)}s (${esc((DEPTHS[run.depth || (run.claude ? 'deep' : 'quick')] || ['Deep'])[0])}). Research, not financial advice.</p>` : ''}`;
+  }
+  function deskSection(sc) {
+    const run = sc.latest;
+    if (!run) return '<div class="empty"><b>No reading yet</b>The desk is still working on the first one.</div>';
+    return `${ladderHtml(run)}${deskHtml(run)}${factsHtml(run)}
+      ${run.judge.watch.length ? `<section class="block"><h2>What would change the call</h2><div class="panel flat">${run.judge.watch.map((w) => `<div class="watch"><div class="watch-top"><b>${esc(w.signal)}</b><span class="thr">${esc(w.threshold)}</span></div><p>${esc(w.why)}</p></div>`).join('')}</div></section>` : ''}
+      <p class="foot">Prices from ${esc((run.sources || []).join(', ') || 'n/a')}. Sentiment by ${esc(run.models.sentiment || 'n/a')}${run.models.forecast ? `, forecast by ${esc(run.models.forecast)}` : ''}${run.models.judge ? `, judged by Claude ${esc(run.models.judge)}` : ''}.${run.errors && run.errors.length ? ` ${run.errors.length} source${run.errors.length > 1 ? 's were' : ' was'} unavailable.` : ''}</p>`;
+  }
+  const askSection = (sc) => `${askHtml(sc)}${sc.theme.length ? `<section class="block"><h2>Same theme</h2>${sc.theme.map(rowHtml).join('')}</section>` : ''}`;
+  const settingsSection = (sc) => `${settingsHtml(sc)}${sc.thesis ? measuredHtml(sc, sc.thesis) : ''}${historyHtml(sc)}`;
+
+  // ---- the reading room ----------------------------------------------------------------------
+  const STANCE = { for: ['Supports', 'trend-up'], against: ['Against', 'trend-down'], context: ['Context', 'arrow-up-right'] };
+  if (!S.ev) S.ev = { filter: 'all', unread: false };
+  async function loadEvidence(id) {
+    let rv;
+    try { rv = await api(`/api/scenarios/${id}/reading`); } catch (e) { $('#evidence').innerHTML = `<p class="empty">${esc(e.message)}</p>`; return; }
+    S.reading = rv;
+    drawEvidence();
+  }
+  function relDay(d) { const t = new Date().toISOString().slice(0, 10); const y = new Date(Date.now() - 86400000).toISOString().slice(0, 10); return d === t ? 'Today' : d === y ? 'Yesterday' : new Date(`${d}T12:00:00Z`).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }); }
+  function balanceChart(days) {
+    // Diverging bars: articles that support the claim above the line, against it below. Last 14 days.
+    const span = 14, today = Date.now();
+    const cols = Array.from({ length: span }, (_, i) => { const d = new Date(today - (span - 1 - i) * 86400000).toISOString().slice(0, 10); const g = days.find((x) => x.date === d); const it = g ? g.items : []; return { d, f: it.filter((x) => x.stance === 'for').length, a: it.filter((x) => x.stance === 'against').length }; });
+    const max = Math.max(1, ...cols.map((c) => Math.max(c.f, c.a)));
+    const W = 300, H = 92, mid = H / 2, bw = W / span - 4;
+    const bars = cols.map((c, i) => { const x = i * (W / span) + 2; const hf = (c.f / max) * (mid - 6), ha = (c.a / max) * (mid - 6); return `<g><title>${esc(fmtShort(c.d))}: ${c.f} support, ${c.a} against</title>${c.f ? `<rect x="${x}" y="${mid - 1 - hf}" width="${bw}" height="${hf}" rx="2" fill="var(--accent)"/>` : ''}${c.a ? `<rect x="${x}" y="${mid + 1}" width="${bw}" height="${ha}" rx="2" fill="var(--no)"/>` : ''}</g>`; }).join('');
+    const tf = cols.reduce((s, c) => s + c.f, 0), ta = cols.reduce((s, c) => s + c.a, 0);
+    const lean = tf + ta ? Math.round((tf / (tf + ta)) * 100) : null;
+    return `<div class="balance"><div class="balance-head"><div><b>The news flow</b><small>Last 14 days, by the day it arrived</small></div>${lean !== null ? `<div class="balance-n"><span class="num">${lean}%</span><small>supports</small></div>` : ''}</div>
+      <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" role="img" aria-label="${tf} articles support and ${ta} are against over 14 days"><line x1="0" x2="${W}" y1="${mid}" y2="${mid}" stroke="var(--line-strong)" stroke-width="1"/>${bars}</svg>
+      <div class="legend"><span><i class="sq" style="background:var(--accent)"></i>Supports ${tf}</span><span><i class="sq" style="background:var(--no)"></i>Against ${ta}</span></div></div>`;
+  }
+  function drawEvidence() {
+    const el = $('#evidence'); const rv = S.reading; if (!el || !rv) return;
+    if (!rv.total) { el.innerHTML = `<div class="hero-empty"><h2>The reading room fills up daily</h2><p>Each run gathers the day's articles from Google News, Yahoo Finance, Seeking Alpha and the Fed${S.me.claude ? ', plus what the research analyst cites,' : ''} and sorts them into supporting and against.</p><button class="btn" data-act="run">${I('arrow-clockwise', 16)}Run now</button></div>`; return; }
+    const f = S.ev.filter;
+    const keep = (x) => (f === 'all' ? true : f === 'saved' ? x.saved : x.stance === f) && (!S.ev.unread || !x.read);
+    const days = rv.days.map((d) => ({ ...d, items: d.items.filter(keep) })).filter((d) => d.items.length);
+    const counts = (st) => rv.days.reduce((s, d) => s + d.items.filter((x) => x.stance === st).length, 0);
+    el.innerHTML = `${balanceChart(rv.days)}
+      <div class="filters"><div class="chips" role="group" aria-label="Show">${[['all', 'All', rv.total], ['for', 'Supports', counts('for')], ['against', 'Against', counts('against')], ['context', 'Context', counts('context')], ['saved', 'Saved', rv.saved.length]].map(([v, t, n]) => `<button class="fchip" aria-pressed="${f === v}" data-act="evf" data-v="${v}">${t} <span class="num">${n}</span></button>`).join('')}</div></div>
+      <div class="ev-tools"><label class="inline"><span class="switch small"><input type="checkbox" data-act="ev-unread" ${S.ev.unread ? 'checked' : ''}><span></span></span>Unread only (${rv.unread})</label>${rv.unread ? '<button class="link" data-act="ev-allread">Mark all read</button>' : ''}</div>
+      ${days.map((d) => `<section class="day"><h2 class="day-h">${esc(relDay(d.date))}<span class="fine">${d.items.length}</span></h2>${d.items.map(articleHtml).join('')}</section>`).join('') || '<p class="empty">Nothing matches this filter.</p>'}
+      <p class="foot">${S.me.claude ? 'Sorted by Claude against the claim, with a reason for each.' : 'Auto-sorted by a finance sentiment model and the claim\'s direction.'} Headlines only; open an article to read it at the source.</p>`;
+  }
+  function articleHtml(x) {
+    const [label, ic] = STANCE[x.stance] || STANCE.context;
+    const when = x.at ? ago(x.at) : '';
+    return `<article class="art ${x.stance}${x.read ? ' read' : ''}">
+      <div class="art-top"><span class="art-st">${I(ic, 13)}${label}</span><span class="art-src">${esc(x.source)}${when ? `, ${esc(when)}` : ''}${x.kind === 'social' ? ', social post' : ''}</span></div>
+      <a class="art-title" href="${safeUrl(x.url)}" target="_blank" rel="noopener" data-read="${esc(x.key)}">${esc(x.title)}</a>
+      ${x.why ? `<p class="art-why">${esc(x.why)}</p>` : ''}
+      <div class="art-act"><button class="mini" data-act="ev-save" data-v="${esc(x.key)}" aria-pressed="${x.saved}">${I('star', 14)}${x.saved ? 'Saved' : 'Save'}</button><button class="mini" data-act="ev-read" data-v="${esc(x.key)}" aria-pressed="${x.read}">${I(x.read ? 'eye' : 'check', 14)}${x.read ? 'Mark unread' : 'Mark read'}</button>${x.by === 'claude' || x.by === 'research' ? '<span class="fine">Sorted by Claude</span>' : x.by === 'auto' ? '<span class="fine">Auto-sorted</span>' : ''}</div>
+    </article>`;
+  }
+  async function markArticle(key, patch) {
+    const it = S.reading && S.reading.days.flatMap((d) => d.items).find((x) => x.key === key);
+    if (it) { if (patch.read !== undefined && it.read !== patch.read) S.reading.unread += patch.read ? -1 : 1; Object.assign(it, patch); if (patch.saved !== undefined) S.reading.saved = S.reading.days.flatMap((d) => d.items).filter((x) => x.saved); }
+    try { await api(`/api/scenarios/${S.cur.id}/reading`, { method: 'POST', body: { key, ...patch } }); } catch (err) { toast(err.message, true); }
   }
   function liveHtml(sc, steps) {
     const last = steps.length ? steps[steps.length - 1].who : null;
@@ -593,6 +659,10 @@
     else if (act === 'logout') { await api('/api/logout', { method: 'POST' }).catch(() => {}); S.me = null; location.hash = '#/today'; render(); }
     else if (act === 'filter') { S.filter = v; document.querySelectorAll('.fchip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === v))); drawList(); }
     else if (act === 'range') { S.range = v; document.querySelectorAll('.seg button[data-act=range]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === v))); drawChart(); }
+    else if (act === 'evf') { S.ev.filter = v; drawEvidence(); }
+    else if (act === 'ev-save') { const it = S.reading.days.flatMap((d) => d.items).find((x) => x.key === v); await markArticle(v, { saved: !it.saved }); drawEvidence(); }
+    else if (act === 'ev-read') { const it = S.reading.days.flatMap((d) => d.items).find((x) => x.key === v); await markArticle(v, { read: !it.read }); drawEvidence(); }
+    else if (act === 'ev-allread') { try { await api(`/api/scenarios/${S.cur.id}/reading`, { method: 'POST', body: { all: true, read: true } }); toast('All marked read.'); loadEvidence(S.cur.id); } catch (err) { toast(err.message, true); } }
     else if (act === 'toggle') { S.open[v] = !S.open[v]; dashView(S.cur.id, { keep: true }); }
     else if (act === 'run') { try { await api(`/api/scenarios/${S.cur.id}/run`, { method: 'POST' }); S.live[S.cur.id] = []; dashView(S.cur.id, { keep: true }); } catch (err) { toast(err.message, true); } }
     else if (act === 'delete') { if (!confirm('Delete this scenario and its history?')) return; await api(`/api/scenarios/${S.cur.id}`, { method: 'DELETE' }); location.hash = '#/scenarios'; }
@@ -616,6 +686,8 @@
     else if (act === 'share') { try { await navigator.clipboard.writeText(location.href); toast('Link copied. Only you can open it.'); } catch { toast("Couldn't copy the link.", true); } }
     else if (act === 'recheck') { $('#src').innerHTML = skLines(2); await api('/api/status?fresh=1').catch(() => {}); sourcesView(); }
   });
+  // Opening an article marks it read (the link still opens normally).
+  document.addEventListener('click', (e) => { const a = e.target.closest('a[data-read]'); if (a && S.cur) { markArticle(a.dataset.read, { read: true }); a.closest('.art')?.classList.add('read'); } });
   document.addEventListener('input', (e) => { if (e.target.id === 'my-call') $('#my-call-v').textContent = `${e.target.value}%`; });
   document.addEventListener('change', async (e) => {
     const t = e.target.closest('[data-act]'); if (!t) return;
@@ -626,6 +698,7 @@
     }
     if (act === 'digest') { try { await api('/api/prefs', { method: 'POST', body: { digest: t.checked } }); toast(t.checked ? 'Daily digest on.' : 'Daily digest off.'); } catch (err) { toast(err.message, true); } return; }
     if (act === 'sort') { S.sort = t.value; drawList(); return; }
+    if (act === 'ev-unread') { S.ev.unread = t.checked; drawEvidence(); return; }
     if (!S.cur) return;
     if (act === 'schedule') return patchCur({ schedule: t.value });
     if (act === 'alert') return patchCur({ alerts: { email: t.checked } });
