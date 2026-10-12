@@ -1,9 +1,9 @@
-run: 127  commit: ed2434e  ssh step: success  at: 2026-10-12T14:47:47Z
+run: 128  commit: f3cd1c6  ssh step: success  at: 2026-10-12T14:53:02Z
 
-HEAD: ed2434e   domain: scenario.cashflowus.com   port: 3402
+HEAD: f3cd1c6   domain: scenario.cashflowus.com   port: 3402
 == prerequisites ==
 node v22.23.3, claude 2.1.287 (Claude Code), python Python 3.12.3
-machine: 8 CPUs, 32094 MB RAM, 26450 MB available, disk free 293G
+machine: 8 CPUs, 32094 MB RAM, 26415 MB available, disk free 293G
 == env file ==
 keys in /etc/scenario.env: SC_PORT SC_DOMAIN SC_DATA_DIR SC_PYTHON CLAUDE_CODE_OAUTH_TOKEN SC_SMTP_HOST SC_SMTP_PORT SC_SMTP_USER SC_SMTP_PASS SC_MAIL_FROM 
 == data ==
@@ -11,29 +11,28 @@ accounts: 3 user(s): harishkumart1994@gmail.com (admin, owner, approved), sruthi
 scenarios: 0
 == service ==
 service: active
-   Oct 12 14:47:22 srv1349789 systemd[1]: Stopping scenario.service - Run Scenario — market claims tested against data every day...
-   Oct 12 14:47:22 srv1349789 systemd[1]: scenario.service: Deactivated successfully.
-   Oct 12 14:47:22 srv1349789 systemd[1]: Stopped scenario.service - Run Scenario — market claims tested against data every day.
-   Oct 12 14:47:22 srv1349789 systemd[1]: Started scenario.service - Run Scenario — market claims tested against data every day.
-   Oct 12 14:47:22 srv1349789 node[2230841]:   Run Scenario on http://localhost:3402 (public https://scenario.cashflowus.com)
+   Oct 12 14:52:20 srv1349789 systemd[1]: Stopping scenario.service - Run Scenario — market claims tested against data every day...
+   Oct 12 14:52:20 srv1349789 systemd[1]: scenario.service: Deactivated successfully.
+   Oct 12 14:52:20 srv1349789 systemd[1]: Stopped scenario.service - Run Scenario — market claims tested against data every day.
+   Oct 12 14:52:20 srv1349789 systemd[1]: Started scenario.service - Run Scenario — market claims tested against data every day.
+   Oct 12 14:52:20 srv1349789 node[2247813]:   Run Scenario on http://localhost:3402 (public https://scenario.cashflowus.com)
 local /: HTTP 200
 api without sign-in: HTTP 401 (401 = sign-in enforced)
 mail: SMTP login OK
 == data sources, as this server reaches them ==
-   OK   Yahoo prices   2513 days (217 ms)
-   FAIL Stooq prices   stooq.com said HTTP 403 (414 ms)
-   FAIL Nasdaq prices  no data (184 ms)
-   OK   FRED           71 points from FRED (St. Louis Fed) (1 ms)
-   OK   Macro via Yahoo 10y–3m spread 1.19 (302 weeks) (19 ms)
-   FAIL Reddit         www.reddit.com said HTTP 403 (19 ms)
-   OK   StockTwits     30 posts (1 ms)
-   OK   Hacker News    40 posts (0 ms)
-   OK   Google News    40 headlines (0 ms)
-   FAIL GDELT          fetch failed (10279 ms)
-   OK   SEC EDGAR      revenue TTM 458393000000 (111 ms)
+   OK   Yahoo prices   2513 days (312 ms)
+   FAIL Stooq prices   stooq.com said HTTP 403 (411 ms)
+   FAIL Nasdaq prices  no data (188 ms)
+   OK   FRED           71 points from FRED (St. Louis Fed) (2 ms)
+   OK   Macro via Yahoo 10y–3m spread 1.19 (302 weeks) (27 ms)
+   FAIL Reddit         www.reddit.com said HTTP 403 (97 ms)
+   OK   StockTwits     30 posts (0 ms)
+   OK   Hacker News    40 posts (1 ms)
+   OK   Google News    40 headlines (1 ms)
+   FAIL GDELT          api.gdeltproject.org said HTTP 429 (26778 ms)
+   OK   SEC EDGAR      revenue TTM 458393000000 (234 ms)
 == Hugging Face models ==
-last attempt:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ TypeError: ChronosBoltPipeline.predict_quantiles() missing 1 required positional argument: 'inputs' 
-installing in the background (torch CPU + chronos + transformers, a few minutes); the desk uses them once ready
+ready: {"forecast":"amazon/chronos-bolt-small","sentiment":"ProsusAI/finbert","at":"2026-10-12T14:47:55Z"}
 == route (k3s Traefik) ==
    namespace/scenario unchanged
    service/scenario unchanged
