@@ -1,9 +1,9 @@
-run: 130  commit: 7291dd3  ssh step: success  at: 2026-10-12T15:11:24Z
+run: 131  commit: 4db0cfb  ssh step: success  at: 2026-10-12T15:25:23Z
 
-HEAD: 7291dd3   domain: scenario.cashflowus.com   port: 3402
+HEAD: 4db0cfb   domain: scenario.cashflowus.com   port: 3402
 == prerequisites ==
 node v22.23.3, claude 2.1.287 (Claude Code), python Python 3.12.3
-machine: 8 CPUs, 32094 MB RAM, 26489 MB available, disk free 293G
+machine: 8 CPUs, 32094 MB RAM, 26549 MB available, disk free 293G
 == env file ==
 keys in /etc/scenario.env: SC_PORT SC_DOMAIN SC_DATA_DIR SC_PYTHON CLAUDE_CODE_OAUTH_TOKEN SC_SMTP_HOST SC_SMTP_PORT SC_SMTP_USER SC_SMTP_PASS SC_MAIL_FROM 
 == data ==
@@ -11,82 +11,42 @@ accounts: 3 user(s): harishkumart1994@gmail.com (admin, owner, approved), sruthi
 scenarios: 0
 == service ==
 service: active
-   Oct 12 15:10:32 srv1349789 systemd[1]: Stopping scenario.service - Run Scenario — market claims tested against data every day...
-   Oct 12 15:10:32 srv1349789 systemd[1]: scenario.service: Deactivated successfully.
-   Oct 12 15:10:32 srv1349789 systemd[1]: Stopped scenario.service - Run Scenario — market claims tested against data every day.
-   Oct 12 15:10:32 srv1349789 systemd[1]: Started scenario.service - Run Scenario — market claims tested against data every day.
-   Oct 12 15:10:32 srv1349789 node[2309379]:   Run Scenario on http://localhost:3402 (public https://scenario.cashflowus.com)
+   Oct 12 15:24:46 srv1349789 systemd[1]: Stopping scenario.service - Run Scenario — market claims tested against data every day...
+   Oct 12 15:24:46 srv1349789 systemd[1]: scenario.service: Deactivated successfully.
+   Oct 12 15:24:46 srv1349789 systemd[1]: Stopped scenario.service - Run Scenario — market claims tested against data every day.
+   Oct 12 15:24:46 srv1349789 systemd[1]: Started scenario.service - Run Scenario — market claims tested against data every day.
+   Oct 12 15:24:46 srv1349789 node[2355543]:   Run Scenario on http://localhost:3402 (public https://scenario.cashflowus.com)
 local /: HTTP 200
 api without sign-in: HTTP 401 (401 = sign-in enforced)
 mail: SMTP login OK
 == data sources, as this server reaches them ==
-   OK   Yahoo prices   2513 days (310 ms)
-   FAIL Stooq prices   stooq.com said HTTP 403 (395 ms)
-   FAIL Nasdaq prices  no data (138 ms)
-   OK   FRED           71 points from FRED (St. Louis Fed) (0 ms)
-   OK   Macro via Yahoo 10y–3m spread 1.19 (302 weeks) (9 ms)
-   FAIL Reddit         www.reddit.com said HTTP 403 (41 ms)
-   OK   StockTwits     30 posts (3 ms)
-   OK   Hacker News    40 posts (1 ms)
+   OK   Yahoo prices   2513 days (222 ms)
+   FAIL Stooq prices   stooq.com said HTTP 403 (406 ms)
+   FAIL Nasdaq prices  no data (283 ms)
+   OK   FRED           71 points from FRED (St. Louis Fed) (1 ms)
+   OK   Macro via Yahoo 10y-3m spread 1.19 (302 weeks) (12 ms)
+   OK   Reddit         40 posts (543 ms)
+   OK   StockTwits     30 posts (1 ms)
+   OK   Hacker News    40 posts (0 ms)
    OK   Google News    40 headlines (1 ms)
-   OK   GDELT          76 days (0 ms)
-   OK   SEC EDGAR      revenue TTM 458393000000 (110 ms)
+   OK   SEC EDGAR      revenue TTM 458393000000 (60 ms)
+   OK   Prediction markets 8 matching (Polymarket, Manifold) (1265 ms)
+   OK   Options (Cboe) 32 expiries, put/call 1.13, IV 12%, P(SPY -10% by 2026-11-13) 2.2% (374 ms)
+   OK   Fear & Greed   46 (neutral) (58 ms)
+   OK   Crypto F&G     69 (Greed) (61 ms)
+   OK   US Treasury    2026-10-09: 2y 4.8, 10y 5.24 (334 ms)
+   OK   BLS            unemployment 4.2% (167 ms)
+   OK   Wikipedia      Nvidia: 180 days (408 ms)
+   OK   Mastodon       27 posts (414 ms)
+   OK   Lemmy          30 posts (1854 ms)
+   OK   Ticker news    47 headlines (396 ms)
+   OK   Federal Reserve 12 releases (53 ms)
 == Hugging Face models ==
 ready: {"forecast":"amazon/chronos-bolt-small","sentiment":"ProsusAI/finbert","at":"2026-10-12T14:47:55Z"}
-== raw samples of free sources ==
---- 200 314ms https://gamma-api.polymarket.com/public-search?q=recession&limit_per_type=3
-{"events":[{"id":"410630","ticker":"japan-recession-in-2026","slug":"japan-recession-in-2026","title":"Japan recession in 2026?","description":"This market will resolve to “Yes” if Japan’s seasonally adjusted quarter-on-quarter percent change in real GDP (Quarterly Real Growth Rate, Seasonally Adjusted Series, Quarter-to-Quarter), as reported by the Cabinet Office, is less than 0.0 for two consecutive quarters between Q4 2025 and Q4 2026. Otherwise, this market will resolve to “No”.\n\nThis market includes estimates reported in both the Cabinet Office’s Quarterly Estimates of GDP (First Preliminary Estimates) and Quarterly Estimates of GDP (Second Preliminary Estimates) releases for the rele
---- 200 236ms https://api.manifold.markets/v0/search-markets?term=recession&limit=3
-[{"id":"Qgg9Rc8PIy","creatorId":"bKvxZ8MJUKN5VGMUHS4MyOSpMnI3","creatorUsername":"JRR","creatorName":"J.R. R","createdTime":1741880433784,"creatorAvatarUrl":"https://lh3.googleusercontent.com/a/ACg8ocJZOlHzdK4GQUMPIYJQ0AxgWztQLFwSkMy-91L4PzUI=s96-c","closeTime":1895201940000,"question":"Will the U.S. enter a recession in Trump's second term?","slug":"will-the-us-enter-a-recession-in-tr","url":"https://manifold.markets/JRR/will-the-us-enter-a-recession-in-tr","pool":{"NO":3287.694976655018,"YES":7275.246028064219},"probability":0.3466852274063814,"p":0.5400761250317627,"totalLiquidity":5050,"outcomeType":"BINARY","mechanism":"cpmm-1","volume":297592.30719417235,"volume24Hours":1000,"isResolve
---- 200 58ms https://api.elections.kalshi.com/trade-api/v2/events?limit=3&status=open&with_nested_marke
-{"cursor":"CgYI8Mzn4AsSDEtYTkVXUE9QRS03MA","events":[{"category":"World","collateral_return_type":"","event_ticker":"KXELONMARS-99","exchange_index":0,"last_updated_ts":"2026-08-28T21:35:33.691337Z","markets":[{"can_close_early":true,"close_time":"2099-08-01T04:59:00Z","created_time":"2025-08-28T20:40:16.168768Z","early_close_condition":"This market will close and expire early if the event occurs.","event_ticker":"KXELONMARS-99","exchange_index":0,"expected_expiration_time":"2099-08-01T15:00:00Z","expiration_time":"2099-08-08T15:00:00Z","expiration_value":"","last_price_dollars":"0.1200","latest_expiration_time":"2099-08-08T15:00:00Z","market_type":"binary","no_ask_dollars":"0.9000","no_bid_
---- 200 514ms https://cdn.cboe.com/api/global/delayed_quotes/options/SPY.json
-{"timestamp": "2026-10-12 15:09:33", "data": {"options": [{"option": "SPY261012C00550000", "bid": 227.95, "bid_size": 6.0, "ask": 228.25, "ask_size": 6.0, "iv": 4.2317, "open_interest": 3.0, "volume": 0.0, "delta": 0.9996, "gamma": 0.0, "vega": 0.0002, "theta": -0.0069, "rho": 0.0, "theo": 228.0969, "change": 0.0, "open": 0.0, "high": 0.0, "low": 0.0, "tick": "down", "last_trade_price": 229.24, "last_trade_time": "2026-10-09T15:22:53", "percent_change": 0.0, "prev_day_close": 228.910003662109}, {"option": "SPY261012P00550000", "bid": 0.0, "bid_size": 0.0, "ask": 0.01, "ask_size": 10072.0, "iv": 4.0286, "open_interest": 202.0, "volume": 0.0, "delta": -0.0004, "gamma": 0.0, "vega": 0.0002, "th
---- 200 204ms https://production.dataviz.cnn.io/index/fearandgreed/graphdata
-{"fear_and_greed": {"score": 46.1142857142857, "rating": "neutral", "timestamp": "2026-10-12T15:09:30+00:00", "previous_close": 45.0, "previous_1_week": 43.7142857142857, "previous_1_month": 32.6857142857143, "previous_1_year": 30.14285714285714}, "fear_and_greed_historical": {"timestamp": 1791817770000.0, "score": 46.1142857142857, "rating": "neutral", "data": [{"x": 1760313600000.0, "y": 29.74285714285714, "rating": "fear"}, {"x": 1760400000000.0, "y": 28.285714285714285, "rating": "fear"}, {"x": 1760486400000.0, "y": 27.41428571428571, "rating": "fear"}, {"x": 1760572800000.0, "y": 23.114285714285717, "rating": "extreme fear"}, {"x": 1760659200000.0, "y": 22.32857142857143, "rating": "ext
---- 200 304ms https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-
-Date,"1 Mo","1.5 Month","2 Mo","3 Mo","4 Mo","6 Mo","1 Yr","2 Yr","3 Yr","5 Yr","7 Yr","10 Yr","20 Yr","30 Yr" 10/09/2026,4.13,4.13,4.13,4.25,4.29,4.32,4.47,4.80,4.89,5.02,5.13,5.24,5.65,5.60 10/08/2026,4.14,4.14,4.13,4.23,4.29,4.30,4.44,4.75,4.85,4.99,5.11,5.22,5.64,5.60 10/07/2026,4.07,4.13,4.14,4.22,4.28,4.28,4.42,4.77,4.87,5.03,5.15,5.28,5.71,5.67 10/06/2026,4.06,4.12,4.13,4.21,4.26,4.28,4.46,4.79,4.88,5.03,5.15,5.27,5.68,5.64 10/05/2026,4.05,4.10,4.13,4.22,4.27,4.30,4.47,4.84,4.97,5.06,5.19,5.31,5.70,5.66 10/02/2026,4.04,4.09,4.11,4.19,4.26,4.27,4.46,4.83,4.96,5.06,5.17,5.28,5.67,5.63 10/01/2026,4.06,4.10,4.13,4.17,4.26,4.27,4.44,4.78,4.91,5.01,5.12,5.24,5.64,5.61 09/30/2026,4.02,4.13,4
---- 200 360ms https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/us
-{"items":[{"project":"en.wikipedia","article":"Nvidia","granularity":"daily","timestamp":"2026090100","access":"all-access","agent":"user","views":5725},{"project":"en.wikipedia","article":"Nvidia","granularity":"daily","timestamp":"2026090200","access":"all-access","agent":"user","views":4999},{"project":"en.wikipedia","article":"Nvidia","granularity":"daily","timestamp":"2026090300","access":"all-access","agent":"user","views":6533},{"project":"en.wikipedia","article":"Nvidia","granularity":"daily","timestamp":"2026090400","access":"all-access","agent":"user","views":7116},{"project":"en.wikipedia","article":"Nvidia","granularity":"daily","timestamp":"2026090500","access":"all-access","age
---- 200 76ms https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=30
-{"prices":[[1789225200000,77445.64426190322],[1789228800000,77366.92475804272],[1789232400000,77348.92912166193],[1789236000000,77193.15949246142],[1789239600000,77123.41691461387],[1789243200000,77113.63783668954],[1789246800000,77152.51919688155],[1789250400000,77245.60981926684],[1789254000000,77218.57922842517],[1789257600000,77261.62722069985],[1789261200000,77258.52592022326],[1789264800000,77302.98579705298],[1789268400000,77273.86828489418],[1789272000000,77177.99013195191],[1789275600000,77192.12247162955],[1789279200000,77299.3303692544],[1789282800000,77098.83617669597],[1789286400000,77101.20979166444],[1789290000000,76790.97168368855],[1789293600000,76774.74504686284],[178929720
---- 403 125ms https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=nvidia&limit=3
-<html><head><title>403 Forbidden</title><link href='//fonts.bunny.net/css?family=Rubik:300,400,500' rel='stylesheet' type='text/css'><style>html, body { width: 100%; margin: 0; padding: 0; text-align: center; font-family: 'Rubik'; background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iMjg4MHB4IiBoZWlnaHQ9IjE0MjRweCIgdmlld0JveD0iMCAwIDI4ODAgMTQyNCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj4KICAgIDxkZWZzPgogICAgICAgIDxyYWRpYWxHcmFkaWVudCBjeD0iNDguNDU0MDQyMiUiIGN5PSIyNy4wMTE5NjQ1JSIgZng9IjQ4LjQ1NDA0MjIlIiBmeT0iMjcuMDExOTY0NSUiIHI9IjcwLjg3MDg1MTQlIiBncmFk
---- 200 656ms https://mastodon.social/api/v1/timelines/tag/stocks?limit=3
-[{"id":"117428532253171868","created_at":"2026-10-12T15:00:03.574Z","in_reply_to_id":null,"in_reply_to_account_id":null,"sensitive":false,"spoiler_text":"","visibility":"public","language":"en","uri":"https://mastodon.social/ap/users/117408703308462682/statuses/117428532253171868","url":"https://mastodon.social/@AisMarketCap/117428532253171868","replies_count":0,"reblogs_count":1,"favourites_count":0,"quotes_count":0,"edited_at":null,"content":"<p>📈 AI Market Cap Scanner - free pre-earnings momentum tool. See today&#39;s AI Pick, scores &amp; PE targets for 100+ stocks. <a href=\"https://mastodon.social/tags/best\" class=\"mention hashtag\" rel=\"tag\">#<span>best</span></a> <a href=\"https
---- 200 314ms https://api.bls.gov/publicAPI/v1/timeseries/data/LNS14000000
-{"status":"REQUEST_SUCCEEDED","responseTime":92,"message":[],"Results":{ "series": [{"seriesID":"LNS14000000","data":[{"year":"2026","period":"M09","periodName":"September","latest":"true","value":"4.2","footnotes":[{}]},{"year":"2026","period":"M08","periodName":"August","value":"4.1","footnotes":[{}]},{"year":"2026","period":"M07","periodName":"July","value":"4.1","footnotes":[{}]},{"year":"2026","period":"M06","periodName":"June","value":"4.2","footnotes":[{}]},{"year":"2026","period":"M05","periodName":"May","value":"4.3","footnotes":[{}]},{"year":"2026","period":"M04","periodName":"April","value":"4.3","footnotes":[{}]},{"year":"2026","period":"M03","periodName":"March","value":"4.3","f
---- 200 82ms https://api.alternative.me/fng/?limit=3
-{ "name": "Fear and Greed Index", "data": [ { "value": "69", "value_classification": "Greed", "timestamp": "1791763200", "time_until_update": "31762" }, { "value": "61", "value_classification": "Greed", "timestamp": "1791676800" }, { "value": "64", "value_classification": "Greed", "timestamp": "1791590400" } ], "metadata": { "error": null } }
---- 200 3058ms https://lemmy.world/api/v3/search?q=nvidia&type_=Posts&limit=3
-{"type_":"Posts","comments":[],"posts":[{"post":{"id":53035684,"name":"RTX 5090 GPUs reportedly discontinued by Nvidia, as GB202 is reserved for AI workstation cards","url":"https://www.digitalfoundry.net/news/2026/10/report-rtx-5090-gpus-discontinued-by-nvidia-as-gb202-is-reserved-for-ai-workstation-cards","body":"","creator_id":13642190,"community_id":1652137,"removed":false,"locked":false,"published":"2026-10-12T13:32:04.092998Z","updated":"2026-10-12T13:34:51.532216Z","deleted":false,"nsfw":false,"embed_title":"Just a moment...","ap_id":"https://piefed.social/c/vidya@piefed.social/p/2481391/rtx-5090-gpus-discontinued-by-nvidia-as-gb202-is-reserved-for-ai-workstation-cards","local":false,
---- 403 53ms https://old.reddit.com/r/stocks/new.json?limit=3
-<!doctype html> <html> <head> <title>Blocked</title> <style> body { font: small verdana, arial, helvetica, sans-serif; width: 600px; margin: 0 auto; } h1 { height: 40px; background: transparent url(//www.redditstatic.com/reddit.com.header.png) no-repeat scroll top right; } </style> </head> <body> <h1>whoa there, pardner!</h1> <p>Your request has been blocked due to a network policy.</p> <p>Try logging in or creating an account <a href=https://www.reddit.com/login/>here</a> to get back to browsing.</p> <p>If you're running a script or application, please register or sign in with your developer credentials <a href=https://www.reddit.com/wiki/api/>here</a>. Additionally make sure your User-Agen
---- 403 112ms https://api.reddit.com/r/stocks/new?limit=3
-<body class=theme-beta><div><style>.theme-light,:root{--rem360:22.5rem;--rem320:20rem;--rem192:12rem;--rem144:9rem;--rem128:8rem;--rem96:6rem;--rem90:5.625rem;--rem88:5.5rem;--rem64:4rem;--rem56:3.5rem;--rem48:3rem;--rem40:2.5rem;--rem36:2.25rem;--rem32:2rem;--rem28:1.75rem;--rem26:1.625rem;--rem24:1.5rem;--rem22:1.375rem;--rem20:1.25rem;--rem18:1.125rem;--rem16:1rem;--rem15:0.9375rem;--rem14:0.875rem;--rem12:0.75rem;--rem10:0.625rem;--rem8:0.5rem;--rem6:0.375rem;--rem4:0.25rem;--rem2:0.125rem;--rem1:0.0625rem;--spacer-4xs:0.125rem;--spacer-2xs:0.25rem;--spacer-xs:0.5rem;--spacer-sm:0.75rem;--spacer-md:1rem;--spacer-lg:1.5rem;--spacer-xl:2rem;--spacer-2xl:3rem;--spacer-a-px:0px;--spacer-butt
---- 200 332ms https://www.reddit.com/r/stocks/new/.rss
-<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/"><category term="stocks" label="r/stocks"/><updated>2026-10-12T15:10:41+00:00</updated><icon>https://www.redditstatic.com/icon.png/</icon><id>/r/stocks/new/.rss</id><link rel="self" href="https://www.reddit.com/r/stocks/new/.rss" type="application/atom+xml" /><link rel="alternate" href="https://www.reddit.com/r/stocks/new/" type="text/html" /><subtitle>The most serious place on Reddit for Stock related discussions! Don't hesitate to tell us about a ticker we should know about, market news, or financial education. Check out our WIKI that has beginner &amp; advanced topics
---- 403 501ms https://stooq.pl/q/d/l/?s=spy.us&i=d
-<meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/><img src=//static.stooq.pl/stooq.svg height=68></a><p style=font-size:x-large>Odmowa dostępu<p><small><a href=/>Strona główna</a>
---- 401 100ms https://query2.finance.yahoo.com/v7/finance/options/SPY
-{"finance":{"result":null,"error":{"code":"Unauthorized","description":"Invalid Crumb"}}}
---- 200 425ms https://feeds.finance.yahoo.com/rss/2.0/headline?s=NVDA&region=US&lang=en-US
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?> <rss version="2.0"> <channel> <copyright>Copyright (c) 2026 Yahoo Inc. All rights reserved.</copyright> <description>Latest Financial News for NVDA</description> <image> <height>45</height> <link>http://finance.yahoo.com/q/h?s=NVDA</link> <title>Yahoo! Finance: NVDA News</title> <url>https://s.yimg.com/rz/stage/p/yahoo_finance_en-US_h_p_finance_2.png</url> <width>144</width> </image> <item> <description>Nvidia is teaming up with AMD, Google, Meta to establish standards related to data center construction.</description> <guid isPermaLink="false">08499a71-de67-4bfe-8494-ee066ad7f42f</guid> <link>https://finance.yahoo.com/technology/articl
---- 403 222ms https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001045810&type=4&dateb=&ow
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> <html xmlns="http://www.w3.org/1999/xhtml"> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /> <title>SEC.gov | Your Request Originates from an Undeclared Automated Tool</title> <style> html {height: 100%} body {height: 100%; margin:0; padding:0;} #header {background-color:#003968; color:#fff; padding:15px 20px 10px 20px;font-family:Arial, Helvetica, sans-serif; font-size:20px; border-bottom:solid 5px #000;} #footer {background-color:#003968; color:#fff; padding:15px 20px;font-family:Arial, Helvetica, sans-serif; font-size:20px;} #content {max-wi
---- 200 911ms https://efts.sec.gov/LATEST/search-index?q=%22artificial%20intelligence%22&forms=8-K
-{"took":506,"timed_out":false,"_shards":{"total":50,"successful":50,"skipped":0,"failed":0},"hits":{"total":{"value":10000,"relation":"gte"},"max_score":19.433691,"hits":[{"_index":"edgar_file","_id":"0001683168-20-000837:radnet_8k-ex9901.htm","_score":19.433691,"_source":{"ciks":["0000790526"],"period_ending":"2020-03-13","file_num":["001-33307"],"display_names":["RadNet, Inc. (RDNT) (CIK 0000790526)"],"xsl":null,"sequence":2,"root_forms":["8-K"],"file_date":"2020-03-16","biz_states":["CA"],"sics":["8071"],"form":"8-K","adsh":"0001683168-20-000837","film_num":["20717909"],"biz_locations":["Los Angeles, CA"],"file_type":"EX-99.1","file_description":"TRANSCRIPT OF CONFERENCE CALL","inc_states
---- ERR fetch failed https://api.gdeltproject.org/api/v2/doc/doc?query=nvidia&mode=artlist&maxrecords=3&format=
---- 200 50ms https://www.federalreserve.gov/feeds/press_all.xml
-<?xml version="1.0" encoding="utf-8" ?> <rss version="2.0"> <channel> <title>FRB: Press Release - All Releases</title> <link><![CDATA[https://www.federalreserve.gov/feeds/feeds.htm]]></link> <description><![CDATA[All recent press releases from the Federal Reserve Board]]></description> <language>en</language> <item> <title>Federal Reserve Board releases results of the 2025 Survey of Consumer Finances, which provides the public and policymakers with detailed insights into the economic condition of American families</title> <link><![CDATA[https://www.federalreserve.gov/newsevents/pressreleases/other20261009a.htm]]></link> <guid><![CDATA[https://www.federalreserve.gov/newsevents/pressreleases/o
---- 200 87ms https://www.investing.com/rss/news_25.rss
-<?xml version="1.0" encoding="utf-8"?> <rss version="2.0"> <channel> <title>Stock Market News</title> <link>https://www.investing.com</link> <item> <enclosure url="https://content-media.investing.com/news/moved_LYNXMPEL702AC_L.jpg" length="61999" type="image/jpeg"/> <title>Norway stocks higher at close of trade; Oslo OBX up 0.10%</title> <pubDate>2026-10-12 14:55:32</pubDate> <author>Investing.com</author> <link>https://www.investing.com/news/stock-market-news/norway-stocks-higher-at-close-of-trade-oslo-obx-up-010-4944846</link> </item> <item> <enclosure url="https://content-media.investing.com/news/moved_LYNXMPEGA30S9_L.jpg" length="69186" type="image/jpeg"/> <title>Israel stocks higher at 
---- 200 90ms https://seekingalpha.com/api/sa/combined/NVDA.xml
-<?xml version="1.0"?> <rss xmlns:sa="https://seekingalpha.com/api/1.0" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"> <channel> <title>NVIDIA Corporation - News and Analysis on Seeking Alpha</title> <link>https://seekingalpha.com</link> <description>&#xA9; seekingalpha.com. Use of this feed is limited to personal, non-commercial use and is governed by Seeking Alpha's Terms of Use (https://about.seekingalpha.com/terms). Publishing this feed for public or commercial use and/or misrepresentation by a third party is prohibited.</description> <item> <title>Nvidia Stock: Finding New Ways To Extend The AI Growth Runway</title> <link>https://seekingalpha.com/article/4953343-nvidia-stock-
 == desk smoke test (live data, no Claude) ==
    SPY 778.07 on 2026-10-12 (Yahoo Finance): -0.1% from high, RSI 60, vol +10%
    Monte Carlo: P(SPY falls 20% from its high by 2026-12-31) = 0.8%
-   Chronos-Bolt 20-day: median 782.09, 80% band 749.71–811.81 (11s)
+   Chronos-Bolt 20-day: median 782.09, 80% band 749.71–811.81 (8s)
    FinBERT: 0.3512, -0.9574 (expect +, -)
 == route (k3s Traefik) ==
    namespace/scenario unchanged
