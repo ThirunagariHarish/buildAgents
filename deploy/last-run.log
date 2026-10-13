@@ -1,4 +1,4 @@
-run: 146  commit: d372dd6  ssh step: success  at: 2026-10-13T00:46:30Z
+run: 151  commit: c01d115  ssh step: success  at: 2026-10-13T01:36:29Z
 
 == secrets GitHub passed to this run ==
 BOX_PASSWORD: set (6 chars)
@@ -6,7 +6,7 @@ CLAUDE_CODE_OAUTH_TOKEN: set (108 chars)
 BOX_GITHUB_TOKEN: set (40 chars)
 BOX_KUBECONFIG: set (2955 chars)
 
-HEAD: d372dd6   domain: box.cashflowus.com
+HEAD: c01d115   domain: box.cashflowus.com
 == env file ==
 claude token: looks valid (length 108)
 keys in /etc/box.env: BOX_PASSWORD CLAUDE_CODE_OAUTH_TOKEN BOX_GITHUB_TOKEN BOX_SMTP_HOST BOX_SMTP_PORT BOX_SMTP_USER BOX_SMTP_PASS BOX_MAIL_FROM BOX_DOMAIN BOX_KUBECONFIG_FILE 
@@ -25,8 +25,12 @@ github token check: classic token for ThirunagariHarish, scopes: admin:enterpris
 service: active
 local /: HTTP 200
 api without sign-in: HTTP 401 (401 = sign-in enforced)
-accounts: 1 user(s): harishkumart1994@gmail.com (admin, approved)
-mail: SMTP login OK as harishkumart1994@gmail.com via smtp.gmail.com
+accounts: 1 user(s): ha***@gmail.com (admin, approved)
+mail: SMTP login OK as ha***@gmail.com via smtp.gmail.com
+   SMTP host smtp.gmail.com:465, login ha***@gmail.com
+   From header "Box" <ha***@gmail.com>, domain gmail.com; same domain as the login (aligned)
+   gmail.com: SPF v=spf1 redirect=_spf.google.com | DMARC v=DMARC1; p=none; sp=quarantine; rua=mailto:mailauth-reports@google.com | MX alt1.gmail-smtp-in.l.google.com, alt2.gmail-smtp-in.l.google.com
+   mail log: 0 attempt(s), 0 failed
 security headers: 3 of 3
 agent pool: 12 agents — Orchestrator, Entrepreneur, Marketer, Solution Architect, Visionary, Critic, Customer Voice, Finance Analyst, Legal & Compliance, Product Manager, Market Researcher, Competitor Scout
 == build crew ==
@@ -37,37 +41,37 @@ postgres: PostgreSQL 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1) on x86_64-p
 tools: node v22.23.3, pnpm 12.9.1, kubectl Client Version: v1.35.5+k3s1, uv uv 0.12.23 (x86_64-unknown-linux-gnu), docker Docker version 29.5.2
 cluster: srv1349789:Ready vps2-control:Ready 
 -- site building-youtube-clipper-automation
-   pod building-youtube-clipper-automation-6c48b75965-pmmzm 0/1 CrashLoopBackOff 2282 (3m24s ago) 8d 10.42.2.53 srv1349789 <none> <none>
+   pod building-youtube-clipper-automation-6c48b75965-pmmzm 0/1 CrashLoopBackOff 2292 (116s ago) 8d 10.42.2.53 srv1349789 <none> <none>
    pod building-youtube-clipper-automation-db-0 1/1 Running 0 8d 10.42.2.26 srv1349789 <none> <none>
-   pod building-youtube-clipper-automation-worker-76df648dcb-5sh85 0/1 Init:0/1 1175 (6m42s ago) 8d 10.42.2.27 srv1349789 <none> <none>
+   pod building-youtube-clipper-automation-worker-76df648dcb-5sh85 0/1 Init:0/1 1180 (6m28s ago) 8d 10.42.2.27 srv1349789 <none> <none>
    endpoints building-youtube-clipper-automation -> 8d
    endpoints building-youtube-clipper-automation-db -> 10.42.2.26:5432
    ingress building-youtube-clipper-automation class=traefik hosts=building-youtube-clipper-automation.cashflowus.com
    https://building-youtube-clipper-automation.cashflowus.com -> HTTP 503
    building-youtube-clipper-automation-6c48b75965-pmmzm last lines:
-      {"level":30,"time":"2026-10-13T00:42:42.058Z","module":"migrate","msg":"migrations applied"}
-      {"level":50,"time":"2026-10-13T00:42:42.974Z","module":"seed","err":{"type":"Error","message":"Missing required environment variable: OWNER_EMAIL","stack":"Error: Missing required environment variable: OWNER_EMAIL\n    at requireEnv (/app/dist/seed.js:52:11)\n    at seedOwner (/app/dist/seed.js:973:17)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async main (/app/dist/seed.js:995:21)"},"msg":"seed failed"}
+      {"level":30,"time":"2026-10-13T01:34:08.165Z","module":"migrate","msg":"migrations applied"}
+      {"level":50,"time":"2026-10-13T01:34:09.172Z","module":"seed","err":{"type":"Error","message":"Missing required environment variable: OWNER_EMAIL","stack":"Error: Missing required environment variable: OWNER_EMAIL\n    at requireEnv (/app/dist/seed.js:52:11)\n    at seedOwner (/app/dist/seed.js:973:17)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async main (/app/dist/seed.js:995:21)"},"msg":"seed failed"}
    building-youtube-clipper-automation-worker-76df648dcb-5sh85 last lines:
       Error from server (BadRequest): container "worker" in pod "building-youtube-clipper-automation-worker-76df648dcb-5sh85" is waiting to start: PodInitializing
 -- site global-product-scout
-   pod global-product-scout-78bcc589c9-fbqp2 1/1 Running 0 2d4h 10.42.2.107 srv1349789 <none> <none>
-   pod global-product-scout-db-0 1/1 Running 0 2d4h 10.42.2.109 srv1349789 <none> <none>
-   pod gps-backup-29861460-vnhrx 0/1 Completed 0 45h <none> vps2-control <none> <none>
-   pod gps-backup-29862900-nllmt 0/1 Completed 0 21h 10.42.0.109 vps2-control <none> <none>
+   pod global-product-scout-78bcc589c9-fbqp2 1/1 Running 0 2d5h 10.42.2.107 srv1349789 <none> <none>
+   pod global-product-scout-db-0 1/1 Running 0 2d5h 10.42.2.109 srv1349789 <none> <none>
+   pod gps-backup-29861460-vnhrx 0/1 Completed 0 46h <none> vps2-control <none> <none>
+   pod gps-backup-29862900-nllmt 0/1 Completed 0 22h 10.42.0.109 vps2-control <none> <none>
    endpoints global-product-scout -> 10.42.2.107:3000
    endpoints global-product-scout-db -> 10.42.2.109:5432
    ingress global-product-scout class=traefik hosts=global-product-scout.cashflowus.com
    https://global-product-scout.cashflowus.com -> HTTP 307
 -- site market-gain-forecast-tool
-   pod market-gain-forecast-tool-6b7847ddff-hlcbr 2/2 Running 0 4d 10.42.2.99 srv1349789 <none> <none>
+   pod market-gain-forecast-tool-6b7847ddff-hlcbr 2/2 Running 0 4d1h 10.42.2.99 srv1349789 <none> <none>
    endpoints market-gain-forecast-tool -> 10.42.2.99:8080
    ingress market-gain-forecast-tool class=traefik hosts=market-gain-forecast-tool.cashflowus.com
    ingress market-gain-forecast-tool-custom class=traefik hosts=investmentbuddy.cashflowus.com
    ingress market-gain-forecast-tool-http class=traefik hosts=market-gain-forecast-tool.cashflowus.com,investmentbuddy.cashflowus.com
    https://market-gain-forecast-tool.cashflowus.com -> HTTP 200
 -- site o-1-achievement-tracker
-   pod o-1-achievement-tracker-6bb6565dd8-jv29l 1/1 Running 0 7d16h 10.42.2.247 srv1349789 <none> <none>
-   pod o-1-achievement-tracker-db-0 1/1 Running 0 7d16h 10.42.2.248 srv1349789 <none> <none>
+   pod o-1-achievement-tracker-6bb6565dd8-jv29l 1/1 Running 0 7d17h 10.42.2.247 srv1349789 <none> <none>
+   pod o-1-achievement-tracker-db-0 1/1 Running 0 7d17h 10.42.2.248 srv1349789 <none> <none>
    endpoints o-1-achievement-tracker -> 10.42.2.247:3000
    endpoints o-1-achievement-tracker-db -> 10.42.2.248:5432
    ingress o-1-achievement-tracker class=traefik hosts=o-1-achievement-tracker.cashflowus.com,o1tracker.cashflowus.com
@@ -84,7 +88,7 @@ claude as build user: OK
 == notifications ==
 push: vapid key ready, devices subscribed: 2, needs you: 3
 == wildcard DNS (*.cashflowus.com) ==
-dns-check-1791852382.cashflowus.com -> 2.25.157.104
+dns-check-1791855380.cashflowus.com -> 2.25.157.104
 box login: on
 == where the time goes, per project ==
 -- Business idea app (deploying, paused)
@@ -103,10 +107,6 @@ box login: on
    wall-clock 92h27 = crew 12h48 + GitHub Actions waits 4h10 + rollouts 2h08 + idle/paused/owner 73h20
    crew: planning 14m · tech lead 7m · developers 7h18 over 116 tasks (avg 4m) · code review 1h49 · QA 2h11 · design review 1h01 · devops 8m · fix cycles 3
    deploys: pushes 26 · CI failures 11 · rollout failures 6 · live yes
--- O-1 Achievement Tracker (review, done)
-   wall-clock 23h53 = crew 3h03 + GitHub Actions waits 1h09 + rollouts 1h50 + idle/paused/owner 17h52
-   crew: planning 9m · tech lead 6m · developers 1h45 over 49 tasks (avg 2m) · code review 15m · QA 21m · design review 21m · devops 5m · fix cycles 3
-   deploys: pushes 28 · CI failures 9 · rollout failures 3 · live yes
 == latest layout reports from phones ==
 [
  {
@@ -256,9 +256,9 @@ box login: on
  }
 ]
 == claude login ==
-haiku: OK (2s) -> OK
-sonnet: OK (3s) -> OK
-opus: OK (2s) -> OK
+haiku: OK (3s) -> OK
+sonnet: OK (2s) -> OK
+opus: OK (3s) -> OK
 == remove earlier Coolify routing attempts ==
 removed relay container box-web
 removed Coolify route file
