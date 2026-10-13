@@ -1,9 +1,9 @@
-run: 149  commit: b5499e4  ssh step: success  at: 2026-10-13T01:31:02Z
+run: 150  commit: 93a43dc  ssh step: success  at: 2026-10-13T01:36:35Z
 
-HEAD: b5499e4   domain: scenario.cashflowus.com   port: 3402
+HEAD: 93a43dc   domain: scenario.cashflowus.com   port: 3402
 == prerequisites ==
 node v22.23.3, claude 2.1.287 (Claude Code), python Python 3.12.3
-machine: 8 CPUs, 32094 MB RAM, 26432 MB available, disk free 290G
+machine: 8 CPUs, 32094 MB RAM, 26564 MB available, disk free 290G
 == env file ==
 keys in /etc/scenario.env: SC_PORT SC_DOMAIN SC_DATA_DIR SC_PYTHON CLAUDE_CODE_OAUTH_TOKEN SC_SMTP_HOST SC_SMTP_PORT SC_SMTP_USER SC_SMTP_PASS SC_MAIL_FROM 
 == data ==
@@ -11,42 +11,42 @@ accounts: 4 user(s): ha***@gmail.com (admin, owner, approved), sr***@gmail.com (
 scenarios: 2
 == service ==
 service: active
-   Oct 13 01:30:12 srv1349789 systemd[1]: scenario.service: Deactivated successfully.
-   Oct 13 01:30:12 srv1349789 systemd[1]: Stopped scenario.service - Run Scenario — market claims tested against data every day.
-   Oct 13 01:30:12 srv1349789 systemd[1]: scenario.service: Consumed 1.185s CPU time, 21.6M memory peak, 0B memory swap peak.
-   Oct 13 01:30:12 srv1349789 systemd[1]: Started scenario.service - Run Scenario — market claims tested against data every day.
-   Oct 13 01:30:13 srv1349789 node[129219]:   Run Scenario on http://localhost:3402 (public https://scenario.cashflowus.com)
+   Oct 13 01:35:58 srv1349789 systemd[1]: Stopping scenario.service - Run Scenario — market claims tested against data every day...
+   Oct 13 01:35:58 srv1349789 systemd[1]: scenario.service: Deactivated successfully.
+   Oct 13 01:35:58 srv1349789 systemd[1]: Stopped scenario.service - Run Scenario — market claims tested against data every day.
+   Oct 13 01:35:58 srv1349789 systemd[1]: Started scenario.service - Run Scenario — market claims tested against data every day.
+   Oct 13 01:35:58 srv1349789 node[147440]:   Run Scenario on http://localhost:3402 (public https://scenario.cashflowus.com)
 local /: HTTP 200
 api without sign-in: HTTP 401 (401 = sign-in enforced)
 front page test (no account): SPY falls 20% from its 52-week high by Dec 31, 2026. 0.8%, look-alikes 0/20
 mail: SMTP login OK
    SMTP host smtp.gmail.com:465, login ha***@gmail.com
    From header "Run Scenario" <ha***@gmail.com>, domain gmail.com; same domain as the login (aligned)
-   gmail.com: SPF v=spf1 redirect=_spf.google.com | DMARC v=DMARC1; p=none; sp=quarantine; rua=mailto:mailauth-reports@google.com | MX alt2.gmail-smtp-in.l.google.com, alt1.gmail-smtp-in.l.google.com
+   gmail.com: SPF v=spf1 redirect=_spf.google.com | DMARC v=DMARC1; p=none; sp=quarantine; rua=mailto:mailauth-reports@google.com | MX alt1.gmail-smtp-in.l.google.com, alt2.gmail-smtp-in.l.google.com
    mail log: 3 attempt(s), 0 failed; latest:
      2026-10-12T18:35:17.377Z  SENT    ha***@gmail.com  "Your Run Scenario account"
      2026-10-13T01:25:46.065Z  SENT    ha***@gmail.com  "New Run Scenario sign-up: Anuragreddy Kanchimireddy"
      2026-10-13T01:25:46.311Z  SENT    an***@gmail.com  "Confirm your email for Run Scenario"
 == data sources, as this server reaches them ==
-   OK   Yahoo prices   2512 days (351 ms)
-   FAIL Stooq prices   stooq.com said HTTP 403 (307 ms)
-   FAIL Nasdaq prices  no data (316 ms)
-   OK   FRED           71 points from FRED (St. Louis Fed) (1 ms)
-   OK   Macro via Yahoo 10y-3m spread 1.19 (301 weeks) (15 ms)
-   OK   Reddit         50 posts (1 ms)
-   OK   StockTwits     30 posts (2 ms)
+   OK   Yahoo prices   2512 days (319 ms)
+   FAIL Stooq prices   stooq.com said HTTP 403 (501 ms)
+   FAIL Nasdaq prices  no data (148 ms)
+   OK   FRED           71 points from FRED (St. Louis Fed) (2 ms)
+   OK   Macro via Yahoo 10y-3m spread 1.19 (301 weeks) (25 ms)
+   OK   Reddit         50 posts (0 ms)
+   OK   StockTwits     30 posts (1 ms)
    OK   Hacker News    40 posts (0 ms)
-   OK   Google News    40 headlines (2 ms)
-   OK   SEC EDGAR      revenue TTM 458393000000 (242 ms)
+   OK   Google News    40 headlines (0 ms)
+   OK   SEC EDGAR      revenue TTM 458393000000 (147 ms)
    OK   Prediction markets 8 matching (Polymarket, Manifold) (1 ms)
-   OK   Options (Cboe) 32 expiries, put/call 1.29, IV 12%, P(SPY -10% by 2026-11-13) 2.0% (34 ms)
-   OK   Fear & Greed   46 (neutral) (1 ms)
-   OK   Crypto F&G     57 (Greed) (0 ms)
+   OK   Options (Cboe) 32 expiries, put/call 1.29, IV 12%, P(SPY -10% by 2026-11-13) 2.0% (24 ms)
+   OK   Fear & Greed   46 (neutral) (3 ms)
+   OK   Crypto F&G     57 (Greed) (1 ms)
    OK   US Treasury    2026-10-09: 2y 4.8, 10y 5.24 (1 ms)
    OK   BLS            unemployment 4.2% (0 ms)
-   OK   Wikipedia      Nvidia: 180 days (0 ms)
+   OK   Wikipedia      Nvidia: 180 days (1 ms)
    OK   Mastodon       27 posts (1 ms)
-   OK   Lemmy          30 posts (1 ms)
+   OK   Lemmy          30 posts (0 ms)
    OK   Ticker news    49 headlines (1 ms)
    OK   Federal Reserve 12 releases (0 ms)
 == Hugging Face models ==
@@ -61,7 +61,7 @@ ready: {"forecast":"amazon/chronos-bolt-small","sentiment":"ProsusAI/finbert","a
      context  Starbucks (SBUX) vs McDonald’s (MCD) and Yum Brands (YUM): Which Restaurant Stock is a Bet (Yahoo Finance)
      for      Is the Stock Market Already Crashing Beneath the Surface? (The Acquirer's Multiple)
    Discover sources: Reddit top 60, StockTwits trending 20, hot markets 12, business news 40; busiest: "Fed Decision in October?: 25 bps decrease" 1%
-   Chronos-Bolt 20-day: median 782.12, 80% band 749.74–811.84 (9s)
+   Chronos-Bolt 20-day: median 782.12, 80% band 749.74–811.84 (7s)
    FinBERT: 0.3512, -0.9574 (expect +, -)
 == speech to text (Whisper) ==
 ready: {"model": "openai/whisper-small.en", "text": ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."}
@@ -72,7 +72,7 @@ ready: {"model": "openai/whisper-small.en", "text": ". . . . . . . . . . . . . .
    ingress.networking.k8s.io/scenario unchanged
    certificate: scenario-tls ready=True 
 == claude ==
-haiku: OK (5s)
+haiku: OK (2s)
 == the domain, as the internet reaches it ==
 DNS: scenario.cashflowus.com -> 2.25.157.104 (agents.cashflowus.com -> 2.25.157.104 )
 https://scenario.cashflowus.com/ -> HTTP 200
