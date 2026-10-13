@@ -233,7 +233,11 @@
     const navOn = S.session?.authed && NAV_ON[r.name] !== undefined && !(r.name === 'a');
     if (navOn) html += bottomNav(NAV_ON[r.name]);
     if (ticket !== rendering) return;
-    const swap = () => { app.innerHTML = html; after(r); };
+    const swap = () => {
+      app.innerHTML = html; after(r);
+      // After a fresh sign-in (or the first visit on a device): offer to add the app to the Home Screen.
+      if (S.session.authed && window.InstallBanner && !S.ibOffered) { S.ibOffered = true; InstallBanner.offer({ name: 'Pocket Box', icon: '/icon-180.png', above: '.nav', theme: { bg: 'var(--paper)', ink: 'var(--ink)', muted: 'var(--muted)', line: 'var(--line-2)', accent: 'var(--btn)', onAccent: 'var(--btn-ink)' } }); }
+    };
     if (transition && document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(swap);
     else swap();
   }
@@ -1466,6 +1470,7 @@
       if (kind === 'login') {
         const r = await api('/api/login', { method: 'POST', body: data });
         S.session = { authed: true, user: r.user };
+        if (window.InstallBanner) InstallBanner.markFresh(); S.ibOffered = false;
         const next = new URLSearchParams(location.search).get('next');
         if (next === '/runtime') { location.href = '/runtime'; return; }
         if (/^\/#\/s\/[A-Za-z0-9_-]+$/.test(next || '')) { location.href = next; return; }
@@ -1480,6 +1485,7 @@
         const r = await api('/api/reset', { method: 'POST', body: { token: form.dataset.token, password: data.password } });
         const l = await api('/api/login', { method: 'POST', body: { email: r.email, password: data.password } });
         S.session = { authed: true, user: l.user };
+        if (window.InstallBanner) InstallBanner.markFresh(); S.ibOffered = false;
         go(afterSignIn());
       } else if (kind === 'new') {
         const a = await api('/api/agents', { method: 'POST', body: { idea: data.idea, template: store.get('pb.template', null) } });
