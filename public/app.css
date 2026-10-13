@@ -741,3 +741,7 @@ a.btn { text-decoration: none; }
 .inbox-help { display: grid; gap: 10px; justify-items: start; margin-top: 14px; }
 .person small.bad-t { color: var(--no); }
 .person .link { font-size: 13px; margin-top: 2px; }
+.people-bulk { margin-top: 18px; padding: 16px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line); display: grid; gap: 12px; }
+.people-bulk p { margin-top: 4px; }
+.people-bulk .btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 0; }
+.person-acts { display: flex; align-items: center; gap: 12px; margin-top: 8px; flex-wrap: wrap; }

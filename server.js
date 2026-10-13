@@ -539,6 +539,38 @@ async function api(req, res, p, url, user) {
     if (!user.primary) return json(res, 403, { error: 'Only the owner manages people.' });
     try { const r = auth.relink(lk[1]); return json(res, 200, { url: `${BASE_URL}/#/reset/${r.token}`, email: r.user.email }); } catch (e) { return json(res, e.status || 500, { error: e.message }); }
   }
+  // Email someone (or everyone) a fresh link: confirm-your-email for people who
+  // haven't, set-a-new-password for everyone else. Their current password keeps
+  // working until they use the link.
+  const em = p.match(/^\/api\/people\/([a-f0-9]{12})\/email$/);
+  if ((em || p === '/api/people/email-all') && req.method === 'POST') {
+    if (!user.primary) return json(res, 403, { error: 'Only the owner manages people.' });
+    const b = await readBody(req).catch(() => ({}));
+    let targets;
+    if (em) targets = [auth.getUser(em[1])].filter(Boolean);
+    else {
+      if (auth.limited(`email-all:${user.id}`, 5, 3600 * 1000)) return json(res, 429, { error: 'You sent a lot of these this hour. Try again later.' });
+      targets = auth.listUsers().filter((x) => !x.primary && x.status !== 'disabled' && (b.scope === 'all' || x.status === 'unverified')).map((x) => auth.getUser(x.id));
+    }
+    if (!targets.length) return json(res, 404, { error: em ? 'No such person.' : 'Nobody to email.' });
+    const results = [];
+    for (const t of targets) {
+      if (t.primary) continue;
+      const { token } = auth.relink(t.id);
+      const link = `${BASE_URL}/#/reset/${token}`;
+      const confirm = t.status === 'unverified';
+      const r = await mail.send({
+        to: t.email,
+        subject: confirm ? 'Confirm your email for Run Scenario' : 'Set your Run Scenario password',
+        text: confirm
+          ? `Hi ${t.firstName},\n\nYou started creating a Run Scenario account. Confirm your email and choose a password with this link (24 hours):\n\n${link}\n\nIf you didn't sign up, ignore this email and nothing happens.\n`
+          : `Hi ${t.firstName},\n\nHere's a link to set a new Run Scenario password (24 hours):\n\n${link}\n\nYour current password keeps working if you don't use it. Sign in at ${BASE_URL}\n`,
+      }).catch((e) => ({ sent: false, error: e.message }));
+      results.push({ email: t.email, kind: confirm ? 'confirm' : 'reset', sent: r.sent, error: r.error || null });
+    }
+    const sent = results.filter((x) => x.sent).length;
+    return json(res, 200, { sent, failed: results.length - sent, results });
+  }
   const pm = p.match(/^\/api\/people\/([a-f0-9]{12})$/);
   if (pm && req.method === 'POST') {
     if (!user.primary) return json(res, 403, { error: 'Only the owner manages people.' });

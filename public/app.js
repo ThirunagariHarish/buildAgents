@@ -1083,9 +1083,12 @@
     shell('you', backTop('#/you', 'You'), `<div class="intro"><h1>People</h1><p>Everyone can use the data desk. The Claude analysts run on your Claude plan, so you choose who gets them.</p></div><div id="people" class="panel flat" style="margin-top:18px">${skLines(3)}</div>`);
     try {
       const { people } = await api('/api/people');
+      const others = people.filter((u) => !u.primary && u.status !== 'disabled');
+      const unconfirmed = others.filter((u) => u.status === 'unverified').length;
+      $('#people').insertAdjacentHTML('beforebegin', others.length ? `<div class="people-bulk"><div><b>Email everyone a link</b><p class="fine">People who haven't confirmed get a confirm link; everyone else gets a set-new-password link. Old passwords keep working until a link is used.</p></div><div class="btns">${unconfirmed ? `<button class="btn small" data-act="email-all" data-v="unconfirmed">${I('bell-ringing', 14)}Not confirmed yet (${unconfirmed})</button>` : ''}<button class="btn small quiet" data-act="email-all" data-v="all">Everyone (${others.length})</button></div></div>` : '');
       $('#people').innerHTML = people.map((u) => `<div class="person"><div><b>${esc(u.name || u.email)}</b>${u.primary ? ' <span class="chip">owner</span>' : ''}<small>${esc(u.email)}, ${u.status === 'unverified' ? 'has not confirmed the email yet' : u.status}${u.scenarios ? `, ${u.scenarios} scenario${u.scenarios > 1 ? 's' : ''}` : ''}</small>
         ${u.lastMail ? `<small class="${u.lastMail.sent ? '' : 'bad-t'}">Last email ${esc(ago(Date.parse(u.lastMail.at)))}: "${esc(u.lastMail.subject)}" ${u.lastMail.sent ? 'sent' : `FAILED (${esc(u.lastMail.error || 'unknown')})`}</small>` : ''}
-        ${!u.primary ? `<button class="link" data-act="copy-link" data-v="${esc(u.id)}">${u.status === 'unverified' ? 'Copy their confirm link' : 'Copy a set-password link'}</button>` : ''}</div>
+        ${!u.primary ? `<span class="person-acts"><button class="btn small quiet" data-act="email-one" data-v="${esc(u.id)}">${I('arrow-up-right', 13)}${u.status === 'unverified' ? 'Email confirm link' : 'Email reset link'}</button><button class="link" data-act="copy-link" data-v="${esc(u.id)}">Copy link</button></span>` : ''}</div>
         ${u.primary || u.role === 'admin' ? '<span class="fine">Claude on</span>' : `<label class="switch" title="Claude analysts"><input type="checkbox" data-act="claude" data-v="${esc(u.id)}" ${u.claude ? 'checked' : ''} aria-label="Claude analysts for ${esc(u.name)}"><span></span></label>`}</div>`).join('') || '<p class="muted">No one yet.</p>';
     } catch (e) { $('#people').innerHTML = `<p class="muted">${esc(e.message)}</p>`; }
   }
@@ -1137,6 +1140,15 @@
       busy(t, true, 'Sending');
       try { await api('/api/forgot', { method: 'POST', body: { email: v }, anon: true }); toast('Sent again. Both links work.'); t.innerHTML = `${I('check', 14)}Sent`; setTimeout(() => { t.disabled = false; t.innerHTML = `${I('arrow-clockwise', 14)}Send it again`; }, 60000); }
       catch (err) { busy(t, false); t.innerHTML = `${I('arrow-clockwise', 14)}Send it again`; toast(err.message, true); }
+    }
+    else if (act === 'email-one' || act === 'email-all') {
+      if (act === 'email-all' && !confirm(v === 'all' ? 'Email every person (except you) a link? People who haven\'t confirmed get a confirm link; the rest get a set-new-password link.' : 'Email a confirm link to everyone who hasn\'t confirmed their email yet?')) return;
+      busy(t, true, 'Sending');
+      try {
+        const r = await api(act === 'email-one' ? `/api/people/${v}/email` : '/api/people/email-all', { method: 'POST', body: act === 'email-all' ? { scope: v } : {} });
+        toast(r.failed ? `Sent ${r.sent}, ${r.failed} failed: ${r.results.filter((x) => !x.sent).map((x) => `${x.email} (${x.error})`).join(', ')}` : r.sent === 1 ? `Sent to ${r.results[0].email}. Earlier links still work.` : `Sent to ${r.sent} people. Earlier links still work.`, !!r.failed);
+        peopleView();
+      } catch (err) { busy(t, false); toast(err.message, true); }
     }
     else if (act === 'copy-link') {
       try { const r = await api(`/api/people/${v}/link`, { method: 'POST' }); try { await navigator.clipboard.writeText(r.url); toast(`Link for ${r.email} copied. Send it to them directly; it works for 24 hours.`); } catch { prompt('Copy this link and send it to them:', r.url); } }
