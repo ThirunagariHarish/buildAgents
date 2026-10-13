@@ -47,6 +47,9 @@
     try { const s = await api('/api/session', { anon: true }); S.me = s.authed ? { ...s.user, allowed: s.allowed, claude: s.claude, owner: s.owner } : null; } catch { S.me = null; }
     if (S.me && S.me.allowed) connect();
     render();
+    // After a fresh sign-in (or the first visit on a device): offer to add the app to the Home Screen.
+    if (S.me && S.me.allowed && window.InstallBanner) InstallBanner.offer({ name: 'Scenario', icon: '/icon-180.png', above: '.tabbar', fresh: !!S.fresh, theme: { bg: 'var(--surface)', ink: 'var(--ink)', muted: 'var(--ink-2)', line: 'var(--line)', accent: 'var(--ink)', onAccent: 'var(--bg)' } });
+    S.fresh = false;
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
   }
   function render() {
@@ -100,7 +103,7 @@
       const f = e.target, email = f.email.value.trim(), password = f.password.value;
       if (formErrors(f, { ...(!validEmail(email) ? { email: 'Enter the email you signed up with.' } : {}), ...(!password ? { password: 'Enter your password.' } : {}) })) return;
       const btn = f.querySelector('.btn'); busy(btn, true, 'Signing in');
-      try { await api('/api/login', { method: 'POST', body: { email, password }, anon: true }); if (/^#\/?(signup|forgot|reset)/.test(location.hash)) location.hash = '#/today'; await boot(); }
+      try { await api('/api/login', { method: 'POST', body: { email, password }, anon: true }); S.fresh = true; if (/^#\/?(signup|forgot|reset)/.test(location.hash)) location.hash = '#/today'; await boot(); }
       catch (err) { busy(btn, false, 'Sign in'); $('#login-note').innerHTML = `<div class="notice bad">${esc(err.message)}${/link we emailed/.test(err.message) ? ` <button type="button" class="link" data-act="resend" data-v="${esc(email)}">Send the link again</button>` : ''}</div>`; }
     };
   }
@@ -146,7 +149,7 @@
       try {
         await api('/api/reset', { method: 'POST', body: { token, password: pw }, anon: true });
         await api('/api/login', { method: 'POST', body: { email: info.email, password: pw }, anon: true }).catch(() => {});
-        location.hash = '#/today'; await boot(); toast('Password saved. You are signed in.');
+        S.fresh = true; location.hash = '#/today'; await boot(); toast('Password saved. You are signed in.');
       } catch (err) { formErrors(f, { pw: err.message }); }
     };
   }
@@ -920,7 +923,7 @@
     else if (act === 'mic') toggleMic(t);
     else if (act === 'opt-depth') { document.querySelectorAll('[data-act="opt-depth"]').forEach((b) => b.setAttribute('aria-checked', String(b === t))); $('#depth-help').textContent = DEPTHS[v][1]; }
     else if (act === 'resend') { try { const r = await api('/api/forgot', { method: 'POST', body: { email: v }, anon: true }); toast(r.message); } catch (err) { toast(err.message, true); } }
-    else if (act === 'logout') { await api('/api/logout', { method: 'POST' }).catch(() => {}); S.me = null; location.hash = '#/today'; render(); }
+    else if (act === 'logout') { if (window.InstallBanner) InstallBanner.hide(); await api('/api/logout', { method: 'POST' }).catch(() => {}); S.me = null; location.hash = '#/today'; render(); }
     else if (act === 'filter') { S.filter = v; document.querySelectorAll('.fchip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === v))); drawList(); }
     else if (act === 'range') { S.range = v; document.querySelectorAll('.seg button[data-act=range]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === v))); drawChart(); }
     else if (act === 'evf') { S.ev.filter = v; drawEvidence(); }
