@@ -307,7 +307,7 @@ async function sendSetPasswordMail(user, token, { reason }) {
   const link = RESET_PATH(token);
   const text = reason === 'approved'
     ? `Hi ${user.firstName},\n\nYour access to Box was approved. Set your password here (the link works once, for 24 hours):\n\n${link}\n\nThen sign in at ${BASE_URL} with ${user.email}.\n`
-    : `Hi ${user.firstName},\n\nUse this link to set a new Box password (it works once, for 24 hours):\n\n${link}\n\nIf you did not ask for this, ignore this email; nothing changes.\n`;
+    : `Hi ${user.firstName},\n\nUse this link to set a new Box password (it works for 24 hours, and asking again doesn't cancel it):\n\n${link}\n\nIf you did not ask for this, ignore this email; nothing changes.\n`;
   const r = await mail.send({ to: user.email, subject: reason === 'approved' ? 'Your Box access is approved' : 'Reset your Box password', text });
   return { ...r, link };
 }
@@ -351,22 +351,33 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req).catch(() => ({}));
       try {
         const { user, duplicate, token } = auth.signup({ ...body, ip });
+        let delivery = { sent: true };
         if (!duplicate && token) {
-          mail.send({ to: user.email, subject: 'Confirm your email for Box', text: `Hi ${user.firstName},\n\nConfirm your email and choose your Box password with this link (it works once, for 24 hours):\n\n${RESET_PATH(token)}\n\nAfter that, the owner approves new accounts and you get an email.\n\nIf you didn't sign up, ignore this email.\n` }).catch(() => {});
+          delivery = await mail.send({ to: user.email, subject: 'Confirm your email for Box', text: `Hi ${user.firstName},\n\nConfirm your email and choose your Box password with this link (it works for 24 hours, and asking again doesn't cancel it):\n\n${RESET_PATH(token)}\n\nAfter that, the owner approves new accounts and you get an email.\n\nIf you didn't sign up, ignore this email.\n` }).catch((e) => ({ sent: false, error: e.message }));
         } else if (duplicate && ['approved', 'unverified', 'pending'].includes(user.status)) {
           // Same reply either way; the inbox owner gets a link to set a password.
           const r = auth.forgot({ email: user.email, ip });
-          if (r) sendSetPasswordMail(r.user, r.token, { reason: 'reset' }).catch(() => {});
+          if (r) delivery = await sendSetPasswordMail(r.user, r.token, { reason: 'reset' }).catch((e) => ({ sent: false, error: e.message }));
         }
-        return json(res, 200, { ok: true, message: 'Check your inbox: we sent a link to confirm your email and choose a password. It works once, for 24 hours (check Spam too).' });
+        if (!delivery.sent && mail.configured()) return json(res, 502, { error: 'Your account is saved, but the email could not be sent just now. Wait a minute, then use "Forgot password" to get the link.', saved: true });
+        return json(res, 200, { ok: true, message: 'Check your inbox: we sent a link to confirm your email and choose a password. It works for 24 hours. Nothing after a couple of minutes? Look in Spam and Promotions, or use "Forgot password" to get another link (the first one keeps working).' });
       } catch (e) { return json(res, e.status || 500, { error: e.status ? e.message : 'Could not send the request.' }); }
     }
     if (p === '/api/forgot' && req.method === 'POST') {
       const body = await readBody(req).catch(() => ({}));
       try {
         const r = auth.forgot({ email: body.email, ip });
-        if (r) sendSetPasswordMail(r.user, r.token, { reason: 'reset' }).catch(() => {});
-        return json(res, 200, { ok: true, message: 'If that address has an approved account, a reset link is on its way.' });
+        let delivery = { sent: true };
+        if (r) delivery = await sendSetPasswordMail(r.user, r.token, { reason: 'reset' }).catch((e) => ({ sent: false, error: e.message }));
+        else {
+          // No account with that address here (accounts are separate per app): say so to the inbox, so nobody waits for a link that will never come.
+          const em = String(body.email || '').trim().toLowerCase();
+          if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em) && em.length <= 120 && !auth.limited(`forgot:none:${em}`, 1, 6 * 3600 * 1000) && !auth.listUsers().some((x) => x.email === em)) {
+            delivery = await mail.send({ to: em, subject: 'Box: no account with this email yet', text: `Hi,\n\nSomeone (hopefully you) asked to reset a Box password for this address, but there is no Box account with it yet. Box accounts are separate from Pocket Box and Run Scenario.\n\nCreate one here:\n\n${BASE_URL}/\n\nIf this wasn't you, ignore this email.\n` }).catch((e) => ({ sent: false, error: e.message }));
+          }
+        }
+        if (!delivery.sent && mail.configured()) return json(res, 502, { error: 'The email could not be sent just now. Wait a minute and try again.' });
+        return json(res, 200, { ok: true, message: 'If that address has an account, a link is on its way. Check Spam and Promotions too; it works for 24 hours.' });
       } catch (e) { return json(res, e.status || 500, { error: e.message }); }
     }
     if (p === '/api/reset' && req.method === 'GET') {

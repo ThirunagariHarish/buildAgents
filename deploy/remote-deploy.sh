@@ -83,8 +83,9 @@ echo "local /: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http:/
 CHECK_TOKEN=$(node -e "const a=require('./lib/auth');a.ensureAdmin();const u=a.admins()[0];console.log(a.createSession(u,'deploy-check'))" 2>/dev/null)
 COOKIE="box_session=${CHECK_TOKEN}"
 echo "api without sign-in: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:3400/api/ideas) (401 = sign-in enforced)"
-echo "accounts: $(node -e "try{const u=JSON.parse(require('fs').readFileSync('data/users.json'));console.log(u.length+' user(s): '+u.map(x=>x.email+' ('+x.role+', '+x.status+')').join(', '))}catch(e){console.log('none yet')}")"
-echo "mail: $(set -a; . /etc/box.env 2>/dev/null; set +a; timeout 30 node -e "require('./lib/mail').verify().then(r=>console.log(r.ok?'SMTP login OK as '+process.env.BOX_SMTP_USER+' via '+process.env.BOX_SMTP_HOST:'NOT working: '+r.error))")"
+echo "accounts: $(node -e "try{const u=JSON.parse(require('fs').readFileSync('data/users.json'));console.log(u.length+' user(s): '+u.map(x=>x.email.replace(/^([^@]{1,2})[^@]*@/,'\$1***@')+' ('+x.role+', '+x.status+')').join(', '))}catch(e){console.log('none yet')}")"
+echo "mail: $(set -a; . /etc/box.env 2>/dev/null; set +a; timeout 30 node -e "require('./lib/mail').verify().then(r=>console.log(r.ok?'SMTP login OK as '+String(process.env.BOX_SMTP_USER).replace(/^([^@]{1,2})[^@]*@/,'\$1***@')+' via '+process.env.BOX_SMTP_HOST:'NOT working: '+r.error))")"
+(set -a; . /etc/box.env 2>/dev/null; set +a; timeout 30 node deploy/mail-check.js BOX data/mail-log.jsonl) || true
 echo "security headers: $(curl -s -D - -o /dev/null --max-time 8 http://localhost:3400/ | grep -ciE 'content-security-policy|x-frame-options|x-content-type') of 3"
 echo "agent pool: $(curl -s --max-time 8 -H "Cookie: $COOKIE" http://localhost:3400/api/agents | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const l=JSON.parse(d);console.log(l.length+' agents — '+l.map(a=>a.name+(a.builtin?'':' (added)')).join(', '))}catch(e){console.log('unreadable: '+d.slice(0,120))}})")"
 
