@@ -276,10 +276,10 @@ const PUBLIC_API = new Set(['/api/session', '/api/login', '/api/logout', '/api/s
 async function sendSetPasswordMail(u, token, reason) {
   const link = `${BASE_URL}/#/reset/${token}`;
   const text = reason === 'approved'
-    ? `Hi ${u.firstName},\n\nYour access to Pocket Box was approved. Set your password here (one use, 24 hours):\n\n${link}\n`
+    ? `Hi ${u.firstName},\n\nYour access to Pocket Box was approved. Set your password here (24 hours; asking again doesn't cancel this one):\n\n${link}\n`
     : reason === 'welcome'
-      ? `Hi ${u.firstName},\n\nHere's your link to finish setting up Pocket Box. Choose a password and you're in (one use, 24 hours):\n\n${link}\n`
-      : `Hi ${u.firstName},\n\nUse this link to set a new Pocket Box password (one use, 24 hours):\n\n${link}\n\nIf you did not ask for this, ignore this email.\n`;
+      ? `Hi ${u.firstName},\n\nHere's your link to finish setting up Pocket Box. Choose a password and you're in (24 hours; asking again doesn't cancel this one):\n\n${link}\n`
+      : `Hi ${u.firstName},\n\nUse this link to set a new Pocket Box password (24 hours; asking again doesn't cancel this one):\n\n${link}\n\nIf you did not ask for this, ignore this email.\n`;
   const r = await mail.send({ to: u.email, subject: reason === 'approved' ? 'Your Pocket Box access is approved' : reason === 'welcome' ? 'Finish setting up Pocket Box' : 'Reset your Pocket Box password', text });
   return { ...r, link };
 }
@@ -352,9 +352,10 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req).catch(() => ({}));
       try {
         const { user, duplicate, token } = auth.signup({ ...body, ip });
+        let delivery = { sent: true };
         if (!duplicate && token) {
           // Open sign-up: the set-password link is the email check.
-          mail.send({ to: user.email, subject: 'Set your Pocket Box password', text: `Hi ${user.firstName},\n\nWelcome to Pocket Box. Set your password with this link (one use, 24 hours) and you're in:\n\n${BASE_URL}/#/reset/${token}\n\nIf you didn't sign up, ignore this email and nothing happens.\n` }).catch(() => {});
+          delivery = await mail.send({ to: user.email, subject: 'Set your Pocket Box password', text: `Hi ${user.firstName},\n\nWelcome to Pocket Box. Set your password with this link (24 hours; asking again doesn't cancel this one) and you're in:\n\n${BASE_URL}/#/reset/${token}\n\nIf you didn't sign up, ignore this email and nothing happens.\n` }).catch((e) => ({ sent: false, error: e.message }));
           for (const ad of auth.admins()) mail.send({ to: ad.email, subject: `New Pocket Box sign-up: ${user.firstName} ${user.lastName}`, text: `${user.firstName} ${user.lastName} (${user.email}, ${user.phone}) signed up. No action needed; you can disable the account under People: ${BASE_URL}/#/people\n` }).catch(() => {});
           bus.broadcast({ event: 'users' }, { adminsOnly: true });
         } else if (!duplicate) {
@@ -365,23 +366,33 @@ const server = http.createServer(async (req, res) => {
           // Already has an account: tell the inbox owner, with a reset link.
           // The screen says the same either way, so nobody learns who has an account.
           const r = auth.forgot({ email: user.email, ip });
-          const link = r ? `\n\nForgot it? Set a new password here (one use, 24 hours):\n${BASE_URL}/#/reset/${r.token}` : '';
+          const link = r ? `\n\nForgot it? Set a new password here (24 hours; asking again doesn't cancel this one):\n${BASE_URL}/#/reset/${r.token}` : '';
           mail.send({ to: user.email, subject: 'You already have a Pocket Box account', text: `Hi ${user.firstName},\n\nSomeone (probably you) asked to create a Pocket Box account with this email, but you already have one. Sign in at ${BASE_URL}${link}\n\nIf this wasn't you, you can ignore this email.\n` }).catch(() => {});
         } else if (user.status === 'unverified') {
           const r = auth.forgot({ email: user.email, ip });
-          if (r) mail.send({ to: user.email, subject: 'Set your Pocket Box password', text: `Hi ${user.firstName},\n\nHere's a fresh link to set your Pocket Box password (one use, 24 hours):\n\n${BASE_URL}/#/reset/${r.token}\n` }).catch(() => {});
+          if (r) delivery = await mail.send({ to: user.email, subject: 'Set your Pocket Box password', text: `Hi ${user.firstName},\n\nHere's a fresh link to set your Pocket Box password (24 hours; asking again doesn't cancel this one):\n\n${BASE_URL}/#/reset/${r.token}\n` }).catch((e) => ({ sent: false, error: e.message }));
         } else if (user.status === 'pending') {
           mail.send({ to: user.email, subject: 'Your Pocket Box request is waiting for approval', text: `Hi ${user.firstName},\n\nYour request to join Pocket Box is still waiting for the administrator. You'll get an email with a link to set your password once it's approved.\n` }).catch(() => {});
         }
-        return json(res, 200, { ok: true, message: config.OPEN_SIGNUP ? 'Check your email: we sent a link to set your password. It works once, for 24 hours. (Check Spam if it isn\'t there in a minute.)' : 'Thanks! Check your email for a confirmation. Once the administrator approves your request, you will get a link to set your password.' });
+        if (!delivery.sent && mail.configured()) return json(res, 502, { error: 'Your account is saved, but the email could not be sent just now. Wait a minute, then use "Send it again".', saved: true });
+        return json(res, 200, { ok: true, message: config.OPEN_SIGNUP ? 'Check your email: we sent a link to set your password. It works for 24 hours. (Check Spam and Promotions if it isn\'t there in a minute.)' : 'Thanks! Check your email for a confirmation. Once the administrator approves your request, you will get a link to set your password.' });
       } catch (e) { return json(res, e.status || 500, { error: e.status ? e.message : 'Could not send the request.' }); }
     }
     if (p === '/api/forgot' && req.method === 'POST') {
       const body = await readBody(req).catch(() => ({}));
       try {
         const r = auth.forgot({ email: body.email, ip });
-        if (r) sendSetPasswordMail(r.user, r.token, r.user.status === 'unverified' ? 'welcome' : 'reset').catch(() => {});
-        return json(res, 200, { ok: true, message: 'If that address has an approved account, a reset link is on its way.' });
+        let delivery = { sent: true };
+        if (r) delivery = await sendSetPasswordMail(r.user, r.token, r.user.status === 'unverified' ? 'welcome' : 'reset').catch((err) => ({ sent: false, error: err.message }));
+        else {
+          // No account with that address here (accounts are separate per app): say so to the inbox, so nobody waits for a link that will never come.
+          const em = String(body.email || '').trim().toLowerCase();
+          if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em) && em.length <= 120 && !auth.limited(`forgot:none:${em}`, 1, 6 * 3600 * 1000) && !auth.listUsers().some((x) => x.email === em)) {
+            delivery = await mail.send({ to: em, subject: 'Pocket Box: no account with this email yet', text: `Hi,\n\nSomeone (hopefully you) asked to reset a Pocket Box password for this address, but there is no Pocket Box account with it yet. Pocket Box accounts are separate from Box and Run Scenario.\n\nCreate one here, it takes a minute:\n\n${BASE_URL}/#/signup\n\nIf this wasn't you, ignore this email.\n` }).catch((err) => ({ sent: false, error: err.message }));
+          }
+        }
+        if (!delivery.sent && mail.configured()) return json(res, 502, { error: 'The email could not be sent just now. Wait a minute and try again.' });
+        return json(res, 200, { ok: true, message: 'If that address has an account, a link is on its way. Check Spam and Promotions too; it works for 24 hours.' });
       } catch (e) { return json(res, e.status || 500, { error: e.message }); }
     }
     if (p === '/api/reset' && req.method === 'GET') {

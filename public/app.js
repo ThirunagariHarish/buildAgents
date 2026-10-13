@@ -13,6 +13,8 @@
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
+  /** After an email is sent: where to look, and a way to send it again (earlier links keep working). */
+  const inboxHelp = (email) => `<div class="stack" style="gap:10px;margin-top:12px"><p class="small muted" style="margin:0">Nothing after a couple of minutes? Look in <strong>Spam</strong> and <strong>Promotions</strong>, and search for "Pocket Box". Links work for 24 hours, and asking again doesn't cancel the first one.</p><div><button type="button" class="btn sm ghost" data-act="resend-mail" data-email="${esc(email || '')}">Send it again</button></div></div>`;
   async function api(path, { method = 'GET', body } = {}) {
     let res;
     try {
@@ -1476,11 +1478,12 @@
         if (/^\/#\/s\/[A-Za-z0-9_-]+$/.test(next || '')) { location.href = next; return; }
         go(afterSignIn());
       } else if (kind === 'signup') {
-        const r = await api('/api/signup', { method: 'POST', body: data });
-        form.innerHTML = `<div class="note good pop">${esc(r.message)}</div>`;
+        let msg, cls = 'good';
+        try { msg = (await api('/api/signup', { method: 'POST', body: data })).message; } catch (err) { if (!(err.data && err.data.saved)) throw err; msg = err.message; cls = 'bad'; }
+        form.innerHTML = `<div class="note ${cls} pop">${esc(msg)}</div>${inboxHelp(data.email)}`;
       } else if (kind === 'forgot') {
         const r = await api('/api/forgot', { method: 'POST', body: data });
-        say(r.message, 'good');
+        form.innerHTML = `<div class="note good pop">${esc(r.message)}</div>${inboxHelp(data.email)}`;
       } else if (kind === 'reset') {
         const r = await api('/api/reset', { method: 'POST', body: { token: form.dataset.token, password: data.password } });
         const l = await api('/api/login', { method: 'POST', body: { email: r.email, password: data.password } });
@@ -1702,6 +1705,13 @@
         break;
       }
       case 'install': await install(); break;
+      case 'resend-mail': {
+        if (!el.dataset.email) { toast('Type your email first.', 'bad'); break; }
+        busy(el, true);
+        try { await api('/api/forgot', { method: 'POST', body: { email: el.dataset.email } }); busy(el, false); el.textContent = 'Sent again'; el.disabled = true; toast('Sent again. Both links work.'); setTimeout(() => { if (document.contains(el)) { el.disabled = false; el.textContent = 'Send it again'; } }, 60000); }
+        catch (err) { busy(el, false); toast(err.message, 'bad'); }
+        break;
+      }
       case 'style': { const r = await post(`/api/agents/${a.id}/style`, { style: el.dataset.style }); if (r) { S.agent = r; const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(r); } break; }
       case 'unshare': { try { S.agent = await api(`/api/agents/${a.id}/members/${el.dataset.user}`, { method: 'DELETE' }); const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(S.agent); } catch (err) { toast(err.message, 'bad'); } break; }
       case 'uninvite': { try { S.agent = await api(`/api/agents/${a.id}/invites?email=${encodeURIComponent(el.dataset.email)}`, { method: 'DELETE' }); const b = $('#tab-body'); if (b) b.innerHTML = settingsTab(S.agent); } catch (err) { toast(err.message, 'bad'); } break; }
