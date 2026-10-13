@@ -2791,7 +2791,7 @@ function showLogin(view = 'login', ctx = {}) {
       return data;
     };
     try {
-      if (view === 'login') { await post('/api/login', { email: $('lg-email').value, password: $('lg-pw').value }); location.hash = location.hash.startsWith('#/reset') ? '#/' : location.hash; location.reload(); }
+      if (view === 'login') { await post('/api/login', { email: $('lg-email').value, password: $('lg-pw').value }); if (window.InstallBanner) InstallBanner.markFresh(); location.hash = location.hash.startsWith('#/reset') ? '#/' : location.hash; location.reload(); }
       else if (view === 'signup') { const r = await post('/api/signup', { firstName: $('su-first').value, lastName: $('su-last').value, phone: $('su-phone').value, email: $('su-email').value }); showLogin('done', { title: 'Check your inbox', text: r.message }); }
       else if (view === 'forgot') { const r = await post('/api/forgot', { email: $('fg-email').value }); showLogin('done', { title: 'Check your email', text: r.message }); }
       else if (view === 'reset') {
@@ -2941,6 +2941,8 @@ function openPeopleSheet() {
   await refreshIdeas();
   await onRoute();
   connectEvents();
+  // After a fresh sign-in (or the first visit on a device): offer to add Box to the Home Screen.
+  if (window.InstallBanner) InstallBanner.offer({ name: 'Box', icon: 'icon-180.png', above: '#composer', theme: { bg: 'var(--bg-pop)', ink: 'var(--text)', muted: 'var(--text-2)', line: 'var(--line-strong)', accent: 'var(--accent)', onAccent: '#fff' } });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     refreshIdeasSoon();
