@@ -85,6 +85,7 @@ echo "service: $(systemctl is-active scenario)"
 journalctl -u scenario -n 5 --no-pager 2>/dev/null | sed 's/^/   /'
 echo "local /: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:$PORT/)"
 echo "api without sign-in: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:$PORT/api/scenarios) (401 = sign-in enforced)"
+echo "front page test (no account): $(curl -s --max-time 60 -X POST -H 'Content-Type: application/json' -H "Origin: http://localhost:$PORT" -d '{"text":"S&P 500 falls 20% by year end"}' http://localhost:$PORT/api/try | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);console.log(j.p!==undefined?`${j.proposition} ${j.p}%${j.analogs?`, look-alikes ${j.analogs.hits}/${j.analogs.k}`:""}`:`error: ${j.error}`)}catch{console.log("no answer")}})')"
 echo "mail: $(set -a; . "$ENV_FILE"; set +a; timeout 30 node -e "require('./lib/mail').verify().then(r=>console.log(r.ok?'SMTP login OK':'NOT working: '+r.error))")"
 
 if command -v ufw >/dev/null && ufw status 2>/dev/null | grep -q 'Status: active'; then

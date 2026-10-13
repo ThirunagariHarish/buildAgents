@@ -53,9 +53,12 @@
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
   }
   function render() {
+    const pm = location.pathname.match(/^\/p\/([A-Za-z0-9_-]{8,16})$/);
+    if (pm) return publicPage(pm[1]);
     const [r0, r1] = route();
     if (r0 === 'reset') return resetView(r1);
-    if (!S.me) return r0 === 'signup' ? signupView() : r0 === 'forgot' ? forgotView() : loginView();
+    // Signed out: the front page (test a claim first), or sign-in for anything deeper.
+    if (!S.me) return r0 === 'signup' ? signupView() : r0 === 'forgot' ? forgotView() : ['today', 'try'].includes(r0) ? landingView() : loginView();
     const views = { today: todayView, scenarios: scenariosView, build: buildView, trends: trendsView, discover: discoverView, markets: marketsView, you: youView, people: peopleView, sources: sourcesView };
     if (r0 === 's' && r1) return dashView(r1);
     return (views[r0] || todayView)();
@@ -69,6 +72,167 @@
   const avatar = () => `<a class="avatar" href="#/you" aria-label="You: track record and settings" title="You">${esc(((S.me.firstName || S.me.email || '?')[0] || '?').toUpperCase())}</a>`;
   const titleTop = (title, extra = '') => top(`<a class="brand" href="#/today">${mark()}<span class="sr">Run Scenario</span></a><h1 class="top-title">${title}</h1><span class="spacer"></span>${extra}${avatar()}`);
   const backTop = (to, label, extra = '') => top(`<a class="back" href="${to}">${I('arrow-left', 18)}${label}</a><span class="spacer"></span>${extra}`);
+
+  // ---- the front page ---------------------------------------------------------------------------
+  // What the app is, and a way in that starts with the visitor's own claim:
+  // type or say it, get real odds in seconds with no account, then "Start
+  // watching" creates the account with that claim as the first scenario.
+  const EXAMPLES = ['S&P 500 falls 20% by year end', 'Bitcoin above 150k by end of 2027', 'Nvidia falls 30% by June 2027', 'Apple beats the S&P 500 over 6 months', 'Gold above 4000 by March', 'Tesla doubles by 2027'];
+  if (!S.lp) S.lp = {};
+  function landingView() {
+    const compare = [
+      ['Answers once, then forgets the question', 'Re-checks your claim every day until it settles, and says what changed'],
+      ['Guesses from what it remembers', 'Simulates thousands of paths on 10 years of real daily prices'],
+      ['Describes history in general', 'Counts the look-alike setups in the actual data and what followed'],
+      ['Can\'t tell you when things change', 'Arms tripwires on live data and emails you when one trips'],
+      ['Leaves no record you can check', 'Keeps dated, fingerprinted receipts and settles YES or NO on its own'],
+      ['Never keeps score', 'Scores every call (Brier score), yours beside the desk\'s'],
+    ];
+    const steps = [
+      ['chats-circle', 'Say the claim', 'Type it or say it: "Nvidia falls 30% by June." The desk turns it into a yes-or-no question with a date.'],
+      ['users-three', 'A desk reads it', 'Analysts run the Monte Carlo, technicals, macro, options, prediction markets, filings, news and the crowd. A judge weighs both sides and commits to one number.'],
+      ['crosshair', 'It keeps watching', 'Every day it re-reads the claim, sorts new articles for and against, and watches the tripwires. You hear when it matters.'],
+    ];
+    app.innerHTML = `<a class="skip" href="#main">Skip to content</a>
+      <header class="lp-top"><div class="lp-top-in"><a class="brand" href="#/today">${mark()}<span class="brand-name">Run Scenario</span></a><span class="spacer"></span><a class="btn small quiet" href="#/signin">Sign in</a></div></header>
+      <main id="main" class="lp fade-in">
+        <section class="lp-hero">
+          <p class="lp-kicker"><span class="pulse"></span>A research desk for market calls, open every day</p>
+          <h1>Put real odds on any market call.</h1>
+          <p class="lp-sub">Type a prediction and get a probability in seconds from real price history. Then a desk of analysts re-checks it every day and tells you when it changes.</p>
+          <form id="try" class="lp-try" novalidate>
+            <label for="t-claim" class="lp-label">Your claim</label>
+            <div class="lp-input"><input id="t-claim" name="claim" maxlength="300" autocomplete="off" enterkeyhint="go" placeholder="${esc(EXAMPLES[2])}" value="${esc(S.lp.text || '')}">${window.Voice && Voice.live ? `<button type="button" class="mic" data-act="mic" data-target="t-claim" data-mode="try" aria-label="Say your claim" title="Say it">${I('microphone', 18)}</button>` : ''}<button class="btn" id="try-go">${I('lightning', 16)}<span>Test it</span></button></div>
+            <div class="mic-note" id="note-t-claim" hidden></div>
+            <div class="lp-ex" role="group" aria-label="Examples">${EXAMPLES.map((x) => `<button type="button" class="fchip" data-act="lp-ex" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>
+          </form>
+          <div id="try-out" aria-live="polite"></div>
+        </section>
+        <section class="lp-sec">
+          <h2>Why not just ask a chatbot?</h2>
+          <p class="lp-lede">A chatbot gives you an opinion once. Run Scenario keeps working on your claim after you close the tab.</p>
+          <div class="cmp" role="table" aria-label="A chatbot compared with Run Scenario">
+            <div class="cmp-h" role="row"><span role="columnheader">A chatbot</span><span role="columnheader">${mark()} Run Scenario</span></div>
+            ${compare.map(([a, b]) => `<div class="cmp-r" role="row"><span role="cell" class="cmp-a">${I('x', 15)}${esc(a)}</span><span role="cell" class="cmp-b">${I('check', 15)}${esc(b)}</span></div>`).join('')}
+          </div>
+        </section>
+        <section class="lp-sec">
+          <h2>How it works</h2>
+          <ol class="lp-steps">${steps.map(([ic, t, d], i) => `<li><span class="lp-step-ic">${I(ic, 20)}</span><div><small class="num">0${i + 1}</small><h3>${t}</h3><p>${d}</p></div></li>`).join('')}</ol>
+        </section>
+        <section class="lp-sec" id="lp-trends" hidden></section>
+        <section class="lp-final"><h2>Start with one claim.</h2><p>Free. No card. Your claim becomes your first scenario.</p><button class="btn" data-act="lp-top">${I('lightning', 16)}Test a claim</button><p class="fine">Already have an account? <a href="#/signin">Sign in</a></p></section>
+        <p class="foot">Prices from Yahoo Finance; macro from FRED, the US Treasury and BLS; options from Cboe; odds from Polymarket and Kalshi. Research, not financial advice.</p>
+      </main>`;
+    $('#try').onsubmit = (e) => { e.preventDefault(); runTry($('#t-claim').value); };
+    if (S.lp.result) drawTry(S.lp.result);
+    loadLandingTrends();
+  }
+  async function runTry(text, build = null) {
+    text = String(text || '').trim();
+    S.lp.text = text;
+    const out = $('#try-out'), btn = $('#try-go');
+    if (!build && text.length < 4) { out.innerHTML = `<p class="lp-hint">Type a claim first, like "${esc(EXAMPLES[0])}".</p>`; $('#t-claim').focus(); return; }
+    busy(btn, true, 'Testing');
+    out.innerHTML = `<div class="lp-result lp-loading"><div class="lp-steps-live">${['Reading the claim', 'Pulling 10 years of daily prices', 'Simulating 3,000 paths to the deadline', 'Finding look-alike days in history'].map((x, i) => `<span style="animation-delay:${i * 0.45}s">${I('check', 13)}${x}</span>`).join('')}</div></div>`;
+    try {
+      const r = await fetch('/api/try', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(build ? { build } : { text }), credentials: 'same-origin' });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        const g = j.guess || {};
+        const sym = g.symbol;
+        const fixes = sym && !g.move ? [`${sym} falls 20% in 6 months`, `${sym} rises 25% by year end`, `${sym} beats the S&P 500 over 6 months`] : EXAMPLES.slice(0, 3);
+        out.innerHTML = `<div class="lp-result lp-miss"><p><b>${esc(j.error || 'Could not test that.')}</b></p><p class="fine" style="margin:8px 0">${sym && !g.move ? 'Pick one to start from, or edit yours:' : 'Some that work:'}</p><div class="lp-ex">${fixes.map((x) => `<button type="button" class="fchip" data-act="lp-ex" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`;
+        return;
+      }
+      S.lp.result = j;
+      drawTry(j);
+      out.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    } catch { out.innerHTML = '<div class="lp-result lp-miss"><p>Could not reach the desk. Try again in a moment.</p></div>'; }
+    finally { busy(btn, false); btn.innerHTML = `${I('lightning', 16)}<span>Test it</span>`; }
+  }
+  function drawTry(j) {
+    const out = $('#try-out'); if (!out) return;
+    const g = j.analogs;
+    const yrs = Math.round((Date.parse(j.asOf) - Date.parse(`${(g && g.since) || j.asOf}`)) / (365 * 864e5));
+    out.innerHTML = `<article class="lp-result">
+      <div class="lr-top"><span class="dcat">${esc(j.symbol)}${j.name && j.name !== j.symbol ? ` <span class="muted">${esc(j.name)}</span>` : ''}</span><span class="fine">by ${esc(fmtDay(j.horizonDate))}</span></div>
+      <h2 class="lr-claim">${esc(j.proposition)}</h2>
+      <div class="lr-main"><div class="lr-p ${tone(j.p)}"><span class="num">${j.p < 1 ? '&lt;1' : j.p > 99 ? '&gt;99' : Math.round(j.p)}<small>%</small></span><small>chance, by the numbers alone</small></div><div class="lr-chart">${Chart.spark(j.spark, { w: 260, h: 70 })}<small class="fine">${esc(j.symbol)} ${fmtN(j.last)}, last 6 months</small></div></div>
+      <div class="lr-facts">
+        ${g ? `<div><small>Look-alike setups</small><b class="num">${g.hits} of ${g.k}</b><span>came true${yrs > 1 ? ` in ${yrs} years of data` : ''}</span></div>` : ''}
+        <div><small>Simulated paths</small><b class="num">${j.paths.toLocaleString()}</b><span>over ${j.days} trading days</span></div>
+        <div><small>Middle of the range</small><b class="num">${fmtN(j.range.p25)} to ${fmtN(j.range.p75)}</b><span>${esc(j.symbol)} by the deadline</span></div>
+      </div>
+      <p class="fine lr-note">That is one analyst: the numbers. Watch it and the full desk takes over: technicals, macro, options, prediction markets, the news, a judge, and tripwires that email you when something changes.</p>
+      <div class="lr-watch" id="lr-watch">
+        <h3>${I('bell-ringing', 18)}Keep watching this claim</h3>
+        <form id="watch-signup" class="stack" novalidate>
+          <div class="row2">${field('wfirst', 'First name', 'text', 'autocomplete="given-name" required')}${field('wemail', 'Email', 'email', 'autocomplete="email" inputmode="email" required')}</div>
+          <button class="btn block">Start watching</button>
+          <p class="fine">We email you a link to confirm and choose a password. Your claim is the first thing you see. Free, no card.</p>
+        </form>
+      </div>
+    </article>`;
+    $('#watch-signup').onsubmit = async (e) => {
+      e.preventDefault();
+      const f = e.target, first = f.wfirst.value.trim(), email = f.wemail.value.trim();
+      if (formErrors(f, { ...(!first ? { wfirst: 'Add your first name.' } : {}), ...(!validEmail(email) ? { wemail: 'Enter a valid email address.' } : {}) })) return;
+      const b = f.querySelector('.btn'); busy(b, true, 'Starting');
+      try {
+        await api('/api/signup', { method: 'POST', body: { firstName: first, email, starter: j.build }, anon: true });
+        $('#lr-watch').innerHTML = `<div class="lr-sent"><span class="lr-mail">${I('check', 22)}</span><div><h3>Check your inbox</h3><p>We sent a link to <b>${esc(email)}</b>. Open it, choose a password, and the desk starts on <b>${esc(j.title)}</b> straight away.</p><p class="fine">Nothing there in a minute? Check Spam. <button type="button" class="link" data-act="lp-again">Use a different email</button></p></div></div>`;
+      } catch (err) { busy(b, false, 'Start watching'); formErrors(f, /email/i.test(err.message) ? { wemail: err.message } : { wfirst: err.message }); }
+    };
+  }
+  async function loadLandingTrends() {
+    let d; try { d = await (await fetch('/api/public-trends')).json(); } catch { return; }
+    const el = $('#lp-trends'); if (!el || !d.trends || !d.trends.length) return;
+    el.hidden = false;
+    el.innerHTML = `<h2>On the desk today</h2><p class="lp-lede">The top ${d.trends.length} trends the desk picked from today's claims, markets and headlines. Tap one to test it.</p>
+      <div class="lp-trends">${d.trends.map((t) => `<button class="lp-trend" data-act="lp-trend" data-v="${esc(t.claim || t.title)}"><span class="dcat">${esc(t.category)}</span><b>${esc(t.title)}</b>${t.spark ? Chart.spark(t.spark, { w: 220, h: 36, fill: false }) : ''}<span class="lp-trend-f">${t.symbol ? `<span class="num">${esc(t.symbol)}</span> <span class="delta ${t.d1 > 0 ? 'up' : 'down'}">${pctS(t.d1)}</span>` : ''}${t.p !== null && t.p !== undefined ? `<span class="tq-s ${tone(t.p)}">${t.p < 1 ? '&lt;1' : t.p > 99 ? '&gt;99' : Math.round(t.p)}% odds</span>` : ''}</span></button>`).join('')}</div>`;
+  }
+
+  // ---- public receipt -------------------------------------------------------------------------
+  // A shared scenario anyone can open: the claim, every dated reading with its
+  // fingerprint (re-checked here in the browser), tripwires and look-alikes.
+  async function publicPage(pid) {
+    const head = `<header class="top"><div class="top-in"><a class="brand" href="/">${mark()}<span class="brand-name">Run Scenario</span></a><span class="spacer"></span>${S.me ? '<a class="btn small quiet" href="/#/today">Open the app</a>' : '<a class="btn small" href="/">Test your own claim</a>'}</div></header>`;
+    app.innerHTML = `${head}<main id="main" class="wrap pub fade-in"><div class="hero"><div class="sk sk-line" style="width:30%"></div><div class="sk sk-line" style="width:85%;height:22px"></div><div class="sk sk-big"></div></div></main>`;
+    let d;
+    try { const r = await fetch(`/api/public/${pid}`); d = await r.json(); if (!r.ok) throw new Error(d.error); } catch (e) { $('main').innerHTML = `<div class="empty"><b>Nothing to see here</b>${esc(e.message || 'This page is private or no longer shared.')}</div>`; return; }
+    document.title = `${d.title} | Run Scenario`;
+    const L = d.latest, p = L ? L.probability : null;
+    const last = d.history[d.history.length - 1];
+    $('main').innerHTML = `
+      <section class="hero">
+        <div class="kicker"><span>Public receipt</span><span>tested daily since ${esc(fmtDay(d.sealedFrom))}</span>${d.by ? `<span>shared by ${esc(d.by)}</span>` : ''}</div>
+        <h1>${esc(d.title)}</h1>
+        <p class="prop">${esc(d.proposition)}</p>
+        ${L ? `<div class="reading"><div class="big">${p}<small>%</small></div><div class="reading-side"><span class="tag ${tone(p)}">${esc(L.verdict)}</span><span class="reading-meta">As of ${esc(fmtDay(L.date))}, ${esc(L.confidence)} confidence, ${L.analysts} analysts</span></div></div><p class="call">${esc(L.call)}</p>` : ''}
+        ${d.resolved ? `<div class="notice settled ${d.resolved.outcome === 'no' ? 'bad' : ''}">Settled ${esc(d.resolved.outcome.toUpperCase())}. ${esc(d.resolved.why)}</div>` : ''}
+      </section>
+      ${d.history.length || d.backfill.length ? `<section class="block"><h2>Every reading so far</h2><div id="pchart" class="pchart-wrap"></div><div class="legend"><span><i class="key"></i>The desk's probability</span>${d.backfill.length ? '<span><i class="key dash"></i>Price-only replay before it started</span>' : ''}</div></section>` : ''}
+      ${d.history.length ? `<section class="block"><div class="chart-head"><h2>${I('receipt', 18)} The receipts</h2><span class="fine" id="chain">Checking the chain</span></div>
+        <p class="fine" style="margin:-6px 0 12px">Each reading is fingerprinted together with the one before it, starting from the claim. Change any past number and every fingerprint after it changes. Today's fingerprint: <code class="fp">${esc((last.hash || '').slice(0, 12))}</code></p>
+        <table class="hist"><thead><tr><th>Date</th><th class="r">Probability</th><th class="r">Fingerprint</th></tr></thead><tbody>${d.history.slice().reverse().slice(0, 30).map((h) => `<tr><td>${esc(fmtDay(h.date))}</td><td class="r num">${h.p}%</td><td class="r"><code class="fp">${esc((h.hash || '').slice(0, 10))}</code></td></tr>`).join('')}</tbody></table></section>` : ''}
+      ${d.analogs ? analogsHtml({ id: '', thesis: { primary: d.primary } }, { analysts: [{ id: 'quant', analogs: d.analogs }] }) : ''}
+      ${tripwiresHtml({ tripwires: d.tripwires })}
+      ${L && (L.bull.length || L.bear.length) ? `<section class="block"><h2>The two cases</h2><div class="cases">${L.bull.length ? `<div class="case yes"><h3>For</h3><ul>${L.bull.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}${L.bear.length ? `<div class="case no"><h3>Against</h3><ul>${L.bear.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}</div></section>` : ''}
+      <section class="pub-cta"><div><h2>Have a claim of your own?</h2><p>Type it, get real odds in seconds, and the desk re-checks it every day: tripwires, look-alike setups and receipts like these. Free.</p></div><a class="btn" href="/">${I('lightning', 16)}Test a claim</a></section>
+      <p class="foot">How it settles: ${esc(d.resolution)} Research, not financial advice.</p>`;
+    const el = $('#pchart');
+    if (el) Chart.probability(el, [...(d.backfill.length ? [{ points: d.backfill, color: 'var(--series-2)', dashed: true, label: 'Price-only replay' }] : []), { points: d.history.map((h) => ({ date: h.date, p: h.p })), color: 'var(--series-1)', label: "Desk's call" }]);
+    const ch = $('#chain');
+    if (ch) verifyChain(d).then((ok) => { ch.innerHTML = ok ? `<span class="chain ok">${I('check', 13)}Chain verified in your browser</span>` : '<span class="chain bad">Chain does not match</span>'; }).catch(() => { ch.textContent = 'Your browser could not check the chain.'; });
+  }
+  async function verifyChain(d) {
+    const enc = new TextEncoder();
+    const sha = async (x) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', enc.encode(x)))].map((b) => b.toString(16).padStart(2, '0')).join('');
+    let prev = await sha(`${d.proposition}|${d.horizonDate}|${d.sealedFrom}`);
+    for (const h of d.history) { const x = await sha(`${prev}|${h.date}|${h.p}`); if (x !== h.hash) return false; prev = x; }
+    return true;
+  }
 
   // ---- accounts ----------------------------------------------------------------------------
   function authShell(title, lede, body, alt) {
@@ -97,13 +261,13 @@
       <div id="login-note"></div>
       <button class="btn block">Sign in</button>
       <button type="button" class="link" data-act="go" data-v="#/forgot">Forgot your password?</button></form>`,
-    `New here? <a href="#/signup">Create an account</a>`);
+    `New here? <a href="#/today">Test a claim first</a> or <a href="#/signup">create an account</a>`);
     $('#login').onsubmit = async (e) => {
       e.preventDefault();
       const f = e.target, email = f.email.value.trim(), password = f.password.value;
       if (formErrors(f, { ...(!validEmail(email) ? { email: 'Enter the email you signed up with.' } : {}), ...(!password ? { password: 'Enter your password.' } : {}) })) return;
       const btn = f.querySelector('.btn'); busy(btn, true, 'Signing in');
-      try { await api('/api/login', { method: 'POST', body: { email, password }, anon: true }); S.fresh = true; if (/^#\/?(signup|forgot|reset)/.test(location.hash)) location.hash = '#/today'; await boot(); }
+      try { await api('/api/login', { method: 'POST', body: { email, password }, anon: true }); S.fresh = true; if (/^#\/?(signin|signup|forgot|reset)/.test(location.hash)) location.hash = '#/today'; await boot(); }
       catch (err) { busy(btn, false, 'Sign in'); $('#login-note').innerHTML = `<div class="notice bad">${esc(err.message)}${/link we emailed/.test(err.message) ? ` <button type="button" class="link" data-act="resend" data-v="${esc(email)}">Send the link again</button>` : ''}</div>`; }
     };
   }
@@ -113,7 +277,7 @@
       ${field('email', 'Email', 'email', 'autocomplete="email" inputmode="email" required')}
       <div class="field"><label for="f-phone">Phone <span class="muted">(optional)</span></label><input id="f-phone" name="phone" type="tel" autocomplete="tel"><div class="err" id="e-phone"></div></div>
       <button class="btn block">Create account</button></form>`,
-    `Already have one? <a href="#/today">Sign in</a>`);
+    `Already have one? <a href="#/signin">Sign in</a>`);
     $('#signup').onsubmit = async (e) => {
       e.preventDefault();
       const f = e.target, b = { firstName: f.firstName.value.trim(), lastName: f.lastName.value.trim(), email: f.email.value.trim(), phone: f.phone.value.trim() };
@@ -126,18 +290,18 @@
     };
   }
   function forgotView() {
-    authShell('Reset your password', 'Enter your email and we send a link to choose a new one.', `<form id="forgot" class="stack" novalidate>${field('email', 'Email', 'email', 'autocomplete="email" inputmode="email" required')}<button class="btn block">Send the link</button></form>`, `<a href="#/today">Back to sign in</a>`);
+    authShell('Reset your password', 'Enter your email and we send a link to choose a new one.', `<form id="forgot" class="stack" novalidate>${field('email', 'Email', 'email', 'autocomplete="email" inputmode="email" required')}<button class="btn block">Send the link</button></form>`, `<a href="#/signin">Back to sign in</a>`);
     $('#forgot').onsubmit = async (e) => {
       e.preventDefault();
       const f = e.target, email = f.email.value.trim();
       if (formErrors(f, !validEmail(email) ? { email: 'Enter a valid email address.' } : {})) return;
-      try { const r = await api('/api/forgot', { method: 'POST', body: { email }, anon: true }); authShell('Check your inbox', esc(r.message), '', `<a href="#/today">Back to sign in</a>`); } catch (err) { formErrors(f, { email: err.message }); }
+      try { const r = await api('/api/forgot', { method: 'POST', body: { email }, anon: true }); authShell('Check your inbox', esc(r.message), '', `<a href="#/signin">Back to sign in</a>`); } catch (err) { formErrors(f, { email: err.message }); }
     };
   }
   async function resetView(token) {
     let info = { valid: false };
     try { info = await api(`/api/reset?token=${encodeURIComponent(token || '')}`, { anon: true }); } catch {}
-    if (!info.valid) return authShell('This link has expired', 'Links work once, for 24 hours. Ask for a fresh one.', `<a class="btn block" href="#/forgot">Send a new link</a>`, `<a href="#/today">Back to sign in</a>`);
+    if (!info.valid) return authShell('This link has expired', 'Links work once, for 24 hours. Ask for a fresh one.', `<a class="btn block" href="#/forgot">Send a new link</a>`, `<a href="#/signin">Back to sign in</a>`);
     authShell('Choose a password', `For <b>${esc(info.email)}</b>. At least 8 characters.`, `<form id="reset" class="stack" novalidate>
       ${field('pw', 'New password', 'password', 'autocomplete="new-password" minlength="8" required')}
       ${field('pw2', 'Type it again', 'password', 'autocomplete="new-password" required')}
@@ -147,9 +311,9 @@
       const f = e.target, pw = f.pw.value, pw2 = f.pw2.value;
       if (formErrors(f, { ...(pw.length < 8 ? { pw: 'Use at least 8 characters.' } : {}), ...(pw && pw2 !== pw ? { pw2: "The two passwords don't match." } : {}) })) return;
       try {
-        await api('/api/reset', { method: 'POST', body: { token, password: pw }, anon: true });
+        const rr = await api('/api/reset', { method: 'POST', body: { token, password: pw }, anon: true });
         await api('/api/login', { method: 'POST', body: { email: info.email, password: pw }, anon: true }).catch(() => {});
-        S.fresh = true; location.hash = '#/today'; await boot(); toast('Password saved. You are signed in.');
+        S.fresh = true; location.hash = rr.starter ? `#/s/${rr.starter}` : '#/today'; await boot(); toast(rr.starter ? 'You are in. The desk is reading your claim now.' : 'Password saved. You are signed in.');
       } catch (err) { formErrors(f, { pw: err.message }); }
     };
   }
@@ -347,7 +511,7 @@
       onText(text, final) {
         if (mode === 'build') { if (field) field.textContent = text ? `"${text}"` : 'Listening'; if (final && text) fillBuild(text); return; }
         if (field) { field.value = (before ? `${before} ` : '') + text; field.dispatchEvent(new Event('input', { bubbles: true })); }
-        if (final) { note(''); if (mode === 'describe' && text && S.me.claude) tidyClaim(field.value); }
+        if (final) { note(''); if (mode === 'describe' && text && S.me && S.me.claude) tidyClaim(field.value); if (mode === 'try' && text) { const f = $('#try'); if (f) f.requestSubmit(); } }
       },
       onError(msg) { note(''); toast(msg, true); },
     });
@@ -503,7 +667,7 @@
   const kinds = { market: 'Market', stock: 'Single stock', compare: 'Comparison', macro: 'Macro', crypto: 'Crypto', event: 'Event' };
   async function dashView(id, { keep } = {}) {
     const section = SECTIONS.some(([v]) => v === route()[2]) ? route()[2] : 'overview';
-    const actions = `<button class="icon-btn" data-act="fork" title="Make a copy with changes" aria-label="Fork">${I('copy', 19)}</button><button class="icon-btn" data-act="share" title="Copy link" aria-label="Copy link">${I('share-network', 19)}</button>`;
+    const actions = `<button class="icon-btn" data-act="fork" title="Make a copy with changes" aria-label="Fork">${I('copy', 19)}</button><button class="icon-btn" data-act="share" title="Share a public receipt" aria-label="Share a public receipt">${I('share-network', 19)}</button>`;
     if (!keep || !S.cur || S.cur.id !== id) shell('scenarios', backTop('#/scenarios', 'Scenarios', actions), `<div class="hero"><div class="sk sk-line" style="width:30%"></div><div class="sk sk-line" style="width:85%;height:22px"></div><div class="sk sk-big"></div></div><div class="sk sk-chart"></div>`);
     let sc;
     try { sc = await api(`/api/scenarios/${id}`); } catch (e) { $('main').innerHTML = `<div class="empty"><b>Can't open this scenario</b>${esc(e.message)}</div>`; return; }
@@ -548,6 +712,8 @@
       ${working ? liveHtml(sc, S.live[sc.id] || []) : ''}
       ${sc.status === 'error' ? `<div class="notice bad" style="margin-top:20px">The desk stopped: ${esc(sc.error || 'unknown error')} <button class="btn small quiet" data-act="run" style="margin-left:6px">Try again</button></div>` : ''}
       ${run || sc.backfill.length ? chartHtml(sc) : ''}
+      ${analogsHtml(sc, run)}
+      ${tripwiresHtml(sc)}
       ${run && run.reading && run.reading.added ? `<a class="evi-cta" href="#/s/${sc.id}/evidence">${I('newspaper', 20)}<span><b>${run.reading.added} new article${run.reading.added > 1 ? 's' : ''} today</b><small>${run.reading.for} support, ${run.reading.against} against, ${run.reading.context} context</small></span>${I('arrow-up-right', 16)}</a>` : sc.unread ? `<a class="evi-cta" href="#/s/${sc.id}/evidence">${I('newspaper', 20)}<span><b>${sc.unread} unread in the reading room</b><small>Articles for and against, sorted daily</small></span>${I('arrow-up-right', 16)}</a>` : ''}
       ${run && sc.status !== 'resolved' ? callHtml(sc, my) : ''}
       ${changesHtml(sc)}
@@ -559,7 +725,8 @@
     const run = sc.latest;
     if (!run) return '<div class="empty"><b>No reading yet</b>The desk is still working on the first one.</div>';
     return `${agentGrid(sc, run)}${factsHtml(run)}
-      ${run.judge.watch.length ? `<section class="block"><h2>What would change the call</h2><div class="panel flat">${run.judge.watch.map((w) => `<div class="watch"><div class="watch-top"><b>${esc(w.signal)}</b><span class="thr">${esc(w.threshold)}</span></div><p>${esc(w.why)}</p></div>`).join('')}</div></section>` : ''}
+      ${tripwiresHtml(sc, true)}
+      ${run.judge.watch.filter((w) => !w.check).length ? `<section class="block"><h2>Also worth watching</h2><div class="panel flat">${run.judge.watch.filter((w) => !w.check).map((w) => `<div class="watch"><div class="watch-top"><b>${esc(w.signal)}</b><span class="thr">${esc(w.threshold)}</span></div><p>${esc(w.why)}</p></div>`).join('')}</div></section>` : ''}
       <p class="foot">Prices from ${esc((run.sources || []).join(', ') || 'n/a')}. Sentiment by ${esc(run.models.sentiment || 'n/a')}${run.models.forecast ? `, forecast by ${esc(run.models.forecast)}` : ''}${run.models.judge ? `, judged by Claude ${esc(run.models.judge)}` : ''}.${run.errors && run.errors.length ? ` ${run.errors.length} source${run.errors.length > 1 ? 's were' : ' was'} unavailable.` : ''}</p>`;
   }
   const askSection = (sc) => `${askHtml(sc)}${sc.theme.length ? `<section class="block"><h2>Same theme</h2>${sc.theme.map(rowHtml).join('')}</section>` : ''}`;
@@ -614,7 +781,7 @@
       <section class="block"><h2>How this analyst works</h2><p class="method">${esc(METHOD[a.id] || '')}</p></section>`;
     drawAgentCharts(a, r.history);
   }
-  function agentViz(a) {
+  function agentViz(a, sc) {
     const box = (id, title, legend = '', note = '') => `<section class="block"><h2>${title}</h2><div id="${id}" class="pchart-wrap"></div>${legend ? `<div class="legend">${legend}</div>` : ''}${note ? `<p class="fine" style="margin-top:6px">${note}</p>` : ''}</section>`;
     let h = '';
     if (a.id === 'technical' && a.chart) {
@@ -637,6 +804,7 @@
     if (a.id === 'quant' && a.fan) {
       h += box('fan-chart', 'Where the paths end up', `<span><i class="key"></i>Median path</span><span><i class="sq" style="background:color-mix(in srgb,var(--series-1) 35%,transparent)"></i>Middle 50%</span><span><i class="sq" style="background:color-mix(in srgb,var(--series-1) 15%,transparent)"></i>90% of paths</span>${a.fan.level ? '<span><i class="key dash" style="border-top-color:var(--no)"></i>Your line</span>' : ''}`);
       if (a.fan.hist) h += box('hist-chart', 'Spread of outcomes at the deadline', '', a.fan.threshold !== null ? 'Colored bars are the outcomes past your line.' : '');
+      if (a.analogs) h += analogsHtml(sc, { analysts: [a] }, true);
       if (a.ladder && a.ladder.length > 2) h += ladderHtml({ analysts: [a] });
       if (a.forecast) h += `<section class="block"><h2>Chronos-Bolt forecast</h2><div class="tiles"><div class="tile"><b>Median path</b>${Chart.spark(a.forecast.median, { w: 240, h: 44, fill: false })}<small>${esc(a.forecast.model)}, ${a.forecast.horizon} trading days</small></div></div></section>`;
     }
@@ -750,6 +918,34 @@
     return `<section class="block"><h2>Your call</h2><div class="panel flat"><div class="slider-row"><input type="range" id="my-call" min="1" max="99" value="${my ?? (sc.latest ? sc.latest.probability : 50)}"><output class="num" id="my-call-v">${my ?? (sc.latest ? sc.latest.probability : 50)}%</output><button class="btn small" data-act="save-call">Save</button></div>
       <p class="fine" style="margin-top:8px">${my !== null ? `You said ${my}% on ${esc(fmtShort(sc.myCalls[sc.myCalls.length - 1].date))}. ` : ''}Your calls are scored against the outcome next to the desk's under You.</p></div></section>`;
   }
+  /** What would change the call, watched for you: armed lines with how far away they are, and the ones that tripped. */
+  function tripwiresHtml(sc, full = false) {
+    const ws = sc.tripwires || [];
+    if (!ws.length) return '';
+    const armed = ws.filter((w) => w.state === 'armed'), hit = ws.filter((w) => w.state === 'tripped').reverse();
+    const away = (w) => { if (!w.last) return ''; const g = (w.value - w.last.value) / Math.abs(w.last.value || 1); return `${Math.abs(g * 100) < 0.1 ? 'right at it' : `${Math.abs(g * 100).toFixed(Math.abs(g) < 0.1 ? 1 : 0)}% away`}`; };
+    const near = (w) => { if (!w.last) return 0; const g = Math.abs((w.value - w.last.value) / (w.last.value || 1)); return Math.max(4, Math.min(100, 100 - g * 400)); };
+    const what = (w) => w.kind === 'fred' ? (FRED_NAMES[w.id] || w.id) : w.id;
+    const row = (w) => `<div class="tw ${w.state}"><div class="tw-top"><span class="tw-dot"></span><b>${esc(w.label)}</b>${w.from === 'judge' ? '<span class="tw-by">judge</span>' : ''}</div>
+      <div class="tw-line"><span class="fine">${esc(what(w))} ${w.state === 'tripped' ? `hit ${fmtN(w.hit.value)} on ${esc(fmtShort(w.hit.date))}` : `now ${w.last ? fmtN(w.last.value) : '-'}, line ${w.op} ${fmtN(w.value)}`}</span>${w.state === 'armed' ? `<span class="tw-away num">${away(w)}</span>` : ''}</div>
+      ${w.state === 'armed' ? `<div class="tw-bar"><span style="width:${near(w)}%"></span></div>` : ''}${full && w.why ? `<p class="tw-why">${esc(w.why)}</p>` : ''}</div>`;
+    return `<section class="block tripwires"><div class="chart-head"><h2>${I('crosshair', 18)} Tripwires</h2><span class="fine">${armed.length} armed</span></div>
+      <p class="fine" style="margin:-6px 0 12px">What would change the call, watched for you on live data every couple of hours. When one trips you get an email and the desk re-reads the scenario at once.</p>
+      ${hit.length ? `<div class="tw-list">${hit.slice(0, full ? 6 : 2).map(row).join('')}</div>` : ''}
+      <div class="tw-list">${armed.map(row).join('') || '<p class="muted">Nothing armed right now.</p>'}</div></section>`;
+  }
+  const FRED_NAMES = { VIXCLS: 'VIX', BAMLH0A0HYM2: 'High-yield spread', T10Y2Y: '10y minus 2y', T10Y3M: '10y minus 3m', UNRATE: 'Unemployment', ICSA: 'Jobless claims', DGS10: '10-year yield', FEDFUNDS: 'Fed funds', NFCI: 'Financial conditions', DCOILWTICO: 'WTI oil', SAHMREALTIME: 'Sahm rule' };
+  /** The past days that looked most like today, and how often the claim came true after them. */
+  function analogsHtml(sc, run, full = false) {
+    const q = run && (run.analysts || []).find((a) => a.id === 'quant'); const g = q && q.analogs;
+    if (!g) return '';
+    const sym = sc.thesis ? sc.thesis.primary : '';
+    return `<section class="block analogs"><h2>Look-alike setups</h2><p class="fine" style="margin:-6px 0 12px">The ${g.k} days since ${esc(g.since.slice(0, 4))} when ${esc(sym)}'s trend, distance from its high and volatility looked most like today, and what followed over the next ${g.horizonDays} trading days.</p>
+      <div class="an-row"><div class="an-big"><span class="num">${g.hits}<small>/${g.k}</small></span><span>came true</span></div><div class="adots" role="img" aria-label="${g.hits} of ${g.k} came true">${(g.picks || Array.from({ length: g.k }, (_, i) => ({ hit: i < g.hits }))).map((x) => `<span class="adot${x.hit ? ' hit' : ''}"${x.date ? ` title="${esc(fmtDay(x.date))}: ${pctS(x.fwd)}${x.hit ? ', came true' : ''}"` : ''}></span>`).join('')}</div></div>
+      <div class="an-stats"><div><small>Median move after</small><b class="num">${pctS(g.medianFwd)}</b></div><div><small>Worst</small><b class="num">${pctS(g.worst)}</b></div><div><small>Best</small><b class="num">${pctS(g.best)}</b></div></div>
+      ${full ? `<table class="hist an-table"><thead><tr><th>Day</th><th class="r">Match</th><th class="r">Move after</th><th class="r">Came true</th></tr></thead><tbody>${g.picks.map((x) => `<tr><td>${esc(fmtDay(x.date))}</td><td class="r num">${x.similarity}%</td><td class="r"><span class="delta ${x.fwd > 0 ? 'up' : 'down'}">${pctS(x.fwd)}</span></td><td class="r">${x.hit ? `<span class="tag yes">Yes</span>` : '<span class="muted">No</span>'}</td></tr>`).join('')}</tbody></table>` : sc.id ? `<a class="link-row" href="#/s/${sc.id}/desk/quant">See every look-alike day ${I('arrow-up-right', 14)}</a>` : ''}
+      <p class="fine" style="margin-top:8px">Computed on ${esc(sym)}'s real daily closes, not estimated. A chatbot can describe history; this counts it.</p></section>`;
+  }
   function ladderHtml(run) {
     const q = run.analysts.find((a) => a.id === 'quant');
     if (!q || !q.ladder || q.ladder.length < 3) return '';
@@ -837,7 +1033,11 @@
     const a = sc.alerts || {};
     const sw = (act, on, label, sub = '') => `<label class="toggle"><span>${label}${sub ? `<small class="fine" style="display:block">${sub}</small>` : ''}</span><span class="switch"><input type="checkbox" data-act="${act}" ${on ? 'checked' : ''}><span></span></span></label>`;
     const depth = sc.depth || 'deep';
-    return `<section class="block"><h2>Run options and alerts</h2><div class="panel flat">
+    const pubUrl = sc.public ? `${location.origin}/p/${sc.publicId}` : '';
+    return `${sc.thesis ? `<section class="block"><h2>Public receipt</h2><div class="panel flat">
+      ${sw('public', sc.public, 'Share a public page', 'Anyone with the link sees the claim, every dated reading (fingerprinted so none can be quietly changed), the call, the tripwires and the look-alikes. Shows your first name; never your notes, facts or email.')}
+      ${sc.public ? `<div class="pub-link"><input readonly value="${esc(pubUrl)}" aria-label="Public link"><button class="btn small" data-act="copy-public">${I('copy', 14)}Copy</button><a class="btn small quiet" href="${esc(pubUrl)}" target="_blank" rel="noopener">Open</a></div>` : ''}
+    </div></section>` : ''}<section class="block"><h2>Run options and alerts</h2><div class="panel flat">
       ${S.me.claude ? `<div class="toggle"><span>How deep<small class="fine" style="display:block">${esc(DEPTHS[depth][1])}</small></span><div class="seg" role="radiogroup">${Object.entries(DEPTHS).map(([v, [t]]) => `<button role="radio" aria-checked="${depth === v}" data-act="set-depth" data-v="${v}">${t}</button>`).join('')}</div></div>` : ''}
       <label class="toggle"><span>How often</span><select data-act="schedule" style="width:auto;max-width:56%">${Object.entries(FREQS).map(([v, t]) => `<option value="${v}" ${(sc.schedule || 'daily') === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
       ${sw('alert', a.email, 'Email alerts')}
@@ -845,6 +1045,7 @@
       <label class="toggle"><span>When it crosses<small class="fine" style="display:block">Your own line, e.g. 50%</small></span><input data-act="cross" inputmode="numeric" maxlength="2" style="width:84px;text-align:right" value="${a.cross ?? ''}" placeholder="off"></label>
       ${sw('flip', a.flip !== false, 'When the verdict changes')}
       ${sw('settle', a.settle !== false, 'When it settles')}
+      ${sw('tripwire', a.tripwire !== false, 'When a tripwire is hit')}
       <div class="btns"><button class="btn small" data-act="run" ${['running', 'queued'].includes(sc.status) ? 'disabled' : ''}>${I('arrow-clockwise', 15)}Run now</button><button class="btn small quiet" data-act="fork">${I('copy', 15)}Fork</button><button class="btn small quiet" data-act="archive">${I('archive', 15)}${sc.archived ? 'Unarchive' : 'Archive'}</button><button class="btn small danger" data-act="delete">${I('trash', 15)}Delete</button></div></div></section>`;
   }
   function drawChart() {
@@ -920,6 +1121,9 @@
       busy(t, true, 'Starting');
       try { const r = await api('/api/scenarios', { method: 'POST', body }); toast('Testing it now.'); location.hash = `#/s/${r.id}`; } catch (err) { busy(t, false); t.innerHTML = `${I('lightning', 14)}Test it`; toast(err.message, true); }
     }
+    else if (act === 'lp-ex' || act === 'lp-trend') { const i = $('#t-claim'); if (i) { i.value = v; window.scrollTo({ top: 0, behavior: 'smooth' }); runTry(v); } }
+    else if (act === 'lp-top') { window.scrollTo({ top: 0, behavior: 'smooth' }); setTimeout(() => $('#t-claim') && $('#t-claim').focus(), 350); }
+    else if (act === 'lp-again') { if (S.lp.result) drawTry(S.lp.result); }
     else if (act === 'mic') toggleMic(t);
     else if (act === 'opt-depth') { document.querySelectorAll('[data-act="opt-depth"]').forEach((b) => b.setAttribute('aria-checked', String(b === t))); $('#depth-help').textContent = DEPTHS[v][1]; }
     else if (act === 'resend') { try { const r = await api('/api/forgot', { method: 'POST', body: { email: v }, anon: true }); toast(r.message); } catch (err) { toast(err.message, true); } }
@@ -950,7 +1154,18 @@
         try { await api('/api/prefs', { method: 'POST', body: { watchlist: $('#f-watch').value.split(/[\s,]+/).filter(Boolean) } }); toast('Watchlist saved.'); marketsView(); } catch (err) { toast(err.message, true); }
       };
     }
-    else if (act === 'share') { try { await navigator.clipboard.writeText(location.href); toast('Link copied. Only you can open it.'); } catch { toast("Couldn't copy the link.", true); } }
+    else if (act === 'share' || act === 'copy-public') {
+      let sc = S.cur;
+      if (!sc.public) {
+        if (!sc.thesis) return toast('Share it once the desk has framed the claim.', true);
+        if (!confirm('Make a public page for this scenario? Anyone with the link sees the claim, the dated readings, the call and your first name. Never your notes or email. You can turn it off in Settings.')) return;
+        try { await api(`/api/scenarios/${sc.id}`, { method: 'PATCH', body: { public: true } }); sc = S.cur = await api(`/api/scenarios/${sc.id}`); } catch (err) { return toast(err.message, true); }
+      }
+      const url = `${location.origin}/p/${sc.publicId}`;
+      if (navigator.share && act === 'share' && matchMedia('(pointer: coarse)').matches) { navigator.share({ title: sc.title, text: `${sc.title}: ${sc.probability}% on Run Scenario`, url }).catch(() => {}); return; }
+      try { await navigator.clipboard.writeText(url); toast('Public link copied.'); } catch { toast(url); }
+      if (route()[2] === 'settings') dashView(sc.id, { keep: true });
+    }
     else if (act === 'recheck') { $('#src').innerHTML = skLines(2); await api('/api/status?fresh=1').catch(() => {}); sourcesView(); }
   });
   // Opening an article marks it read (the link still opens normally).
@@ -972,6 +1187,8 @@
     if (act === 'move') return patchCur({ alerts: { move: Number(t.value) } });
     if (act === 'flip') return patchCur({ alerts: { flip: t.checked } });
     if (act === 'settle') return patchCur({ alerts: { settle: t.checked } });
+    if (act === 'tripwire') return patchCur({ alerts: { tripwire: t.checked } });
+    if (act === 'public') { await patchCur({ public: t.checked }, t.checked ? 'Public page is on. Copy the link below.' : 'Public page is off. The link stops working.'); return dashView(S.cur.id, { keep: true }); }
     if (act === 'cross') { const v = t.value.trim(); if (v && !(Number(v) >= 1 && Number(v) <= 99)) return toast('Use a number from 1 to 99.', true); return patchCur({ alerts: { cross: v ? Number(v) : null, email: true } }, v ? `You'll get an email if it crosses ${v}%.` : 'Line removed.'); }
   });
   document.addEventListener('submit', async (e) => {

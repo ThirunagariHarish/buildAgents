@@ -20,8 +20,10 @@ const models = require('./lib/models');
 const insights = require('./lib/insights');
 const reading = require('./lib/reading');
 const voice = require('./lib/voice');
+const quant = require('./lib/quant');
 const discover = require('./lib/discover');
 const trends = require('./lib/trends');
+const tripwires = require('./lib/tripwires');
 const os = require('os');
 
 const { PORT, BASE_URL } = config;
@@ -92,6 +94,20 @@ function crossSiteWrite(req) {
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2' };
 const VERSION = (() => { const h = crypto.createHash('sha256'); for (const f of fs.readdirSync(PUBLIC_DIR)) { try { h.update(fs.readFileSync(path.join(PUBLIC_DIR, f))); } catch {} } return h.digest('hex').slice(0, 12); })();
 function serveStatic(req, res, p) {
+  // A shared scenario: the app's page, with a title and description link previews can show.
+  const pp = p.match(/^\/p\/([A-Za-z0-9_-]{8,16})$/);
+  if (pp) {
+    const sc = publicScenario(pp[1]);
+    let html = fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8').replace(/(src|href)="\/?([a-zA-Z-]+\.(?:js|css))"/g, `$1="/$2?v=${VERSION}"`);
+    if (sc) {
+      const last = (sc.history || []).slice(-1)[0];
+      const t = `${sc.thesis.title}${last ? `: ${last.p}%` : ''}`;
+      const dsc = `${sc.latest ? `${sc.latest.verdict}. ${sc.latest.call} ` : ''}Tested against real data every day on Run Scenario.`;
+      html = html.replace(/<title>[^<]*<\/title>/, `<title>${escHtml(t)} | Run Scenario</title><meta property="og:title" content="${escHtml(t)}"><meta property="og:description" content="${escHtml(dsc)}"><meta property="og:type" content="article"><meta property="og:site_name" content="Run Scenario"><meta property="og:image" content="${BASE_URL}/icon-512.png"><meta name="twitter:card" content="summary">`).replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${escHtml(dsc)}">`);
+    }
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+    return res.end(html);
+  }
   const rel = p === '/' ? '/index.html' : p;
   const file = path.join(PUBLIC_DIR, path.normalize(rel));
   if (!file.startsWith(PUBLIC_DIR) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
@@ -101,7 +117,7 @@ function serveStatic(req, res, p) {
   }
   const ext = path.extname(file);
   res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream', 'Cache-Control': ext === '.html' ? 'no-store' : 'no-cache', ...(rel === '/sw.js' ? { 'Service-Worker-Allowed': '/' } : {}) });
-  if (ext === '.html') return res.end(fs.readFileSync(file, 'utf8').replace(/(src|href)="([a-z-]+\.(?:js|css))"/g, `$1="$2?v=${VERSION}"`));
+  if (ext === '.html') return res.end(fs.readFileSync(file, 'utf8').replace(/(src|href)="\/?([a-zA-Z-]+\.(?:js|css))"/g, `$1="/$2?v=${VERSION}"`));
   fs.createReadStream(file).pipe(res);
 }
 
@@ -150,7 +166,7 @@ let batchDone = false;
  * Email the owner when a run did something they asked to hear about: a big
  * move, a verdict flip, crossing their level, or the scenario settling.
  */
-async function alert({ sc, run, prev }, reason) {
+async function alert({ sc, run, prev, tripped }, reason) {
   const a = sc.alerts || {};
   if (!a.email) return;
   const why = [];
@@ -161,6 +177,8 @@ async function alert({ sc, run, prev }, reason) {
     if (a.flip !== false && prev.verdict !== run.verdict) why.push(`the verdict changed from ${prev.verdict} to ${run.verdict}`);
     if (Number.isFinite(a.cross) && (prev.probability - a.cross) * (run.probability - a.cross) < 0) why.push(`it crossed your ${a.cross}% line`);
   }
+  const trips = tripped || [];
+  if (trips.length && a.tripwire !== false) why.push(`${trips.length > 1 ? `${trips.length} tripwires were hit` : 'a tripwire was hit'}: ${trips.map((w) => w.label).join('; ')}`);
   if (!why.length) return;
   const u = auth.getUser(sc.ownerId);
   if (!u) return;
@@ -242,8 +260,32 @@ function trendsDue(now = new Date()) {
   const dl = discover.latest();
   return now.getUTCHours() >= 13 && !trends.load(now.toISOString().slice(0, 10)) && dl && Date.now() - dl.at < 10 * 3600 * 1000;
 }
+/**
+ * Between runs, every couple of hours: check each scenario's armed tripwires
+ * against the latest prices and macro data. A trip emails the owner and has
+ * the desk re-read the scenario (at most every 6 hours).
+ */
+let tripCheckAt = 0;
+async function checkTripwires() {
+  for (const sc of store.list()) {
+    if (sc.archived || sc.status === 'resolved' || !(sc.tripwires || []).some((w) => w.state === 'armed')) continue;
+    const r = await tripwires.check(sc.tripwires).catch(() => null);
+    if (!r) continue;
+    store.patch(sc.id, { tripwires: r.wires });
+    if (!r.tripped.length) continue;
+    emit({ event: 'scenario', id: sc.id });
+    const rerun = !sc.lastTripRun || Date.now() - sc.lastTripRun > 6 * 3600 * 1000;
+    if (rerun) { store.patch(sc.id, { lastTripRun: Date.now() }); enqueue(sc.id, 'tripwire'); }
+    const u = auth.getUser(sc.ownerId);
+    if (!u || !(sc.alerts || {}).email || (sc.alerts || {}).tripwire === false) continue;
+    const lines = [sc.thesis.title, '', ...r.tripped.map((w) => `Tripwire hit: ${w.label}. ${w.kind === 'fred' ? (data.FRED_INFO[w.id] || w.id) : w.id} is at ${tripwires.fmt(w.hit.value)} (line ${w.op} ${tripwires.fmt(w.value)}, ${w.hit.date}). ${w.why}`), '', rerun ? 'The desk is re-reading the scenario now; the new reading follows.' : 'The desk re-reads it on its next run.', '', `Open it: ${BASE_URL}/#/s/${sc.id}`, '', 'Research, not financial advice. Turn tripwire emails off in the scenario\'s settings.'];
+    mail.send({ to: u.email, subject: `Tripwire: ${r.tripped[0].label} (${sc.thesis.title})`, text: lines.join('\n') }).catch(() => {});
+  }
+}
+
 function tick() {
   const now = new Date();
+  if (Date.now() - tripCheckAt > 2 * 3600 * 1000) { tripCheckAt = Date.now(); checkTripwires().catch((e) => console.error(`tripwires: ${e.message}`)); }
   if (trendsDue(now) && !discovering) buildTrends();
   const dl = discover.latest();
   if (!dl || (Date.now() - dl.at > 6 * 3600 * 1000 && [12, 13, 21, 22].includes(now.getUTCHours()))) refreshDiscover();
@@ -257,6 +299,59 @@ function tick() {
 }
 
 // ---- views ---------------------------------------------------------------------
+/** Read a typed claim with the rule parser, then price it: Monte Carlo, base rate and look-alike setups. */
+async function tryClaim(b) {
+  let build = b.build && typeof b.build === 'object' ? { ...b.build } : null;
+  const text = String(b.text || '').trim().slice(0, 300);
+  if (!build) {
+    if (text.length < 4) throw Object.assign(new Error('Type a claim, like "Nvidia falls 30% by June".'), { status: 400 });
+    const norm = text.replace(/\bdoubles?\b/i, 'rises 100%').replace(/\bhalves\b|\bhalf its value\b/i, 'falls 50%').replace(/\b(crash(es)?|collapses?)\b(?!.*\d+\s*%)/i, 'falls 20%');
+    build = voice.parseBuild(norm);
+    if (!build.date && /year[- ]?end|end of (the )?year|this year/i.test(text)) { const y = new Date().getUTCFullYear(); build.date = `${Date.now() > Date.parse(`${y}-11-30`) ? y + 1 : y}-12-31`; }
+  }
+  if (!build.symbol || !build.move) throw Object.assign(new Error(build.symbol ? `Got ${build.symbol}. Now say the move: "falls 20%", "above 300", "beats the S&P 500".` : 'Name the asset and the move, like "Apple falls 20% by June" or "Bitcoin above 150k by 2027".'), { status: 422, guess: build });
+  if (!build.date) build.date = new Date(Date.now() + 182 * 864e5).toISOString().slice(0, 10);
+  const th = desk.buildThesis(build);
+  if (th.target.type === 'none') throw Object.assign(new Error('That one needs the full desk. Try a price move, like "falls 20%" or "above 300".'), { status: 422, guess: build });
+  const H = quant.tradingDaysUntil(th.horizonDate);
+  if (H < 2) throw Object.assign(new Error('Pick a date at least a few days out.'), { status: 422, guess: build });
+  const s = await data.prices(th.primary).catch(() => null);
+  if (!s) throw Object.assign(new Error(`No price history for ${th.primary}. Try a well-known ticker.`), { status: 422, guess: build });
+  const vs = th.target.vs ? await data.prices(th.target.vs).catch(() => null) : null;
+  const sim = quant.simulate({ series: s, vsSeries: vs, target: th.target, horizonDays: H, seed: `try:${th.proposition}:${new Date().toISOString().slice(0, 10)}`, paths: 3000 });
+  if (!sim) throw Object.assign(new Error('Not enough history to simulate that.'), { status: 422, guess: build });
+  const an = th.target.type === 'outperform' ? null : quant.analogs({ series: s, target: th.target, horizonDays: H });
+  const hist = quant.historicalRate({ series: s, target: th.target, horizonDays: H });
+  const c = s.close;
+  return {
+    build: { symbol: build.symbol, move: build.move, value: build.value, vs: build.vs || '', date: th.horizonDate },
+    title: th.title, proposition: th.proposition, horizonDate: th.horizonDate, symbol: th.primary, name: s.name || th.primary,
+    p: Math.round(sim.probability * 1000) / 10, paths: sim.paths, days: H, last: c[c.length - 1], spark: c.slice(-130), asOf: s.dates[s.dates.length - 1],
+    range: { p25: sim.quantiles.p25, p75: sim.quantiles.p75 },
+    analogs: an ? { k: an.k, hits: an.hits, rate: an.rate, medianFwd: an.medianFwd, since: an.since, horizonDays: an.horizonDays } : null,
+    base: hist ? { rate: hist.rate, years: hist.years } : null,
+  };
+}
+
+/** A scenario its owner chose to share, by its public id. */
+function publicScenario(pid) { return store.list().find((x) => x.public && x.publicId === pid && x.thesis) || null; }
+/** What a public page shows: the claim, every dated reading (fingerprinted), the call, the tripwires and the look-alikes. Nothing about the owner but a first name. */
+function publicView(sc) {
+  const run = sc.latest ? store.loadRun(sc.id, sc.latest.id) : null;
+  const q = run && (run.analysts || []).find((a) => a.id === 'quant');
+  const owner = auth.getUser(sc.ownerId);
+  const th = sc.thesis;
+  return {
+    id: sc.publicId, title: th.title, proposition: th.proposition, resolution: th.resolution, horizonDate: th.horizonDate, kind: th.kind, primary: th.primary,
+    createdAt: sc.createdAt, sealedFrom: new Date(sc.createdAt).toISOString().slice(0, 10), by: owner ? owner.firstName : null,
+    history: (sc.history || []).map((h) => ({ date: h.date, p: h.p, hash: h.hash || null })), backfill: sc.backfill || [],
+    latest: run ? { date: run.date, probability: run.probability, verdict: run.verdict, call: run.call, confidence: run.judge.confidence, bull: (run.judge.bull || []).slice(0, 3), bear: (run.judge.bear || []).slice(0, 3), claude: !!run.claude, analysts: (run.analysts || []).length } : null,
+    resolved: sc.resolved || null,
+    analogs: q && q.analogs ? (({ picks, now, ...rest }) => rest)(q.analogs) : null,
+    tripwires: (sc.tripwires || []).map((w) => ({ label: w.label, state: w.state, kind: w.kind, id: w.id, op: w.op, value: w.value, last: w.last || null, hit: w.hit || null })),
+  };
+}
+const escHtml = (x) => String(x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 function card(sc, user = null) {
   const h = sc.history || [];
   const last = h[h.length - 1], prev = h[h.length - 2];
@@ -268,6 +363,7 @@ function card(sc, user = null) {
     archived: !!sc.archived, schedule: sc.schedule, depth: sc.depth || 'deep', myCall: (sc.myCalls || []).length ? sc.myCalls[sc.myCalls.length - 1].p : null,
     kind: sc.thesis ? sc.thesis.kind : null, primary: sc.thesis ? sc.thesis.primary : null,
     unread: user ? reading.unreadCount(sc.id, user.id) : 0,
+    public: !!sc.public, publicId: sc.public ? sc.publicId : null,
   };
 }
 function fullView(sc, user) {
@@ -280,7 +376,7 @@ function fullView(sc, user) {
   }
   const runs = (sc.history || []).map((h) => ({ date: h.date, p: h.p, runId: h.runId }));
   const theme = store.list().filter((x) => x.themeId === sc.themeId && x.id !== sc.id).map(card);
-  return { ...card(sc, user), thesis: sc.thesis, facts: sc.facts, history: sc.history, backfill: sc.backfill, questions: sc.questions, schedule: sc.schedule, alerts: sc.alerts, depth: sc.depth || 'deep', myCalls: sc.myCalls || [], resolved: sc.resolved || null, latest, sinceVisit, runs, theme, progress: desk.progress(sc.id), queued: queue.some((q) => q.id === sc.id) };
+  return { ...card(sc, user), thesis: sc.thesis, facts: sc.facts, history: sc.history, backfill: sc.backfill, questions: sc.questions, schedule: sc.schedule, alerts: sc.alerts, depth: sc.depth || 'deep', myCalls: sc.myCalls || [], resolved: sc.resolved || null, tripwires: sc.tripwires || [], latest, sinceVisit, runs, theme, progress: desk.progress(sc.id), queued: queue.some((q) => q.id === sc.id) };
 }
 const mine = (u, sc) => !!sc && (sc.ownerId === u.id || u.role === 'admin');
 
@@ -293,7 +389,7 @@ function runOptions(b, user, sc = null) {
   if (b.alerts && typeof b.alerts === 'object') {
     const a = b.alerts, cur = (sc && sc.alerts) || {};
     const cross = a.cross === null || a.cross === '' ? null : Number.isFinite(Number(a.cross)) ? Math.max(1, Math.min(99, Math.round(Number(a.cross)))) : cur.cross ?? null;
-    f.alerts = { email: a.email !== undefined ? !!a.email : cur.email !== false, move: Math.max(1, Math.min(50, Number(a.move ?? cur.move) || 5)), flip: a.flip !== undefined ? !!a.flip : cur.flip !== false, settle: a.settle !== undefined ? !!a.settle : cur.settle !== false, cross };
+    f.alerts = { email: a.email !== undefined ? !!a.email : cur.email !== false, move: Math.max(1, Math.min(50, Number(a.move ?? cur.move) || 5)), flip: a.flip !== undefined ? !!a.flip : cur.flip !== false, settle: a.settle !== undefined ? !!a.settle : cur.settle !== false, cross, tripwire: a.tripwire !== undefined ? !!a.tripwire : cur.tripwire !== false };
   }
   return f;
 }
@@ -334,9 +430,15 @@ const server = http.createServer(async (req, res) => {
       const b = await readBody(req).catch(() => ({}));
       if (!config.OPEN_SIGNUP) return json(res, 403, { error: 'Sign-up is closed right now.' });
       try {
-        const { user: nu, duplicate, token } = auth.signup({ ...b, ip });
+        let starter = null;
+        if (b.starter && typeof b.starter === 'object') {
+          const st = b.starter;
+          const clean = { symbol: String(st.symbol || '').slice(0, 15), move: String(st.move || '').slice(0, 12), value: Number(st.value) || 0, vs: String(st.vs || '').slice(0, 15), date: String(st.date || '').slice(0, 10) };
+          try { const th = desk.buildThesis(clean); starter = { ...clean, proposition: th.proposition }; } catch { starter = null; }
+        }
+        const { user: nu, duplicate, token } = auth.signup({ ...b, ip, starter });
         if (!duplicate && token) {
-          mail.send({ to: nu.email, subject: 'Confirm your email for Run Scenario', text: `Hi ${nu.firstName},\n\nConfirm your email and choose a password with this link (one use, 24 hours):\n\n${BASE_URL}/#/reset/${token}\n\nIf you didn't sign up, ignore this email and nothing happens.\n` }).catch(() => {});
+          mail.send({ to: nu.email, subject: starter ? 'Confirm your email to start watching your claim' : 'Confirm your email for Run Scenario', text: `Hi ${nu.firstName},\n\n${starter ? `Your claim is ready to watch:\n\n  "${starter.proposition}"\n\nConfirm your email and choose a password with this link, and the desk starts on it straight away` : 'Confirm your email and choose a password with this link'} (one use, 24 hours):\n\n${BASE_URL}/#/reset/${token}\n\nIf you didn't sign up, ignore this email and nothing happens.\n` }).catch(() => {});
           for (const ad of auth.admins().filter((a) => a.primary)) mail.send({ to: ad.email, subject: `New Run Scenario sign-up: ${nu.firstName} ${nu.lastName}`, text: `${nu.firstName} ${nu.lastName} (${nu.email}) signed up. They can use the free desk once they confirm their email. To give them the Claude desk, open ${BASE_URL}/#/people\n` }).catch(() => {});
         } else if (duplicate) {
           // Same reply either way; the inbox owner gets a sign-in or reset link.
@@ -358,7 +460,38 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/reset' && req.method === 'POST') {
       const b = await readBody(req).catch(() => ({}));
       if (auth.limited(`reset:ip:${ip}`, 10, 3600 * 1000)) return json(res, 429, { error: 'Too many attempts.' });
-      try { const u = auth.resetPassword({ token: b.token, password: b.password }); return json(res, 200, { ok: true, email: u.email }); } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+      try {
+        const u = auth.resetPassword({ token: b.token, password: b.password });
+        // The claim they tested before signing up becomes their first scenario.
+        let starterId = null;
+        const st = allowed(u) ? auth.takeStarter(u.id) : null;
+        if (st) {
+          try {
+            const th = desk.buildThesis(st);
+            const sc = store.create({ ownerId: u.id, claim: th.proposition });
+            store.patch(sc.id, { thesis: th, ...runOptions({}, u) });
+            enqueue(sc.id, 'new');
+            starterId = sc.id;
+          } catch (e) { console.error(`starter for ${u.id}: ${e.message}`); }
+        }
+        return json(res, 200, { ok: true, email: u.email, starter: starterId });
+      } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+    }
+    // The front page: test a claim before having an account. Data desk only (never Claude), rate-limited.
+    if (p === '/api/try' && req.method === 'POST') {
+      const b = await readBody(req).catch(() => ({}));
+      if (auth.limited(`try:${ip}`, 30, 3600 * 1000)) return json(res, 429, { error: 'That\'s a lot of tests for one hour. Create an account to keep going.' });
+      try { return json(res, 200, await tryClaim(b)); } catch (e) { return json(res, e.status || 500, { error: e.status ? e.message : 'Could not test that claim right now.', ...(e.guess ? { guess: e.guess } : {}) }); }
+    }
+    if (p === '/api/public-trends' && req.method === 'GET') {
+      const day = trends.days(1)[0];
+      return json(res, 200, { date: day ? day.date : null, trends: day ? day.trends.map((t) => ({ title: t.title, category: t.category, symbol: t.market ? t.market.symbol : null, d1: t.market ? t.market.d1 : null, spark: t.market ? t.market.spark.slice(-40) : null, claim: t.claim, build: t.build || null, p: t.quick ? t.quick.p : null })) : [] });
+    }
+    const pub = p.match(/^\/api\/public\/([A-Za-z0-9_-]{8,16})$/);
+    if (pub && req.method === 'GET') {
+      if (auth.limited(`public:${ip}`, 120, 3600 * 1000)) return json(res, 429, { error: 'Too many requests.' });
+      const sc = publicScenario(pub[1]);
+      return sc ? json(res, 200, publicView(sc)) : json(res, 404, { error: 'This page is private or no longer shared.' });
     }
     if (!p.startsWith('/api/')) return serveStatic(req, res, p);
 
@@ -489,6 +622,11 @@ async function api(req, res, p, url, user) {
     const b = await readBody(req);
     const f = runOptions(b, user, sc);
     if (typeof b.archived === 'boolean') f.archived = b.archived;
+    if (typeof b.public === 'boolean' && sc.thesis) {
+      f.public = b.public;
+      if (b.public && !sc.publicId) f.publicId = crypto.randomBytes(8).toString('base64url');
+      if (b.public) f.history = desk.sealHistory((sc.history || []).map((h) => ({ ...h })), sc.thesis, sc.createdAt);
+    }
     return json(res, 200, card(store.patch(sc.id, f)));
   }
   if (sub === '/call' && req.method === 'POST') {
