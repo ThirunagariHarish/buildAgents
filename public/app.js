@@ -19,7 +19,7 @@
     const r = await fetch(path, { method: opts.method || 'GET', headers: opts.body ? { 'Content-Type': 'application/json' } : {}, body: opts.body ? JSON.stringify(opts.body) : undefined, credentials: 'same-origin' });
     const j = await r.json().catch(() => ({}));
     if (r.status === 401 && !opts.anon) { S.me = null; render(); throw new Error(j.error || 'Sign in to continue.'); }
-    if (!r.ok) throw new Error(j.error || `Request failed (${r.status}).`);
+    if (!r.ok) throw Object.assign(new Error(j.error || `Request failed (${r.status}).`), { data: j, status: r.status });
     return j;
   }
   function toast(msg, bad) {
@@ -180,8 +180,9 @@
       if (formErrors(f, { ...(!first ? { wfirst: 'Add your first name.' } : {}), ...(!validEmail(email) ? { wemail: 'Enter a valid email address.' } : {}) })) return;
       const b = f.querySelector('.btn'); busy(b, true, 'Starting');
       try {
-        await api('/api/signup', { method: 'POST', body: { firstName: first, email, starter: j.build }, anon: true });
-        $('#lr-watch').innerHTML = `<div class="lr-sent"><span class="lr-mail">${I('check', 22)}</span><div><h3>Check your inbox</h3><p>We sent a link to <b>${esc(email)}</b>. Open it, choose a password, and the desk starts on <b>${esc(j.title)}</b> straight away.</p><p class="fine">Nothing there in a minute? Check Spam. <button type="button" class="link" data-act="lp-again">Use a different email</button></p></div></div>`;
+        let warn = '';
+        try { await api('/api/signup', { method: 'POST', body: { firstName: first, email, starter: j.build }, anon: true }); } catch (err) { if (!(err.data && err.data.saved)) throw err; warn = err.message; }
+        $('#lr-watch').innerHTML = `<div class="lr-sent"><span class="lr-mail">${I('check', 22)}</span><div><h3>${warn ? 'Almost there' : 'Check your inbox'}</h3><p>${warn ? 'Your claim is saved with your account.' : `We sent a link to <b>${esc(email)}</b>. Open it, choose a password, and the desk starts on <b>${esc(j.title)}</b> straight away.`}</p>${inboxHelp(email, warn)}<p class="fine"><button type="button" class="link" data-act="lp-again">Use a different email</button></p></div></div>`;
       } catch (err) { busy(b, false, 'Start watching'); formErrors(f, /email/i.test(err.message) ? { wemail: err.message } : { wfirst: err.message }); }
     };
   }
@@ -271,6 +272,8 @@
       catch (err) { busy(btn, false, 'Sign in'); $('#login-note').innerHTML = `<div class="notice bad">${esc(err.message)}${/link we emailed/.test(err.message) ? ` <button type="button" class="link" data-act="resend" data-v="${esc(email)}">Send the link again</button>` : ''}</div>`; }
     };
   }
+  /** After an email is sent: where to look, and a way to send it again (earlier links keep working). */
+  const inboxHelp = (email, warn = '') => `${warn ? `<div class="notice bad" style="margin-bottom:12px">${esc(warn)}</div>` : ''}<div class="inbox-help"><p class="fine">Nothing after a couple of minutes? Look in <b>Spam</b> and <b>Promotions</b>, and search your inbox for "Run Scenario". Links work for 24 hours, and asking again doesn't cancel the first one.</p><button type="button" class="btn small quiet" data-act="resend" data-v="${esc(email)}">${I('arrow-clockwise', 14)}Send it again</button></div>`;
   function signupView() {
     authShell('Create your account', 'We email you a link to confirm your address and choose a password.', `<form id="signup" class="stack" novalidate>
       <div class="row2">${field('firstName', 'First name', 'text', 'autocomplete="given-name" required')}${field('lastName', 'Last name', 'text', 'autocomplete="family-name" required')}</div>
@@ -285,8 +288,10 @@
       const btn = f.querySelector('.btn'); busy(btn, true, 'Creating');
       try {
         const r = await api('/api/signup', { method: 'POST', body: b, anon: true });
-        authShell('Check your inbox', esc(r.message), `<div class="notice">${I('check', 16)} Sent to <b>${esc(b.email)}</b>. Open the link on this device to set your password.</div>`, `Wrong address? <a href="#/signup">Start again</a>`);
-      } catch (err) { busy(btn, false, 'Create account'); formErrors(f, /email/i.test(err.message) ? { email: err.message } : /phone/i.test(err.message) ? { phone: err.message } : { firstName: err.message }); }
+        authShell('Check your inbox', esc(r.message), `<div class="notice">${I('check', 16)} Sent to <b>${esc(b.email)}</b>. Open the link to set your password.</div>${inboxHelp(b.email)}`, `Wrong address? <a href="#/signup">Start again</a>`);
+      } catch (err) {
+        if (err.data && err.data.saved) return authShell('Almost there', 'Your account is saved. The email is the last step.', inboxHelp(b.email, err.message), `Wrong address? <a href="#/signup">Start again</a>`);
+        busy(btn, false, 'Create account'); formErrors(f, /email/i.test(err.message) ? { email: err.message } : /phone/i.test(err.message) ? { phone: err.message } : { firstName: err.message }); }
     };
   }
   function forgotView() {
@@ -295,7 +300,7 @@
       e.preventDefault();
       const f = e.target, email = f.email.value.trim();
       if (formErrors(f, !validEmail(email) ? { email: 'Enter a valid email address.' } : {})) return;
-      try { const r = await api('/api/forgot', { method: 'POST', body: { email }, anon: true }); authShell('Check your inbox', esc(r.message), '', `<a href="#/signin">Back to sign in</a>`); } catch (err) { formErrors(f, { email: err.message }); }
+      try { const r = await api('/api/forgot', { method: 'POST', body: { email }, anon: true }); authShell('Check your inbox', esc(r.message), inboxHelp(email), `<a href="#/signin">Back to sign in</a>`); } catch (err) { formErrors(f, { email: err.message }); }
     };
   }
   async function resetView(token) {
@@ -1078,7 +1083,9 @@
     shell('you', backTop('#/you', 'You'), `<div class="intro"><h1>People</h1><p>Everyone can use the data desk. The Claude analysts run on your Claude plan, so you choose who gets them.</p></div><div id="people" class="panel flat" style="margin-top:18px">${skLines(3)}</div>`);
     try {
       const { people } = await api('/api/people');
-      $('#people').innerHTML = people.map((u) => `<div class="person"><div><b>${esc(u.name || u.email)}</b>${u.primary ? ' <span class="chip">owner</span>' : ''}<small>${esc(u.email)}, ${u.status === 'unverified' ? 'has not confirmed the email yet' : u.status}${u.scenarios ? `, ${u.scenarios} scenario${u.scenarios > 1 ? 's' : ''}` : ''}</small></div>
+      $('#people').innerHTML = people.map((u) => `<div class="person"><div><b>${esc(u.name || u.email)}</b>${u.primary ? ' <span class="chip">owner</span>' : ''}<small>${esc(u.email)}, ${u.status === 'unverified' ? 'has not confirmed the email yet' : u.status}${u.scenarios ? `, ${u.scenarios} scenario${u.scenarios > 1 ? 's' : ''}` : ''}</small>
+        ${u.lastMail ? `<small class="${u.lastMail.sent ? '' : 'bad-t'}">Last email ${esc(ago(Date.parse(u.lastMail.at)))}: "${esc(u.lastMail.subject)}" ${u.lastMail.sent ? 'sent' : `FAILED (${esc(u.lastMail.error || 'unknown')})`}</small>` : ''}
+        ${!u.primary ? `<button class="link" data-act="copy-link" data-v="${esc(u.id)}">${u.status === 'unverified' ? 'Copy their confirm link' : 'Copy a set-password link'}</button>` : ''}</div>
         ${u.primary || u.role === 'admin' ? '<span class="fine">Claude on</span>' : `<label class="switch" title="Claude analysts"><input type="checkbox" data-act="claude" data-v="${esc(u.id)}" ${u.claude ? 'checked' : ''} aria-label="Claude analysts for ${esc(u.name)}"><span></span></label>`}</div>`).join('') || '<p class="muted">No one yet.</p>';
     } catch (e) { $('#people').innerHTML = `<p class="muted">${esc(e.message)}</p>`; }
   }
@@ -1126,7 +1133,15 @@
     else if (act === 'lp-again') { if (S.lp.result) drawTry(S.lp.result); }
     else if (act === 'mic') toggleMic(t);
     else if (act === 'opt-depth') { document.querySelectorAll('[data-act="opt-depth"]').forEach((b) => b.setAttribute('aria-checked', String(b === t))); $('#depth-help').textContent = DEPTHS[v][1]; }
-    else if (act === 'resend') { try { const r = await api('/api/forgot', { method: 'POST', body: { email: v }, anon: true }); toast(r.message); } catch (err) { toast(err.message, true); } }
+    else if (act === 'resend') {
+      busy(t, true, 'Sending');
+      try { await api('/api/forgot', { method: 'POST', body: { email: v }, anon: true }); toast('Sent again. Both links work.'); t.innerHTML = `${I('check', 14)}Sent`; setTimeout(() => { t.disabled = false; t.innerHTML = `${I('arrow-clockwise', 14)}Send it again`; }, 60000); }
+      catch (err) { busy(t, false); t.innerHTML = `${I('arrow-clockwise', 14)}Send it again`; toast(err.message, true); }
+    }
+    else if (act === 'copy-link') {
+      try { const r = await api(`/api/people/${v}/link`, { method: 'POST' }); try { await navigator.clipboard.writeText(r.url); toast(`Link for ${r.email} copied. Send it to them directly; it works for 24 hours.`); } catch { prompt('Copy this link and send it to them:', r.url); } }
+      catch (err) { toast(err.message, true); }
+    }
     else if (act === 'logout') { if (window.InstallBanner) InstallBanner.hide(); await api('/api/logout', { method: 'POST' }).catch(() => {}); S.me = null; location.hash = '#/today'; render(); }
     else if (act === 'filter') { S.filter = v; document.querySelectorAll('.fchip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === v))); drawList(); }
     else if (act === 'range') { S.range = v; document.querySelectorAll('.seg button[data-act=range]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === v))); drawChart(); }

@@ -738,3 +738,6 @@ a.btn { text-decoration: none; }
 .lp-top-in .spacer { flex: 1; }
 .lp-result { scroll-margin-top: 96px; }
 @media (max-width: 520px) { .lr-facts { grid-template-columns: 1fr 1fr; } .lr-facts > div:last-child:nth-child(odd) { grid-column: 1 / -1; } }
+.inbox-help { display: grid; gap: 10px; justify-items: start; margin-top: 14px; }
+.person small.bad-t { color: var(--no); }
+.person .link { font-size: 13px; margin-top: 2px; }

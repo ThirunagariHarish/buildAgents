@@ -437,14 +437,16 @@ const server = http.createServer(async (req, res) => {
           try { const th = desk.buildThesis(clean); starter = { ...clean, proposition: th.proposition }; } catch { starter = null; }
         }
         const { user: nu, duplicate, token } = auth.signup({ ...b, ip, starter });
+        let delivery = { sent: true };
         if (!duplicate && token) {
-          mail.send({ to: nu.email, subject: starter ? 'Confirm your email to start watching your claim' : 'Confirm your email for Run Scenario', text: `Hi ${nu.firstName},\n\n${starter ? `Your claim is ready to watch:\n\n  "${starter.proposition}"\n\nConfirm your email and choose a password with this link, and the desk starts on it straight away` : 'Confirm your email and choose a password with this link'} (one use, 24 hours):\n\n${BASE_URL}/#/reset/${token}\n\nIf you didn't sign up, ignore this email and nothing happens.\n` }).catch(() => {});
+          delivery = await mail.send({ to: nu.email, subject: starter ? 'Confirm your email to start watching your claim' : 'Confirm your email for Run Scenario', text: `Hi ${nu.firstName},\n\n${starter ? `Your claim is ready to watch:\n\n  "${starter.proposition}"\n\nConfirm your email and choose a password with this link, and the desk starts on it straight away` : 'Confirm your email and choose a password with this link'} (24 hours):\n\n${BASE_URL}/#/reset/${token}\n\nIf you didn't sign up, ignore this email and nothing happens.\n` }).catch((e) => ({ sent: false, error: e.message }));
           for (const ad of auth.admins().filter((a) => a.primary)) mail.send({ to: ad.email, subject: `New Run Scenario sign-up: ${nu.firstName} ${nu.lastName}`, text: `${nu.firstName} ${nu.lastName} (${nu.email}) signed up. They can use the free desk once they confirm their email. To give them the Claude desk, open ${BASE_URL}/#/people\n` }).catch(() => {});
         } else if (duplicate) {
           // Same reply either way; the inbox owner gets a sign-in or reset link.
           const r = auth.forgot({ email: nu.email, ip });
-          if (r) mail.send({ to: nu.email, subject: 'Your Run Scenario account', text: `Hi ${nu.firstName},\n\nYou already have an account. Sign in at ${BASE_URL}, or set a new password here (one use, 24 hours):\n\n${BASE_URL}/#/reset/${r.token}\n` }).catch(() => {});
+          if (r) delivery = await mail.send({ to: nu.email, subject: 'Your Run Scenario account', text: `Hi ${nu.firstName},\n\nYou already have an account. Sign in at ${BASE_URL}, or set a new password here (24 hours):\n\n${BASE_URL}/#/reset/${r.token}\n` }).catch((e) => ({ sent: false, error: e.message }));
         }
+        if (!delivery.sent && mail.configured()) return json(res, 502, { error: 'Your account is saved, but the email could not be sent just now. Wait a minute, then use "Send it again".', saved: true });
         return json(res, 200, { ok: true, message: 'Check your inbox. We sent a link to confirm your email and set your password. It works once, for 24 hours (check Spam too).' });
       } catch (e) { return json(res, e.status || 500, { error: e.status ? e.message : 'Could not create the account.' }); }
     }
@@ -452,7 +454,16 @@ const server = http.createServer(async (req, res) => {
       const b = await readBody(req).catch(() => ({}));
       try {
         const r = auth.forgot({ email: b.email, ip });
-        if (r) mail.send({ to: r.user.email, subject: 'Set your Run Scenario password', text: `Hi ${r.user.firstName},\n\nUse this link to set your Run Scenario password (one use, 24 hours):\n\n${BASE_URL}/#/reset/${r.token}\n\nIf you didn't ask for this, ignore this email.\n` }).catch(() => {});
+        let delivery = { sent: true };
+        if (r) delivery = await mail.send({ to: r.user.email, subject: r.user.status === 'unverified' ? 'Confirm your email for Run Scenario' : 'Set your Run Scenario password', text: `Hi ${r.user.firstName},\n\nUse this link to ${r.user.status === 'unverified' ? 'confirm your email and choose' : 'set'} your Run Scenario password (24 hours; earlier links keep working too):\n\n${BASE_URL}/#/reset/${r.token}\n\nIf you didn't ask for this, ignore this email.\n` }).catch((e) => ({ sent: false, error: e.message }));
+        else {
+          // No account with that address here (accounts are separate per app): say so to the inbox, so nobody waits for a link that will never come.
+          const em = String(b.email || '').trim().toLowerCase();
+          if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em) && em.length <= 120 && !auth.limited(`forgot:none:${em}`, 1, 6 * 3600 * 1000) && !auth.listUsers().some((x) => x.email === em)) {
+            delivery = await mail.send({ to: em, subject: 'Run Scenario: no account with this email yet', text: `Hi,\n\nSomeone (hopefully you) asked to reset a Run Scenario password for this address, but there is no Run Scenario account with it yet. Run Scenario accounts are separate from Box and Pocket Box.\n\nCreate one here, it takes a minute:\n\n${BASE_URL}/\n\nIf this wasn't you, ignore this email.\n` }).catch((e) => ({ sent: false, error: e.message }));
+          }
+        }
+        if (!delivery.sent && mail.configured()) return json(res, 502, { error: 'The email could not be sent just now. Wait a minute and try again.' });
         return json(res, 200, { ok: true, message: 'If that address has an account, a link is on its way. Check Spam too.' });
       } catch (e) { return json(res, e.status || 500, { error: e.message }); }
     }
@@ -517,7 +528,16 @@ async function api(req, res, p, url, user) {
   if (p === '/api/status' && req.method === 'GET') return json(res, 200, await status(url.searchParams.get('fresh') === '1'));
   if (p === '/api/people' && req.method === 'GET') {
     if (!user.primary) return json(res, 403, { error: 'Only the owner manages people.' });
-    return json(res, 200, { people: auth.listUsers().map((x) => ({ id: x.id, name: x.name, email: x.email, status: x.status, role: x.role, primary: !!x.primary, claude: x.role === 'admin' || x.claude === true, createdAt: x.createdAt, scenarios: store.list().filter((sc) => sc.ownerId === x.id).length })) });
+    // The last email each person was sent (subject and result only), to see who is stuck.
+    const lastMail = new Map();
+    try { for (const l of fs.readFileSync(path.join(config.DATA, 'mail-log.jsonl'), 'utf8').trim().split('\n')) { const x = JSON.parse(l); lastMail.set(String(x.to).toLowerCase(), { at: x.at, subject: x.subject, sent: x.sent, error: x.error }); } } catch {}
+    return json(res, 200, { mail: mail.configured(), people: auth.listUsers().map((x) => ({ id: x.id, name: x.name, email: x.email, status: x.status, role: x.role, primary: !!x.primary, claude: x.role === 'admin' || x.claude === true, createdAt: x.createdAt, scenarios: store.list().filter((sc) => sc.ownerId === x.id).length, lastMail: lastMail.get(x.email) || null })) });
+  }
+  const lk = p.match(/^\/api\/people\/([a-f0-9]{12})\/link$/);
+  if (lk && req.method === 'POST') {
+    // A fresh set-password link the owner can pass on by hand (text, chat) when email isn't getting through.
+    if (!user.primary) return json(res, 403, { error: 'Only the owner manages people.' });
+    try { const r = auth.relink(lk[1]); return json(res, 200, { url: `${BASE_URL}/#/reset/${r.token}`, email: r.user.email }); } catch (e) { return json(res, e.status || 500, { error: e.message }); }
   }
   const pm = p.match(/^\/api\/people\/([a-f0-9]{12})$/);
   if (pm && req.method === 'POST') {
