@@ -55,7 +55,7 @@ if [ ! -f "$DATA/users.json" ]; then
 fi
 chown root:root "$DATA"; chmod 700 "$DATA"
 find "$DATA" -maxdepth 1 -type f -exec chmod 600 {} +
-echo "accounts: $(node -e "try{const u=JSON.parse(require('fs').readFileSync('$DATA/users.json'));console.log(u.length+' user(s): '+u.map(x=>x.email+' ('+x.role+(x.primary?', owner':'')+', '+x.status+')').join(', '))}catch(e){console.log('none yet')}")"
+echo "accounts: $(node -e "try{const u=JSON.parse(require('fs').readFileSync('$DATA/users.json'));console.log(u.length+' user(s): '+u.map(x=>x.email.replace(/^([^@]{1,2})[^@]*@/,'\$1***@')+' ('+x.role+(x.primary?', owner':'')+', '+x.status+')').join(', '))}catch(e){console.log('none yet')}")"
 echo "scenarios: $(ls "$DATA/scenarios" 2>/dev/null | grep -c '\.json$')"
 
 echo "== service =="
@@ -87,6 +87,7 @@ echo "local /: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http:/
 echo "api without sign-in: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:$PORT/api/scenarios) (401 = sign-in enforced)"
 echo "front page test (no account): $(curl -s --max-time 60 -X POST -H 'Content-Type: application/json' -H "Origin: http://localhost:$PORT" -d '{"text":"S&P 500 falls 20% by year end"}' http://localhost:$PORT/api/try | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);console.log(j.p!==undefined?`${j.proposition} ${j.p}%${j.analogs?`, look-alikes ${j.analogs.hits}/${j.analogs.k}`:""}`:`error: ${j.error}`)}catch{console.log("no answer")}})')"
 echo "mail: $(set -a; . "$ENV_FILE"; set +a; timeout 30 node -e "require('./lib/mail').verify().then(r=>console.log(r.ok?'SMTP login OK':'NOT working: '+r.error))")"
+(set -a; . "$ENV_FILE"; set +a; timeout 30 node deploy/mail-check.js SC "$DATA/mail-log.jsonl") || true
 
 if command -v ufw >/dev/null && ufw status 2>/dev/null | grep -q 'Status: active'; then
   ufw status | grep -q "^$PORT" || { ufw status | grep -qE '^(3400|3401)' && ufw allow $PORT/tcp >/dev/null && echo "firewall: opened $PORT like Pocket Box"; }
