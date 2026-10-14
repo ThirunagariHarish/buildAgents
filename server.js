@@ -656,7 +656,7 @@ const server = http.createServer(async (req, res) => {
       const attachments = resolveIds(body.attachments);
       if (!text && !attachments.length) return json(res, 400, { error: 'Describe your idea first.' });
       if (/https?:\/\//.test(text)) attachments.push(...await ingestUrls(text));
-      const maxRounds = Math.min(4, Math.max(1, Number(body.maxRounds) || 2));
+      const maxRounds = Math.min(8, Math.max(1, Number(body.maxRounds) || 4));
       const idea = createIdea({
         title: body.title, text: text || 'See the attached files.', attachments, maxRounds,
         template: TEMPLATES[body.template] ? body.template : null,
@@ -730,6 +730,8 @@ const server = http.createServer(async (req, res) => {
         const name = String(url.searchParams.get('name') || '');
         const env = idea.project?.deploy?.env || {};
         if (!/^[A-Z][A-Z0-9_]{1,60}$/.test(name) || !(name in env)) return json(res, 404, { error: 'No such variable.' });
+        // Box's own Claude sign-in is never shown, only used.
+        if (name === 'CLAUDE_CODE_OAUTH_TOKEN' && idea.project?.useClaudePlan) return json(res, 403, { error: 'This is your Claude plan sign-in. Box uses it for the app but never shows it.' });
         return json(res, 200, { name, value: String(env[name]) });
       }
       if (action === 'env' && req.method === 'POST') {
@@ -748,6 +750,46 @@ const server = http.createServer(async (req, res) => {
           try { await deployOps.updateEnv(idea.project.slug, d.env); applied = true; } catch (e) { return json(res, 500, { error: `Saved, but the cluster update failed: ${e.message}` }); }
         }
         return json(res, 200, { ok: true, applied, missing: d.missing, names: Object.keys(d.env).filter((k) => !k.startsWith('__')) });
+      }
+      if (action === 'env' && req.method === 'DELETE') {
+        // The owner says the site does not need this setting: it leaves the
+        // list (and stays out when DevOps restates the list from the code).
+        const d = idea.project?.deploy;
+        if (!d) return json(res, 409, { error: 'The project has not been prepared for deployment yet.' });
+        const name = String(url.searchParams.get('name') || '');
+        if (!/^[A-Z][A-Z0-9_]{1,60}$/.test(name)) return json(res, 400, { error: 'No such variable.' });
+        if (name === 'CLAUDE_CODE_OAUTH_TOKEN') idea.project.useClaudePlan = false;
+        d.envJson = { ...(d.envJson || {}) }; delete d.envJson[name];
+        if (d.env) delete d.env[name];
+        d.missing = (d.missing || []).filter((k) => k !== name);
+        d.dropped = [...new Set([...(d.dropped || []), name])];
+        saveIdea(idea);
+        let applied = false;
+        if (idea.project.url && deployOps.ready()) { try { await deployOps.updateEnv(idea.project.slug, d.env || {}); applied = true; } catch {} }
+        return json(res, 200, { ok: true, applied, missing: d.missing, names: Object.keys(d.env || {}).filter((k) => !k.startsWith('__')), envJson: d.envJson });
+      }
+      if (action === 'claudeplan' && req.method === 'POST') {
+        // Let this project's app run its AI on the Claude plan Box runs on.
+        // Only the primary administrator (whose plan it is) can switch it on.
+        if (!user.primary) return json(res, 403, { error: 'Only the primary administrator can share their Claude plan with a project.' });
+        if (!idea.project) return json(res, 409, { error: 'Not a project.' });
+        const body = await readBody(req);
+        const on = !!body.on;
+        if (on && !process.env.CLAUDE_CODE_OAUTH_TOKEN) return json(res, 409, { error: 'Box has no Claude sign-in token (CLAUDE_CODE_OAUTH_TOKEN) in its own settings to share.' });
+        idea.project.useClaudePlan = on;
+        const d = idea.project.deploy;
+        if (d) {
+          d.envJson = { ...(d.envJson || {}) };
+          if (on) { d.envJson.CLAUDE_CODE_OAUTH_TOKEN = null; d.dropped = (d.dropped || []).filter((k) => k !== 'CLAUDE_CODE_OAUTH_TOKEN'); d.env = { ...(d.env || {}), CLAUDE_CODE_OAUTH_TOKEN: process.env.CLAUDE_CODE_OAUTH_TOKEN }; }
+          else if (d.env) delete d.env.CLAUDE_CODE_OAUTH_TOKEN;
+          d.missing = (d.missing || []).filter((k) => !(on && k === 'CLAUDE_CODE_OAUTH_TOKEN'));
+        }
+        saveIdea(idea);
+        let applied = false;
+        if (d && idea.project.url && deployOps.ready()) { try { await deployOps.updateEnv(idea.project.slug, d.env || {}); applied = true; } catch {} }
+        const msg = addMessage(idea, { agentId: 'system', kind: 'system', round: idea.round, summary: on ? 'AI runs on your Claude plan' : 'Claude plan switched off', content: on ? 'The app signs in to Claude with the same token Box runs on (CLAUDE_CODE_OAUTH_TOKEN). No Anthropic API key is needed; every AI call counts toward your plan\'s usage limits.' : 'The app no longer gets your Claude sign-in. Its AI steps stop until it has another way to reach a model.' });
+        bus.publish(idea.id, { event: 'message', message: msg });
+        return json(res, 200, { ok: true, on, applied, missing: d ? d.missing : [], envJson: d ? d.envJson : {} });
       }
       if (action === 'logs' && req.method === 'GET') {
         if (!idea.project?.url || !deployOps.ready()) return json(res, 409, { error: 'Logs are available once the project is live and Box has cluster access.' });
