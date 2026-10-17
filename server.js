@@ -958,19 +958,27 @@ const server = http.createServer(async (req, res) => {
 
 // Restarts (deploys, crashes) must not strand a working crew. On SIGTERM we
 // ask every run to stop after its current turn, wait for that, and mark the
-// idea to resume; on startup, anything marked (or left "running" by a crash)
-// is resumed automatically.
+// idea to resume; on startup, only what was actually running when Box stopped
+// (or was left "running" by a crash) continues. A project that had failed or
+// was paused stays as it is until the owner taps Resume: a Box update never
+// restarts old work on its own.
 auth.ensureAdmin();
 {
   const admin = auth.admins()[0];
+  // One time, after the update that stopped failed projects from restarting
+  // themselves: continue nothing, so what was restarted that way stops here.
+  const HALT_ONCE = path.join(__dirname, 'data', '.no-autoresume-2026-10-17');
+  const haltNow = !fs.existsSync(HALT_ONCE);
   for (const i of listIdeas()) {
     if (!i.ownerId && admin) i.ownerId = admin.id;
     if (i.status === 'running') { i.status = 'paused'; i.autoResume = true; }
-    // A crew that stopped because the sandbox itself failed to start (not the
-    // work) picks up again once the sandbox is fixed by a deploy.
-    if (i.status === 'error' && /^Claude call failed .*\bbwrap:|^The image build failed on GitHub Actions|box-kubeconfig: permission denied|Init:ImagePullBackOff|ImagePullBackOff|Missing required environment variable|updates to statefulset spec|may not change once set|is immutable|pod updates may not change fields|^Rollout did not finish|exit null\)/.test(i.error || '')) { i.status = 'paused'; i.error = null; i.autoResume = true; }
+    if (haltNow && i.autoResume) {
+      i.autoResume = false;
+      addMessage(i, { agentId: 'system', kind: 'system', round: i.round || 0, summary: 'Paused after a Box update', content: 'Box was updated and this work was paused instead of continuing on its own. Tap Resume when you want the crew to carry on.' });
+    }
     saveIdea(i);
   }
+  if (haltNow) { try { fs.mkdirSync(path.dirname(HALT_ONCE), { recursive: true }); fs.writeFileSync(HALT_ONCE, new Date().toISOString()); } catch {} }
 }
 setTimeout(() => {
   for (const i of listIdeas()) {
