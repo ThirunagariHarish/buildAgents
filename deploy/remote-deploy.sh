@@ -51,6 +51,10 @@ chown root:root "$DATA"; chmod 700 "$DATA"
 find "$DATA" -maxdepth 1 -type f -exec chmod 600 {} +
 echo "accounts: $(node -e "try{const u=JSON.parse(require('fs').readFileSync('$DATA/users.json'));console.log(u.length+' user(s): '+u.map(x=>x.email.replace(/^([^@]{1,2})[^@]*@/,'\$1***@')+' ('+x.role+(x.primary?', owner':'')+', '+x.status+')').join(', '))}catch(e){console.log('none yet')}")"
 echo "products so far: $(ls "$DATA/posts" 2>/dev/null | grep -c '\.json$')"
+node -e "
+const fs=require('fs'),d='$DATA/posts';let l=[];try{l=fs.readdirSync(d).map(f=>JSON.parse(fs.readFileSync(d+'/'+f))).sort((a,b)=>b.createdAt-a.createdAt).slice(0,6)}catch{}
+for(const p of l){const inv=(p.rounds||[]).flatMap(r=>r.inventions||[]);console.log('   '+new Date(p.createdAt).toISOString().slice(0,16)+' '+((p.product&&p.product.name)||'(researching)')+' ['+p.status+'] photo:'+(p.image?'yes':'no')+' -> '+(inv.map(i=>i.title+(i.sketch?'':' (no sketch)')).join(' | ')||'none yet')+(p.error?' error: '+p.error:''))}
+" 2>/dev/null
 
 echo "== service =="
 cat > /etc/systemd/system/reinvent.service <<UNIT
@@ -73,6 +77,12 @@ WantedBy=multi-user.target
 UNIT
 systemctl daemon-reload
 systemctl enable reinvent >/dev/null 2>&1
+# Let a running research job finish (up to 12 minutes) rather than cut it off.
+if systemctl is-active -q reinvent && [ -f "$DATA/.busy" ]; then
+  echo "studio is working ($(cat "$DATA/.busy")); waiting for it to finish"
+  for i in $(seq 1 72); do [ -f "$DATA/.busy" ] || break; sleep 10; done
+  [ -f "$DATA/.busy" ] && echo "still working after 12 minutes; restarting anyway (the post is tidied on start)" || echo "finished; restarting"
+fi
 systemctl restart reinvent
 for i in $(seq 1 20); do curl -s -o /dev/null --max-time 2 "http://localhost:$PORT/api/session" && break; sleep 1; done
 echo "service: $(systemctl is-active reinvent)"
@@ -103,7 +113,7 @@ echo "== claude =="
 (set -a; . "$ENV_FILE"; set +a; timeout 120 node -e "require('./lib/claude').askClaude({prompt:'Reply with exactly: OK',system:'Connectivity check.',model:'haiku',timeoutMs:100000}).then(r=>console.log('haiku: '+r.text.trim().slice(0,20)+' ('+Math.round(r.durationMs/1000)+'s)')).catch(e=>console.log('FAILED: '+e.message))")
 
 echo "== studio =="
-node -e "try{const s=JSON.parse(require('fs').readFileSync('$DATA/settings.json'));console.log('every '+s.intervalMin+' min, '+(s.paused?'paused':'running')+', last run '+(s.lastRunAt?new Date(s.lastRunAt).toISOString():'never')+(s.holdUntil>Date.now()?', on hold until '+new Date(s.holdUntil).toISOString():''))}catch(e){console.log('defaults (first product about 20 seconds after start)')}"
+node -e "try{const s=JSON.parse(require('fs').readFileSync('$DATA/settings.json'));console.log('every '+s.intervalMin+' min, '+(s.paused?'paused':'running')+', last run '+(s.lastRunAt?new Date(s.lastRunAt).toISOString():'never')+(s.holdUntil>Date.now()?', on hold until '+new Date(s.holdUntil).toISOString():'')+(s.lastError?', last error ('+new Date(s.lastErrorAt).toISOString().slice(0,16)+'): '+s.lastError:''))}catch(e){console.log('defaults (first product about 20 seconds after start)')}"
 
 echo "== the domain, as the internet reaches it =="
 echo "DNS: $DOMAIN -> $(getent hosts $DOMAIN | awk '{print $1}' | tr '\n' ' ')"

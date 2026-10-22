@@ -41,7 +41,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           envs: CLAUDE_CODE_OAUTH_TOKEN,BOX_SMTP_HOST,BOX_SMTP_PORT,BOX_SMTP_USER,BOX_SMTP_PASS,BOX_ADMIN_PASSWORD
           capture_stdout: true
-          command_timeout: 15m
+          command_timeout: 30m
           script: |
             set -e
             APP_DIR=/opt/reinvent

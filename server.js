@@ -109,6 +109,7 @@ function emit(payload) {
   }
 }
 studio.setEmitter(emit);
+{ const n = studio.recover(); if (n) console.log(`tidied ${n} post(s) cut off by a restart`); }
 setInterval(() => { for (const res of streams.keys()) { try { res.write(': ping\n\n'); } catch {} } }, 25000);
 
 // ---- views ----------------------------------------------------------------------------------
