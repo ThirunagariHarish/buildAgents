@@ -1,0 +1,215 @@
+- document:
+  - banner:
+    - search:
+      - textbox "Search"
+      - button
+    - link:
+      - /url: "#"
+    - link "Yanko Design - Modern Industrial Design News":
+      - /url: https://www.yankodesign.com/
+      - img "Yanko Design - Modern Industrial Design News"
+    - insertion:
+      - text: Discover more
+      - link "Modern industrial design":
+        - img
+        - text: Modern industrial design
+      - link "Furniture design":
+        - img
+        - text: Furniture design
+      - link "Kitchen design":
+        - img
+        - text: Kitchen design
+  - main:
+    - list:
+      - listitem:
+        - figure:
+          - link:
+            - /url: https://www.yankodesign.com/2026/10/21/meet-draco-the-90mm-smart-telescope-that-wakes-itself-up-to-shoot-the-night-while-you-sleep/
+        - heading "Meet Draco, the 90mm smart telescope that wakes itself up to shoot the night while you sleep" [level=2]:
+          - link "Meet Draco, the 90mm smart telescope that wakes itself up to shoot the night while you sleep":
+            - /url: https://www.yankodesign.com/2026/10/21/meet-draco-the-90mm-smart-telescope-that-wakes-itself-up-to-shoot-the-night-while-you-sleep/
+        - paragraph: About 4,500 years ago, while the Egyptians were busy stacking pyramids, the North Star was a completely different star called Thuban. It sat in the…
+        - link "Deals":
+          - /url: https://www.yankodesign.com/category/deals/
+        - text: ","
+        - link "Product Design":
+          - /url: https://www.yankodesign.com/category/productdesign/
+        - text: ","
+        - link "Technology":
+          - /url: https://www.yankodesign.com/category/technology/
+        - text: /
+        - time: 10/21/2026
+    - article:
+      - figure:
+        - link:
+          - /url: https://www.yankodesign.com/2026/10/21/the-5-best-home-office-upgrades-of-october-2026-that-dont-look-like-office-equipment/
+      - heading "The 5 Best Home Office Upgrades of October 2026 That Don’t Look Like Office Equipment" [level=2]:
+        - link "The 5 Best Home Office Upgrades of October 2026 That Don’t Look Like Office Equipment":
+          - /url: https://www.yankodesign.com/2026/10/21/the-5-best-home-office-upgrades-of-october-2026-that-dont-look-like-office-equipment/
+      - paragraph: A laptop stand can be useful all day and still feel like an unwelcome guest at dinner. That’s the problem with building a home office…
+      - link "Deals":
+        - /url: https://www.yankodesign.com/category/deals/
+      - text: ","
+      - link "Office":
+        - /url: https://www.yankodesign.com/category/office/
+      - text: ","
+      - link "Product Design":
+        - /url: https://www.yankodesign.com/category/productdesign/
+      - text: ","
+      - link "Shop":
+        - /url: https://www.yankodesign.com/category/shop/
+      - text: /
+      - time: 10/21/2026
+    - article:
+      - figure:
+        - link:
+          - /url: https://www.yankodesign.com/2026/10/21/houstons-proposed-o27-skyscraper-turns-triangular-glass-into-a-rippling-facade/
+      - heading "Houston’s Proposed O27 Skyscraper Turns Triangular Glass Into a Rippling Facade" [level=2]:
+        - link "Houston’s Proposed O27 Skyscraper Turns Triangular Glass Into a Rippling Facade":
+          - /url: https://www.yankodesign.com/2026/10/21/houstons-proposed-o27-skyscraper-turns-triangular-glass-into-a-rippling-facade/
+      - paragraph: A grid of triangular glass panels follows O27’s swelling, pinched silhouette, making the proposed Houston skyscraper look almost elastic. Designed by Austin-based STG Design for…
+      - link "Architecture":
+        - /url: https://www.yankodesign.com/category/architecture/
+      - text: ","
+      - link "Office":
+        - /url: https://www.yankodesign.com/category/office/
+      - text: /
+      - time: 10/21/2026
+    - article:
+      - figure:
+        - link:
+          - /url: https://www.yankodesign.com/2026/10/21/a-stained-glass-caution-sign-youll-actually-stop-to-admire/
+      - heading "A Stained-Glass Caution Sign You’ll Actually Stop to Admire" [level=2]:
+        - link "A Stained-Glass Caution Sign You’ll Actually Stop to Admire":
+          - /url: https://www.yankodesign.com/2026/10/21/a-stained-glass-caution-sign-youll-actually-stop-to-admire/
+      - paragraph: The amber shadow on the sidewalk is almost as appealing as the object casting it. Hayden Clay Williams’ stained-glass caution sign takes the familiar folding…
+      - link "Product Design":
+        - /url: https://www.yankodesign.com/category/productdesign/
+      - text: /
+      - time: 10/21/2026
+    - article:
+      - figure:
+        - link:
+          - /url: https://www.yankodesign.com/2026/10/21/legos-new-160-fast-furious-dodge-charger-takes-family-time-very-seriously/
+      - heading "Lego’s new $160 Fast & Furious Dodge Charger takes family time very seriously" [level=2]:
+        - link "Lego’s new $160 Fast & Furious Dodge Charger takes family time very seriously":
+          - /url: https://www.yankodesign.com/2026/10/21/legos-new-160-fast-furious-dodge-charger-takes-family-time-very-seriously/
+      - paragraph: The 1968 Dodge Charger almost died as a clay model. Designer Richard Sias sculpted a 1/10th scale study, and Dodge styling boss Bill Brownlie ordered…
+      - link "Automotive":
+        - /url: https://www.yankodesign.com/category/automotive/
+      - text: ","
+      - link "Product Design":
+        - /url: https://www.yankodesign.com/category/productdesign/
+      - text: ","
+      - link "Toys":
+        - /url: https://www.yankodesign.com/category/toys/
+      - text: /
+      - time: 10/21/2026
+    - insertion:
+      - heading "These are topics related to the article that might interest you" [level=2]: Discover more
+      - link "Product design accessories"
+      - link "Lighting design"
+      - link "Technology gadgets"
+      - link "Automotive design"
+      - link "Design"
+    - heading "Featured Designs" [level=2]
+    - article:
+      - figure:
+        - link:
+          - /url: https://www.yankodesign.com/2026/10/18/no-wood-no-ash-no-smoke-this-modular-propane-torch-turns-any-outdoor-space-into-a-gathering-spot/
+      - 'heading "No Wood, No Ash, No Smoke: This Modular Propane Torch Turns Any Outdoor Space Into a Gathering Spot" [level=2]':
+        - 'link "No Wood, No Ash, No Smoke: This Modular Propane Torch Turns Any Outdoor Space Into a Gathering Spot"':
+          - /url: https://www.yankodesign.com/2026/10/18/no-wood-no-ash-no-smoke-this-modular-propane-torch-turns-any-outdoor-space-into-a-gathering-spot/
+      - paragraph: Camping gear has a habit of living in the garage for 51 weeks a year. Camp Torch, built by three friends in Boise, Idaho, took…
+      - link "Accessories":
+        - /url: https://www.yankodesign.com/category/accessories/
+      - text: ","
+      - link "Deals":
+        - /url: https://www.yankodesign.com/category/deals/
+      - text: ","
+      - link "Featured":
+        - /url: https://www.yankodesign.com/category/featured/
+      - text: ","
+      - link "Outdoor":
+        - /url: https://www.yankodesign.com/category/outdoor/
+      - text: ","
+      - link "Product Design":
+        - /url: https://www.yankodesign.com/category/productdesign/
+      - text: /
+      - time: 10/18/2026
+    - article:
+      - figure:
+        - link:
+          - /url: https://www.yankodesign.com/2026/10/15/this-coin-sized-titanium-tape-measure-handles-straight-lines-curves-and-looks-like-jet-engine-stock/
+      - heading "This coin-sized titanium tape measure handles straight lines, curves, and looks like jet-engine stock" [level=2]:
+        - link "This coin-sized titanium tape measure handles straight lines, curves, and looks like jet-engine stock":
+          - /url: https://www.yankodesign.com/2026/10/15/this-coin-sized-titanium-tape-measure-handles-straight-lines-curves-and-looks-like-jet-engine-stock/
+      - paragraph: Grade 5 titanium (Ti-6Al-4V) is the alloy of jet engine compressor blades, surgical implants, and aerospace fasteners. It has a tensile strength of nearly 1000…
+      - link "Accessories":
+        - /url: https://www.yankodesign.com/category/accessories/
+      - text: ","
+      - link "Deals":
+        - /url: https://www.yankodesign.com/category/deals/
+      - text: ","
+      - link "Featured":
+        - /url: https://www.yankodesign.com/category/featured/
+      - text: ","
+      - link "Product Design":
+        - /url: https://www.yankodesign.com/category/productdesign/
+      - text: ","
+      - link "Stationery":
+        - /url: https://www.yankodesign.com/category/stationery/
+      - text: /
+      - time: 10/15/2026
+    - 'link "Live Coverage #IFA2026"':
+      - /url: https://www.yankodesign.com/tag/ifa-2026/
+      - heading "Live Coverage" [level=2]
+      - text: "#IFA2026"
+    - 'link "Anker’s Sleep Earbuds 4 Pro Silence Snoring in Real Time With Adaptive Masking: Hands-on at IFA 2026"':
+      - /url: https://www.yankodesign.com/2026/09/08/ankers-sleep-earbuds-4-pro-silence-snoring-in-real-time-with-adaptive-masking-hands-on-at-ifa-2026/
+      - 'heading "Anker’s Sleep Earbuds 4 Pro Silence Snoring in Real Time With Adaptive Masking: Hands-on at IFA 2026" [level=2]'
+    - link "This Self-Moving Harry Potter Chessboard Stole The Show At IFA 2026 From Every AI Gadget":
+      - /url: https://www.yankodesign.com/2026/09/08/this-self-moving-harry-potter-chessboard-stole-the-show-at-ifa-2026-from-every-ai-gadget/
+      - heading "This Self-Moving Harry Potter Chessboard Stole The Show At IFA 2026 From Every AI Gadget" [level=2]
+    - 'link "Xiaomi 18 Fold Hands-On: Got Here Before Apple, Can It Beat Samsung?"':
+      - /url: https://www.yankodesign.com/2026/09/08/xiaomi-18-fold-hands-on-got-here-before-apple-can-it-beat-samsung/
+      - 'heading "Xiaomi 18 Fold Hands-On: Got Here Before Apple, Can It Beat Samsung?" [level=2]'
+    - article:
+      - iframe
+    - article:
+      - iframe
+    - article:
+      - figure:
+        - link:
+          - /url: https://www.yankodesign.com/2026/10/21/this-56-diy-space-shuttle-has-gears-glowing-engines-and-zero-subtlety/
+      - heading "This $56 DIY space shuttle has gears, glowing engines, and zero subtlety" [level=2]:
+        - link "This $56 DIY space shuttle has gears, glowing engines, and zero subtlety":
+          - /url: https://www.yankodesign.com/2026/10/21/this-56-diy-space-shuttle-has-gears-glowing-engines-and-zero-subtlety/
+      - paragraph: "A fun bit of trivia for ruining dinner parties: NASA never tilted its space shuttles upright at the launch pad. The orbiters were stacked vertically…"
+      - link "Deals":
+        - /url: https://www.yankodesign.com/category/deals/
+      - text: ","
+      - link "Product Design":
+        - /url: https://www.yankodesign.com/category/productdesign/
+      - text: ","
+      - link "Toys":
+        - /url: https://www.yankodesign.com/category/toys/
+      - text: /
+      - time: 10/21/2026
+    - article:
+      - figure:
+        - link:
+          - /url: https://www.yankodesign.com/2026/10/21/youtuber-built-a-bike-camper-from-scratch-and-took-it-to-burning-man/
+      - heading "YouTuber built a bike camper from scratch and took it to Burning Man" [level=2]:
+        - link "YouTuber built a bike camper from scratch and took it to Burning Man":
+          - /url: https://www.yankodesign.com/2026/10/21/youtuber-built-a-bike-camper-from-scratch-and-took-it-to-burning-man/
+      - paragraph: A solo traveler needs a compact camping solution on his bike. To satiate this adventure group, a new league of bike RVs/campers is coming of…
+      - link "Automotive":
+        - /url: https://www.yankodesign.com/category/automotive/
+      - text: /
+      - time: 10/21/2026
+    - article:
+      - figure:
+        - link:
+          - /url: https://www.yankodesign.com/2026/10/21/oppo-find-x10-pro-max-review-stunning-imaging-well-balanced-flagship-big-price/
+      - 'heading "Oppo Find X10 Pro Max Review: Stunning Imaging, Well-Balanced Flagship, Big Price" 

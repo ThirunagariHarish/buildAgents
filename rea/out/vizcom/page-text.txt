@@ -1,0 +1,440 @@
+- document:
+  - text: \
+  - navigation:
+    - link:
+      - /url: /
+      - img
+    - button "Menu"
+    - list:
+      - listitem:
+        - button "Product"
+        - list:
+          - link "Overview":
+            - /url: /product
+          - link "Download":
+            - /url: /download
+      - listitem:
+        - button "Solutions"
+        - list:
+          - link "Industrial Design":
+            - /url: /solutions/industrial-design
+          - link "Footwear":
+            - /url: /solutions/footwear
+          - link "Gaming":
+            - /url: /solutions/gaming
+          - link "Apparel":
+            - /url: /solutions/apparel
+          - link "Automotive":
+            - /url: /solutions/automotive
+          - link "Enterprise":
+            - /url: /enterprise
+      - listitem:
+        - button "Programs"
+        - list:
+          - link "Vizcom for Students":
+            - /url: /programs/students
+          - link "Vizcom for Educators":
+            - /url: /programs/educators
+          - link "Challenges":
+            - /url: /challenges
+      - listitem:
+        - button "Resources"
+        - list:
+          - link "University":
+            - /url: /university
+          - link "Documentation":
+            - /url: https://docs.vizcom.ai/
+          - link "Support":
+            - /url: mailto:support@vizcom.com?subject=Ask%20for%20support
+          - link "Case Studies":
+            - /url: /case-studies
+          - link "Blog":
+            - /url: /blog
+          - link "Careers":
+            - /url: /careers
+          - link "Data & Security":
+            - /url: /data-security
+      - listitem:
+        - link "Pricing":
+          - /url: /pricing
+      - listitem:
+        - link "Contact":
+          - /url: /contact
+    - link "Login":
+      - /url: https://app.vizcom.com/auth
+    - link "Try it out":
+      - /url: https://app.vizcom.com/auth
+  - main:
+    - link:
+      - /url: "#"
+    - link:
+      - /url: "#"
+    - link:
+      - /url: "#"
+    - link:
+      - /url: "#"
+    - link:
+      - /url: "#"
+    - link:
+      - /url: "#"
+    - img
+    - img
+    - paragraph: A new way to design for the real world
+    - link "Get Started":
+      - /url: https://app.vizcom.com/auth
+    - link "Book a Demo":
+      - /url: /contact
+    - paragraph: Bringing ideas to life for world-class brands
+    - list:
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+    - list:
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+    - heading "Your ideation toolkit" [level=2]
+    - paragraph: From your vision, through variations, and into reality. Vizcom brings clarity to the messy middle of idea generation
+    - link "Sketch":
+      - /url: "#demo-sketch"
+      - text: Sketch
+      - img
+      - img
+    - link "Render":
+      - /url: "#demo-render"
+      - text: Render
+      - img
+      - img
+    - link "Iterate":
+      - /url: "#demo-iterate"
+      - text: Iterate
+      - img
+      - img
+    - link "Make it real":
+      - /url: "#demo-real"
+      - text: Make it real
+      - img
+      - img
+    - heading "Instantly iterate and explore" [level=2]
+    - paragraph: Speed up every step of your ideation, without sacrificing your creative spark
+    - text: Animate Describe
+    - paragraph: Make the chair lift into midair and spin around
+    - button "Generate"
+    - text: Palette
+    - button "Change"
+    - text: Color Form Style Color
+    - button "Change"
+    - text: Change expression Emote
+    - img
+    - img
+    - button "Happy"
+    - text: New View 3D rotate
+    - img
+    - combobox:
+      - option "Select" [selected]
+      - option "0deg"
+      - option "45deg"
+      - option "90deg"
+      - option "135deg"
+      - option "180deg"
+      - option "225deg"
+      - option "270deg"
+      - option "315deg"
+    - heading "Bridging the gap from digital to physical" [level=2]
+    - paragraph: See how real world teams are using Vizcom to make their products a reality
+    - list:
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+      - listitem
+    - heading "Equipping designers for any challenge" [level=2]
+    - text: Add content and motion Place your object in the real world and add motion by animating
+    - img
+    - text: Visualize 3D Models Drop in any model. Swap colors, materials, and scenes instantly.
+    - img
+    - heading "Designed for the real world" [level=2]
+    - paragraph: From pixels to atoms, Vizcom is designed to complement your workflow and bring your concepts to life — in the real world, or virtually.
+    - heading "Frequently asked questions" [level=2]
+    - paragraph: Get in touch with our team or explore our frequently-asked questions.
+    - list
+    - paragraph: Stay aligned, move faster, and build together
+    - link "Book a Demo":
+      - /url: /contact
+    - link "Get Started":
+      - /url: https://app.vizcom.com/auth
+  - contentinfo:
+    - paragraph: Explore
+    - list:
+      - listitem:
+        - link "Product":
+          - /url: /product
+          - paragraph: Product
+      - listitem:
+        - link "Download":
+          - /url: /download
+          - paragraph: Download
+      - listitem:
+        - link "Careers":
+          - /url: /careers
+          - paragraph: Careers
+      - listitem:
+        - link "Challenges":
+          - /url: /challenges
+          - paragraph: Challenges
+      - listitem:
+        - link "Case Studies":
+          - /url: /case-studies
+          - paragraph: Case Studies
+      - listitem:
+        - link "Archive":
+          - /url: /archive
+          - paragraph: Archive
+    - paragraph: Solutions
+    - list:
+      - listitem:
+        - link "Enterprise":
+          - /url: /enterprise
+          - paragraph: Enterprise
+      - listitem:
+        - link "Industrial":
+          - /url: /solutions/industrial-design
+          - paragraph: Industrial
+      - listitem:
+        - link "Footwear":
+          - /url: /solutions/footwear
+          - paragraph: Footwear
+      - listitem:
+        - link "Gaming":
+          - /url: /solutions/gaming
+          - paragraph: Gaming
+      - listitem:
+        - link "Apparel":
+          - /url: /solutions/apparel
+          - paragraph: Apparel
+      - listitem:
+        - link "Automotive":
+          - /url: /solutions/automotive
+          - paragraph: Automotive
+    - paragraph: Resources
+    - list:
+      - listitem:
+        - link "Blog":
+          - /url: /blog
+          - paragraph: Blog
+      - listitem:
+        - link "Documentation":
+          - /url: https://docs.vizcom.ai/
+          - paragraph: Documentation
+      - listitem:
+        - link "Support":
+          - /url: mailto:support@vizcom.com?subject=Vizcom%20%7C%20Ask%20for%20support
+          - paragraph: Support
+      - listitem:
+        - link "For Students":
+          - /url: /programs/students
+          - paragraph: For Students
+      - listitem:
+        - link "For Educators":
+          - /url: /programs/educators
+          - paragraph: For Educators
+      - listitem:
+        - link "Data & Security":
+          - /url: /data-security
+          - paragraph: Data & Security
+      - listitem:
+        - link "Privacy Policy":
+          - /url: https://vizcom.com/legal/privacy-policy
+          - paragraph: Privacy Policy
+      - listitem:
+        - link "Terms of Service":
+          - /url: https://vizcom.com/legal/terms-of-service
+          - paragraph: Terms of Service
+      - listitem:
+        - link "Trust":
+          - /url: https://trust.vizcom.com
+          - paragraph: Trust
+    - paragraph: Get Started
+    - list:
+      - listitem:
+        - link "Book a demo":
+          - /url: /contact
+          - paragraph: Book a demo
+      - listitem:
+        - link "Pricing":
+          - /url: /pricing
+          - paragraph: Pricing
+      - listitem:
+        - link "Login":
+          - /url: https://app.vizcom.com/auth
+          - paragraph: Login
+    - paragraph: Follow Us
+    - link:
+      - /url: https://www.linkedin.com/company/vizcomhq/
+      - img
+    - link:
+      - /url: https://www.instagram.com/vizcom_/
+      - img
+    - link:
+      - /url: https://www.youtube.com/channel/UCU-XOa74z1aGdZRyvRBQ6UQ
+      - img
+    - link:
+      - /url: https://x.com/vizcom
+      - img
+    - link:
+      - /url: https://discord.gg/62np2zXfX2
+      - img
+    - text: Subscribe to our newsletter
+    - form "HubSpot Form":
+      - textbox:
+        - /placeholder: Email*
+      - button "Subscribe"
+    - img
+    - paragraph: ©2026 Vizcom
+    - link "site by OFF+BRAND.":
+      - /url: https://www.itsoffbrand.com/
+  - button "Open Intercom Messenger":
+    - img

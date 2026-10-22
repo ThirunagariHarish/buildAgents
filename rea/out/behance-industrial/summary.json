@@ -1,0 +1,239 @@
+{
+  "name": "behance-industrial",
+  "log": [
+    "capture: ok  (1977863 bytes)",
+    "export scripts: ok",
+    "analyze javascript: ok (269852566 bytes)"
+  ],
+  "network": {
+    "requests": 107,
+    "responses": 107,
+    "failed": 0,
+    "byType": {
+      "document": 2,
+      "font": 1,
+      "script": 72,
+      "stylesheet": 4,
+      "image": 12,
+      "manifest": 1,
+      "xhr": 8,
+      "fetch": 6,
+      "other": 1
+    },
+    "topHosts": [
+      [
+        "a5.behance.net",
+        68
+      ],
+      [
+        "www.behance.net",
+        6
+      ],
+      [
+        "mir-s3-cdn-cf.behance.net",
+        5
+      ],
+      [
+        "pps.services.adobe.com",
+        5
+      ],
+      [
+        "www.adobe.com",
+        5
+      ],
+      [
+        "assets.adobedtm.com",
+        5
+      ],
+      [
+        "bam.nr-data.net",
+        4
+      ],
+      [
+        "sstats.adobe.com",
+        2
+      ],
+      [
+        "use.typekit.net",
+        1
+      ],
+      [
+        "auth.services.adobe.com",
+        1
+      ],
+      [
+        "geo2.adobe.com",
+        1
+      ],
+      [
+        "cdn.cookielaw.org",
+        1
+      ],
+      [
+        "adobeid-na1.services.adobe.com",
+        1
+      ],
+      [
+        "js-agent.newrelic.com",
+        1
+      ],
+      [
+        "dcs.adobedc.net",
+        1
+      ]
+    ],
+    "apiCalls": [
+      "POST www.behance.net/v3/graphql",
+      "GET cdn.cookielaw.org/consent/c1e18a0d-18b5-4d40-b150-cc73734ac2c3/c1e18a0d-18b5-4d40-b150-cc73734ac2c3.json",
+      "POST adobeid-na1.services.adobe.com/ims/check/v6/token ?jslVersion",
+      "POST www.adobe.com/experienceedge/v2/collect ?datastreamId&requestId",
+      "POST www.behance.net/v2/logs",
+      "POST sstats.adobe.com/ee/v1/privacy/set-consent ?configId&requestId",
+      "POST bam.nr-data.net/1/e7fb1b89a0 ?a&v&to&rst&s&ref&ptid&af&ap&be&fe&dc&at&perf&fp&fcp",
+      "POST sstats.adobe.com/ee/va6/v1/interact ?configId&requestId",
+      "POST bam.nr-data.net/events/1/e7fb1b89a0 ?a&v&to&rst&s&ref&ptid",
+      "POST bam.nr-data.net/jserrors/1/e7fb1b89a0 ?a&v&to&rst&s&ref&ptid",
+      "POST dcs.adobedc.net/collection/e891d3631145f2a3263cc9791b49ce1aa98295228a85170b4d9a0e9b7ac07d25"
+    ],
+    "services": [
+      "Cookie consent",
+      "GraphQL API"
+    ]
+  },
+  "consoleSample": [
+    "Failed to load resource: the server responded with a status of 403 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Hydration completed but contains mismatches.",
+    "Going to iterate over instancesSettings"
+  ],
+  "finalUrl": "https://www.behance.net/galleries/industrial-design",
+  "title": null,
+  "pageTextChars": 6894,
+  "screenshot": true,
+  "javascript": {
+    "statistics": {
+      "relevant_files": 61,
+      "nested_asar_containers": 0,
+      "text_bytes_read": 1119437,
+      "invalid_utf8_files": 0,
+      "parsed_javascript_files": 61,
+      "skipped_javascript_files": 0,
+      "visited_ast_nodes": 245741,
+      "findings": 2153,
+      "modules": 451,
+      "parse_failures": 0
+    },
+    "appGraph": {
+      "javascript-module": 1460,
+      "javascript-chunk": 154,
+      "javascript-asset": 61,
+      "source-map": 54,
+      "storage": 8,
+      "endpoint": 22,
+      "artifact": 1,
+      "service-worker": 1
+    },
+    "endpoints": [
+      "literal Hire_DeclineFreelanceProjectProposal",
+      "literal userEditorPermissions",
+      "literal DeleteSourceFile",
+      "literal ProposalsArchiveAppliedCandidate",
+      "literal UpdateSourceFile",
+      "literal sendMessage",
+      "literal partial u",
+      "literal GetSelectedTool",
+      "candidate OptanonConsent",
+      "literal getAssetRenditionsUploadUrl",
+      "literal partial c",
+      "literal SendMessageWithThreadId",
+      "literal QueryAllowedSourceFileMimeTypes",
+      "literal /",
+      "literal FreelanceCreateFreelanceProject",
+      "candidate OptanonConsent",
+      "candidate value-sha256:d3ea3cca0a00f1283fd7489dbcb7bf3153c976c8769e5e3919ecfd253eb98c54",
+      "literal AllBriefs",
+      "literal https://cc-api-data.adobe.io/ingest",
+      "literal updateProjectLinkedAsset",
+      "literal CreateSourceFile",
+      "literal createInboxThreadWithHireMeData"
+    ],
+    "storage": [
+      "session-storage: window.sessionStorage.getItem",
+      "local-storage: window.localStorage.setItem",
+      "session-storage: window.sessionStorage.getItem",
+      "local-storage: localStorage.setItem",
+      "session-storage: window.sessionStorage.setItem",
+      "local-storage: localStorage.getItem",
+      "local-storage: window.localStorage.getItem",
+      "local-storage: localStorage.removeItem"
+    ],
+    "serviceWorkers": [
+      "navigator.serviceWorker.register(\"/marketingtech/d4d114c60e50/a0e989131fd5/AjoServiceWorker.js\",{scope:\"/\"})"
+    ],
+    "behaviour": {
+      "call-site": 10056,
+      "function": 3622,
+      "boundary": 143,
+      "task": 37,
+      "module": 41,
+      "promise": 60,
+      "timer": 29,
+      "event": 2,
+      "listener": 2
+    },
+    "labels": [
+      [
+        "construct",
+        80
+      ],
+      [
+        "Boolean",
+        61
+      ],
+      [
+        "awaited expression",
+        37
+      ],
+      [
+        "Number",
+        35
+      ],
+      [
+        "String",
+        35
+      ],
+      [
+        "setTimeout",
+        28
+      ],
+      [
+        "parseFloat",
+        4
+      ],
+      [
+        "JSON.parse",
+        4
+      ],
+      [
+        "parseInt",
+        2
+      ],
+      [
+        "is",
+        2
+      ],
+      [
+        "setInterval",
+        1
+      ]
+    ],
+    "limitations": [
+      "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+      "Electron relationships are derived from inert syntax; runtime registration, reachability, defaults, and enforcement remain unproven.",
+      "Graph coverage is incomplete; unavailable facts remain explicit and must not be read as absence.",
+      "JavaScript and HTML were parsed as inert text; bundle bootstrap code was never executed.",
+      "Sender, frame, URL, and origin checks are observations only; REA does not claim that they enforce a complete authorization policy.",
+      "Static imports, entrypoints, workers, endpoints, and storage relationships do not prove runtime execution."
+    ]
+  }
+}

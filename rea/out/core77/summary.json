@@ -1,0 +1,248 @@
+{
+  "name": "core77",
+  "log": [
+    "capture: ok  (2268444 bytes)",
+    "export scripts: ok",
+    "analyze javascript: ok (119539592 bytes)"
+  ],
+  "network": {
+    "requests": 156,
+    "responses": 155,
+    "failed": 16,
+    "byType": {
+      "document": 11,
+      "stylesheet": 7,
+      "script": 41,
+      "image": 54,
+      "font": 4,
+      "xhr": 16,
+      "fetch": 19,
+      "ping": 1,
+      "other": 3
+    },
+    "topHosts": [
+      [
+        "s3files.core77.com",
+        30
+      ],
+      [
+        "pagead2.googlesyndication.com",
+        15
+      ],
+      [
+        "fundingchoicesmessages.google.com",
+        14
+      ],
+      [
+        "www.google.com",
+        10
+      ],
+      [
+        "www.gstatic.com",
+        10
+      ],
+      [
+        "securepubads.g.doubleclick.net",
+        10
+      ],
+      [
+        "static.core77.com",
+        9
+      ],
+      [
+        "tpc.googlesyndication.com",
+        9
+      ],
+      [
+        "boards.core77.com",
+        8
+      ],
+      [
+        "sea1.discourse-cdn.com",
+        8
+      ],
+      [
+        "www.core77.com",
+        7
+      ],
+      [
+        "us1.discourse-cdn.com",
+        6
+      ],
+      [
+        "0511dd1d89a47e4472d34f3fe1dc0ff1.safeframe.googlesyndication.com",
+        4
+      ],
+      [
+        "ep2.adtrafficquality.google",
+        3
+      ],
+      [
+        "www.googletagmanager.com",
+        2
+      ],
+      [
+        "connect.facebook.net",
+        2
+      ],
+      [
+        "ajax.googleapis.com",
+        1
+      ],
+      [
+        "static.cloudflareinsights.com",
+        1
+      ],
+      [
+        "fonts.googleapis.com",
+        1
+      ],
+      [
+        "www.googletagservices.com",
+        1
+      ],
+      [
+        "analytics.google.com",
+        1
+      ],
+      [
+        "stats.g.doubleclick.net",
+        1
+      ],
+      [
+        "fonts.gstatic.com",
+        1
+      ],
+      [
+        "www.facebook.com",
+        1
+      ],
+      [
+        "ep1.adtrafficquality.google",
+        1
+      ]
+    ],
+    "apiCalls": [
+      "POST www.core77.com/directory/h_ptv_st",
+      "POST www.core77.com/home/increment_channel_view",
+      "POST www.core77.com/cdn-cgi/challenge-platform/h/b/jsd/oneshot/d2d3316b729e/0.7223695054683876:1792645226:Qmtc4EW39uRdDAasxwvQZP46PlJBK7T_DUXOodazBL4/a4e620a3a938e20f",
+      "POST www.google.com/recaptcha/api2/pat ?k",
+      "POST analytics.google.com/g/collect ?v&tid&gtm&_p&_gaz&gcd&npa&dma&_eu&cid&frm&pscdl&rcb&sr&uaa&uab&uafvl&uam&uamb&uap&uapv&uaw&ul&gaf&_s&tag_exp&sid&sct&seg&dl&dt&en&_fv&_nsi&_ss&_ee&tfd",
+      "POST fundingchoicesmessages.google.com/el/AGSKWxV6EX7OPQVpmzie5H_dDG_tDENe4sZ-QI5Gf_S5NkXyhNh7_TUc-wNc4h3pDdDpc6E896e2R1ruf-dCBiAirfqLnzZTgp9uKVGu-CPLpE1XGoAsqo2f-GvF1qsQXvd6qkl2pFAvjw==",
+      "GET securepubads.g.doubleclick.net/gampad/ads ?pvsid&correlator&eid&output&gdfp_req&vrg&ptt&impl&gdpr&iu_parts&enc_prev_ius&prev_iu_szs&fluid&ifi&dids&adfs&sfv&sc&cookie_enabled&abxe&dt&lmt&adxs&adys&biw&bih&scr_x&scr_y&btvi&ucis&oid&u_his&u_h&u_w&u_ah&u_aw&u_cd&u_sd&dmc&bc&nvt&uach&url&vis&psz&msz&fws&ohw&dlt&idt&adks&frm&cpu&eoidce&blev&bisch",
+      "POST fundingchoicesmessages.google.com/el/AGSKWxX_gV4KlZ5yZvlBjOV_i3VdGkqHSDQIOIuMau7LcLkqLbzpfhn-lbQVLE2-yhKZgr8nfvX-UbM3aTV2LtMkuLLsEt4wQifplNDVp5na_9dhg0uM4nFdo7Ls4yKZjSSpLV3L1DDMig==",
+      "GET securepubads.g.doubleclick.net/pcs/view ?xai&sai&sig&uach_m&urlfix&adurl",
+      "GET securepubads.g.doubleclick.net/pcs/view ?xai&sai&sig&uach_m&urlfix&vt&igpp&dett&adurl",
+      "GET pagead2.googlesyndication.com/pagead/gen_204 ?id&type",
+      "GET pagead2.googlesyndication.com/pagead/gen_204 ?id&type&name",
+      "GET pagead2.googlesyndication.com/pagead/gen_204 ?id&type&proto",
+      "GET ep1.adtrafficquality.google/getconfig/sodar ?sv&tid&tv&st&sjk",
+      "POST www.core77.com/cdn-cgi/rum",
+      "POST fundingchoicesmessages.google.com/el/AGSKWxWqdHDeF1jD5y5lthDqV4RC15cYNVjnaRPAi1mvb9UEwdH3bBH80LyKNJtFVQ4AN_3j467vtGpzZwD19_kbAS9g_mzTuw2ro6C7y0WakY-fungUYmrX2YPfUQ5hEkFB5kk7zmcZQg=="
+    ],
+    "services": [
+      "Ads",
+      "Captcha",
+      "Cloudflare",
+      "Google Analytics / Tag Manager",
+      "Meta pixel",
+      "X/Twitter"
+    ]
+  },
+  "consoleSample": [
+    "Unrecognized feature: 'private-token'.",
+    "[DOM] Input elements should have autocomplete attributes (suggested: \"current-password\"): (More info: https://goo.gl/9p2vKq) %o",
+    "[DOM] Input elements should have autocomplete attributes (suggested: \"new-password\"): (More info: https://goo.gl/9p2vKq) %o",
+    "[DOM] Input elements should have autocomplete attributes (suggested: \"new-password\"): (More info: https://goo.gl/9p2vKq) %o",
+    "Failed to load resource: the server responded with a status of 401 ()",
+    "Failed to load resource: the server responded with a status of 401 ()",
+    "[GPT] Slot.setCollapseEmptyDiv is deprecated, use Slot.setConfig({collapseDiv: ...}) instead.\nhttps://goo.gle/gpt-message#171",
+    "[GPT] Invalid arguments: googletag.display('').\nhttps://goo.gle/gpt-message#96",
+    "[GPT] Invalid arguments: googletag.display('').\nhttps://goo.gle/gpt-message#96",
+    "[GPT] Invalid arguments: googletag.display('').\nhttps://goo.gle/gpt-message#96"
+  ],
+  "finalUrl": "https://www.core77.com/",
+  "title": null,
+  "pageTextChars": 18945,
+  "screenshot": true,
+  "javascript": {
+    "statistics": {
+      "relevant_files": 23,
+      "nested_asar_containers": 0,
+      "text_bytes_read": 340688,
+      "invalid_utf8_files": 0,
+      "parsed_javascript_files": 23,
+      "skipped_javascript_files": 0,
+      "visited_ast_nodes": 91970,
+      "findings": 8,
+      "modules": 0,
+      "parse_failures": 0
+    },
+    "appGraph": {
+      "javascript-module": 26,
+      "javascript-asset": 18,
+      "endpoint": 4,
+      "source-map": 1,
+      "artifact": 1
+    },
+    "endpoints": [
+      "candidate spa",
+      "candidate token",
+      "candidate ad_type",
+      "literal partial pollUrl"
+    ],
+    "storage": [],
+    "serviceWorkers": [],
+    "behaviour": {
+      "call-site": 5381,
+      "function": 1762,
+      "boundary": 98,
+      "timer": 21,
+      "promise": 23,
+      "module": 23,
+      "request": 1
+    },
+    "labels": [
+      [
+        "construct",
+        373
+      ],
+      [
+        "JSON.parse",
+        34
+      ],
+      [
+        "String",
+        34
+      ],
+      [
+        "setTimeout",
+        21
+      ],
+      [
+        "Number",
+        14
+      ],
+      [
+        "parseInt",
+        13
+      ],
+      [
+        "is",
+        3
+      ],
+      [
+        "fetch",
+        1
+      ]
+    ],
+    "limitations": [
+      "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+      "Graph coverage is incomplete; unavailable facts remain explicit and must not be read as absence.",
+      "JavaScript and HTML were parsed as inert text; bundle bootstrap code was never executed.",
+      "Static imports, entrypoints, workers, endpoints, and storage relationships do not prove runtime execution.",
+      "Static paths and relationships may remain unresolved when expressions are dynamic or obfuscated.",
+      "Webpack/Rspack factories were recovered from AST literals; REA did not invoke push handlers or bundle bootstrap code."
+    ]
+  }
+}

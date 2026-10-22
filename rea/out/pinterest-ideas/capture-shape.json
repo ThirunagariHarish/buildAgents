@@ -1,0 +1,238 @@
+{
+ "evidence_id": "string(67)",
+ "subject": null,
+ "provider": {
+  "id": "rea-playwright-browser-scenario",
+  "name": "REA Playwright browser scenario capture provider",
+  "version": "1"
+ },
+ "analysis_profile": null,
+ "predicate_type": "rea.browser-scenario-capture",
+ "operation": "capture_browser_scenario",
+ "parameters": {
+  "browser": {
+   "mode": "connect",
+   "cdp_endpoint": "http://127.0.0.1:9333",
+   "target_id": "D9614E6515C619640FD9FF7AA793A09D"
+  },
+  "start_url": {
+   "url": "https://www.pinterest.com/ideas/",
+   "query": []
+  },
+  "environment": {
+   "viewport": {
+    "width": 390,
+    "height": 844,
+    "device_scale_factor": 2
+   },
+   "locale": "en-US",
+   "timezone": "UTC",
+   "color_scheme": "light",
+   "reduced_motion": "reduce",
+   "service_workers": "allow"
+  },
+  "actions": [
+   "5 items",
+   {
+    "step_id": "settle",
+    "action": "wait_for_timeout",
+    "duration_ms": 6000
+   }
+  ],
+  "storage": {
+   "cookies": [],
+   "local_storage": [],
+   "session_storage": []
+  },
+  "secrets": [],
+  "capture": {
+   "after_each_step": [],
+   "at_end": [
+    "3 items",
+    "url"
+   ],
+   "events": [
+    "3 items",
+    "network"
+   ],
+   "network": {
+    "request_body": false,
+    "response_body": true,
+    "header_values": false
+   },
+   "limits": {
+    "max_events": 10000,
+    "max_event_allocation_bytes": 4194304,
+    "max_total_event_allocation_bytes": 16777216,
+    "max_network_transactions": 1024,
+    "max_network_body_bytes": 65536,
+    "max_network_body_allocation_bytes": 1048576,
+    "max_network_header_allocation_bytes": 1048576,
+    "max_network_metadata_allocation_bytes": 1048576
+   }
+  },
+  "scenario_sha256": "string(64)"
+ },
+ "raw_result": null,
+ "normalized_result": {
+  "browser": {
+   "mode": "connect",
+   "process_ownership": "external",
+   "cleanup": "disconnected-external",
+   "product": "Chromium",
+   "version": "155.0.8059.84"
+  },
+  "scenario": {
+   "start_origin": "https://www.pinterest.com",
+   "action_count": 5,
+   "secret_references": [],
+   "network_content": {
+    "request_body": false,
+    "response_body": true,
+    "header_values": false
+   },
+   "event_families": [
+    "3 items",
+    "console"
+   ],
+   "limits": {
+    "max_events": 10000,
+    "max_event_allocation_bytes": 4194304,
+    "max_total_event_allocation_bytes": 16777216,
+    "max_network_transactions": 1024,
+    "max_network_body_bytes": 65536,
+    "max_network_body_allocation_bytes": 1048576,
+    "max_network_header_allocation_bytes": 1048576,
+    "max_network_metadata_allocation_bytes": 1048576
+   }
+  },
+  "duration_ms": 15595,
+  "steps": [
+   "6 items",
+   {
+    "step_index": 0,
+    "step_id": "scenario_start",
+    "action": "goto_start",
+    "elapsed_ms": 1364,
+    "before_url": {
+     "url": "about:blank",
+     "origin": null,
+     "query_parameter_names": [],
+     "redacted": false
+    },
+    "after_url": {
+     "url": "https://www.pinterest.com/ideas/",
+     "origin": "https://www.pinterest.com",
+     "query_parameter_names": [],
+     "redacted": false
+    },
+    "event_sequence_start": 1,
+    "event_sequence_end": 358,
+    "artifacts": {
+     "screenshot": {
+      "state": "…"
+     },
+     "dom": {
+      "state": "…"
+     },
+     "accessibility": {
+      "state": "…"
+     },
+     "url": {
+      "state": "…"
+     },
+     "history": {
+      "state": "…"
+     },
+     "storage": {
+      "state": "…"
+     }
+    },
+    "completeness": {
+     "status": "complete",
+     "equality_eligible": true,
+     "missing_sections": [],
+     "truncated_sections": []
+    },
+    "status": "completed",
+    "error": null
+   }
+  ],
+  "events": {
+   "retained": 444,
+   "dropped": 268,
+   "items": [
+    "444 items",
+    {
+     "sequence": 1,
+     "step_index": 0,
+     "transaction_id": "request-1",
+     "redirected_from_transaction_id": null,
+     "redirected_from_transaction_state": "root",
+     "method": "GET",
+     "url": {
+      "url": "…",
+      "origin": "…",
+      "query_parameter_names": "…",
+      "redacted": "…"
+     },
+     "resource_type": "document",
+     "header_names": [
+      "5 items",
+      "…"
+     ],
+     "kind": "request",
+     "status": null,
+     "failure": null
+    }
+   ],
+   "omissions": {
+    "by_kind": [
+     "7 items",
+     {
+      "kind": "…",
+      "count": "…",
+      "reasons": "…"
+     }
+    ],
+    "network_transactions": [
+     "87 items",
+     {
+      "transaction_id": "…",
+      "omitted_kinds": "…",
+      "reasons": "…"
+     }
+    ],
+    "network_transaction_range": null
+   }
+  },
+  "completeness": {
+   "status": "incomplete",
+   "equality_eligible": false,
+   "missing_sections": [
+    "1 items",
+    "events"
+   ],
+   "truncated_sections": []
+  },
+  "limitations": [
+   "256 items",
+   "string(94)"
+  ]
+ },
+ "confidence": "observed",
+ "authority": "controlled-replay",
+ "environment": {
+  "id": "Chromium@155.0.8059.84",
+  "platform": "unknown",
+  "architecture": "unknown",
+  "isolation": "none"
+ },
+ "limitations": [
+  "258 items",
+  "Artifact identity is unavailable for this observation."
+ ],
+ "relationship_coverage": null,
+ "locations": [],
+ "evidence_links": []
+}

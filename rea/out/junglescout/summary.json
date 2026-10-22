@@ -1,0 +1,350 @@
+{
+  "name": "junglescout",
+  "log": [
+    "capture: ok  (2257121 bytes)",
+    "export scripts: ok",
+    "analyze javascript: ok (197417399 bytes)"
+  ],
+  "network": {
+    "requests": 188,
+    "responses": 184,
+    "failed": 6,
+    "byType": {
+      "document": 3,
+      "script": 64,
+      "font": 11,
+      "stylesheet": 39,
+      "image": 26,
+      "xhr": 20,
+      "fetch": 17,
+      "ping": 6,
+      "other": 2
+    },
+    "topHosts": [
+      [
+        "www.junglescout.com",
+        69
+      ],
+      [
+        "cdn.cookielaw.org",
+        11
+      ],
+      [
+        "fonts.gstatic.com",
+        10
+      ],
+      [
+        "rtp-static.marketo.com",
+        9
+      ],
+      [
+        "cdn.segment.com",
+        8
+      ],
+      [
+        "www.google.com",
+        7
+      ],
+      [
+        "bam.nr-data.net",
+        7
+      ],
+      [
+        "analytics.tiktok.com",
+        6
+      ],
+      [
+        "www.gstatic.com",
+        5
+      ],
+      [
+        "sjrtp8.marketo.com",
+        5
+      ],
+      [
+        "px.ads.linkedin.com",
+        4
+      ],
+      [
+        "www.googletagmanager.com",
+        3
+      ],
+      [
+        "bat.bing.com",
+        3
+      ],
+      [
+        "fonts.googleapis.com",
+        2
+      ],
+      [
+        "get.junglescout.com",
+        2
+      ],
+      [
+        "a.omappapi.com",
+        2
+      ],
+      [
+        "www.youtube.com",
+        2
+      ],
+      [
+        "edge.fullstory.com",
+        2
+      ],
+      [
+        "logx.optimizely.com",
+        2
+      ],
+      [
+        "js.zi-scripts.com",
+        2
+      ],
+      [
+        "ws.zoominfo.com",
+        2
+      ],
+      [
+        "connect.facebook.net",
+        2
+      ],
+      [
+        "munchkin.marketo.net",
+        2
+      ],
+      [
+        "cdn.optimizely.com",
+        1
+      ],
+      [
+        "geolocation.onetrust.com",
+        1
+      ]
+    ],
+    "apiCalls": [
+      "GET cdn.cookielaw.org/consent/4d6182d8-5a10-4244-84dc-300b5142252b/4d6182d8-5a10-4244-84dc-300b5142252b.json",
+      "GET geolocation.onetrust.com/cookieconsentpub/v1/geo/location",
+      "GET get.junglescout.com/pr/grc/pk_JZcAkwb16FUpE81cf0Ls7ZmlEoxme0mK",
+      "POST www.google.com/ccm/collect ?rcb&frm&apvc&auid&dt&tid&en&dl&scrsrc&rnd&navt&npa&did&gdid&gtb&gtm&gcd&dma&tag_exp&tft&tfd&gap.gtb&tids&fmt",
+      "POST ad.doubleclick.net/ccm/s/collect ?auid&gtm&fmt",
+      "POST www.junglescout.com/cdn-cgi/challenge-platform/h/b/jsd/oneshot/d2d3316b729e/0.7223695054683876:1792645226:Qmtc4EW39uRdDAasxwvQZP46PlJBK7T_DUXOodazBL4/a4e627c14e7e0008",
+      "GET cdn.segment.com/v1/projects/YAxc3fZJr2UOtNFjkYaAHH5dhtg9VcFv/settings",
+      "GET partnerlinks.io/pr/grc/pk_JZcAkwb16FUpE81cf0Ls7ZmlEoxme0mK",
+      "GET grsm.io/pr/grc/pk_JZcAkwb16FUpE81cf0Ls7ZmlEoxme0mK",
+      "GET cdn.cookielaw.org/consent/4d6182d8-5a10-4244-84dc-300b5142252b/018e1563-ea28-7983-b19c-5d96aa6f353a/en.json",
+      "GET cdn.cookielaw.org/scripttemplates/202402.1.0/assets/otFlat.json",
+      "GET cdn.cookielaw.org/scripttemplates/202402.1.0/assets/v2/otPcTab.json",
+      "GET cdn.cookielaw.org/scripttemplates/202402.1.0/assets/otCommonStyles.css",
+      "POST analytics.google.com/g/collect ?v&tid&gtm&_p&_gaz&gcd&npa&dma&gdid&ecid&_eu&cid&ec_mode&frm&ir&pscdl&rcb&sr&uaa&uab&uafvl&uam&uamb&uap&uapv&uaw&ul&gaf&_s&tag_exp&sid&sct&seg&dl&dt&en&_fv&_nsi&_ss&tfd",
+      "GET cdn.cookielaw.org/logos/static/ot_guard_logo.svg",
+      "POST px.ads.linkedin.com/wa/ ?medium&fmt",
+      "GET edge.fullstory.com/s/settings/P1RGS/v1/web",
+      "POST www.google.com/recaptcha/api2/pat ?k",
+      "POST logx.optimizely.com/v1/events",
+      "POST rs.fullstory.com/rec/page",
+      "POST api.segment.io/v1/p",
+      "GET sjrtp8.marketo.com/gw1/rtp/api/v1_1/visitor ?sid&aid&1792647504316",
+      "GET sjrtp8.marketo.com/gw1/ga/sgm ?sid&1792647504316",
+      "POST bam.nr-data.net/1/NRJS-11cc7dadda82ce36b05 ?a&v&to&rst&s&ref&ptid&af&ap&be&fe&dc&at&fsh&perf&fp&fcp",
+      "GET js.zi-scripts.com/unified/v1/master/getSubscriptions",
+      "POST bam.nr-data.net/browser/blobs ?browser_monitoring_key&type&app_id&protocol_version&timestamp&attributes",
+      "POST bam.nr-data.net/events/1/NRJS-11cc7dadda82ce36b05 ?a&v&to&rst&s&ref&ptid&ht",
+      "POST bam.nr-data.net/jserrors/1/NRJS-11cc7dadda82ce36b05 ?a&v&to&rst&s&ref&ptid&ht",
+      "GET ws.zoominfo.com/pixel/60f9a4887d506a0012177cfc/ ?iszitag",
+      "POST ws.zoominfo.com/formcomplete-v2/forms",
+      "POST www.google.com/ccm/collect ?rcb&frm&apvc&ae&auid&dt&en&dl&scrsrc&rnd&navt&npa&ep.ads_data_redaction&gdid&gtm&gcd&dma&tag_exp&tft&tfd&fmt",
+      "GET 397-ptp-191.mktoutil.com/mktoutil/lpDomain ?_mchId&_mchTd"
+    ],
+    "services": [
+      "Ads",
+      "Amplitude",
+      "Captcha",
+      "Cookie consent",
+      "Feature flags / A-B tests",
+      "Google Analytics / Tag Manager",
+      "LinkedIn",
+      "Meta pixel",
+      "Segment",
+      "TikTok pixel",
+      "Video embeds",
+      "WordPress"
+    ]
+  },
+  "consoleSample": [
+    "Unrecognized feature: 'private-token'.",
+    "Failed to load resource: the server responded with a status of 401 ()",
+    "%cSegment: Page Viewed - Successful background-color: #ff5e00; color: white",
+    "Found GTM tag"
+  ],
+  "finalUrl": "https://www.junglescout.com/",
+  "title": null,
+  "pageTextChars": 15478,
+  "screenshot": true,
+  "javascript": {
+    "statistics": {
+      "relevant_files": 39,
+      "nested_asar_containers": 0,
+      "text_bytes_read": 462190,
+      "invalid_utf8_files": 0,
+      "parsed_javascript_files": 39,
+      "skipped_javascript_files": 0,
+      "visited_ast_nodes": 136965,
+      "findings": 500,
+      "modules": 221,
+      "parse_failures": 0
+    },
+    "appGraph": {
+      "storage": 33,
+      "javascript-module": 283,
+      "endpoint": 26,
+      "javascript-asset": 37,
+      "artifact": 1,
+      "javascript-chunk": 11,
+      "source-map": 5
+    },
+    "endpoints": [
+      "literal partial `${window?.zitag?.FORMCOMPLETE_BACKEND_URL}`",
+      "candidate analytics_session_id.last_access",
+      "candidate analytics_session_id",
+      "candidate state",
+      "literal partial n",
+      "literal partial n",
+      "candidate clientId",
+      "candidate trackingId",
+      "candidate _omra",
+      "literal partial endpoint",
+      "candidate otpreview",
+      "literal partial `${window?.zitag?.ZI_TAG_BACKEND_URL}getSubscriptions`",
+      "candidate omSessionPageviews",
+      "literal partial `${window?.zitag?.ZI_WS_BACKEND_URL}${websiteId}/?iszitag=true`",
+      "literal partial Qe(e,\"fetch\",r)",
+      "literal /",
+      "candidate otgeo",
+      "literal partial Qe(n,\"beacon\",t)",
+      "candidate omSessionStart",
+      "literal partial endpoint",
+      "candidate omScrollHeight",
+      "literal /",
+      "candidate name",
+      "candidate otreset",
+      "literal partial `${window.zitag.ZI_TAG_BACKEND_URL}logError`",
+      "candidate state"
+    ],
+    "storage": [
+      "session-storage: omdev",
+      "local-storage: window.localStorage.getItem",
+      "session-storage: paidAttributes",
+      "local-storage: window.localStorage.setItem",
+      "session-storage: unifiedScriptVerified",
+      "session-storage: sessionStorage.setItem",
+      "local-storage: htmx-history-cache",
+      "session-storage: sessionStorage.getItem",
+      "local-storage: window.localStorage.removeItem",
+      "session-storage: omScrollHeight",
+      "local-storage: window.localStorage.getItem",
+      "session-storage: otPreviewData",
+      "local-storage: window.localStorage.setItem",
+      "session-storage: window.sessionStorage.getItem",
+      "local-storage: window.localStorage.getItem",
+      "session-storage: ziPendingTelemetry",
+      "local-storage: window.localStorage.getItem",
+      "session-storage: sessionStorage.removeItem",
+      "session-storage: bulkDomainMgmtEnabled",
+      "local-storage: window.localStorage.setItem",
+      "local-storage: window.localStorage.getItem",
+      "local-storage: GET_PERFORMANCE_ATTRIBUTES",
+      "session-storage: ziScriptSession",
+      "session-storage: omdebug",
+      "local-storage: localStorage.setItem",
+      "local-storage: window.localStorage.getItem",
+      "local-storage: window.localStorage.setItem",
+      "local-storage: localStorage.removeItem",
+      "session-storage: sessionStorage.getItem",
+      "local-storage: window.localStorage.setItem",
+      "local-storage: SET_PERFORMANCE_ATTRIBUTES",
+      "local-storage: localStorage.removeItem",
+      "local-storage: localStorage.removeItem"
+    ],
+    "serviceWorkers": [],
+    "behaviour": {
+      "call-site": 9101,
+      "function": 3121,
+      "boundary": 155,
+      "promise": 62,
+      "task": 5,
+      "module": 39,
+      "timer": 28,
+      "event": 41,
+      "listener": 22,
+      "request": 7,
+      "response": 1
+    },
+    "labels": [
+      [
+        "construct",
+        398
+      ],
+      [
+        "String",
+        50
+      ],
+      [
+        "JSON.parse",
+        35
+      ],
+      [
+        "parseInt",
+        29
+      ],
+      [
+        "setTimeout",
+        22
+      ],
+      [
+        "Number",
+        22
+      ],
+      [
+        "parseFloat",
+        9
+      ],
+      [
+        "fetch",
+        7
+      ],
+      [
+        "Boolean",
+        6
+      ],
+      [
+        "setInterval",
+        6
+      ],
+      [
+        "awaited expression",
+        5
+      ],
+      [
+        "is",
+        2
+      ],
+      [
+        "parse",
+        2
+      ],
+      [
+        "json",
+        1
+      ]
+    ],
+    "limitations": [
+      "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+      "Graph coverage is incomplete; unavailable facts remain explicit and must not be read as absence.",
+      "JavaScript and HTML were parsed as inert text; bundle bootstrap code was never executed.",
+      "Static imports, entrypoints, workers, endpoints, and storage relationships do not prove runtime execution.",
+      "Static paths and relationships may remain unresolved when expressions are dynamic or obfuscated.",
+      "Webpack/Rspack factories were recovered from AST literals; REA did not invoke push handlers or bundle bootstrap code."
+    ]
+  }
+}

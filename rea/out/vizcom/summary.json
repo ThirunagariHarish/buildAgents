@@ -1,0 +1,286 @@
+{
+  "name": "vizcom",
+  "log": [
+    "capture: ok  (2275240 bytes)",
+    "export scripts: ok",
+    "analyze javascript: ok (169151307 bytes)"
+  ],
+  "network": {
+    "requests": 236,
+    "responses": 221,
+    "failed": 9,
+    "byType": {
+      "document": 14,
+      "stylesheet": 6,
+      "script": 66,
+      "image": 91,
+      "font": 3,
+      "fetch": 23,
+      "xhr": 26,
+      "ping": 3,
+      "other": 1,
+      "media": 3
+    },
+    "topHosts": [
+      [
+        "cdn.prod.website-files.com",
+        96
+      ],
+      [
+        "challenges.cloudflare.com",
+        32
+      ],
+      [
+        "player.vimeo.com",
+        22
+      ],
+      [
+        "",
+        18
+      ],
+      [
+        "vimeo.com",
+        12
+      ],
+      [
+        "cdn.jsdelivr.net",
+        7
+      ],
+      [
+        "brunhild.challenges.cloudflare.com",
+        6
+      ],
+      [
+        "api.default.com",
+        5
+      ],
+      [
+        "vizcom.vercel.app",
+        4
+      ],
+      [
+        "forms-na2.hsforms.com",
+        4
+      ],
+      [
+        "track-na2.hubspot.com",
+        3
+      ],
+      [
+        "vizcom.com",
+        2
+      ],
+      [
+        "www.googletagmanager.com",
+        2
+      ],
+      [
+        "static.hsappstatic.net",
+        2
+      ],
+      [
+        "js.intercomcdn.com",
+        2
+      ],
+      [
+        "api-iam.intercom.io",
+        2
+      ],
+      [
+        "www.vizcom.com",
+        1
+      ],
+      [
+        "use.typekit.net",
+        1
+      ],
+      [
+        "d3e54v103j8qbb.cloudfront.net",
+        1
+      ],
+      [
+        "js-na2.hs-scripts.com",
+        1
+      ],
+      [
+        "js-na2.hsforms.net",
+        1
+      ],
+      [
+        "hubspotv2.use1-marketplace-1p-apps-prod-red.if.webflow.services",
+        1
+      ],
+      [
+        "p.typekit.net",
+        1
+      ],
+      [
+        "handshake.default.com",
+        1
+      ],
+      [
+        "js-na2.hs-analytics.net",
+        1
+      ]
+    ],
+    "apiCalls": [
+      "GET forms-na2.hsforms.com/embed/v4/render-definition/ssr/246719405/1423bce8-0dbd-477d-850d-484865342ed7",
+      "GET accounts.finsweet.com/v1/components/verify ?componentId&siteId",
+      "GET vimeo.com/api/oembed.json ?url&id&url",
+      "GET unpkg.com/@rive-app/canvas@2.32.2/rive.wasm",
+      "GET forms-na2.hsforms.com/embed/v4/visitor/246719405/1423bce8-0dbd-477d-850d-484865342ed7 ?hutk",
+      "GET forms-na2.hsforms.com/embed/v4/feature-control/246719405",
+      "POST analytics.google.com/g/collect ?v&tid&gtm&_p&_gaz&gcd&npa&dma&_eu&cid&frm&ibt&ngs&pscdl&rcb&sr&uaa&uab&uafvl&uam&uamb&uap&uapv&uaw&ul&_s&tag_exp&sid&sct&seg&dl&dt&en&_fv&_nsi&_ss&tfd",
+      "GET cdn.prod.website-files.com/68da69e18c8988d039a9f6fe/6960ff74015cd6d0850e2616_teams-v3.riv",
+      "POST player.vimeo.com/cdn-cgi/challenge-platform/h/b/precursor/d2d3316b729e/0.09224551311389007:1792645226:463c7A2MIywdbz_WABZv5bCvFajnU4o5MCcWajAbiVI/a4e62672cfaea1eb",
+      "POST player.vimeo.com/cdn-cgi/challenge-platform/h/b/precursor/d2d3316b729e/0.09224551311389007:1792645226:463c7A2MIywdbz_WABZv5bCvFajnU4o5MCcWajAbiVI/a4e62672cfafa1eb",
+      "POST player.vimeo.com/cdn-cgi/challenge-platform/h/b/precursor/d2d3316b729e/0.09224551311389007:1792645226:463c7A2MIywdbz_WABZv5bCvFajnU4o5MCcWajAbiVI/a4e62672cfaca1eb",
+      "POST player.vimeo.com/cdn-cgi/challenge-platform/h/b/precursor/d2d3316b729e/0.09224551311389007:1792645226:463c7A2MIywdbz_WABZv5bCvFajnU4o5MCcWajAbiVI/a4e62672cfa7a1eb",
+      "POST player.vimeo.com/cdn-cgi/challenge-platform/h/b/precursor/d2d3316b729e/0.09224551311389007:1792645226:463c7A2MIywdbz_WABZv5bCvFajnU4o5MCcWajAbiVI/a4e62672cfb0a1eb",
+      "POST player.vimeo.com/cdn-cgi/challenge-platform/h/b/precursor/d2d3316b729e/0.09224551311389007:1792645226:463c7A2MIywdbz_WABZv5bCvFajnU4o5MCcWajAbiVI/a4e62672cfaba1eb",
+      "POST challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/fo/4003708265:1792645222:CJSBiGgb1LNz2DZ8BOPPjGrqSM8MwynAZLPIs-ezHqg/a4e6267509caae26/1zVwAnOrGAgrEmFuXbvc4.qQifc2Pr.2BfC.gSLr1As-1792647447-1.2.1.1-j4kQWfo76C0uyo6xdDVi0acRr7LAyjPWjt9P36mRNEVsGmNxgB5lyI_d47wqwV3J",
+      "POST challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/fo/4003708265:1792645222:CJSBiGgb1LNz2DZ8BOPPjGrqSM8MwynAZLPIs-ezHqg/a4e6267529d8ae26/EtUiZPROB.d6.sr.ZpQJEZpTxZ7WSk7.TADfyO6MWYM-1792647447-1.2.1.1-.RzS4P8FeA_ohqsktd9j20zVXuPz44xHN60Uibdji9pZErYHeD84K4e_oGSvIh0D",
+      "POST api.default.com/api/pixel/website-intent",
+      "POST api.default.com/api/pixel/scheduler-style",
+      "POST api.default.com/api/pixel/known-forms",
+      "HEAD vizcom.com/",
+      "POST challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/fo/4003708265:1792645222:CJSBiGgb1LNz2DZ8BOPPjGrqSM8MwynAZLPIs-ezHqg/a4e6267519d0ae26/VRBc4NKRvWNAqna2zzn7QOvmF7z5sWP1_XlptOdNSLA-1792647447-1.2.1.1-ezZo7.yd63EiwFgQnBQ8TG2AkVG9iFClMn_jGE3mCAvf9qFpnF2db.0bSZ0gYBSo",
+      "POST challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/fo/4003708265:1792645222:CJSBiGgb1LNz2DZ8BOPPjGrqSM8MwynAZLPIs-ezHqg/a4e6267529d4ae26/4u7O_l_LXeEYT6Wf7a24RXbxzl3.VCRDPNbQt5_SVvE-1792647447-1.2.1.1-YtGAVnlzrfOwCIusnR5us4N33f9v3lZxssl9Fw4g1wkKajpRrv7RU0k.ADXO3FbH",
+      "POST challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/fo/4003708265:1792645222:CJSBiGgb1LNz2DZ8BOPPjGrqSM8MwynAZLPIs-ezHqg/a4e62675e9f5ae26/S7PXc8hVQbmJMqTnSXw4oqqhr83ZveuMgPVE_EWfXao-1792647447-1.2.1.1-W_rYVCn9yVzCqMEz1P95gpggiAIonL5YHP5uLWi.sgLP107RL_KlM6PhDsd2F1mz",
+      "POST challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/fo/4003708265:1792645222:CJSBiGgb1LNz2DZ8BOPPjGrqSM8MwynAZLPIs-ezHqg/a4e62675d9f3ae26/yBhvuAeErkXH57kPdjIyklnHQ1kefmzoEX4vt.2chEg-1792647447-1.2.1.1-FP0a8ipfKpVDa5xE9oC_XxQusy51azEtdXza2x4Dt.QbTM2wG5Sc.Qx3GOz3Klj8",
+      "POST api-iam.intercom.io/messenger/web/launcher_settings",
+      "POST api-iam.intercom.io/messenger/web/ping",
+      "GET brunhild.challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/i/a4e62675e9f5ae26/S7PXc8hVQbmJMqTnSXw4oqqhr83ZveuMgPVE_EWfXao-1792647447-1.2.1.1-W_rYVCn9yVzCqMEz1P95gpggiAIonL5YHP5uLWi.sgLP107RL_KlM6PhDsd2F1mz",
+      "GET challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/pat/a4e62675e9f5ae26/1792647448536/62efc3b77182e2dcff6f4c7060381b31568341d347c3b7265a39b2cd333263b5/fWmTM7FHpI3SfCPZ2BLrpzxZFAoebFNN0mE7qYc20Y0-1792647448-1.3.1.1-veEoiso3diuWtI2oZv5Xub46ke6LseUAYmmDiKDamHVP2gCBZseviPehWb4CNPMWp4aUlHnb9x7JOt4A2qVefFwARuYK.C4mPCXRitlD7WW3M7EYiqATRqsMKkg96BONwbWqt.yB5Q4FQCf7MJ_55014sUgBjqUVT1xq8ikVhb97wqAMoGYz3tDqSMdfK8YxTrk17ElpaIcvp_oCnKK8uodlJvYFTlmTUyWqju8wFOysp48AMQM2BRIzHVCf1UrRJkfRqMCkGr7JBJjn420gbdIkXRG7QuBD2ZL9DLgVgE.kiyNHIdk9MnnrUzRZk9ejNF3MNBia308hCn4Wr2jOcWk5e9j2TWbCvMN5Vo.Ld4tYuppBNswKDYFUSP.52LxAS5kMwyU4Vflm68wxkUdJH3DzKaVEETwusfhdhpyz9Ppr72uWZAEM4k3lywbQyZymJ3SXkkvipGQPUAKQD_ngQg12yNUD9e6MZNr5dcbfsWU3hA6hBfTW0WBPOt6RcXjrL.xAq__oLnGHZAVo5JrzVc5vrKup5uTo9wNwnNespIDN0ne603XnRFfI9SaGu4zVKV_cRa8gQ582pAnjQr9B5.sZHqIRPu_QvXgDgRTIeXZ.cpnwe994_QUVni1A35yN.PZCfKU1OWmRnsFgpvYTX3BSYWEi_4jXRMRF_smsWEGifGmFoJaizzhVJ4jWCg_oHKFntoWQYILOU0qwsnEn9mLUk6COfTGmVbIoJi_a6Me3eCrYfpEjG_YU3XK3oy1U9FhNxAEIKnwwf3a_83jIiW80OBUXmblo2s2hMda2klHzzdWb.oP0u5KOD_LgvXwn",
+      "GET brunhild.challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/i/a4e6267519d0ae26/VRBc4NKRvWNAqna2zzn7QOvmF7z5sWP1_XlptOdNSLA-1792647447-1.2.1.1-ezZo7.yd63EiwFgQnBQ8TG2AkVG9iFClMn_jGE3mCAvf9qFpnF2db.0bSZ0gYBSo",
+      "GET challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/pat/a4e6267519d0ae26/1792647448536/efc57e41d59f450559f4217ef9f7c451661d2eadaa02d43b70d1a89d9918cdae/g5073jOjXjgllKia7yFrUrUfNNOrCResvP3TajxoXeA-1792647448-1.3.1.1-6hloUinAdRC_CaVWcO1UHmlYa3yM3m7CUDifPmxElEk470CC8W226RDrvF0Ff1ShS6jf4T_QrHL_mQMsZhjhWR3ULaC6CY4xAyoZgDtRubpifHNLhOjg818J6Pd725BFOnjZzHUA2SxjaoXxhU3ZpJjSzCrL8VDjc.ak.5RFR1kpHThQdO2CE4x1VBQNdNNgS.C0kQpWfZYouuYQpLMoqQMcAGvA.yTEzEb0hIeaD847u0VRbCMgA.2frCcBHCNx_.HlxP0h1CQJKI.JsWfrZuLv3Q5w0CReBRlJlQuw3jV6DOSQl3TyQrtiV6qBVjHPAsVg90M9R1JfKEOnoPDyabgGYBE1ZVRHr0AUDxnyXuuRQvK_VfZxnZIzKhYvnh3z51QDwF9Vh9LgfMA7bmfrev3EybIpNuhc5MvzLGfRyLTfhIjifFEN3yn9YZu_pIhWXj4R.eXdAhU8HpnUmuef.nTXbIcEb_M67DvYYy0UTUxKvMuG3P9nROCDAD0RpeCO5_FyfUJ6tkeUJudINNDyhGpaTHvmt6gkIme2uCW6xVcTCjmMk6YZ_15.6QuWMWwX8CZ_VO.Sm2O3HJe1lXU1GEsXOv1FewQcCQ4LACnoJBbAk9CyJsW3JO3g9hSzAFMrIca3sjc7JJEDs.48clDss35dcl.Dw4bKICYClTpJDflnm2uMB_JSxWHrOJLFTLdUyDXqMuSZSh2KTvir4DBmBRh361.wkIDfpSYHBikzBZDg7VjDXRfe70qHx3FT5Cpqbuza8pbad1Zf6N6DHdoul_GIY4MT.guscaF5L.Jnc2LOt9KKaW1xTqwp.96e8fAG",
+      "GET brunhild.challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/i/a4e6267509caae26/1zVwAnOrGAgrEmFuXbvc4.qQifc2Pr.2BfC.gSLr1As-1792647447-1.2.1.1-j4kQWfo76C0uyo6xdDVi0acRr7LAyjPWjt9P36mRNEVsGmNxgB5lyI_d47wqwV3J",
+      "GET challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/pat/a4e6267509caae26/1792647448574/46319596cc5281b4155680e594b23f399eb295a6c5ee463668cdbc892def89b4/.5B_3SQ3oTW2Hrck1xP22kwqwbU_ntuLeSm.7_QmFPU-1792647448-1.3.1.1-.Hy.Zx8zvrEjrh4_ACivqEKc6KFsSSwAg30wooPkZ5V3usvUcg8UiqmC6yf5ux33JjkeIdiBLKCnM.59fzXvj5Wpi54ZJL51GBY98CgZEa4aI0RHjRLpOGIUJW9QMOiYuPvnqSlnKytxMNyYNmS4yLg_.1KtKJmclI5tIyEmyOKWGaSl0GtAOGTXfs2uy.C1NjWK73zAtBXUZT09vWnNf01GLnm114I8EXxraNVe1mkc63JJAg60MgjZaolElnqPif8MQeX85su74g2h7yA5zhW.nsBz0B9nMNkz9sF1Ht7uT7BNVtc6QHkUt8qAKHZS492t6yXxo1xmzELPm5B98kxNnzf5CCtDrJl7SCgV7ySu0OhpcUn3DlcMT7e_jBvx2RVQW_Iqaw8vZl4a0B16Y02CdKjkQf3271KPhD1.eX2_neA2dwFQIEXavbGJ4Yue9FpszR13MpqY9GVClmTv0hnzVjKuotpJd2IQ2FCvscgQUEYHjYYSQPI94gqZ6puVWu6qI8txmUfhU8qaE1ZraWNJOnziJHfInL.qyuaAEqWvOipzS76p5CqzL3VdUFvHtNIJHtR3Q_RVdkI_m3tVZ1afnpPYLdWaRGvpuFpB_ntph8av4ndGM89mgFxvdXKyoSKZJFs2mX1whFzifNT.wflakgtZ1Qy9oVfKrFKUiVuJactF99.EK.G4CFOYMPSqLyFIm2tVTnMWm8WlxCSYweoCfGrIwiGg3xLJL3pfirZqiOH_lNHB2QxPNvob8X87CM7KG3i0gVoT_FsJtwH1qb7yTMT0oxhEeTQCSmLfOfTYTOqwXZH9lTuFnVFhoxr5",
+      "GET brunhild.challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/i/a4e6267529d4ae26/4u7O_l_LXeEYT6Wf7a24RXbxzl3.VCRDPNbQt5_SVvE-1792647447-1.2.1.1-YtGAVnlzrfOwCIusnR5us4N33f9v3lZxssl9Fw4g1wkKajpRrv7RU0k.ADXO3FbH",
+      "GET challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/pat/a4e6267529d4ae26/1792647448589/cd2573ed989d3b0c78863c7cfe5a52df5b65f9625c586d7dc7ed5730a0b05bf0/Szzj7CnMFau85Bw4uhCKTz4qSZMaYN7rnsm8_.dUwXg-1792647448-1.3.1.1-noEovietu5SiJ4S1NqQkestnEo3oDc.e2pJQ2TQvzX.j6pnwy4cmBv94CUInswxpyp653C9DOIB9BOf9f.3egqbEhiifs9XjvX3KW8NxjRVbplF1sHfLn9rIXP3aTeNJxgU1pjH17T3.2WeUyNV5J4IWFqAgj9E4nV9.zyJTdoGpPOavu.o363gnWc9URoilrIcRwu3HmPTPyjww5bgebx.DjhoQWJsqSzU15xh.32JgQmB_.gk1p6NvZyCGFfnsiOt5MCNCvY6EpjvsjrSC2bBUMce146MOb4l7VvSAj3AmFaBt5k9n1Zg.K9CysKREEg_YrIrDaljBRs1kiKZoa5dq_gWBwZk77oB4mLUz1yqHU_mAtQm1BFebsjfqSTBYt9jomxcymiKJHw2kgYZe07XO5eIPqxZQ5NnXFBlpj0rvvJ85g7crrZbKA7o0YO.BBpF.hGNjeK0H03k7t1QSpMuuEdFHrAlXUup7iS9GAh_EUK5areo7eDRH9d4MtuNMfYzh9DluvCxdA2blCqtK4NCS7DacnVSvFbpVMgF9A_KrK.3xXQct6xfFLw0IoEMBwXzqvyd_wh59fB2bg3m3wRgZFxrSMuXgcrfdMhWsoalt8WEF6bd9WnnVczPskqzelyhla.ZPyfmEem6x7.BaXpMmk6Gbt46ulFgWoyFXTuA6jx2Y0u8sarnNu80IN3J6mSug6ShZSI9xoMt3lrA.fl5jA8Obe8q16ydf8brDeQuYrWbXUzbqExG06OWvCVupbQMDyZgHiHufwY5IDA6uj2RkryvtFmbadZsYVrxsstlZ1AHOl7pIK1kO0N3gITR5",
+      "GET brunhild.challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/i/a4e62675d9f3ae26/yBhvuAeErkXH57kPdjIyklnHQ1kefmzoEX4vt.2chEg-1792647447-1.2.1.1-FP0a8ipfKpVDa5xE9oC_XxQusy51azEtdXza2x4Dt.QbTM2wG5Sc.Qx3GOz3Klj8",
+      "GET challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/pat/a4e62675d9f3ae26/1792647448592/e4b400f6295c965b244629733c0cc8242ed34e4b67b151b02624b8604c9c7f07/hFmBPDCJ5ZyJpZH4ZE0klmntKskSkNc6QIA330OdJC0-1792647448-1.3.1.1-ulsAMN6XamC.y1.LTtWXGmQZgM6_jSxRMfg4.s.oOqWgQGKzhkYApIneruzXycIqQ7EjOgRFKbM3Klm9izMZWkJVgszg9sqEfxV6An6K_T3rfCEeuH5xUMTeOiS3bSbHY90MvQ3aGNt4O5w_WsiLjFfyK7UgB5CsVz_1pA_p9OaoS.3ouvFvMRxAQX_SqHGP00mYUYDqWiSxEwVGjEreJ8Z_9DGQ1KAHLeY8ZaYfv1oZZ5V.NDA42D3SvTa4pm46FNlQcRQMDydqw2ud5chd6csPCYEGpigfs6AVpXGjxOZtmOs7FOBSBWvcQChiio3ksj8cOG0NsMbfO.a.Qoel1lv9SS4h.R6zFEslYnWNfkaJYoR5UQ_7yr3rqEdXbYs0ex84vEV7M21R1tYJVoSkZjA_uwWiF1jhYK_yvhM0xrqCG0SWvbm09IAd9X5Bd19t32Sfc95wljyG1p7LKHVotHgJSh.Ywwqi7QOuodYa6oo2QnwiI5hfjaI4Oa_4d7zFntFkPfAfUSMQZsCP4.EGdVackg.xqteLbq533znVGvB3QaDt.1Y7g64M04pM.7BEpkrmHn.WqXqo3kvz7EYCyxLzpJujdfZTzp6QaJTAOSbOTxF.Lx3x9ajhxM7UGbIrg.MwCqfiHgPGHfDKfAiPrGgW80ulfAiUFT7PXOcZrahTUctbIVgDyazioZqKohBdnH.WK6VbzLyXFK70iICGSwvNJbl40IjUooRhKNAwbbhIRsTwp_mkG_Hocs1y3xfiMG2s.yDorh0APjxEJ6YK.9F2dcOAewbrGvMPAcfMdfp1fxQstB3A1QTWxUJ.loIu",
+      "GET challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/pat/a4e6267529d8ae26/1792647448363/f0341b73eb298deba8e5bf0f9b960c0e1c7391a9d773dbc146dd0f77fc11f452/YB7eiAh2GqCOTZntaevKyJAHrHObfy8HyZ29OJymvmE-1792647448-1.3.1.1-gcZTTdC.BvclxUUnCBu7q8B6AQOoHiqR1Tt2WCwHYqVOPpLCRyDoQJAsLQ0nQhg.Yy8o9U_n5VZpXBXHswlzR4ndJR9hrLFAdjuXuU64JPnhjbACHyxZSrtkjUoffUfjXNuWHT2epG26dSgPXGRjsQZrNvq4RXw0qPvgTQ626nj2TQaDCVPIXTD3fecupsH_8dMb71N6W1Oekh6vyYR3U.aE9yUGdnUgeGNouluWWLfvFriqcQ2DHRuWxsQYiAWAoeuOobh6H6TVpWXdlz1aqzVxRHywM7YN5bYvkrMZI8e7HAM_XNJhgSNkEB9BC.xjGaNr0UMPzvguT53eCCY3Mv6_.3F1UDw1iLSurywPqxXeVouAlYISPS_g9_5TU1CJqSdD6VCCK2wx2_R.osjg2S0xstb7S7iMemd2JzI76n0d7ihhpVx7.LsOMgDudUDJ2nNkInN_kZPrpgTaG2a9zHlKhZ2Hjgo8jfFVq.cAtK6nkDTf74nH2ou4VgPUVUNfR0CU1w45HwdtoJVndXjXrBVf7KUgMh_Um6pThkjU869vN4.GtpFf.OCmjD0okYMs5O_I0Wpj6eOo5bkl6NcguYk2vdqL149_rNy4iaUiFi8ORWVS98lZQZP0kq.kc2yjxFiPaHPo4RRSsU3ioaG7rm_SHgpmI6gnt6gEmjwpRWFHoeDtO.jxKxczFqKS5_EZ.JY.3aPCDaynDVYTVJ504PEbcgmkXLQXOGJqrr_ZDOH46dFgB1VoLlaioZ45QtOca7eL_AcbXi_MA.YEpamU_dlZlUsvY8gBmhrnJ7ucuKxB.llLsTfay9D60rUlS.9a",
+      "GET brunhild.challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/i/a4e6267529d8ae26/EtUiZPROB.d6.sr.ZpQJEZpTxZ7WSk7.TADfyO6MWYM-1792647447-1.2.1.1-.RzS4P8FeA_ohqsktd9j20zVXuPz44xHN60Uibdji9pZErYHeD84K4e_oGSvIh0D"
+    ],
+    "services": [
+      "Ads",
+      "Captcha",
+      "Cloudflare",
+      "Google Analytics / Tag Manager",
+      "HubSpot",
+      "Intercom",
+      "Video embeds",
+      "Webflow"
+    ]
+  },
+  "consoleSample": [
+    "%c ⩩ Site built by https://itsoffbrand.com ⩩ font-size: 12px;color: #fffce1;font-family: monospace;background: #0e100f;display: inline-block;padding: 1rem 3rem;border: 1px solid #fffce1;border-radius:",
+    "getScrollbarWidth is not defined",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "[Pixel] Script loaded successfully: https://handshake.default.com/index.js",
+    "visual expend module initializing...",
+    "Failed to call default function for module \"vimeo\": ReferenceError: Vimeo is not defined\n    at dM (https://vizcom.vercel.app/app.js:4939:33631)\n    at https://vizcom.vercel.app/app.js:4939:36545\n    ",
+    "Failed to call default function for module \"vimeo\": ReferenceError: Vimeo is not defined\n    at dM (https://vizcom.vercel.app/app.js:4939:33631)\n    at https://vizcom.vercel.app/app.js:4939:36545\n    ",
+    "Failed to call default function for module \"vimeo\": ReferenceError: Vimeo is not defined\n    at dM (https://vizcom.vercel.app/app.js:4939:33631)\n    at https://vizcom.vercel.app/app.js:4939:36545\n    ",
+    "Failed to call default function for module \"vimeo\": ReferenceError: Vimeo is not defined\n    at dM (https://vizcom.vercel.app/app.js:4939:33631)\n    at https://vizcom.vercel.app/app.js:4939:36545\n    ",
+    "Failed to call default function for module \"vimeo\": ReferenceError: Vimeo is not defined\n    at dM (https://vizcom.vercel.app/app.js:4939:33631)\n    at https://vizcom.vercel.app/app.js:4939:36545\n    "
+  ],
+  "finalUrl": "https://www.vizcom.com/",
+  "title": null,
+  "pageTextChars": 10977,
+  "screenshot": true,
+  "javascript": {
+    "statistics": {
+      "relevant_files": 30,
+      "nested_asar_containers": 0,
+      "text_bytes_read": 338740,
+      "invalid_utf8_files": 0,
+      "parsed_javascript_files": 30,
+      "skipped_javascript_files": 0,
+      "visited_ast_nodes": 119815,
+      "findings": 108,
+      "modules": 11,
+      "parse_failures": 0
+    },
+    "appGraph": {
+      "javascript-module": 95,
+      "javascript-asset": 15,
+      "artifact": 1,
+      "endpoint": 1,
+      "javascript-chunk": 2,
+      "storage": 3
+    },
+    "endpoints": [
+      "literal partial `${i(l(a,s),n)}/${r}/${o}`"
+    ],
+    "storage": [
+      "local-storage: WebflowEditor",
+      "local-storage: localStorage.setItem",
+      "local-storage: localStorage.removeItem"
+    ],
+    "serviceWorkers": [],
+    "behaviour": {
+      "call-site": 7826,
+      "boundary": 442,
+      "function": 2088,
+      "timer": 64,
+      "promise": 26,
+      "event": 18,
+      "listener": 22,
+      "module": 30,
+      "task": 28,
+      "request": 1
+    },
+    "labels": [
+      [
+        "parseInt",
+        382
+      ],
+      [
+        "construct",
+        105
+      ],
+      [
+        "JSON.parse",
+        48
+      ],
+      [
+        "setTimeout",
+        46
+      ],
+      [
+        "awaited expression",
+        28
+      ],
+      [
+        "setInterval",
+        18
+      ],
+      [
+        "String",
+        7
+      ],
+      [
+        "parseFloat",
+        4
+      ],
+      [
+        "fetch",
+        1
+      ],
+      [
+        "is",
+        1
+      ]
+    ],
+    "limitations": [
+      "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+      "Graph coverage is incomplete; unavailable facts remain explicit and must not be read as absence.",
+      "JavaScript and HTML were parsed as inert text; bundle bootstrap code was never executed.",
+      "Static imports, entrypoints, workers, endpoints, and storage relationships do not prove runtime execution.",
+      "Static paths and relationships may remain unresolved when expressions are dynamic or obfuscated.",
+      "Webpack/Rspack factories were recovered from AST literals; REA did not invoke push handlers or bundle bootstrap code."
+    ]
+  }
+}

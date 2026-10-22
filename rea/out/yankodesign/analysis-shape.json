@@ -1,0 +1,294 @@
+{
+ "evidence_id": "string(67)",
+ "subject": {
+  "name": "files",
+  "digest": {
+   "sha256": "string(64)"
+  },
+  "local_path": "string(75)",
+  "format": "directory",
+  "architecture": null
+ },
+ "provider": {
+  "id": "rea-javascript-application",
+  "name": "REA JavaScript application analyzer",
+  "version": "1"
+ },
+ "analysis_profile": null,
+ "predicate_type": "rea.javascript-application-analysis",
+ "operation": "analyze_javascript_application",
+ "parameters": {
+  "format": "auto",
+  "integrity_policy": "fail"
+ },
+ "raw_result": null,
+ "normalized_result": {
+  "input_path": "string(75)",
+  "format": "directory",
+  "root_artifact_sha256": "string(64)",
+  "inventory_manifest_id": "string(68)",
+  "inventory_graph_sha256": "string(64)",
+  "integrity_contradictions": [],
+  "graph": {
+   "schema": "JavaScriptApplicationGraph",
+   "root_node_ids": [
+    "1 items",
+    "string(73)"
+   ],
+   "nodes": [
+    "35 items",
+    {
+     "node_id": "string(73)",
+     "kind": "javascript-module",
+     "identity": {
+      "strategy": "…",
+      "stability": "…",
+      "artifact_sha256": "…",
+      "namespace": "…",
+      "key": "…"
+     },
+     "observations": [
+      "1 items",
+      "…"
+     ]
+    }
+   ],
+   "edges": [
+    "38 items",
+    {
+     "source_node_id": "string(73)",
+     "target_node_id": "string(73)",
+     "relation": "contains",
+     "properties": {
+      "logical_module_key": "…"
+     },
+     "evidence": {
+      "authority": "…",
+      "state": "…",
+      "confidence": "…",
+      "artifact": "…",
+      "location": "…",
+      "extractor": "…",
+      "coverage": "…",
+      "limitations": "…",
+      "evidence_ids": "…"
+     },
+     "edge_id": "string(73)",
+     "identifier_strategy": {
+      "strategy": "…",
+      "stability": "…"
+     }
+    }
+   ],
+   "coverage": {
+    "status": "partial",
+    "truncated": false,
+    "omitted_count": null,
+    "limits": []
+   },
+   "limitations": [
+    "6 items",
+    "string(132)"
+   ],
+   "graph_id": "string(68)"
+  },
+  "summary": {
+   "browser_windows": 0,
+   "explicit_web_preferences": 0,
+   "preload_entrypoints": 0,
+   "context_bridge_apis": 0,
+   "exposed_api_members": 0,
+   "ipc": {
+    "operations": 0,
+    "literal_channels": 0,
+    "dynamic_channel_operations": 0,
+    "renderer_transmissions": 0,
+    "renderer_listeners": 0,
+    "main_handlers": 0,
+    "paired_renderer_transmissions": 0,
+    "ambiguous_renderer_transmissions": 0,
+    "unpaired_literal_renderer_transmissions": 0
+   },
+   "sender_validation_observations": 0,
+   "utility_processes": 0,
+   "resolved_utility_entrypoints": 0,
+   "native_addon_bindings": 0,
+   "resolved_native_addon_bindings": 0
+  },
+  "statistics": {
+   "relevant_files": 14,
+   "nested_asar_containers": 0,
+   "text_bytes_read": 311470,
+   "invalid_utf8_files": 0,
+   "parsed_javascript_files": 14,
+   "skipped_javascript_files": 0,
+   "visited_ast_nodes": 78912,
+   "findings": 10,
+   "modules": 0,
+   "parse_failures": 0
+  },
+  "limitations": [
+   "6 items",
+   "string(132)"
+  ],
+  "semantic_graph": {
+   "schema": "JavaScriptSemanticRelationGraph",
+   "root_artifact_sha256": "string(64)",
+   "application_graph_id": "string(68)",
+   "root_node_ids": [
+    "14 items",
+    "string(74)"
+   ],
+   "evidence_contexts": [
+    "742 items",
+    {
+     "authority": "unknown",
+     "state": "unknown",
+     "confidence": "unknown",
+     "artifact": {
+      "available": "…",
+      "artifact_id": "…",
+      "sha256": "…"
+     },
+     "extractor": {
+      "name": "…",
+      "version": "…",
+      "operation": "…",
+      "executable_sha256": "…"
+     },
+     "coverage": {
+      "status": "…",
+      "truncated": "…",
+      "omitted_count": "…",
+      "limits": "…"
+     },
+     "limitations": [
+      "1 items",
+      "…"
+     ],
+     "evidence_ids": [],
+     "context_id": "string(78)"
+    }
+   ],
+   "nodes": [
+    "51958 items",
+    {
+     "kind": "expression",
+     "identity": {
+      "artifact_sha256": "…",
+      "module_path": "…",
+      "source_range": "…",
+      "role_key": "…"
+     },
+     "function_node_id": "string(74)",
+     "application_node_ids": [],
+     "label": "n",
+     "properties": {},
+     "evidence": {
+      "context_id": "…",
+      "location": "…"
+     },
+     "node_id": "string(74)"
+    }
+   ],
+   "relations": [
+    "51211 items",
+    {
+     "source_node_id": "string(74)",
+     "target_node_id": "string(74)",
+     "relation": "reads",
+     "resolution": "resolved",
+     "properties": {},
+     "evidence": {
+      "context_id": "…",
+      "location": "…"
+     },
+     "relation_id": "string(78)"
+    }
+   ],
+   "fingerprints": [
+    "1496 items",
+    {
+     "function_node_id": "string(74)",
+     "algorithm": "rea.javascript-semantic-function",
+     "status": "complete",
+     "components": {
+      "parameter_arity": "…",
+      "normalized_ast_sha256": "…",
+      "control_flow_sha256": "…",
+      "relation_shape_sha256": "…",
+      "literal_set_sha256": "…",
+      "effects": "…"
+     },
+     "limitations": [
+      "1 items",
+      "…"
+     ],
+     "evidence": {
+      "context_id": "…",
+      "location": "…"
+     },
+     "fingerprint_id": "string(81)",
+     "fingerprint_sha256": "string(64)"
+    }
+   ],
+   "unknowns": [
+    "16521 items",
+    {
+     "node_id": "string(74)",
+     "family": "call-flow",
+     "relation_kinds": [
+      "1 items",
+      "…"
+     ],
+     "reason": "dynamic-call",
+     "detail": "Unsupported MemberExpression call target.",
+     "candidate_node_ids": [],
+     "evidence": {
+      "context_id": "…",
+      "location": "…"
+     },
+     "unknown_id": "string(77)"
+    }
+   ],
+   "coverage": {
+    "status": "unknown",
+    "truncated": false,
+    "omitted_nodes": 0,
+    "omitted_relations": 0,
+    "limits": [],
+    "families": [
+     "12 items",
+     {
+      "family": "…",
+      "status": "…",
+      "retained_relations": "…",
+      "omitted_relations": "…",
+      "unknown_ids": "…"
+     }
+    ]
+   },
+   "limitations": [
+    "11 items",
+    "string(104)"
+   ],
+   "graph_id": "string(69)"
+  }
+ },
+ "confidence": "derived",
+ "authority": "shipped-artifact",
+ "environment": null,
+ "limitations": [
+  "6 items",
+  "string(132)"
+ ],
+ "relationship_coverage": null,
+ "locations": [
+  "1 items",
+  {
+   "kind": "artifact-path",
+   "path": "artifact-root"
+  }
+ ],
+ "evidence_links": []
+}

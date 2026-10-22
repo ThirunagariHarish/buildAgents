@@ -1,0 +1,253 @@
+{
+  "name": "pinterest-ideas",
+  "log": [
+    "capture: ok  (2533044 bytes)",
+    "export scripts: ok",
+    "analyze javascript: ok (226366467 bytes)"
+  ],
+  "network": {
+    "requests": 120,
+    "responses": 115,
+    "failed": 3,
+    "byType": {
+      "document": 5,
+      "script": 63,
+      "font": 4,
+      "manifest": 1,
+      "image": 33,
+      "other": 4,
+      "fetch": 4,
+      "xhr": 4,
+      "stylesheet": 2
+    },
+    "topHosts": [
+      [
+        "s.pinimg.com",
+        67
+      ],
+      [
+        "i.pinimg.com",
+        32
+      ],
+      [
+        "www.pinterest.com",
+        11
+      ],
+      [
+        "accounts.google.com",
+        4
+      ],
+      [
+        "ct.pinterest.com",
+        2
+      ],
+      [
+        "servedby.flashtalking.com",
+        2
+      ],
+      [
+        "okra.pinterest.com",
+        1
+      ],
+      [
+        "www.recaptcha.net",
+        1
+      ]
+    ],
+    "apiCalls": [
+      "POST www.pinterest.com/_/_/storage_report/",
+      "POST www.pinterest.com/_/_/logClientError/",
+      "POST www.pinterest.com/_/_/csp_report/",
+      "GET www.pinterest.com/secure/unauth_user_data/",
+      "GET www.pinterest.com/secure/arkose_data_exchange/",
+      "GET www.pinterest.com/resource/UserExperienceResource/get/ ?source_url&data&_",
+      "GET www.pinterest.com/resource/BoardsFeedResource/get/ ?source_url&data&_",
+      "GET accounts.google.com/gsi/status ?client_id&cas&bs&has_opted_out_fedcm&is_itp"
+    ],
+    "services": [
+      "Captcha",
+      "Pinterest"
+    ]
+  },
+  "consoleSample": [
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "[GSI_LOGGER]: Your client application uses one of the Google One Tap prompt UI status methods that may stop functioning when FedCM becomes mandatory. Refer to the migration guide to update your code a",
+    "Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner."
+  ],
+  "finalUrl": "https://www.pinterest.com/ideas/",
+  "title": null,
+  "pageTextChars": 2939,
+  "screenshot": true,
+  "javascript": {
+    "statistics": {
+      "relevant_files": 24,
+      "nested_asar_containers": 0,
+      "text_bytes_read": 839643,
+      "invalid_utf8_files": 0,
+      "parsed_javascript_files": 24,
+      "skipped_javascript_files": 0,
+      "visited_ast_nodes": 226144,
+      "findings": 112,
+      "modules": 0,
+      "parse_failures": 0
+    },
+    "appGraph": {
+      "endpoint": 69,
+      "javascript-asset": 24,
+      "javascript-module": 24,
+      "storage": 8,
+      "source-map": 22,
+      "artifact": 1
+    },
+    "endpoints": [
+      "literal /videos/:category/:id",
+      "literal /ads/v4/business_entities",
+      "literal /greeting-card/:inviteCode/",
+      "literal /business/business-manager/:userBizId/reporting-and-analytics",
+      "literal /business/business-manager/:userBizId/shared-tags",
+      "literal /business/business-manager/:userBizId/asset-groups",
+      "literal /pw/:username",
+      "literal /business/business-access/:businessId/security",
+      "literal /business/business-manager/:userBizId/catalogs",
+      "literal /pin/:id/edit",
+      "literal /answers/:questionTerm/:topicId",
+      "literal /business/business-access/:userBizId/shared-tags",
+      "literal /pin/:id/repin",
+      "literal /ideas",
+      "literal /reports-and-violations/*",
+      "literal /pin/:id/comments",
+      "literal /conversions/tag",
+      "literal /board/:id/edit",
+      "candidate utm_pai",
+      "literal /business/business-hierarchy/:businessHierarchyId/business_security",
+      "literal /business/business-hierarchy/:businessHierarchyId/",
+      "candidate twa_type",
+      "literal /shopping/:category/:id",
+      "literal /conversation/:id",
+      "literal /boardsection/:id/edit",
+      "literal /business/catalogs/:userBizId/",
+      "literal /business/business-access/:userBizId/brand-safety",
+      "literal /business/business-access/:userBizId/dashboard",
+      "literal /business/business-manager/:userBizId/brand-safety",
+      "literal /business/business-access/:businessId/",
+      "candidate id",
+      "literal /business/business-access/:businessId/audiences",
+      "literal /business/business-access/:userBizId/asset-groups",
+      "literal /today",
+      "literal /advertiser/:id/ads/edit_draft/",
+      "candidate utm_source",
+      "literal /board/:id/edit/add_collaborators",
+      "literal partial `https://${window.location.hostname}/_/_/storage_report/`",
+      "literal /business/business-manager/:businessId/audiences",
+      "literal /pin/:id",
+      "literal /",
+      "candidate nic_v4",
+      "literal /signup",
+      "literal /business/business-hierarchy/:businessHierarchyId/dashboard",
+      "literal partial o",
+      "literal /advertiser/:id/ads/edit/",
+      "literal /business/business-manager/:businessId/invoice-management",
+      "literal /business/business-manager/:businessId/security",
+      "literal /_/_/logClientError/",
+      "literal /recommendations",
+      "literal /:username/",
+      "literal /ideas/:interest/:id",
+      "literal /settings/claim",
+      "literal /advertiser/:id/ads/duplicate/",
+      "literal /:username/:boardId/:boardSectionId",
+      "literal /business/business-hierarchy/:businessHierarchyId/hierarchy",
+      "literal /advertiser/:id/ads/bulk_edit/",
+      "literal /business/business-manager/:businessId/ad-accounts/cee-migration",
+      "literal /business/business-hierarchy/:businessHierarchyId/managers",
+      "literal /resource/ApiSResource/create/",
+      "literal /business/business-access",
+      "literal /business/business-hierarchy/:businessHierarchyId/directory",
+      "literal /business/business-manager/:userBizId/dashboard",
+      "literal /board/:id/edit/collaborators",
+      "literal /advertiser/:id/ads/*",
+      "literal /business/business-access/:businessId/invoice-management",
+      "literal /business/business-manager/:businessId/",
+      "candidate schema",
+      "literal /advertiser/:id/ads/"
+    ],
+    "storage": [
+      "session-storage: window.sessionStorage.getItem",
+      "session-storage: window.sessionStorage.removeItem",
+      "session-storage: window.sessionStorage.setItem",
+      "local-storage: window.localStorage.clear",
+      "local-storage: window.localStorage.removeItem",
+      "local-storage: window.localStorage.setItem",
+      "local-storage: window.localStorage.getItem",
+      "session-storage: window.sessionStorage.clear"
+    ],
+    "serviceWorkers": [],
+    "behaviour": {
+      "function": 4302,
+      "call-site": 9323,
+      "boundary": 152,
+      "promise": 135,
+      "task": 52,
+      "module": 16,
+      "timer": 18,
+      "request": 2
+    },
+    "labels": [
+      [
+        "construct",
+        261
+      ],
+      [
+        "String",
+        59
+      ],
+      [
+        "awaited expression",
+        52
+      ],
+      [
+        "parseInt",
+        41
+      ],
+      [
+        "Number",
+        25
+      ],
+      [
+        "JSON.parse",
+        16
+      ],
+      [
+        "setTimeout",
+        16
+      ],
+      [
+        "parseFloat",
+        8
+      ],
+      [
+        "is",
+        2
+      ],
+      [
+        "setInterval",
+        2
+      ],
+      [
+        "fetch",
+        2
+      ],
+      [
+        "parse",
+        1
+      ]
+    ],
+    "limitations": [
+      "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+      "Graph coverage is incomplete; unavailable facts remain explicit and must not be read as absence.",
+      "JavaScript and HTML were parsed as inert text; bundle bootstrap code was never executed.",
+      "Static imports, entrypoints, workers, endpoints, and storage relationships do not prove runtime execution.",
+      "Static paths and relationships may remain unresolved when expressions are dynamic or obfuscated.",
+      "Webpack/Rspack factories were recovered from AST literals; REA did not invoke push handlers or bundle bootstrap code."
+    ]
+  }
+}

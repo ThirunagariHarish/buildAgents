@@ -1,0 +1,199 @@
+{
+  "name": "designboom",
+  "log": [
+    "capture: ok  (2229596 bytes)",
+    "export scripts: ok",
+    "analyze javascript: ok (20059430 bytes)"
+  ],
+  "network": {
+    "requests": 110,
+    "responses": 106,
+    "failed": 3,
+    "byType": {
+      "document": 2,
+      "image": 69,
+      "font": 5,
+      "stylesheet": 2,
+      "script": 20,
+      "fetch": 6,
+      "xhr": 3,
+      "media": 3
+    },
+    "topHosts": [
+      [
+        "static.designboom.com",
+        57
+      ],
+      [
+        "www.designboom.com",
+        28
+      ],
+      [
+        "cdn.consentmanager.net",
+        6
+      ],
+      [
+        "j.clarity.ms",
+        3
+      ],
+      [
+        "securepubads.g.doubleclick.net",
+        3
+      ],
+      [
+        "c.delivery.consentmanager.net",
+        2
+      ],
+      [
+        "www.googletagmanager.com",
+        2
+      ],
+      [
+        "www.google-analytics.com",
+        2
+      ],
+      [
+        "c.clarity.ms",
+        2
+      ],
+      [
+        "ssa.daaily.com",
+        1
+      ],
+      [
+        "www.clarity.ms",
+        1
+      ],
+      [
+        "scripts.clarity.ms",
+        1
+      ],
+      [
+        "c.bing.com",
+        1
+      ],
+      [
+        "doublepage.designboom.com",
+        1
+      ]
+    ],
+    "apiCalls": [
+      "GET www.designboom.com/wp-content/cache/page_enhanced/www.designboom.com/root_cache_widgets/shop-archive/_index.html",
+      "GET www.designboom.com/wp-content/cache/page_enhanced/www.designboom.com/root_cache_widgets/wire/_index.html",
+      "POST www.google-analytics.com/g/collect ?v&tid&gtm&_p&gcd&npa&dma&tcfd&cid&frm&ngs&pscdl&rcb&sr&uaa&uab&uafvl&uam&uamb&uap&uapv&uaw&ul&_s&tag_exp&sid&sct&seg&dl&dt&en&_fv&_nsi&_ss&tfd",
+      "POST j.clarity.ms/collect",
+      "GET doublepage.designboom.com/dp.txt ?a178&ts",
+      "POST www.google-analytics.com/g/collect ?v&tid&gtm&_p&gcs&gcd&npa&dma_cps&dma&tcfd&gdid&_eu&ae&cid&frm&ngs&pscdl&rcb&sr&uaa&uab&uafvl&uam&uamb&uap&uapv&uaw&ul&_s&tag_exp&sid&sct&seg&dl&dt&en&_fv&_nsi&_ss&epn.percent_scrolled&tfd",
+      "GET securepubads.g.doubleclick.net/pagead/purl_config ?url&puc_types&pppnc"
+    ],
+    "services": [
+      "Ads",
+      "Google Analytics / Tag Manager",
+      "Microsoft Clarity",
+      "WordPress"
+    ]
+  },
+  "consoleSample": [
+    "[GPT] PubAdsService.enableSingleRequest is deprecated, use googletag.setConfig({singleRequest: ...}) instead.\nhttps://goo.gle/gpt-message#170"
+  ],
+  "finalUrl": "https://www.designboom.com/design/",
+  "title": null,
+  "pageTextChars": 45989,
+  "screenshot": true,
+  "javascript": {
+    "statistics": {
+      "relevant_files": 13,
+      "nested_asar_containers": 0,
+      "text_bytes_read": 55223,
+      "invalid_utf8_files": 0,
+      "parsed_javascript_files": 13,
+      "skipped_javascript_files": 0,
+      "visited_ast_nodes": 15164,
+      "findings": 57,
+      "modules": 0,
+      "parse_failures": 0
+    },
+    "appGraph": {
+      "javascript-asset": 13,
+      "endpoint": 3,
+      "javascript-module": 32,
+      "storage": 10,
+      "artifact": 1
+    },
+    "endpoints": [
+      "literal partial o",
+      "literal partial `${t}/dp.txt?${e}&ts=${Date.now()}`",
+      "literal partial t.dataset.liveSrc"
+    ],
+    "storage": [
+      "local-storage: localStorage.setItem",
+      "local-storage: localStorage.removeItem",
+      "session-storage: e.sessionStorage.getItem",
+      "session-storage: sessionStorage.removeItem",
+      "local-storage: db-color-mode",
+      "session-storage: sessionStorage.getItem",
+      "local-storage: n.localStorage.getItem",
+      "local-storage: cmp_gpcConsentModeEligible.bb3961e46271b",
+      "session-storage: sessionStorage.setItem",
+      "local-storage: localStorage.getItem"
+    ],
+    "serviceWorkers": [],
+    "behaviour": {
+      "boundary": 21,
+      "call-site": 1152,
+      "function": 324,
+      "request": 3,
+      "promise": 29,
+      "timer": 6,
+      "module": 13,
+      "task": 9,
+      "response": 1
+    },
+    "labels": [
+      [
+        "construct",
+        40
+      ],
+      [
+        "Number",
+        9
+      ],
+      [
+        "awaited expression",
+        9
+      ],
+      [
+        "setTimeout",
+        6
+      ],
+      [
+        "parseFloat",
+        4
+      ],
+      [
+        "JSON.parse",
+        4
+      ],
+      [
+        "String",
+        4
+      ],
+      [
+        "fetch",
+        3
+      ],
+      [
+        "text",
+        1
+      ]
+    ],
+    "limitations": [
+      "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+      "Graph coverage is incomplete; unavailable facts remain explicit and must not be read as absence.",
+      "JavaScript and HTML were parsed as inert text; bundle bootstrap code was never executed.",
+      "Static imports, entrypoints, workers, endpoints, and storage relationships do not prove runtime execution.",
+      "Static paths and relationships may remain unresolved when expressions are dynamic or obfuscated.",
+      "Webpack/Rspack factories were recovered from AST literals; REA did not invoke push handlers or bundle bootstrap code."
+    ]
+  }
+}

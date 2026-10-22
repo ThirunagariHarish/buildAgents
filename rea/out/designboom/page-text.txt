@@ -1,0 +1,188 @@
+- document:
+  - dialog "Opt-out for personal information & cookies":
+    - document:
+      - heading "Opt-out for personal information & cookies" [level=1]
+      - text: "When you visit our website we and our partners collect personal information from you regarding your internet activity (e.g. online identifier, IP address, browsing history) and may set cookies or use similar technologies on your device in order to personalize the advertising that you see. This helps us to show you more relevant ads and improves your internet experience. We also use it in order to measure results or align our website content. Our partners may sell this information to third parties. You can opt out of our sharing of your information with third parties here:"
+      - link "Do Not Sell My Personal Information":
+        - /url: "#"
+      - form "Purpose":
+        - 'checkbox "Purpose: Store and/or access information on a device"':
+          - img "Store and/or access information on a device"
+        - text: Store and/or access information on a device
+        - 'checkbox "Purpose: Use precise geolocation data"':
+          - img "Use precise geolocation data"
+        - text: Use precise geolocation data
+        - 'checkbox "Purpose: Identify devices based on information actively requested"':
+          - img "Identify devices based on information actively requested"
+        - text: Identify devices based on information actively requested
+        - 'checkbox "Purpose: Personalised advertising and content, advertising and content measurement, audience research and services development"':
+          - img "Personalised advertising and content, advertising and content measurement, audience research and services development"
+        - text: Personalised advertising and content, advertising and content measurement, audience research and services development
+      - form:
+        - button "SAVE & EXIT"
+        - button "ACCEPT ALL"
+        - link "Customize your choice":
+          - /url: "#"
+        - text: "|"
+        - link "Privacy policy":
+          - /url: https://daaily.com/privacy-policy.html
+        - text: "|"
+        - link "Terms of use":
+          - /url: https://daaily.com/terms-conditions.html
+        - text: "|"
+        - link "Cookie policy":
+          - /url: https://daaily.com/cookie-policy.html
+    - text: Cookie Banner powered by
+    - link "consentmanager.net":
+      - /url: https://www.consentmanager.net/en/cookie-banner/?utm_source=cmplogo2A&utm_medium=banner&utm_campaign=cmplogo2A&utm_term=140254&utm_content=designboom.com
+      - img "consentmanager.net"
+  - link "skip to content":
+    - /url: "#main"
+  - banner:
+    - button "menu"
+    - link "designboom home":
+      - /url: https://www.designboom.com/
+    - 'link "live: PARIS ART WEEK 2026"':
+      - /url: https://www.designboom.com/paris-art-week-2026/
+      - text: live
+    - button "your account"
+    - button "search"
+  - main:
+    - img "studio thusthat turns the rusty-red waste of aluminum production into delicate ceramics"
+    - paragraph:
+      - link "studio thusthat turns the rusty-red waste of aluminum production into delicate ceramics":
+        - /url: https://www.designboom.com/design/studio-thusthat-rusty-red-waste-aluminum-production-delicate-ceramics/
+    - paragraph: 14,041 stories
+    - heading "design" [level=1]
+    - paragraph: design news and projects on designboom spotlight a wide range of projects, from graphic and industrial design to fashion and interior studies. we cover the work of the leading protagonists in the world of design, as well as emerging designers and university graduates. check back for breaking news stories, in-depth features, and one-on-one interviews. many contributions are submitted directly by our global audience of readers, offering a unique cultural take on how design is developing in different parts of the world.
+    - region "featured stories":
+      - article:
+        - figure
+        - link "design":
+          - /url: https://www.designboom.com/design/
+        - 'button "save: apple’s ''designers of tomorrow'' brings a rattling chair and palm-frond lantern to paris"'
+        - heading "apple’s 'designers of tomorrow' brings a rattling chair and palm-frond lantern to paris" [level=3]:
+          - link "apple’s 'designers of tomorrow' brings a rattling chair and palm-frond lantern to paris":
+            - /url: https://www.designboom.com/design/apple-designers-tomorrow-design-miami-paris-2026/
+        - link "kat barandy":
+          - /url: https://www.designboom.com/author/kat-barandy/
+      - group "stories":
+        - article:
+          - figure
+          - link "design":
+            - /url: https://www.designboom.com/design/
+          - 'button "save: steel spheres moving across curved glass frame leonardo garza’s sensory installation for BYREDO"'
+          - heading "steel spheres moving across curved glass frame leonardo garza’s sensory installation for BYREDO" [level=3]:
+            - link "steel spheres moving across curved glass frame leonardo garza’s sensory installation for BYREDO":
+              - /url: https://www.designboom.com/design/steel-spheres-curved-glass-leonardo-garza-sensory-installation-byredo-matter-memory/
+          - text: Leonardo Garza
+          - link "readers":
+            - /url: https://www.designboom.com/readers/
+        - article:
+          - figure
+          - link "design":
+            - /url: https://www.designboom.com/design/
+          - 'button "save: what we learned: spectator and spectacle"'
+          - 'heading "what we learned: spectator and spectacle" [level=3]':
+            - 'link "what we learned: spectator and spectacle"':
+              - /url: https://www.designboom.com/design/what-we-learned-spectator-and-spectacle/
+          - text: Iñaki Laguardia
+        - article:
+          - figure
+          - link "design":
+            - /url: https://www.designboom.com/design/
+          - 'button "save: boss design turns outdated furniture into timeless pieces with circular initiative"'
+          - heading "boss design turns outdated furniture into timeless pieces with circular initiative" [level=3]:
+            - link "boss design turns outdated furniture into timeless pieces with circular initiative":
+              - /url: https://www.designboom.com/design/boss-design-the-loop-lucy-chair-circular-initiative/
+          - text: belen afonso
+          - link "featured":
+            - /url: https://www.designboom.com/featured/
+    - paragraph: "[FEATURED]"
+    - article:
+      - figure
+      - link "design":
+        - /url: https://www.designboom.com/design/
+      - 'button "save: red-and-white aluminum safety barriers convert into public seating at dutch design week"'
+      - heading "red-and-white aluminum safety barriers convert into public seating at dutch design week" [level=3]:
+        - link "red-and-white aluminum safety barriers convert into public seating at dutch design week":
+          - /url: https://www.designboom.com/design/red-white-aluminum-safety-barriers-public-seating-dutch-design-week-martins-mezulis-13_0663_tsx/
+      - text: M.Mezulis
+      - link "readers":
+        - /url: https://www.designboom.com/readers/
+    - article:
+      - figure
+      - link "design":
+        - /url: https://www.designboom.com/design/
+      - 'button "save: jean-baptiste fastrez turns an inflatable boat and a wall fixing into mirrors to look and to be looked at"'
+      - heading "jean-baptiste fastrez turns an inflatable boat and a wall fixing into mirrors to look and to be looked at" [level=3]:
+        - link "jean-baptiste fastrez turns an inflatable boat and a wall fixing into mirrors to look and to be looked at":
+          - /url: https://www.designboom.com/design/jean-baptiste-fastrez-boat-fitting-mirrors-look-looked-at-interview/
+      - link "sofia lekka angelopoulou":
+        - /url: https://www.designboom.com/author/sofia-lekka-angelopoulou/
+    - article:
+      - figure
+      - link "design":
+        - /url: https://www.designboom.com/design/
+      - 'button "save: thai fishing boats inspire rirkrit tiravanija’s dining installation for we are ona in paris"'
+      - heading "thai fishing boats inspire rirkrit tiravanija’s dining installation for we are ona in paris" [level=3]:
+        - link "thai fishing boats inspire rirkrit tiravanija’s dining installation for we are ona in paris":
+          - /url: https://www.designboom.com/design/thai-fishing-boats-rirkrit-tiravanija-dining-installation-we-are-ona-dalad-kambhuart-luca-pronzato-basel-paris-2026-interview/
+      - text: Iñaki Laguardia
+    - article:
+      - figure
+      - link "design":
+        - /url: https://www.designboom.com/design/
+      - 'button "save: a tiny backpack for your phone? this expandable case holds anything from cards to airpods and keys"'
+      - heading "a tiny backpack for your phone? this expandable case holds anything from cards to airpods and keys" [level=3]:
+        - link "a tiny backpack for your phone? this expandable case holds anything from cards to airpods and keys":
+          - /url: https://www.designboom.com/design/backpack-phone-ninja-labs-stretchy-magsafe-flex-pouch-smartphone-pocket/
+      - link "kat barandy":
+        - /url: https://www.designboom.com/author/kat-barandy/
+    - article:
+      - figure
+      - link "design":
+        - /url: https://www.designboom.com/design/
+      - 'button "save: borosilicate drinking glass creates optical illusion of liquid melting into table"'
+      - heading "borosilicate drinking glass creates optical illusion of liquid melting into table" [level=3]:
+        - link "borosilicate drinking glass creates optical illusion of liquid melting into table":
+          - /url: https://www.designboom.com/design/borosilicate-drinking-glass-optical-illusion-liquid-melting-federico-fontanella-traga/
+      - text: TRAGA
+      - link "readers":
+        - /url: https://www.designboom.com/readers/
+    - article:
+      - figure
+      - link "design":
+        - /url: https://www.designboom.com/design/
+      - 'button "save: stefan sagmeister, neri&hu, and dani garcía lead interihotel MAD26''s creative rebellion"'
+      - heading "stefan sagmeister, neri&hu, and dani garcía lead interihotel MAD26's creative rebellion" [level=3]:
+        - link "stefan sagmeister, neri&hu, and dani garcía lead interihotel MAD26's creative rebellion":
+          - /url: https://www.designboom.com/design/stefan-sagmeister-neri-hu-dani-garcia-interihotel-mad26-creative-rebellion/
+      - link "lisa kostyra":
+        - /url: https://www.designboom.com/author/lisa-kostyra/
+      - link "featured":
+        - /url: https://www.designboom.com/featured/
+    - article:
+      - figure
+      - link "design":
+        - /url: https://www.designboom.com/design/
+      - 'button "save: undulating plywood layers form stratum parametric public seating sculpture"'
+      - heading "undulating plywood layers form stratum parametric public seating sculpture" [level=3]:
+        - link "undulating plywood layers form stratum parametric public seating sculpture":
+          - /url: https://www.designboom.com/design/undulating-plywood-layers-stratum-parametric-public-seating-sculpture-zorka-furniture/
+      - text: AY
+      - link "readers":
+        - /url: https://www.designboom.com/readers/
+    - article:
+      - figure
+      - link "design":
+        - /url: https://www.designboom.com/design/
+      - 'button "save: dennis vanderbroeck creates settings for the moments that bring us together"'
+      - heading "dennis vanderbroeck creates settings for the moments that bring us together" [level=3]:
+        - link "dennis vanderbroeck creates settings for the moments that bring us together":
+          - /url: https://www.designboom.com/design/dennis-vanderbroeck-settings-moments-together-spatial-design-fashion-performance-interview/
+      - link "thomai tsimpou":
+        - /url: https://www.designboom.com/author/thomai-tsimpou/
+    - article:
+      - figure
+      - link 

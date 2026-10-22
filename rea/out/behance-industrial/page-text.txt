@@ -1,0 +1,206 @@
+- document:
+  - navigation "Site Wide":
+    - button "Sign In"
+    - list "Primary Navigation Mobile Menu":
+      - listitem:
+        - link "Explore":
+          - /url: /?tracking_source=nav20
+      - listitem:
+        - link "Jobs":
+          - /url: /joblist?tracking_source=nav20
+      - listitem:
+        - button "Resources":
+          - text: Resources
+          - img
+      - listitem:
+        - button "Hire":
+          - text: Hire
+          - img
+      - listitem:
+        - button "Share Work":
+          - text: Share Work
+          - img
+    - list:
+      - listitem:
+        - link "Download on the App Store":
+          - /url: https://itunes.apple.com/us/app/behance/id489667151
+      - listitem:
+        - link "Get it on Google Play":
+          - /url: https://play.google.com/store/apps/details?id=com.behance.behance
+    - heading "More Behance" [level=3]:
+      - button "More Behance"
+    - combobox "View Behance in your language of choice":
+      - option "English" [selected]
+      - option "Čeština"
+      - option "Dansk"
+      - option "Deutsch"
+      - option "Español"
+      - option "Français"
+      - option "Italiano"
+      - option "Nederlands"
+      - option "Norsk"
+      - option "Polski"
+      - option "Português"
+      - option "Pусский"
+      - option "Suomi"
+      - option "Svenska"
+      - option "Türkçe"
+      - option "日本語"
+      - option "한국어"
+      - option "中文(简体)"
+      - option "中文(繁體)"
+    - link "TOU":
+      - /url: https://www.adobe.com/legal/terms.html
+    - link "Privacy":
+      - /url: https://www.adobe.com/privacy.html
+    - link "Community":
+      - /url: /misc/community
+    - link "Help":
+      - /url: https://help.behance.net/
+    - button "Cookie preferences"
+    - link "Do not sell or share my personal information":
+      - /url: https://www.adobe.com/privacy/us-rights.html
+    - img "Adobe, Inc."
+    - list:
+      - listitem:
+        - link "Go to adobe.com":
+          - /url: https://www.adobe.com?promoid=TTGWL148
+      - listitem:
+        - link "Get Adobe Express free":
+          - /url: https://www.adobe.com/express/?geocheck=on&mv=other&promoid=8WLD4Y3J
+    - link "Skip to Main Content":
+      - /url: javascript:void(0)
+    - link "Skip to Footer":
+      - /url: javascript:void(0)
+    - button "Mobile Primary Navigation Menu"
+    - list "Primary Navigation Desktop Menu":
+      - listitem:
+        - link "Navigate to behance.net":
+          - /url: /
+    - button "Use App"
+    - link "search magnifying glass":
+      - /url: /search/projects?tracking_source=nav20
+      - img "search magnifying glass"
+  - main:
+    - text: Oops! We can’t find that page.
+    - link "3D Art":
+      - /url: https://www.behance.net/galleries/3d-art
+    - link "Advertising":
+      - /url: https://www.behance.net/galleries/advertising
+    - link "Architecture":
+      - /url: https://www.behance.net/galleries/architecture
+    - link "Crafts":
+      - /url: https://www.behance.net/galleries/crafts
+    - link "Creative Challenges":
+      - /url: https://www.behance.net/galleries/challenges
+    - link "Fashion":
+      - /url: https://www.behance.net/galleries/fashion
+    - link "Fine Arts":
+      - /url: https://www.behance.net/galleries/fine-arts
+    - link "Game Design":
+      - /url: https://www.behance.net/galleries/game-design
+    - link "Graphic Design":
+      - /url: https://www.behance.net/galleries/graphic-design
+    - link "Illustration":
+      - /url: https://www.behance.net/galleries/illustration
+    - link "Motion":
+      - /url: https://www.behance.net/galleries/motion
+    - link "Photography":
+      - /url: https://www.behance.net/galleries/photography
+    - link "Product Design":
+      - /url: https://www.behance.net/galleries/product-design
+    - link "Sound":
+      - /url: https://www.behance.net/galleries/sound
+    - link "UI/UX":
+      - /url: https://www.behance.net/galleries/ui-ux
+    - link "MIRA Smart Glasses":
+      - /url: https://www.behance.net/gallery/256258737/MIRA-Smart-Glasses
+      - img "MIRA Smart Glasses"
+    - link "MIRA Smart Glasses":
+      - /url: https://www.behance.net/gallery/256258737/MIRA-Smart-Glasses
+    - link "Agus Bobadilla":
+      - /url: https://www.behance.net/agusbobadilla
+    - list:
+      - listitem:
+        - link "3D Art":
+          - /url: /search/projects?field=145
+    - link "146 986":
+      - /url: https://www.behance.net/gallery/256258737/MIRA-Smart-Glasses
+      - img
+      - text: "146"
+      - img
+      - text: "986"
+      - img
+    - link "Aldi's Burger Visual Identity":
+      - /url: https://www.behance.net/gallery/246683287/Aldis-Burger-Visual-Identity
+      - img "Aldi's Burger Visual Identity"
+    - link "Aldi's Burger Visual Identity":
+      - /url: https://www.behance.net/gallery/246683287/Aldis-Burger-Visual-Identity
+    - link "HOZ Creative Lab":
+      - /url: https://www.behance.net/hozcreativelablondon
+    - list:
+      - listitem:
+        - link "Branding":
+          - /url: /search/projects?field=109
+    - link "559 9677":
+      - /url: https://www.behance.net/gallery/246683287/Aldis-Burger-Visual-Identity
+      - img
+      - text: "559"
+      - img
+      - text: "9677"
+      - img
+    - link "Lehigh University":
+      - /url: https://www.behance.net/gallery/225232427/Lehigh-University
+      - img "Lehigh University"
+    - link "Lehigh University":
+      - /url: https://www.behance.net/gallery/225232427/Lehigh-University
+    - link "Gwen Keraval":
+      - /url: https://www.behance.net/gwenkeraval
+    - list:
+      - listitem:
+        - link "Architecture":
+          - /url: /search/projects?field=4
+    - link "288 1789":
+      - /url: https://www.behance.net/gallery/225232427/Lehigh-University
+      - img
+      - text: "288"
+      - img
+      - text: "1789"
+      - img
+    - link "BLOSSOM 39":
+      - /url: https://www.behance.net/gallery/213783113/BLOSSOM-39
+      - img "BLOSSOM 39"
+    - link "BLOSSOM 39":
+      - /url: https://www.behance.net/gallery/213783113/BLOSSOM-39
+    - link "Shelby Hanlon":
+      - /url: https://www.behance.net/shelbyhanloncreative
+    - list:
+      - listitem:
+        - link "Photography":
+          - /url: /search/projects?field=73
+    - link "526 4617":
+      - /url: https://www.behance.net/gallery/213783113/BLOSSOM-39
+      - img
+      - text: "526"
+      - img
+      - text: "4617"
+      - img
+    - link "Naugard":
+      - /url: https://www.behance.net/gallery/257336311/Naugard
+      - img "Naugard"
+    - link "Naugard":
+      - /url: https://www.behance.net/gallery/257336311/Naugard
+    - link "FORNER STUDIO":
+      - /url: https://www.behance.net/kmf
+    - list:
+      - listitem:
+        - link "Branding":
+          - /url: /search/projects?field=109
+    - link "198 991":
+      - /url: https://www.behance.net/gallery/257336311/Naugard
+      - img
+      - text: "198"
+      - img
+      - text: "991"
+      - img
+  - contentinfo "primary"

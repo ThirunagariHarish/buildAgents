@@ -1,0 +1,99 @@
+{
+  "name": "kickstarter-product",
+  "log": [
+    "capture: ok  (127758 bytes)",
+    "export scripts: ok",
+    "analyze javascript: ok (391615 bytes)"
+  ],
+  "network": {
+    "requests": 18,
+    "responses": 15,
+    "failed": 1,
+    "byType": {
+      "document": 3,
+      "script": 9,
+      "xhr": 3,
+      "fetch": 2,
+      "image": 1
+    },
+    "topHosts": [
+      [
+        "",
+        7
+      ],
+      [
+        "challenges.cloudflare.com",
+        6
+      ],
+      [
+        "www.kickstarter.com",
+        4
+      ],
+      [
+        "brunhild.challenges.cloudflare.com",
+        1
+      ]
+    ],
+    "apiCalls": [
+      "POST www.kickstarter.com/cdn-cgi/challenge-platform/h/b/fo/821439567:1792645211:C9qd8LRT8AkdHFNqOvj8U0bUyHMwrG58THmoL0iyFXs/a4e6252b2defa1cd/S_mC1G9l7r1P9ARVECxxkDigdjiHO81u2ADNWkvpO14-1792647395-1.2.1.1-9AX7xrIozIXNMRC.kw7S.ZzVUHqbLy02pQvoeVbOyqJwPR4mj_qeUzxHYDOZqVma",
+      "POST challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/fo/4003708265:1792645222:CJSBiGgb1LNz2DZ8BOPPjGrqSM8MwynAZLPIs-ezHqg/a4e6252d2a41acab/eFsVx1Eskp71yfwfQo7s1frs2PqDGyfPqXeRBAiQ698-1792647395-1.2.1.1-WQ90Plkv3YMCIlRTZqg3I1EgCZ6XNxegLgyvHETL3Per3jm.Zo.T6jvJutE99Wl2",
+      "GET challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/pat/a4e6252d2a41acab/1792647395615/891f56e33eaefc04d6d9c9765254aa207da4fefb7f3dc76f15e10a91ee621a13/acjrwvxRdajaGHyxmcYcN6iW5e1JzDeTPE3bek3A7Xc-1792647395-1.3.1.1-wOd6nC.5BBndfTvVT.gL_EeFScTeWZo3SJAHRaMRHonl6XqwruMzln3xVmPunIfhzwC8PC.LX84xg9x2p8HOoRvEzQcbU6PHudCHwidWl0vwdpQl0tzXUYpxYSe8klAas_tshOtKw3FFRGEDmCLoewPfrg1NjqHJt3idw06muD9Y_0hKEfWy55PnqF16I2YxkUWpgIv5Y2DUw7k.WT3MT6YWe7ynLyo_tpGl6FZZ2ZeR5MGYxulQ0exVVoM5Z4li5mOKZlFzXu.a..seWWxRrZs2a8eK_PrOIVbENKTFKBqPMg3t9dl7Pz87R7UrEFmb9L1d2SjAr5yyAzfIjTszX7aHEIbSFf1WZ6uKjx2gsVH_TCxKKB2hMReccJ.g3aMNkqSid.T1.RnAbOGUoGVI23aaQROehKXIEVxW0LShvlN4paGK_rszqtMe6J_O10KY2NSOMJv7Hcox82TLz758Y2HlWYDgWtHMHk1XnkAc1HHE1L3G1ZX7Wqhgl041N6j6I2k7L0ma4W5sEhqJa1ebsRlv5cKOYJ8dT3IMrByhzpf4.iq8KGXpkDjA_4jL_sf2cOwR2FbpDen..5.eg7NXhJ0cidZOXze6cabPUEtyFGIKfmHFcoOsBxlvlutItS7aH8vQhS9w_G9MXME.Ys7HM78gnIrmYjQ0dRFw7Df0juUAYqenTT1gcaDz0j_yBEQf.cIKgZLHXSkI9aWW.dA0iKTniyH1oLm8sO0_65Yf9WTz1irD68ZkRrynIUCYxuX7X34xxAreeJv6duORv7IvtxYECsS_YuHq0iHrtSlKKNyzRedbEwQ3RKnlSS6v9Ybl",
+      "GET brunhild.challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/i/a4e6252d2a41acab/eFsVx1Eskp71yfwfQo7s1frs2PqDGyfPqXeRBAiQ698-1792647395-1.2.1.1-WQ90Plkv3YMCIlRTZqg3I1EgCZ6XNxegLgyvHETL3Per3jm.Zo.T6jvJutE99Wl2"
+    ],
+    "services": [
+      "Captcha",
+      "Cloudflare"
+    ]
+  },
+  "consoleSample": [
+    "Failed to load resource: the server responded with a status of 403 ()",
+    "No available adapters.",
+    "No available adapters.",
+    "Error",
+    "/.*.*=.*/",
+    "/.*.*=.*/",
+    "function(){return Ar(TT,TE)}",
+    "function(){return Ar(TT,TE)}",
+    "JSHandle@node",
+    "JSHandle@node"
+  ],
+  "finalUrl": "https://www.kickstarter.com/discover/categories/design/product%20design",
+  "title": null,
+  "pageTextChars": 700,
+  "screenshot": true,
+  "javascript": {
+    "statistics": {
+      "relevant_files": 4,
+      "nested_asar_containers": 0,
+      "text_bytes_read": 1164,
+      "invalid_utf8_files": 0,
+      "parsed_javascript_files": 4,
+      "skipped_javascript_files": 0,
+      "visited_ast_nodes": 336,
+      "findings": 0,
+      "modules": 0,
+      "parse_failures": 0
+    },
+    "appGraph": {
+      "javascript-asset": 1,
+      "javascript-module": 4,
+      "artifact": 1
+    },
+    "endpoints": [],
+    "storage": [],
+    "serviceWorkers": [],
+    "behaviour": {
+      "call-site": 16,
+      "module": 4,
+      "function": 8
+    },
+    "labels": [],
+    "limitations": [
+      "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+      "JavaScript and HTML were parsed as inert text; bundle bootstrap code was never executed.",
+      "Static imports, entrypoints, workers, endpoints, and storage relationships do not prove runtime execution.",
+      "Static paths and relationships may remain unresolved when expressions are dynamic or obfuscated.",
+      "Webpack/Rspack factories were recovered from AST literals; REA did not invoke push handlers or bundle bootstrap code."
+    ]
+  }
+}

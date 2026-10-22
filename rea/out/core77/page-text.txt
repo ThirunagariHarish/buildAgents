@@ -1,0 +1,233 @@
+- document:
+  - banner:
+    - list:
+      - listitem:
+        - link "Company Directory":
+          - /url: https://www.core77.com/directory/companies?utm_source=navigation
+      - listitem:
+        - link "ID Jobs":
+          - /url: https://www.core77.com/jobs#keywords=industrial%20designer
+      - listitem:
+        - link "Awards":
+          - /url: https://designawards.core77.com/
+      - listitem:
+        - link "Blog":
+          - /url: /
+      - listitem:
+        - link "Guides":
+          - /url: https://www.core77.com/guides?utm_source=navigation
+      - listitem:
+        - link "Discussion":
+          - /url: https://boards.core77.com
+    - list:
+      - listitem:
+        - link "About":
+          - /url: https://www.core77.com/about?utm_source=navigation
+      - listitem:
+        - link "Contact Us":
+          - /url: https://www.core77.com/contact?utm_source=navigation
+      - listitem:
+        - link "Terms of Use":
+          - /url: https://www.core77.com/terms?utm_source=navigation
+      - listitem:
+        - link "Privacy Policy":
+          - /url: https://www.core77.com/terms?utm_source=navigation
+      - listitem:
+        - link "Advertise":
+          - /url: https://www.core77.com/advertising?utm_source=navigation
+    - list:
+      - listitem:
+        - link "Sign In / Join Now":
+          - /url: https://codex.core77.com/login
+    - heading "Core77" [level=1]:
+      - link "Core77":
+        - /url: https://www.core77.com/
+        - img
+        - text: Core77
+  - iframe
+  - iframe
+  - iframe
+  - list:
+    - listitem:
+      - link:
+        - /url: https://www.core77.com/posts/145698/A-Transforming-Mid-Century-Chair-and-Fun-Knoll-Facts?utm_source=core77&utm_medium=from_tile_image
+        - img
+      - link "Furniture Design":
+        - /url: https://www.core77.com/Furniture-Design?utm_source=tile_flag
+      - heading "A Transforming Mid-Century Chair, and Fun Knoll Facts" [level=1]:
+        - link "A Transforming Mid-Century Chair, and Fun Knoll Facts":
+          - /url: https://www.core77.com/posts/145698/A-Transforming-Mid-Century-Chair-and-Fun-Knoll-Facts?utm_source=core77&utm_medium=from_title
+      - heading "Which Knoll was a Nazi?" [level=2]
+      - heading "October 21 New" [level=3]:
+        - text: October 21
+        - emphasis: New
+    - listitem:
+      - link:
+        - /url: https://www.core77.com/posts/145699/Toyota-Releases-Video-of-Wheelchair-Alternative-Mobility-Concepts-in-Action?utm_source=core77&utm_medium=from_tile_image
+        - img
+      - link "Mobility":
+        - /url: https://www.core77.com/Mobility?utm_source=tile_flag
+      - heading "Toyota Releases Video of Wheelchair-Alternative Mobility Concepts in Action" [level=1]:
+        - link "Toyota Releases Video of Wheelchair-Alternative Mobility Concepts in Action":
+          - /url: https://www.core77.com/posts/145699/Toyota-Releases-Video-of-Wheelchair-Alternative-Mobility-Concepts-in-Action?utm_source=core77&utm_medium=from_title
+      - 'heading "Last year Toyota unveiled three concepts at the Japanese Mobility Show: Walk Me, a..." [level=2]'
+      - heading "October 21 New" [level=3]:
+        - text: October 21
+        - emphasis: New
+    - listitem:
+      - link:
+        - /url: https://www.core77.com/posts/145454/Designing-Play-How-Ekoplay-Turns-Learning-Into-a-Hands-On-Experience?utm_source=core77&utm_medium=from_tile_image
+        - img
+      - link "Toy":
+        - /url: https://www.core77.com/Toy?utm_source=tile_flag
+      - 'heading "Designing Play: How Ekoplay Turns Learning Into a Hands-On Experience" [level=1]':
+        - 'link "Designing Play: How Ekoplay Turns Learning Into a Hands-On Experience"':
+          - /url: https://www.core77.com/posts/145454/Designing-Play-How-Ekoplay-Turns-Learning-Into-a-Hands-On-Experience?utm_source=core77&utm_medium=from_title
+      - heading "Creating objects that invite explorations of ideas" [level=2]
+      - heading "October 21 New" [level=3]:
+        - text: October 21
+        - emphasis: New
+  - list:
+    - listitem:
+      - link:
+        - /url: https://www.core77.com/posts/145696/Work-Sharps-Diminutive-Flexible-Knife-Sharpener?utm_source=core77&utm_medium=from_tile_image
+        - img
+      - link "Tools & Craft":
+        - /url: https://www.core77.com/Tools-and-Craft?utm_source=tile_flag
+      - heading "Work Sharp's Diminutive, Flexible Knife Sharpener" [level=1]:
+        - link "Work Sharp's Diminutive, Flexible Knife Sharpener":
+          - /url: https://www.core77.com/posts/145696/Work-Sharps-Diminutive-Flexible-Knife-Sharpener?utm_source=core77&utm_medium=from_title
+      - heading "This Pivot Plus Knife Sharpener is by Work Sharp, an Oregon-based manufacturer of sharpening..." [level=2]
+      - heading "October 21 New" [level=3]:
+        - text: October 21
+        - emphasis: New
+    - listitem:
+      - link:
+        - /url: https://www.core77.com/posts/145689/An-Electric-Motorcycle-Concept-with-Modular-Scalable-Power?utm_source=core77&utm_medium=from_tile_image
+        - img
+      - link "Mobility":
+        - /url: https://www.core77.com/Mobility?utm_source=tile_flag
+      - heading "An Electric Motorcycle Concept with Modular, Scalable Power" [level=1]:
+        - link "An Electric Motorcycle Concept with Modular, Scalable Power":
+          - /url: https://www.core77.com/posts/145689/An-Electric-Motorcycle-Concept-with-Modular-Scalable-Power?utm_source=core77&utm_medium=from_title
+      - heading "The Cellcius C-01, by Clandestine Design Group" [level=2]
+      - heading "October 20" [level=3]:
+        - text: October 20
+        - emphasis
+    - listitem:
+      - link:
+        - /url: https://www.core77.com/posts/145688/The-Simple-Beautiful-Interface-on-Brauns-1960s-Portable-Heater?utm_source=core77&utm_medium=from_tile_image
+        - img
+      - link "UX":
+        - /url: https://www.core77.com/UX?utm_source=tile_flag
+      - heading "The Simple, Beautiful Interface on Braun's 1960s Portable Heater" [level=1]:
+        - link "The Simple, Beautiful Interface on Braun's 1960s Portable Heater":
+          - /url: https://www.core77.com/posts/145688/The-Simple-Beautiful-Interface-on-Brauns-1960s-Portable-Heater?utm_source=core77&utm_medium=from_title
+      - heading "In the mid-1960s, Dieter Rams and Reinhold Weiss designed Braun's H7, a portable fan..." [level=2]
+      - heading "October 20" [level=3]:
+        - text: October 20
+        - emphasis
+      - text: 5 Favorites
+  - heading "Directory Company Profiles" [level=2]
+  - img
+  - text: Core77 Industrial Design Resources
+  - list:
+    - listitem:
+      - heading "Core77 Directory" [level=5]
+      - text: Find the Best Industrial Design Companies
+      - link "Go":
+        - /url: https://www.core77.com/directory/companies
+    - listitem:
+      - link "Doris Dev":
+        - /url: https://www.core77.com/profiles/Doris-Dev
+        - img
+        - text: Doris Dev
+    - listitem:
+      - link "Delve":
+        - /url: https://www.core77.com/profiles/Delve
+        - img
+        - text: Delve
+    - listitem:
+      - link "Copenhagen Institute of Interaction Design":
+        - /url: https://www.core77.com/profiles/Copenhagen-Institute-of-Interaction-Design
+        - img
+        - text: Copenhagen Institute of Interaction Design
+  - text: Boards Need some advice? Seeking feedback on a project? The conversation starts here.
+  - iframe
+  - list:
+    - listitem:
+      - link:
+        - /url: https://www.core77.com/posts/145685/A-Creative-Low-Tech-Way-to-Cantilever-a-Movable-Lamp?utm_source=core77&utm_medium=from_tile_image
+        - img
+      - link "Lighting":
+        - /url: https://www.core77.com/Lighting?utm_source=tile_flag
+      - heading "A Creative, Low-Tech Way to Cantilever a Movable Lamp" [level=1]:
+        - link "A Creative, Low-Tech Way to Cantilever a Movable Lamp":
+          - /url: https://www.core77.com/posts/145685/A-Creative-Low-Tech-Way-to-Cantilever-a-Movable-Lamp?utm_source=core77&utm_medium=from_title
+      - heading "Journalist Peter Wagner runs MeisterStunde, a web magazine where he interviews master craftspeople and..." [level=2]
+      - heading "October 20" [level=3]:
+        - text: October 20
+        - emphasis
+    - listitem:
+      - link:
+        - /url: https://www.core77.com/posts/145676/Combining-3D-Printing-with-Weaving?utm_source=core77&utm_medium=from_tile_image
+        - img
+      - link "Digital Fabrication":
+        - /url: https://www.core77.com/Digital-Fabrication?utm_source=tile_flag
+      - heading "Combining 3D Printing with Weaving" [level=1]:
+        - link "Combining 3D Printing with Weaving":
+          - /url: https://www.core77.com/posts/145676/Combining-3D-Printing-with-Weaving?utm_source=core77&utm_medium=from_title
+      - heading "FilaLoom, by Joram de Haas" [level=2]
+      - heading "October 19" [level=3]:
+        - text: October 19
+        - emphasis
+    - listitem:
+      - link:
+        - /url: https://www.core77.com/posts/145672/CMFs-Milk-Carton-Inspired-Affordable-Portable-Speaker?utm_source=core77&utm_medium=from_tile_image
+        - img
+      - link "Object Culture":
+        - /url: https://www.core77.com/Object-Culture?utm_source=tile_flag
+      - heading "CMF's Milk-Carton-Inspired Affordable Portable Speaker" [level=1]:
+        - link "CMF's Milk-Carton-Inspired Affordable Portable Speaker":
+          - /url: https://www.core77.com/posts/145672/CMFs-Milk-Carton-Inspired-Affordable-Portable-Speaker?utm_source=core77&utm_medium=from_title
+      - heading "This eye-catching Speaker S is by CMF, a spin-off brand from UK electronics company..." [level=2]
+      - heading "October 19" [level=3]:
+        - text: October 19
+        - emphasis
+      - text: 2 Comments
+    - listitem:
+      - link:
+        - /url: https://www.core77.com/posts/145662/Maya-Barkais-Walking-Men-Public-Art-Installations?utm_source=core77&utm_medium=from_tile_image
+        - img
+      - link "Visual Communication":
+        - /url: https://www.core77.com/Visual-Communication?utm_source=tile_flag
+      - heading "Maya Barkai's \"Walking Men\" Public Art Installations" [level=1]:
+        - link "Maya Barkai's \"Walking Men\" Public Art Installations":
+          - /url: https://www.core77.com/posts/145662/Maya-Barkais-Walking-Men-Public-Art-Installations?utm_source=core77&utm_medium=from_title
+      - heading "Since 2009, NYC-based photographer Maya Barkai has been exhibiting Walking Men, a traveling public..." [level=2]
+      - heading "October 19" [level=3]:
+        - text: October 19
+        - emphasis
+    - listitem:
+      - link:
+        - /url: https://www.core77.com/posts/145633/Core77-Weekly-Roundup-10-13-26-to-10-16-26?utm_source=core77&utm_medium=from_tile_image
+        - img
+      - link "Object Culture":
+        - /url: https://www.core77.com/Object-Culture?utm_source=tile_flag
+      - heading "Core77 Weekly Roundup (10-13-26 to 10-16-26)" [level=1]:
+        - link "Core77 Weekly Roundup (10-13-26 to 10-16-26)":
+          - /url: https://www.core77.com/posts/145633/Core77-Weekly-Roundup-10-13-26-to-10-16-26?utm_source=core77&utm_medium=from_title
+      - 'heading "Here''s what we looked at this week: To build a low-cost EV, Citröen dusts..." [level=2]'
+      - heading "October 16" [level=3]:
+        - text: October 16
+        - emphasis
+    - listitem:
+      - link:
+        - /url: https://www.core77.com/posts/145660/The-International-Linemans-Rodeo-The-Olympics-for-Lineworkers?utm_source=core77&utm_medium=from_tile_image
+        - img
+      - link "Tools & Craft":
+        - /url: https://www.core77.com/Tools-and-Craft?utm_source=tile_flag
+      - 'heading "The International Lineman''s Rodeo: The Olympics for Lineworkers" [level=1]':
+        - 'link "The International Lineman''s Rodeo: The Olympics for Lineworkers"':
+          - /url: https://www.core77.com/posts/145660/The-International-Linemans-Rodeo-The-Olympics-for-Lineworkers?utm_source=core77&utm_medium=from_title
+      - heading "An annual competition for the workers who keep our 

@@ -1,0 +1,100 @@
+- document:
+  - navigation:
+    - link "Home":
+      - /url: /ideas/
+      - img "Home"
+    - link "Search":
+      - /url: /search/
+      - img "Search"
+    - link "My profile":
+      - /url: /unauth-profile/
+      - img "My profile"
+  - main:
+    - button "Pinterest App":
+      - link "Pinterest App":
+        - /url: /
+    - button "Log in"
+    - button "Sign up"
+    - tablist:
+      - tab "Explore" [selected]
+      - tab "Shop"
+    - heading "Explore the best of Pinterest" [level=1]
+    - list:
+      - listitem:
+        - link "2026 top picks Trending halloween costumes":
+          - /url: /fashion/trending-halloween-costumes/
+          - text: 2026 top picks
+          - heading "Trending halloween costumes" [level=2]
+      - listitem:
+        - link "Comfort zone Night time wind down":
+          - /url: /editorialsponsorships/night-time-wind-down/
+          - text: Comfort zone
+          - heading "Night time wind down" [level=2]
+    - button "See more"
+    - heading "Browse by category" [level=2]
+    - list:
+      - listitem:
+        - link "Halloween":
+          - /url: /ideas/halloween/915794205972/
+      - listitem:
+        - link "Animals":
+          - /url: /ideas/animals/925056443165/
+      - listitem:
+        - link "Art":
+          - /url: /ideas/art/961238559656/
+      - listitem:
+        - link "Beauty":
+          - /url: /ideas/beauty/935541271955/
+      - listitem:
+        - link "Design":
+          - /url: /ideas/design/902065567321/
+      - listitem:
+        - link "Diy And Crafts":
+          - /url: /ideas/diy-and-crafts/934876475639/
+    - button "See more"
+    - heading "Explore featured boards" [level=2]
+    - list
+    - button "See more"
+    - heading "What's new on Pinterest" [level=2]
+    - list:
+      - listitem:
+        - button "Pin":
+          - img "Pin"
+      - listitem:
+        - button "Pin":
+          - img "Pin"
+      - listitem:
+        - button "Pin":
+          - img "Pin"
+      - listitem:
+        - button "Pin":
+          - img "Pin"
+      - listitem:
+        - button "Pin":
+          - img "Pin"
+      - listitem:
+        - button "Pin":
+          - img "Pin"
+  - iframe
+  - dialog:
+    - button "Mobile Signup Modal Mask"
+    - img "Pinterest upsell background"
+    - heading "Spooky season starts here" [level=2]
+    - button "Get Pinterest app"
+    - button "Continue with email"
+    - button "GOOGLE_SIGNIN_BUTTON":
+      - iframe
+      - button "Sign in with Google. Opens in new tab"
+    - text: Already a member?
+    - link "Log in":
+      - /url: /login/
+    - text: By continuing, you agree to Pinterest's
+    - link "Terms of Service":
+      - /url: /_/_/policy/terms-of-service/
+    - text: and acknowledge you've read our
+    - link "Privacy Policy":
+      - /url: https://www.pinterest.com/_/_/policy/privacy-policy/
+    - text: .
+    - link "Notice at collection":
+      - /url: https://www.pinterest.com/_/_/policy/notice-at-collection
+    - text: .

@@ -1,0 +1,209 @@
+- document:
+  - banner:
+    - navigation "Main Navigation":
+      - link "Jungle Scout":
+        - /url: https://www.junglescout.com
+        - img "Jungle Scout"
+      - link "Get a Demo":
+        - /url: /enterprise/demo/
+      - button "Toggle navigation": menu
+      - text: search
+      - textbox "Search"
+      - button "chevron_right"
+      - button "Toggle navigation": close
+      - link "Solutions chevron_right":
+        - /url: "#"
+      - link "Products chevron_right":
+        - /url: "#"
+      - link "Pricing":
+        - /url: /pricing/
+      - link "Resources chevron_right":
+        - /url: "#"
+      - link "Our Data":
+        - /url: /amazon-data/
+      - link "Get a Demo":
+        - /url: /enterprise/demo/
+      - link "Login to Jungle Scout Cobalt":
+        - /url: https://jsc.junglescout.com/auth
+        - img
+        - text: Login to Jungle Scout Cobalt
+      - link "Login to Jungle Scout Catalyst":
+        - /url: https://login.junglescout.com
+        - img
+        - text: Login to Jungle Scout Catalyst
+  - document:
+    - main:
+      - link "Bring Amazon Intelligence to Your AI Workflow. Explore the MCP":
+        - /url: https://www.junglescout.com/products/jungle-scout-mcp/
+      - heading "Industry-Leading Amazon Data for Brands, Driving Every Revenue Decision" [level=1]
+      - paragraph: With the most complete Amazon intelligence, Jungle Scout connects every revenue lever – from category benchmarking and pricing to product innovation, reseller control, and advertising performance. The Jungle Scout MCP brings that intelligence directly into the AI workflows your team already uses, turning a simple prompt into a full Amazon analysis.
+      - link "Get a Demo":
+        - /url: /enterprise/demo/
+      - figure:
+        - img "Jungle Scout MCP"
+      - figure
+      - heading "Your best-in-class market share insights" [level=2]
+      - paragraph: More than insights – intelligence that drives action and fuels growth. Turn Amazon data into a competitive advantage.
+      - figure:
+        - img "G2 Best Software badge for 2026 Top 100 Best Software Products"
+      - figure:
+        - img "G2 badge milestone users love us"
+      - figure:
+        - img "G2 badge fall 2026 momentum leader"
+      - heading "20%" [level=3]
+      - paragraph: more accurate than our closest Amazon data competitor
+      - heading "18x" [level=3]
+      - paragraph: more GMV coverage than any other provider
+      - heading "11 years" [level=3]
+      - paragraph: worth of data and Amazon sales estimate refinement
+      - heading "600M+" [level=3]
+      - paragraph: products tracked across 24 categories
+      - heading "Measure the market – and win it" [level=2]
+      - paragraph: Data-backed decision making is the only way to win on Amazon – and beyond. Here are all of the ways we help brands grow revenue on the world’s largest e-commerce marketplace.
+      - figure:
+        - img "MCP AI Workflow"
+      - paragraph: Benchmarking
+      - paragraph: There is revenue to be won in the space between category growth, competitor growth and your growth. Benchmark performance regularly to uncover gaps, prioritize opportunities, and take action faster than the competition.
+      - link "Know where you stand arrow_forward":
+        - /url: https://www.junglescout.com/solutions/benchmark-amazon-performance/
+      - figure:
+        - img "Cobalt Amazon category market share visualization"
+      - paragraph: Pricing
+      - paragraph: The right price point is your key to selling more units or driving revenue per unit. Use real-time pricing insights to adjust confidently and protect both volume and margin.
+      - link "Protect your market share arrow_forward":
+        - /url: https://www.junglescout.com/solutions/protect-market-share/
+      - figure:
+        - img "Jungle Scout Cobalt Dashboard for Amazon Price Analysis"
+      - paragraph: Product Innovation
+      - paragraph: Using real shopper data to determine new products and catalog refinement is the only way to fail proof innovation. Turn shopper signals into a roadmap for what to launch, improve, and discontinue.
+      - link "Launch new products arrow_forward":
+        - /url: https://www.junglescout.com/solutions/product-innovation/
+      - figure:
+        - img "Jungle Scout Cobalt's Competitor Summary"
+      - paragraph: Marketing & Advertising
+      - paragraph: When your spend and shelf are optimized, every campaign fuels sustainable growth. Optimize placement and spend continuously so every dollar drives measurable, compounding returns.
+      - link "Optimize your spend arrow_forward":
+        - /url: https://www.junglescout.com/solutions/optimize-ad-spend/
+      - figure:
+        - img "Jungle Scout Cobalt ad spend vs. search volume"
+      - paragraph: Brand Control
+      - paragraph: Unchecked resellers erode your profit, brand control, and customer trust. Identify unauthorized sellers early and enforce your channel strategy to protect margin and brand equity.
+      - link "Protect your brand arrow_forward":
+        - /url: https://www.junglescout.com/solutions/win-the-amazon-buy-box/
+      - figure:
+        - img "Jungle Scout Cobalt buy box"
+      - figure:
+        - img "Jungle Scout Cobalt Executive Summary dashboard"
+      - heading "Why brands use Jungle Scout" [level=2]
+      - paragraph: Not all Amazon data is created equal. Jungle Scout delivers Amazon intelligence trusted by brands that need to measure performance against the market, not just against themselves.
+      - list:
+        - listitem: Comprehensive 1P & 3P Amazon sales estimates
+        - listitem: Historical depth and daily refresh cadence
+        - listitem: Pricing, promotion, and inventory signals
+        - listitem: Category-level and ASIN-level benchmarking
+        - listitem: Validated models trusted for executive reporting
+      - link "Get a Demo":
+        - /url: /enterprise/demo/
+      - paragraph:
+        - text: When brands need to understand where growth is coming from – and
+        - strong: where it’s being lost – Jungle Scout is the source of truth.
+      - link "Learn more about Our Data arrow_forward":
+        - /url: https://www.junglescout.com/amazon-data/
+      - separator
+      - paragraph: ENTERPRISE SOLUTIONS
+      - heading "The tools that fuel Amazon growth" [level=3]
+      - paragraph: Cobalt gives brands and agencies a complete view of Amazon category performance – revealing the revenue opportunity that exists between your growth, competitor growth, and total market growth.
+      - figure:
+        - img "Jungle Scout MCP"
+      - paragraph: Access the Power of Jungle Scout Data in your AI Workflow
+      - paragraph: Jungle Scout MCP gives your approved AI platform a direct connection to the industry’s most comprehensive and accurate Amazon intelligence.
+      - paragraph: That means your team can receive answers grounded in real marketplace data across categories, competitors, brands, sellers, pricing, products, attributes, keywords, and performance.
+      - list:
+        - listitem: Ask questions in plain English
+        - listitem: Receive data-grounded answers
+        - listitem: Investigate the drivers by asking follow up questions
+        - listitem: Take data-driven action based on the answers provided
+      - link "Explore Jungle Scout MCP":
+        - /url: https://www.junglescout.com/products/jungle-scout-mcp/
+      - figure:
+        - img "Jungle Scout MCP investigating how to win the beauty category"
+      - figure:
+        - img "Jungle Scout Cobalt competitor summary for Lip Mask keyword report"
+      - figure:
+        - img "Jungle Scout Cobalt Amazon intelligence for large brands"
+      - paragraph: Amazon Intelligence for Brands & Agencies
+      - list:
+        - listitem: Benchmark share, velocity, and pricing across categories
+        - listitem: Identify where competitors are outperforming the market
+        - listitem: Quantify whitespace for expansion and innovation
+        - listitem: Inform executive-level Amazon growth strategy with confidence
+      - link "Explore Cobalt":
+        - /url: /products/cobalt/
+      - paragraph:
+        - emphasis: On average, brands using Cobalt
+        - strong:
+          - emphasis: grew Amazon revenue 28% year over year.
+      - figure:
+        - img "Jungle Scout Cloud Amazon intelligence data for BI teams"
+      - paragraph: Amazon intelligence for BI teams
+      - paragraph: Cloud provides direct access to Jungle Scout’s Amazon datasets for organizations that need to power their own analytics, models, or platforms.
+      - list:
+        - listitem: Fuel proprietary insights and reporting
+        - listitem: Integrate sales, revenue and market data into internal systems
+      - link "Explore Cloud Data Solutions":
+        - /url: /products/cloud/
+      - figure:
+        - img "Jungle Scout Consult executive Amazon reporting"
+      - paragraph: Executive Amazon Reporting & Strategic Insight
+      - paragraph: Consult pairs Jungle Scout intelligence with expert analysis to help leadership teams move faster and with confidence. Purpose-built for executive reporting, strategic planning, and high-stakes decision-making.
+      - list:
+        - listitem: Translate Amazon data into clear growth narratives
+        - listitem: Align stakeholders around market realities
+        - listitem: Accelerate strategy with expert interpretation
+      - link "Get Custom Insights":
+        - /url: /products/consult/
+      - heading "The Latest Data Insights" [level=2]
+      - link "All resources":
+        - /url: /resources/
+      - paragraph: BEAUTY, HEALTH & WELLNESS REPORT
+      - heading "How formulation trends, ingredient virality, and cross-category innovation are reshaping Amazon" [level=6]
+      - paragraph: See the trends >
+      - link "Beauty, Health & Wellness Innovation Report":
+        - /url: https://www.junglescout.com/resources/reports/beauty-health-wellness-innovation-report/
+      - paragraph: REPORT
+      - heading "Which Amazon categories are the best (and worst) to sell in?" [level=6]
+      - paragraph: Explore our findings >
+      - link "Which Amazon categories are the best (and worst) to sell in?":
+        - /url: /resources/reports/best-and-worst-amazon-categories-2025/
+      - paragraph: AMAZON DATA REPORT
+      - heading "The winning formula for growth through innovation on Amazon" [level=6]
+      - paragraph: See the trends >
+      - link "Amazon Innovation Report":
+        - /url: https://www.junglescout.com/resources/reports/amazon-innovation-report/
+      - paragraph: DATA GUIDE
+      - heading "Navigate Amazon’s data complexities to fuel success." [level=6]
+      - paragraph: Get the data >
+      - link "Navigate Amazon’s data complexities to fuel success.":
+        - /url: /resources/guides/amazon-leveraging-data-for-growth/
+      - paragraph: REPORT
+      - heading "Consumer Shopping Trends on Amazon" [level=6]
+      - paragraph: Learn more >
+      - link "Consumer Shopping Trends on Amazon":
+        - /url: /resources/reports/consumer-trends-2025/
+      - heading "Amazon revenue growth starts with Jungle Scout" [level=2]
+      - paragraph: Whether you’re a $5M brand entering a competitive category or a $500M enterprise defending share, Jungle Scout gives you the intelligence to grow faster than the market.
+      - link "Get a Demo":
+        - /url: /enterprise/demo/
+  - contentinfo:
+    - img "Jungle Scout"
+    - heading "Accelerate your Amazon business today!" [level=2]
+    - img "G2 Best Software badge for 2026 Top 100 Best Software Products"
+    - img "aws-partner"
+    - paragraph: Download the Jungle Scout Cobalt mobile app.
+    - link "Download on the App Store":
+      - /url: https://apps.apple.com/us/app/jungle-scout-cobalt/id6798426173?itscg=30200&itsct=apps_box_badge&mttnsubad=6798426173
+      - img "Download on the App Store"
+    - heading "Brands & Enterprises" [level=3]
+    - paragraph:
+      - link "Jungle Scout MCP":
+        - /url: /products/ju

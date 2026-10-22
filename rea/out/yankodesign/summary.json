@@ -1,0 +1,208 @@
+{
+  "name": "yankodesign",
+  "log": [
+    "capture: ok  (1259023 bytes)",
+    "export scripts: ok",
+    "analyze javascript: ok (99594794 bytes)"
+  ],
+  "network": {
+    "requests": 88,
+    "responses": 87,
+    "failed": 17,
+    "byType": {
+      "document": 11,
+      "stylesheet": 8,
+      "script": 24,
+      "image": 16,
+      "font": 9,
+      "fetch": 18,
+      "xhr": 1,
+      "other": 1
+    },
+    "topHosts": [
+      [
+        "www.yankodesign.com",
+        23
+      ],
+      [
+        "pagead2.googlesyndication.com",
+        16
+      ],
+      [
+        "fonts.gstatic.com",
+        8
+      ],
+      [
+        "fonts.googleapis.com",
+        7
+      ],
+      [
+        "securepubads.g.doubleclick.net",
+        7
+      ],
+      [
+        "tpc.googlesyndication.com",
+        6
+      ],
+      [
+        "googleads.g.doubleclick.net",
+        5
+      ],
+      [
+        "4529d192cd10223e7e9bdb4b19d0df43.safeframe.googlesyndication.com",
+        3
+      ],
+      [
+        "ep2.adtrafficquality.google",
+        3
+      ],
+      [
+        "challenges.cloudflare.com",
+        2
+      ],
+      [
+        "www.google-analytics.com",
+        2
+      ],
+      [
+        "ep1.adtrafficquality.google",
+        2
+      ],
+      [
+        "www.googletagmanager.com",
+        1
+      ],
+      [
+        "static.getclicky.com",
+        1
+      ],
+      [
+        "in.getclicky.com",
+        1
+      ],
+      [
+        "www.google.com",
+        1
+      ]
+    ],
+    "apiCalls": [
+      "POST www.google-analytics.com/g/collect ?v&tid&gtm&_p&gcd&npa&dma&gdid&cid&frm&ngs&pscdl&rcb&sr&uaa&uab&uafvl&uam&uamb&uap&uapv&uaw&ul&_s&tag_exp&sid&sct&seg&dl&dt&en&_fv&_nsi&_ss&_ee&ep.use_amp_client_id&ep.forceSSL&ep.author&ep.tags&tfd",
+      "GET securepubads.g.doubleclick.net/gampad/ads ?pvsid&correlator&eid&output&gdfp_req&vrg&ptt&impl&iu_parts&enc_prev_ius&prev_iu_szs&fluid&ifi&dids&adfs&sfv&sc&cookie_enabled&abxe&dt&lmt&adxs&adys&biw&bih&scr_x&scr_y&btvi&ucis&oid&u_his&u_h&u_w&u_ah&u_aw&u_cd&u_sd&dmc&bc&nvt&uach&url&vis&psz&msz&fws&ohw&dlt&idt&adks&frm&cpu&eoidce&pgls",
+      "GET in.getclicky.com/in.php ?site_id&href&title&res&lang&tz&tc&ck&x&f",
+      "GET securepubads.g.doubleclick.net/pcs/view ?xai&sai&sig&uach_m&urlfix&adurl",
+      "GET pagead2.googlesyndication.com/pagead/gen_204 ?id&type",
+      "GET pagead2.googlesyndication.com/pagead/gen_204 ?id&type&name",
+      "GET pagead2.googlesyndication.com/pagead/gen_204 ?id&type&proto",
+      "GET securepubads.g.doubleclick.net/pcs/view ?xai&sai&sig&uach_m&urlfix&vt&igpp&dett&adurl",
+      "POST pagead2.googlesyndication.com/pagead/ping ?e",
+      "GET ep1.adtrafficquality.google/getconfig/sodar ?sv&tid&tv&st&sjk",
+      "POST www.google-analytics.com/g/collect ?v&tid&gtm&_p&gcd&npa&dma&gdid&_eu&cid&frm&ngs&ni&pscdl&rcb&sr&uaa&uab&uafvl&uam&uamb&uap&uapv&uaw&ul&tag_exp&sid&sct&seg&dl&dt&_s&tfd"
+    ],
+    "services": [
+      "Ads",
+      "Captcha",
+      "Cloudflare",
+      "Google Analytics / Tag Manager",
+      "WordPress"
+    ]
+  },
+  "consoleSample": [
+    "JQMIGRATE: Migrate is installed, version 3.4.1",
+    "[GPT] PubAdsService.enableSingleRequest is deprecated, use googletag.setConfig({singleRequest: ...}) instead.\nhttps://goo.gle/gpt-message#170",
+    "Access to fetch at 'https://in.getclicky.com/in.php?site_id=101265524&href=%2F&title=Yanko%20Design%20-%20Modern%20Industrial%20Design%20News&res=800x600&lang=en-US&tz=UTC&tc=&ck=1&x=6ao5cg&f=1' from ",
+    "Failed to load resource: net::ERR_FAILED",
+    "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+  ],
+  "finalUrl": "https://www.yankodesign.com/",
+  "title": null,
+  "pageTextChars": 25327,
+  "screenshot": true,
+  "javascript": {
+    "statistics": {
+      "relevant_files": 14,
+      "nested_asar_containers": 0,
+      "text_bytes_read": 311470,
+      "invalid_utf8_files": 0,
+      "parsed_javascript_files": 14,
+      "skipped_javascript_files": 0,
+      "visited_ast_nodes": 78912,
+      "findings": 10,
+      "modules": 0,
+      "parse_failures": 0
+    },
+    "appGraph": {
+      "javascript-module": 21,
+      "javascript-asset": 12,
+      "source-map": 1,
+      "artifact": 1
+    },
+    "endpoints": [],
+    "storage": [],
+    "serviceWorkers": [],
+    "behaviour": {
+      "call-site": 4574,
+      "function": 1532,
+      "boundary": 88,
+      "timer": 33,
+      "module": 14,
+      "listener": 34,
+      "promise": 13,
+      "event": 36,
+      "request": 1
+    },
+    "labels": [
+      [
+        "construct",
+        211
+      ],
+      [
+        "setTimeout",
+        29
+      ],
+      [
+        "JSON.parse",
+        24
+      ],
+      [
+        "parseInt",
+        20
+      ],
+      [
+        "String",
+        19
+      ],
+      [
+        "Number",
+        15
+      ],
+      [
+        "parseFloat",
+        6
+      ],
+      [
+        "is",
+        4
+      ],
+      [
+        "setInterval",
+        3
+      ],
+      [
+        "setImmediate",
+        1
+      ],
+      [
+        "fetch",
+        1
+      ]
+    ],
+    "limitations": [
+      "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+      "Graph coverage is incomplete; unavailable facts remain explicit and must not be read as absence.",
+      "JavaScript and HTML were parsed as inert text; bundle bootstrap code was never executed.",
+      "Static imports, entrypoints, workers, endpoints, and storage relationships do not prove runtime execution.",
+      "Static paths and relationships may remain unresolved when expressions are dynamic or obfuscated.",
+      "Webpack/Rspack factories were recovered from AST literals; REA did not invoke push handlers or bundle bootstrap code."
+    ]
+  }
+}

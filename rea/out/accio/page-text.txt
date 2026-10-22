@@ -1,0 +1,163 @@
+- document:
+  - navigation:
+    - link "Accio Work":
+      - /url: "#home"
+      - img "Accio Work"
+    - button "Open navigation menu"
+  - main:
+    - heading "Your Agentic Business Team Switch character" [level=1]:
+      - text: Your Agentic Business Team
+      - button "Switch character"
+    - paragraph: Real work. Real impact.
+    - button "Download for macOS For macOS 12 or later"
+    - button
+    - text: Loved by 10+ million monthly active users
+    - button "toggle sidebar"
+    - complementary:
+      - img "Accio Work"
+      - button "New task"
+      - button "Agents"
+      - button "Plugins"
+      - button "Scheduled Tasks"
+      - button "Channels"
+      - text: Tasks Accio
+      - button "Store Performance Analysis"
+      - button "E-commerce Hero Images unread": E-commerce Hero Images
+      - button "Buyer Due Diligence unread": Buyer Due Diligence
+      - button "Competitor Comparison unread": Competitor Comparison
+      - button "Team Beta"
+      - text: John
+    - main:
+      - heading "Store Performance Analysis" [level=3]
+      - button
+      - button
+      - button
+      - text: John Pull together the last seven days of performance data for my Tmall and Taobao stores, confirm the scope with me, then generate a comparison report. Accio
+      - button "Thought for 96s":
+        - img
+        - text: Thought for 96s
+        - img
+      - 'heading "7-Day E-Commerce Performance Review: From Volatile Sales to Sustainable Growth" [level=3]'
+      - paragraph: E-commerce performance cannot be evaluated by gross sales alone. A short-term surge driven by a promotion may conceal weak day-to-day sales, a high refund rate, insufficient content-driven traffic, and slow after-sales support.
+      - paragraph:
+        - text: This review draws on operating data from a brand’s Tmall and Taobao stores between
+        - strong: August 6 and August 12, 2026
+        - text: . It also incorporates recent negative reviews and customer-service conversations from the Tmall store. The analysis focuses on four areas—sales stability, refund risk, traffic composition, and service experience—and provides a practical improvement plan.
+      - heading "Key Findings" [level=4]
+      - list:
+        - listitem:
+          - text: GMV at both stores followed a distinct “spike-driven” pattern. The Tmall store generated
+          - strong: 65.5%
+          - text: of its GMV during its three highest-revenue days, compared with
+          - strong: 55.5%
+          - text: for the Taobao store.
+        - listitem:
+          - text: Refunds at the Tmall store amounted to
+          - strong: 35.3%
+          - text: of GMV, making them a significant risk to net revenue and operating profit.
+        - listitem:
+          - text: The Taobao store generated only
+          - strong: 54%
+          - text: of the traffic achieved by comparable stores at the same tier. Its content-driven traffic reached just
+          - strong: 3.4%
+          - text: of the relevant peer benchmark.
+        - listitem: "Twenty recent unanswered negative reviews at the Tmall store were concentrated in four areas: product performance, delivery execution, information consistency, and after-sales response."
+        - listitem: Rather than pursuing isolated improvements, the business needs an integrated operating loop built around stable customer acquisition, accurate promises, reliable fulfillment, and proactive after-sales support.
+      - separator
+      - heading "1. Performance Over the Past Seven Days" [level=4]
+      - heading "GMV Is Highly Concentrated, Indicating Weak Baseline Sales" [level=5]
+      - paragraph: Sales at both stores were concentrated in a small number of peak days.
+      - table:
+        - rowgroup:
+          - row "Store Share of GMV Generated on the Top 3 Days Primary Characteristic":
+            - columnheader "Store"
+            - columnheader "Share of GMV Generated on the Top 3 Days"
+            - columnheader "Primary Characteristic"
+        - rowgroup:
+          - row "Tmall store 65.5% High dependence on campaigns, paid promotion, or a few breakout days":
+            - cell "Tmall store"
+            - cell "65.5%"
+            - cell "High dependence on campaigns, paid promotion, or a few breakout days"
+          - row "Taobao store 55.5% Significant sales volatility and a weak baseline outside peak periods":
+            - cell "Taobao store"
+            - cell "55.5%"
+            - cell "Significant sales volatility and a weak baseline outside peak periods"
+      - paragraph: When more than half of GMV is generated in just three days, revenue becomes highly sensitive to campaign schedules, advertising changes, and fluctuations in the performance of core products. Strong peak-day sales are valuable, but without steady orders on regular days, overall performance remains unpredictable.
+      - paragraph: "In addition to total GMV, the following indicators should be monitored when evaluating growth quality:"
+      - list:
+        - listitem: Average daily GMV outside campaign periods
+        - listitem: Share of transactions from new and returning customers
+        - listitem: Number of consecutive selling days for core SKUs
+        - listitem: Contribution of organic and paid traffic
+        - listitem: Sales retention after campaigns end
+      - heading "Refunds Are Significantly Eroding Tmall Revenue" [level=5]
+      - paragraph:
+        - text: Refunds at the Tmall store reached
+        - strong: 35.3%
+        - text: of GMV. In other words, for every RMB 100 in gross sales, approximately RMB 35.30 was subject to refund deductions.
+      - paragraph: "A high refund ratio reduces net revenue and can create several secondary effects:"
+      - list:
+        - listitem: Longer payback periods for advertising expenditure
+        - listitem: Higher customer-service and after-sales costs
+        - listitem: Pressure on product ratings and store experience scores
+        - listitem: Potential impact on platform traffic allocation
+        - listitem: Slower inventory turnover and more difficulty reselling returned products
+      - paragraph: Customer reviews indicate that refunds may not stem from product quality alone. Product-page descriptions, delivery execution, and after-sales responses may also contribute. Refund reduction therefore requires improvements across products, content, fulfillment, and service—not just customer-retention efforts after a complaint arises.
+      - heading "The Taobao Store Has a Significant Traffic Gap" [level=5]
+      - paragraph:
+        - text: The Taobao store generated only
+        - strong: 54%
+        - text: of the traffic achieved by comparable stores at the same tier. Content-driven traffic reached just
+        - strong: 3.4%
+        - text: of the relevant peer benchmark.
+      - paragraph: This suggests that the store lacks both sufficient overall visits and a mature content-based acquisition channel. Continued dependence on search traffic or paid advertising may increase customer-acquisition cost pressure and make stable organic growth more difficult.
+      - paragraph: "The following content touchpoints should be strengthened first:"
+      - list:
+        - listitem: Short product videos and real-use demonstrations
+        - listitem: Installation, startup, and cooling-performance tests
+        - listitem: Use-case examples for restaurant kitchens, convenience stores, and beverage shops
+        - listitem: Buying guides covering capacity, dimensions, and model selection
+        - listitem: Cleaning, defrosting, and common troubleshooting guides
+        - listitem: Customer feedback, repeat-purchase stories, and after-sales service records
+      - paragraph: Content development should do more than generate impressions. It should answer customers’ most important pre-purchase questions, reduce consultation costs, and improve conversion quality.
+      - separator
+      - heading "2. Breakdown of Negative Reviews" [level=4]
+      - paragraph: The 20 recent unanswered negative reviews from the Tmall store fall into four main categories.
+      - heading "2.1 Product Quality and Performance" [level=5]
+      - paragraph: "Typical feedback included:"
+      - list:
+        - listitem: A faulty float valve in an ice maker that failed to stop incoming water
+        - listitem: Continued malfunction after a replacement part was provided
+        - listitem: Excessive operating noise
+        - listitem: A display refrigerator that did not cool as expected
+        - listitem: Water leakage or abnormal cooling performance
+        - listitem: Strong dissatisfaction with the overall product experience
+      - paragraph: These reviews have the greatest potential impact on conversion because they concern the core functions of commercial equipment. For restaurants and retailers, equipment failure can mean more than temporary inconvenience—it may interrupt business operations, cause food spoilage, and increase labor costs.
+      - heading "2.2 Logistics and Delivery" [level=5]
+      - paragraph: Some customers reported that delivery personnel left before completing a proper handover. Others felt that the product’s actual dimensions or specifications did not match their pre-purchase understanding.
+      - paragraph: These issues may involve the seller, warehouse, and logistics provider, but customers generally attribute the entire experience to the brand. Delivery must therefore be managed as part of the product experience rather than passed to the carrier only after a complaint occurs.
+      - heading "2.3 Concerns About Origin and Product Information" [level=5]
+      - paragraph: Some customers questioned the product’s identity and warranty coverage because the relationship among the brand’s registered location, production base, supervising factory, and warranty information was not clearly explained.
+      - paragraph: Such concerns may result from unclear information or inconsistent wording across different parts of the product page. The page should clearly distinguish the brand owner, place of production, quality supervision, and after-sales service provider so customers do not have to piece together fragmented information.
+      - heading "2.4 After-Sales Response" [level=5]
+      - paragraph: When customers reported water leakage or cooling problems, customer service did not immediately provide a clear troubleshooting and resolution process. Instead, representatives repeatedly asked whether the unit had been powered on or whether the operating environment was responsible. Mechanical questioning of this kind may give customers the impression that the seller is avoiding responsibility, turning a solvable service issue into a negative review.
+      - paragraph: The first goal of after-sales communication is not to prove that the product is fault-free. It is to assure the customer that someone is taking ownership of the issue.
+      - separator
+      - heading "3. Key Friction Points in Customer Communication" [level=4]
+      - textbox "Ask anything... (@ reference file)"
+      - button "add"
+      - button "Default permissions"
+      - button "Auto"
+      - button "send"
+      - text: Select workspace
+    - region "The AI workspace for Global E-commerce":
+      - paragraph: → Meet Our New Feature
+      - heading "The AI workspace for Global E-commerce" [level=2]
+      - article:
+        - heading "Integrate with leading ecommerce ecosystems" [level=3]
+        - paragraph: Connect seamlessly with leading marketplaces such as Shopify, Amazon, TikTok Shop, etc. Automate ecommerce tasks with 200+ tools and expert skills to power your business.
+      - article:
+        - heading "Over 50% lower cost on real commerce work" [level=3]
+        - paragraph: In a commerce benchmark, Accio completed the full 107-task set at over 50% lower cost than OpenAI Codex and Anthropic’s Claude Code.
+        - img "Higher pass rate, with Accio Work total cost over 50 percent lower."
+    - heading "B

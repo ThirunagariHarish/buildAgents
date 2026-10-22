@@ -1,0 +1,234 @@
+{
+  "name": "accio",
+  "log": [
+    "capture: ok  (1365746 bytes)",
+    "export scripts: ok",
+    "analyze javascript: ok (62953708 bytes)"
+  ],
+  "network": {
+    "requests": 158,
+    "responses": 156,
+    "failed": 6,
+    "byType": {
+      "document": 3,
+      "stylesheet": 1,
+      "script": 26,
+      "fetch": 13,
+      "image": 100,
+      "media": 1,
+      "xhr": 3,
+      "ping": 10,
+      "other": 1
+    },
+    "topHosts": [
+      [
+        "img.alicdn.com",
+        79
+      ],
+      [
+        "awaplus.alibaba.com",
+        27
+      ],
+      [
+        "s.alicdn.com",
+        17
+      ],
+      [
+        "analytics.tiktok.com",
+        8
+      ],
+      [
+        "www.accio.com",
+        5
+      ],
+      [
+        "aeis.alicdn.com",
+        3
+      ],
+      [
+        "fourier.alibaba.com",
+        3
+      ],
+      [
+        "www.googletagmanager.com",
+        2
+      ],
+      [
+        "www.google-analytics.com",
+        2
+      ],
+      [
+        "acs.h.accio.com",
+        2
+      ],
+      [
+        "us.ynuf.aliapp.org",
+        2
+      ],
+      [
+        "fourier.taobao.com",
+        2
+      ],
+      [
+        "work-download.accio.com",
+        1
+      ],
+      [
+        "analytics-ipv6.tiktokw.us",
+        1
+      ],
+      [
+        "buyercentral.alibaba.com",
+        1
+      ],
+      [
+        "www.alibaba.com",
+        1
+      ],
+      [
+        "o.alicdn.com",
+        1
+      ],
+      [
+        "g.alicdn.com",
+        1
+      ]
+    ],
+    "apiCalls": [
+      "GET www.accio.com/work/api/web-config/sw",
+      "GET s.alicdn.com/@g//alilog/ ??s/8.15.25/plugin/aplus_client.js,aplus_cplugin/0.7.12/toolkit.js,aplus_cplugin/0.7.12/monitor.js,s/8.15.25/aplus_std.js,s/8.15.25/plugin/aplus_spmact.js,aplus_plugin_icbu/0.0.14/index.js?v",
+      "GET www.accio.com/work/app",
+      "GET www.accio.com/work",
+      "POST www.google-analytics.com/g/collect ?v&tid&gtm&_p&gcd&npa&dma&cid&frm&ngs&pscdl&rcb&sr&uaa&uab&uafvl&uam&uamb&uap&uapv&uaw&ul&_s&tag_exp&sid&sct&seg&dl&dt&en&_fv&_nsi&_ss&_ee&tfd",
+      "GET img.alicdn.com/imgextra/i1/O1CN01QvGREN1pVE2IQaLPS_!!6000000005365-49-tps-720-720.webp",
+      "GET img.alicdn.com/imgextra/i4/O1CN01aac4BV1w8y6CdTLac_!!6000000006264-49-tps-720-720.webp",
+      "GET img.alicdn.com/imgextra/i2/O1CN01BVQXMe1o1AQW64RVe_!!6000000005164-49-tps-720-720.webp",
+      "GET img.alicdn.com/imgextra/i3/O1CN01z8E8Qo1tlUZ8sf2Vt_!!6000000005942-49-tps-720-720.webp",
+      "GET img.alicdn.com/imgextra/i1/O1CN01gCLPYC1ps7q5nDezw_!!6000000005415-49-tps-720-720.webp",
+      "GET img.alicdn.com/imgextra/i2/O1CN01Qiz3781my8BYKlT8i_!!6000000005022-49-tps-720-720.webp",
+      "GET acs.h.accio.com/h5/mtop.alibaba.intl.buyeragent.homepage.cookie.popup.read/1.0/ ?jsv&appKey&t&sign&api&v&dataType&method&type&data",
+      "POST us.ynuf.aliapp.org/service/um.json",
+      "GET s.alicdn.com/@xconfig/icbu_plugin_script/config/data",
+      "POST www.google-analytics.com/g/collect ?v&tid&gtm&_p&gcd&npa&dma&_eu&ae&cid&frm&ngs&pscdl&rcb&sr&uaa&uab&uafvl&uam&uamb&uap&uapv&uaw&ul&_s&tag_exp&sid&sct&seg&dl&dt&en&epn.percent_scrolled&_et&tfd"
+    ],
+    "services": [
+      "Alibaba CDN",
+      "Google Analytics / Tag Manager",
+      "LinkedIn",
+      "Sentry",
+      "TikTok pixel"
+    ]
+  },
+  "consoleSample": [
+    "🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙",
+    "Error",
+    "Error",
+    "Thu Oct 22 2026 05:36:54 GMT+0000 (Coordinated Universal Time)",
+    "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content.",
+    "Error",
+    "Error",
+    "Error",
+    "Mixed Content: The page at 'https://www.accio.com/work' was loaded over HTTPS, but requested an insecure script 'http://www.alibaba.com/error1.html'. This request has been blocked; the content must be",
+    "Error"
+  ],
+  "finalUrl": "https://www.accio.com/",
+  "title": null,
+  "pageTextChars": 26457,
+  "screenshot": true,
+  "javascript": {
+    "statistics": {
+      "relevant_files": 15,
+      "nested_asar_containers": 0,
+      "text_bytes_read": 218156,
+      "invalid_utf8_files": 0,
+      "parsed_javascript_files": 15,
+      "skipped_javascript_files": 0,
+      "visited_ast_nodes": 48269,
+      "findings": 28,
+      "modules": 0,
+      "parse_failures": 0
+    },
+    "appGraph": {
+      "javascript-module": 21,
+      "javascript-asset": 15,
+      "storage": 8,
+      "endpoint": 5,
+      "artifact": 1
+    },
+    "endpoints": [
+      "literal partial t",
+      "literal aplus_plugin_guide/index.js",
+      "literal .",
+      "literal /",
+      "literal https://s.alicdn.com/@xconfig/icbu_plugin_script/config/data"
+    ],
+    "storage": [
+      "local-storage: localStorage.setItem",
+      "local-storage: web_behavior_jsArr_conf",
+      "local-storage: baxia_entry_config",
+      "local-storage: baxia_entry_config_time",
+      "local-storage: aplusDebug",
+      "local-storage: localStorage.removeItem",
+      "local-storage: web_behavior_time",
+      "local-storage: localStorage.getItem"
+    ],
+    "serviceWorkers": [],
+    "behaviour": {
+      "function": 852,
+      "call-site": 2773,
+      "boundary": 65,
+      "promise": 38,
+      "timer": 16,
+      "listener": 3,
+      "module": 15,
+      "request": 1,
+      "event": 3
+    },
+    "labels": [
+      [
+        "construct",
+        111
+      ],
+      [
+        "JSON.parse",
+        34
+      ],
+      [
+        "setTimeout",
+        13
+      ],
+      [
+        "String",
+        10
+      ],
+      [
+        "Number",
+        10
+      ],
+      [
+        "parseInt",
+        9
+      ],
+      [
+        "setInterval",
+        3
+      ],
+      [
+        "parseFloat",
+        2
+      ],
+      [
+        "fetch",
+        1
+      ]
+    ],
+    "limitations": [
+      "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+      "Graph coverage is incomplete; unavailable facts remain explicit and must not be read as absence.",
+      "JavaScript and HTML were parsed as inert text; bundle bootstrap code was never executed.",
+      "Static imports, entrypoints, workers, endpoints, and storage relationships do not prove runtime execution.",
+      "Static paths and relationships may remain unresolved when expressions are dynamic or obfuscated.",
+      "Webpack/Rspack factories were recovered from AST literals; REA did not invoke push handlers or bundle bootstrap code."
+    ]
+  }
+}
