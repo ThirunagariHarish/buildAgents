@@ -1,0 +1,64 @@
+# Routes reinvent.cashflowus.com through the cluster's Traefik to Reinvent,
+# a systemd service on the worker node (69.62.86.166:3403), next to Box and
+# Run Scenario. Applied by deploy/remote-deploy.sh.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: reinvent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reinvent
+  namespace: reinvent
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3403
+      protocol: TCP
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: reinvent-host
+  namespace: reinvent
+  labels:
+    kubernetes.io/service-name: reinvent
+    endpointslice.kubernetes.io/managed-by: reinvent-manual
+addressType: IPv4
+ports:
+  - name: http
+    port: 3403
+    protocol: TCP
+endpoints:
+  - addresses:
+      - 69.62.86.166
+    conditions:
+      ready: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: reinvent
+  namespace: reinvent
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: reinvent.cashflowus.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: reinvent
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - reinvent.cashflowus.com
+      secretName: reinvent-tls
