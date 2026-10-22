@@ -160,8 +160,18 @@
     } catch (e) { const feed = $('#feed'); if (feed && reset) feed.innerHTML = `<div class="empty">${I('warning-circle', 32)}<b>Couldn't load the feed</b>${esc(e.message)}</div>`; }
     finally { S.loading = false; }
   }
+  const CREW = [
+    { id: 'scout', n: 'S', name: 'The Scout', what: 'picks a product and reads reviews, forums and patents', color: '#6f675a' },
+    { id: 'engineer', n: 'M', name: 'Mara', what: 'reinvents the mechanism', color: '#4f78a8' },
+    { id: 'designer', n: 'K', name: 'Kenji', what: 'reinvents how it is used', color: '#a07a3c' },
+    { id: 'futurist', n: 'I', name: 'Ines', what: 'reinvents the system around it', color: '#4b8768' },
+  ];
   function emptyFeed(r) {
-    return `<div class="empty" style="padding-top:calc(120px + var(--sat))">${I('flask', 40)}<b>The studio is warming up</b><p>${r.live ? esc(r.live.label) : r.paused ? 'The studio is paused.' : `The first product arrives ${r.nextRunAt ? inMin(r.nextRunAt) : 'soon'}.`} Each one takes the Scout and the three inventors 10 to 20 minutes.</p>${S.me.owner ? '<button class="btn" data-act="run-now">Research one now</button>' : ''}</div>`;
+    const l = r.live;
+    const at = l ? CREW.findIndex((c) => c.id === (l.agent || 'scout')) : -1;
+    return `<div class="warm"><h2>The first product is on the bench</h2><p>${l ? esc(l.label) + '.' : r.paused ? 'The studio is paused.' : `The Scout starts ${r.nextRunAt ? inMin(r.nextRunAt) : 'soon'}.`} A full round takes 10 to 20 minutes; it appears here the moment the first reinvention is drawn.</p>
+      <div class="steps">${CREW.map((c, i) => `<div class="${i === at ? 'on' : ''}" style="--agent:${c.color}"><span class="sq">${c.n}</span><span>${esc(c.name)}<small>${esc(c.what)}</small></span><span class="st">${at < 0 ? '' : i < at ? 'done' : i === at ? 'working' : 'next'}</span></div>`).join('')}</div>
+      ${l && l.activity ? `<p class="fine">${esc(l.activity)}</p>` : ''}${S.me.owner && !l ? '<button class="btn" data-act="run-now">Research one now</button>' : ''}</div>`;
   }
   function postHtml(p) {
     const invs = p.inventions || [];
@@ -170,19 +180,34 @@
         <div class="visual ${p.image ? 'photo' : ''}">${p.image ? `<img src="${esc(p.image.src)}" alt="${esc(pr.name)}" loading="lazy">${p.image.credit ? `<a class="credit" href="${safeUrl(p.image.source)}" target="_blank" rel="noopener">${esc(p.image.credit)}</a>` : ''}` : p.sketch ? `<img src="${esc(p.sketch)}" alt="${esc(pr.name)}" loading="lazy">` : ''}<span class="tag">The original</span></div>
         <div class="body"><div class="kicker">${esc(pr.category || p.category || '')}${pr.priceRange ? `<span>·</span><span>${esc(pr.priceRange)}</span>` : ''}</div>
           <h2>${esc(pr.name)}</h2><p class="tagline">${esc(pr.oneLiner)}</p>
-          ${pr.pains.length ? `<div class="pains">${pr.pains.slice(0, 2).map((x) => `<div><span>${esc(x)}</span></div>`).join('')}</div>` : ''}</div>
+          ${pr.pains.length ? `<div class="pains">${pr.pains.slice(0, 2).map((x) => `<div><span>${esc(x)}</span></div>`).join('')}</div>` : ''}
+          ${evidenceHtml(p)}</div>
         <div class="cardbar"><button class="btn small quiet" data-act="dossier" data-v="${p.id}">${I('info', 16)}Research</button><button class="iconbtn" data-act="chat" data-v="${p.id}" aria-label="Talk about it">${I('chat-circle-dots', 22)}</button><span class="spacer"></span><span class="fine count">${invs.length} reinvention${invs.length === 1 ? '' : 's'}${I('caret-right', 14)}</span></div>
       </article></div>`;
     const slides = invs.map((inv, k) => `<div class="slide"><article class="card" style="--agent:${esc(inv.agent.color)}">
-        <div class="visual">${inv.sketch ? `<img src="${esc(inv.sketch)}" alt="Concept sketch of ${esc(inv.title)}" loading="lazy">` : `<div class="fine">No sketch</div>`}<span class="tag inv">${esc(inv.agent.name)} · ${esc(inv.agent.role.replace(/^The /, ''))}</span></div>
-        <div class="body"><div class="kicker"><span>Reinvention ${k + 1} of ${invs.length}</span>${inv.priceHint ? `<span>·</span><span>${esc(inv.priceHint)}</span>` : ''}</div>
-          <h2>${esc(inv.title)}</h2><p class="tagline">${esc(inv.tagline)}</p>
+        <div class="visual">${inv.sketch ? `<img src="${esc(inv.sketch)}" alt="Concept sketch of ${esc(inv.title)}" loading="lazy">` : `<div class="fine">No sketch</div>`}<span class="tag"><span class="sq">${esc(inv.agent.name[0])}</span>${esc(inv.agent.name)} · ${esc(LEVER[inv.lever] || inv.agent.role.replace(/^The /, ''))}</span><span class="aimark">AI concept sketch</span></div>
+        <div class="body"><div class="kicker"><span>${k + 1} of ${invs.length}</span>${inv.priceHint ? `<span>·</span><span>${esc(inv.priceHint)}</span>` : ''}${inv.feasibility ? `<span>·</span><span>feasibility ${inv.feasibility}/10</span>` : ''}</div>
+          <h2>${esc(inv.title)}</h2>
+          ${inv.problem && inv.fix ? `<div class="pf"><span class="pb">${esc(inv.problem)}</span>${I('arrow-right', 14)}<span class="fx">${esc(inv.fix)}</span></div>` : `<p class="tagline">${esc(inv.tagline)}</p>`}
           ${inv.whyBetter.length ? `<div class="chips">${inv.whyBetter.map((w) => `<span class="chip metric">${esc(w.metric || w.claim)}</span>`).join('')}</div>` : ''}</div>
-        <div class="cardbar"><button class="btn small" data-act="detail" data-v="${p.id}:${inv.id}">Details</button><button class="iconbtn" data-act="chat" data-v="${p.id}" aria-label="Talk about it">${I('chat-circle-dots', 22)}</button><span class="spacer"></span>${saveBtn(inv)}</div>
+        <div class="cardbar"><button class="btn small" data-act="detail" data-v="${p.id}:${inv.id}">Details</button><button class="iconbtn" data-act="chat" data-v="${p.id}" aria-label="Talk about it">${I('chat-circle-dots', 22)}</button><span class="spacer"></span>${buyBtn(inv)}${saveBtn(inv)}</div>
       </article></div>`).join('');
     const note = p.round && p.round.by === 'feedback' && p.round.feedback ? `<div class="roundnote">${I('sparkle', 14)}Round ${p.round.n}, from your note: “${esc(p.round.feedback.slice(0, 80))}${p.round.feedback.length > 80 ? '…' : ''}”</div>` : '';
-    return `<section class="post" data-post="${p.id}">${note}<div class="slides" data-slides>${orig}${slides}</div><div class="dots">${[0, ...invs.map(() => 1)].map((x, i) => `<i class="${x ? 'inv' : ''}${i === 0 ? ' on' : ''}"></i>`).join('')}</div></section>`;
+    return `<section class="post" data-post="${p.id}">${note}<div class="slides" data-slides>${orig}${slides}</div><div class="dots">${[0, ...invs.map(() => 1)].map((x, i) => `<i class="${x ? 'inv' : ''}${i === 0 ? ' on' : ''}"></i>`).join('')}</div>${invs.length > 1 ? pickHtml(p) : ''}</section>`;
   }
+  const LEVER = { mechanism: 'mechanism', interaction: 'how it is used', system: 'the system' };
+  // How much research stands behind the original; each chip opens the dossier.
+  function evidenceHtml(p) {
+    const e = p.evidence; if (!e) return '';
+    const chips = [[e.pains, 'complaint', 'complaints'], [e.priorArt, 'past attempt', 'past attempts'], [e.patents, 'patent', 'patents'], [e.sources, 'source', 'sources']].filter(([n]) => n > 0);
+    return chips.length ? `<div class="evid">${chips.map(([n, one, many]) => `<button data-act="dossier" data-v="${p.id}"><b>${n}</b>${n === 1 ? one : many}</button>`).join('')}</div>` : '';
+  }
+  // "Whose fix wins?": counts stay hidden until you pick, so early votes do not steer you.
+  function pickHtml(p) {
+    const pk = p.picks || { counts: {}, total: 0, mine: null };
+    return `<div class="pick" data-pick="${p.id}"><span>Best fix?</span>${p.inventions.map((inv) => `<button data-act="pick" data-v="${p.id}:${inv.id}" aria-pressed="${pk.mine === inv.id}" style="--agent:${esc(inv.agent.color)}"><span class="sq">${esc(inv.agent.name[0])}</span>${esc(inv.agent.name)}${pk.mine ? ` <span class="n">${pk.counts[inv.id] || 0}</span>` : ''}</button>`).join('')}</div>`;
+  }
+  const buyBtn = (inv) => { const d = inv.demand || {}; const on = d.mine !== null && d.mine !== undefined; return `<button class="buy" data-act="buy" data-v="${inv.id}" aria-pressed="${on}">${I(on ? 'check' : 'shopping-bag', 18)}${on ? 'You\'d buy' : 'I\'d buy'}${d.count ? ` <span class="n">${d.count}</span>` : ''}</button>`; };
   const saveBtn = (inv) => `<button class="save" data-act="save" data-v="${inv.id}" aria-pressed="${!!inv.saved}" aria-label="${inv.saved ? 'Saved' : 'Save'}">${I(inv.saved ? 'bookmark-simple-fill' : 'bookmark-simple', 22)}</button>`;
   function wireSlides(root) {
     root.querySelectorAll('[data-slides]').forEach((el) => {
@@ -246,6 +271,7 @@
     const inv = r && r.inventions.find((i) => i.id === invId);
     if (!inv) { sh.querySelector('.sheet-body').innerHTML = '<p>This design is no longer here.</p>'; return; }
     S.sheet.kind = { type: 'detail', postId, invId };
+    S.detailInv = inv;
     sh.style.setProperty('--agent', inv.agent.color);
     sh.querySelector('.sheet-head h3').textContent = inv.title;
     sh.querySelector('.sheet-head').insertAdjacentHTML('beforeend', '');
@@ -256,23 +282,33 @@
     const sec = (title, html, ic) => (html ? `<div class="sec"><h3>${ic ? I(ic, 14) : ''}${title}</h3>${html}</div>` : '');
     const ul = (xs) => (xs && xs.length ? `<ul>${xs.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '');
     return `<div class="hero">${inv.sketch ? `<img src="${esc(inv.sketch)}" alt="Concept sketch of ${esc(inv.title)}">` : ''}</div>
+      <p class="fine" style="margin-top:6px">AI concept sketch. Numbers on the drawing match the list of changes below.</p>
       <div class="dhead"><span class="agent"><span class="av">${esc(inv.agent.name[0])}</span>${esc(inv.agent.name)}, ${esc(inv.agent.role.toLowerCase())} · ${esc(inv.agent.method)}</span><h2>${esc(inv.title)}</h2><p>${esc(inv.tagline)}</p>
-        <div style="display:flex;gap:8px;margin-top:6px">${saveBtn(inv)}<button class="btn small quiet" data-act="chat" data-v="${p.id}">${I('chat-circle-dots', 16)}Talk about it</button></div></div>
-      <p class="fine" style="margin-top:12px">A reinvention of <b>${esc(p.product.name)}</b>, round ${r.n}${r.feedback ? ` from your note “${esc(r.feedback.slice(0, 120))}”` : ''}.</p>
+        ${inv.problem && inv.fix ? `<div class="pfbig"><small>Problem → fix</small><span><span class="pb">${esc(inv.problem)}</span></span><span class="fx">${esc(inv.fix)}</span></div>` : ''}
+        <div class="demandrow">${buyBtn(inv)}${saveBtn(inv)}<button class="btn small quiet" data-act="chat" data-v="${p.id}">${I('chat-circle-dots', 16)}Talk about it</button>${demandLine(inv.demand)}</div></div>
+      <p class="fine" style="margin-top:12px">${inv.work ? `${workLine(inv.work, inv.agent.name)}. ` : ''}A reinvention of <b>${esc(p.product.name)}</b>, round ${r.n}${r.feedback ? ` from your note “${esc(r.feedback.slice(0, 120))}”` : ''}.${inv.redoOf ? ` The reviewer sent the first idea (“${esc(inv.redoOf)}”) back for being too close to a colleague's, so this is ${esc(inv.agent.name)}'s second direction.` : ''}</p>
+      ${inv.lever || inv.principle ? sec('The lever', `<div class="lever">${inv.lever ? `<span class="chip">${esc(LEVER[inv.lever] || inv.lever)}</span>` : ''}${inv.principle ? `<span class="chip" style="white-space:normal">${esc(inv.principle)}</span>` : ''}</div>`, 'wrench') : ''}
       ${sec('The insight', `<div class="insight">${esc(inv.insight)}</div>`, 'lightbulb')}
-      ${sec('What changes', ul(inv.changes))}
+      ${sec('What changes', inv.changes && inv.changes.length ? `<ol class="callouts">${inv.changes.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>` : '')}
+      ${inv.feasibility ? sec('Feasibility', meter(inv.feasibility.score, inv.feasibility.why), 'gauge') : ''}
       ${sec('How it works', `<p>${esc(inv.howItWorks)}</p>`)}
-      ${inv.whyBetter.length ? sec('Why it is better', `<div class="metrics">${inv.whyBetter.map((w) => `<div class="metric"><b>${esc(w.metric || '')}</b><span>${esc(w.claim)}</span></div>`).join('')}</div>`) : ''}
+      ${inv.whyBetter.length ? sec('Why it is better', `<div class="metrics">${inv.whyBetter.map((w) => `<div class="metric"><b>${esc(w.metric || '')}</b><span>${esc(w.claim)}</span>${w.basis === 'sourced' && w.url ? `<a class="basis src" href="${safeUrl(w.url)}" target="_blank" rel="noopener">${I('check', 12)}sourced · ${esc(host(w.url))}</a>` : '<span class="basis">estimate</span>'}</div>`).join('')}</div>`) : ''}
       ${sec('Materials', `<p>${esc(inv.materials)}</p>`)}
       ${sec('How it is made', `<p>${esc(inv.manufacturing)}</p>`, 'factory')}
       ${sec('Who buys it first', `<p>${esc(inv.targetCustomer)}</p>`)}
       ${sec('Rough numbers', `<dl class="kv"><dt>Retail</dt><dd>${esc(inv.priceHint || '-')}</dd><dt>Cost to make</dt><dd>${esc(inv.unitCostHint || '-')}</dd></dl>`, 'currency-dollar')}
-      ${sec('Is it new?', `${inv.novelty.verdict ? `<p>${esc(inv.novelty.verdict)}</p>` : ''}${inv.novelty.closest.length ? `<div class="refs" style="margin-top:10px">${inv.novelty.closest.map((c) => `<a class="ref" href="${safeUrl(c.url)}" target="_blank" rel="noopener"><b>${esc(c.name)}</b>${esc(c.how)}${c.url ? `<small>${esc(host(c.url))}</small>` : ''}</a>`).join('')}</div>` : ''}`, 'magnifying-glass')}
-      ${sec('Risks', ul(inv.risks), 'warning-circle')}
-      ${inv.considered.length ? sec(`How ${esc(inv.agent.name)} got here`, `<ul class="considered">${inv.considered.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`) : ''}
+      ${sec('Is it new?', `${inv.novelty.verdict ? `<p>${esc(inv.novelty.verdict)}</p>` : ''}${inv.novelty.closest.length ? `<div class="refs" style="margin-top:10px">${inv.novelty.closest.map((c) => `<a class="ref" href="${safeUrl(c.url)}" target="_blank" rel="noopener"><b>${esc(c.name)}</b>${esc(c.how)}${c.url ? `<small>${esc(host(c.url))}</small>` : ''}</a>`).join('')}</div>` : ''}${inv.patentQuery ? `<div class="chips" style="margin-top:10px"><a class="chip" href="https://patents.google.com/?q=${encodeURIComponent(inv.patentQuery)}" target="_blank" rel="noopener">Search Google Patents ${I('arrow-up-right', 12)}</a></div>` : ''}`, 'magnifying-glass')}
+      ${sec('Risks and challenges', ul(inv.risks), 'warning-circle')}
+      ${inv.considered.length ? sec(`How ${esc(inv.agent.name)} got here`, `<ul class="considered">${inv.considered.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>${inv.ruledOut && inv.ruledOut.length ? `<p class="fine" style="margin-top:8px">Ruled out because a colleague went there: ${esc(inv.ruledOut.join('; '))}</p>` : ''}`) : ''}
       <div class="make" id="make"></div>
       ${inv.sources.length ? sec('Sources', `<div class="refs">${inv.sources.map((s) => `<a class="ref" href="${safeUrl(s.url)}" target="_blank" rel="noopener"><b>${esc(s.title)}</b><small>${esc(host(s.url))}</small></a>`).join('')}</div>`) : ''}`;
   }
+  function meter(score, why) {
+    const cls = score >= 7 ? 'hi' : score >= 4 ? 'mid' : 'lo';
+    return `<div class="meter"><span class="bar"><i class="${cls}" style="width:${Math.max(4, score * 10)}%"></i></span><b>${score}/10</b>${why ? `<small>${esc(why)}</small>` : ''}</div>`;
+  }
+  const workLine = (w, who) => (w && (w.searches || w.pages) ? `${who ? `${esc(who)}: ` : ''}${w.searches} search${w.searches === 1 ? '' : 'es'}, ${w.pages} page${w.pages === 1 ? '' : 's'} read, ${w.minutes} min` : '');
+  const demandLine = (d) => (d && d.count ? `<span class="fine">${d.count} ${d.count === 1 ? 'person' : 'people'} would buy${d.median ? `, median ${money(d.median)}` : ''}</span>` : '');
   function drawMake(inv) {
     const el = $('#make'); if (!el) return;
     const s = inv.sourcing;
@@ -286,12 +322,38 @@
       el.innerHTML = `${intro}<div class="progress"><span class="spin"></span><span>${s.status === 'queued' ? 'Waiting for the studio (one job at a time)' : 'The sourcing analyst is researching'}<small>${esc(l && l.activity ? l.activity : 'factories, prices, freight and duty')}</small></span></div>`;
       return;
     }
-    el.innerHTML = `${intro}${sourcingHtml(s.report)}<p class="fine" style="margin-top:14px">Researched ${esc(ago(s.at))}. Estimates: confirm with suppliers before you commit money. ${S.me.claude ? `<button class="link" data-act="sourcing-again" data-v="${inv.id}">Research again</button>` : ''}</p>`;
+    el.innerHTML = `${intro}${sourcingHtml(s.report)}<p class="fine" style="margin-top:14px">Researched ${esc(ago(s.at))}${s.work ? ` (${workLine(s.work)})` : ''}. Estimates: confirm with suppliers before you commit money. ${S.me.claude ? `<button class="link" data-act="sourcing-again" data-v="${inv.id}">Research again</button>` : ''}</p>`;
+    wireCalc();
+  }
+  // The margin calculator: everything editable, results live. Benchmarks: 15% margin, 50% ROI.
+  function wireCalc() {
+    const f = $('#calc'), out = $('#calcout'); if (!f || !out) return;
+    const val = (k) => { const n = parseFloat(String(f.querySelector(`[data-calc="${k}"]`).value).replace(/[^0-9.]/g, '')); return Number.isFinite(n) ? n : 0; };
+    const draw = () => {
+      const price = val('price'), cost = val('cost'), fees = val('fees'), units = val('units'), tooling = val('tooling');
+      const per = price - cost - fees;
+      const margin = price > 0 ? (per / price) * 100 : 0;
+      const roi = cost > 0 ? (per / cost) * 100 : 0;
+      const profit = per * units - tooling;
+      const breakEven = per > 0 ? Math.ceil(tooling / per) : null;
+      out.innerHTML = `<div><small>Profit per unit</small><b>${money(per)}</b></div>
+        <div><small>Margin</small><b>${Math.round(margin)}%</b>${margin < 15 ? '<span class="warn">below 15%</span>' : ''}</div>
+        <div><small>Return on cost</small><b>${Math.round(roi)}%</b>${roi < 50 ? '<span class="warn">below 50%</span>' : ''}</div>
+        <div><small>Profit on ${units.toLocaleString()} units</small><b>${money(profit, 0)}</b></div>
+        <div style="grid-column:1/-1"><small>Break-even after tooling and samples</small><b>${breakEven === null ? 'never at this price' : `${breakEven.toLocaleString()} units`}</b></div>`;
+    };
+    f.addEventListener('input', draw);
+    draw();
   }
   function sourcingHtml(r) {
     const u1 = r.unitCost.at1k || {}, u10 = r.unitCost.at10k || {};
     const sec = (title, html, ic) => (html ? `<div class="sec"><h3>${ic ? I(ic, 14) : ''}${title}</h3>${html}</div>` : '');
+    const o = r.opportunity;
+    const OPP = { demand: 'Demand', margin: 'Margin', competition: 'Competition', manufacturability: 'Easy to make', ipRisk: 'Clear of patents' };
+    const toolingSum = (r.oneTime || []).reduce((a, x) => a + (x.cost || 0), 0);
     return `<p style="color:var(--ink-2);margin-bottom:14px">${esc(r.summary)}</p>
+      ${o ? `<div class="opp"><span class="big">${o.score}<small>/10</small></span><p><b>Opportunity score.</b> Weighted: ${Object.entries(o.weights).map(([k, w]) => `${OPP[k].toLowerCase()} ${Math.round(w * 100)}%`).join(', ')}. Every part is shown below.</p></div>
+      <div class="subs">${Object.entries(OPP).filter(([k]) => o.parts[k]).map(([k, t]) => `<div><div class="fine" style="font-weight:600;color:var(--ink-2);margin-bottom:4px">${t}</div>${meter(o.parts[k].score, o.parts[k].why)}</div>`).join('')}</div>` : ''}
       <div class="tiles">
         <div class="tile"><small>Cost / unit at 1k</small><b class="num">${money(u1.total)}</b><span>materials ${money(u1.materials)}</span></div>
         <div class="tile"><small>Cost / unit at 10k</small><b class="num">${money(u10.total)}</b><span>processing ${money(u10.processing)}</span></div>
@@ -302,15 +364,26 @@
       </div>
       ${r.profitExample ? `<div class="insight" style="margin-top:12px">${esc(r.profitExample)}</div>` : ''}
       ${r.pricing.note ? `<p class="fine" style="margin-top:8px">${esc(r.pricing.note)}</p>` : ''}
+      ${sec('Your numbers', `<p class="fine" style="margin-bottom:10px">Change any number; the margin updates as you type.</p><form class="calc" id="calc" onsubmit="return false">
+        <label>Selling price<input inputmode="decimal" data-calc="price" value="${r.pricing.retail ?? ''}"></label>
+        <label>Landed cost / unit<input inputmode="decimal" data-calc="cost" value="${r.landed.landedAt10k ?? u10.total ?? ''}"></label>
+        <label>Fees / unit<input inputmode="decimal" data-calc="fees" value="${r.pricing.channelFeesPerUnit ?? 0}"></label>
+        <label>Units<input inputmode="numeric" data-calc="units" value="10000"></label>
+        <label>Tooling and samples<input inputmode="decimal" data-calc="tooling" value="${Math.round(toolingSum + ((r.samples && r.samples.costPerSample) || 0) * ((r.samples && r.samples.rounds) || 0))}"></label>
+      </form><div class="calcout" id="calcout"></div>`, 'calculator')}
       ${r.oneTime.length ? sec('One-time costs', `<table class="t"><tbody>${r.oneTime.map((o) => `<tr><td>${esc(o.item)}</td><td class="r num">${money(o.cost, 0)}</td></tr>`).join('')}</tbody></table>`, 'currency-dollar') : ''}
       ${r.bom.length ? sec('Bill of materials', `<table class="t"><thead><tr><th>Part</th><th>Material / process</th><th class="r">Unit</th></tr></thead><tbody>${r.bom.map((b) => `<tr><td>${esc(b.part)}</td><td>${esc([b.material, b.process].filter(Boolean).join(', '))}</td><td class="r num">${money(b.unitCost)}</td></tr>`).join('')}</tbody></table>`, 'package') : ''}
       ${r.productionRoute.length ? sec('How it gets made', `<ol style="margin:0;padding-left:20px;display:grid;gap:6px">${r.productionRoute.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>`, 'factory') : ''}
       ${r.clusters.length ? sec('Where in China', `<div class="refs">${r.clusters.map((c) => `<div class="ref"><b>${I('map-pin', 14)} ${esc(c.place)}</b>${esc(c.why)}</div>`).join('')}</div>`, 'globe-hemisphere-east') : ''}
-      ${r.suppliers.length ? sec('Suppliers to contact', `<div class="refs">${r.suppliers.map((s) => `<a class="ref" href="${safeUrl(s.url)}" target="_blank" rel="noopener"><b>${esc(s.name)}${s.city ? ` · ${esc(s.city)}` : ''}</b>${esc(s.makes)}${s.note ? `<small>${esc(s.note)}</small>` : ''}</a>`).join('')}</div>`, 'factory') : ''}
+      ${r.suppliers.length ? sec('Suppliers to contact', `<p class="fine" style="margin-bottom:8px">Found on the web and not verified. Marketplace badges only confirm a business licence; ask for a production-line video before paying.</p><div class="refs">${r.suppliers.map((s) => `<a class="ref" href="${safeUrl(s.url)}" target="_blank" rel="noopener"><b>${esc(s.name)}${s.city ? ` · ${esc(s.city)}` : ''}${s.type ? `<span class="badge${s.type === 'factory' ? '' : ' warn'}">${esc(s.type)}</span>` : ''}</b>${esc(s.makes)}${s.note ? `<small>${esc(s.note)}</small>` : ''}</a>`).join('')}</div>`, 'factory') : ''}
       ${r.searchLinks.length ? sec('Search the marketplaces', `<div class="chips">${r.searchLinks.map((s) => `<a class="chip" href="${safeUrl(s.url)}" target="_blank" rel="noopener">${esc(s.site)} ${I('arrow-up-right', 12)}</a>`).join('')}</div>`, 'magnifying-glass') : ''}
-      ${sec('Timing', `<dl class="kv">${r.moq ? `<dt>MOQ</dt><dd>${esc(r.moq)}</dd>` : ''}${r.leadTime ? `<dt>Lead time</dt><dd>${esc(r.leadTime)}</dd>` : ''}${r.landed.dutyRate ? `<dt>US duty</dt><dd>${esc(r.landed.dutyRate)}</dd>` : ''}</dl>`, 'clock')}
+      ${r.route || r.samples || r.toolingRange ? sec('Getting to a sample', `${r.route && r.route.recommended ? `<p><b>${r.route.recommended === 'ODM' ? 'Start from an existing factory product (ODM)' : 'New tooling (OEM)'}.</b> ${esc(r.route.why)}</p>` : ''}${r.route && r.route.closestOdm ? `<a class="ref" style="margin-top:8px" href="${safeUrl(r.route.closestOdm.url)}" target="_blank" rel="noopener"><b>Closest product to modify</b>${esc(r.route.closestOdm.name)}${r.route.closestOdm.url ? `<small>${esc(host(r.route.closestOdm.url))}</small>` : ''}</a>` : ''}
+        <dl class="kv" style="margin-top:10px">${r.samples && r.samples.costPerSample ? `<dt>Samples</dt><dd>${money(r.samples.costPerSample, 0)} each, about ${r.samples.rounds || 2} rounds</dd>` : ''}${r.toolingRange && (r.toolingRange.low || r.toolingRange.high) ? `<dt>Tooling</dt><dd>${money(r.toolingRange.low, 0)} to ${money(r.toolingRange.high, 0)}</dd>` : ''}${r.route && r.route.odmWeeks ? `<dt>ODM</dt><dd>about ${r.route.odmWeeks} weeks</dd>` : ''}${r.route && r.route.oemWeeks ? `<dt>OEM</dt><dd>about ${r.route.oemWeeks} weeks</dd>` : ''}</dl>${r.samples && r.samples.note ? `<p class="fine" style="margin-top:6px">${esc(r.samples.note)}</p>` : ''}`, 'flask') : ''}
+      ${sec('Timing and duty', `<dl class="kv">${r.moq ? `<dt>MOQ</dt><dd>${esc(r.moq)}</dd>` : ''}${r.leadTime ? `<dt>Lead time</dt><dd>${esc(r.leadTime)}</dd>` : ''}${r.landed.hts ? `<dt>HTS code</dt><dd><a href="https://hts.usitc.gov/search?query=${encodeURIComponent(r.landed.hts)}" target="_blank" rel="noopener">${esc(r.landed.hts)}</a></dd>` : ''}${r.landed.dutyRate ? `<dt>US duty</dt><dd>${esc(r.landed.dutyRate)}${r.landed.dutyAsOf ? ` <span class="badge warn">as of ${esc(r.landed.dutyAsOf)}</span>` : ''}</dd>` : ''}</dl>${r.landed.dutyRate ? '<p class="fine" style="margin-top:6px">US tariffs on Chinese goods changed several times in 2025 and 2026. Check the rate on the official schedule before you order.</p>' : ''}`, 'clock')}
       ${r.certifications.length ? sec('Certifications', `<ul>${r.certifications.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`, 'certificate') : ''}
       ${r.ipCheck.note ? sec('Patents and designs', `<p>${esc(r.ipCheck.note)}</p>${r.ipCheck.links.length ? `<div class="chips" style="margin-top:8px">${r.ipCheck.links.map((u) => `<a class="chip" href="${safeUrl(u)}" target="_blank" rel="noopener">${esc(host(u))} ${I('arrow-up-right', 12)}</a>`).join('')}</div>` : ''}`, 'scales') : ''}
+      ${r.techPack ? sec('Tech pack', `<dl class="kv">${[['dimensions', 'Size'], ['materialSpec', 'Material'], ['finish', 'Finish'], ['packaging', 'Packaging'], ['aql', 'Inspection'], ['volume', 'Volume']].filter(([k]) => r.techPack[k]).map(([k, t]) => `<dt>${t}</dt><dd>${esc(r.techPack[k])}</dd>`).join('')}</dl>`, 'ruler') : ''}
+      ${r.rfq ? sec('Ask for a quote', `<p class="fine" style="margin-bottom:8px">Send this to 5 to 10 suppliers; many will not reply.</p><div class="seg" role="group">${r.rfq.zh ? '<button data-act="rfq-lang" data-v="en" aria-pressed="true">English</button><button data-act="rfq-lang" data-v="zh" aria-pressed="false">中文</button>' : ''}</div><div class="rfq" id="rfqtext" data-en="${esc(r.rfq.en)}" data-zh="${esc(r.rfq.zh || '')}">${esc(r.rfq.en)}</div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn small" data-act="copy-rfq">${I('copy', 16)}Copy message</button></div>${r.rfq.screening.length ? `<p class="fine" style="margin-top:10px;font-weight:600">Questions that expose trading companies</p><ul>${r.rfq.screening.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}`, 'paper-plane-right') : ''}
       ${r.nextSteps.length ? sec('Next steps', `<ol style="margin:0;padding-left:20px;display:grid;gap:6px">${r.nextSteps.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>`, 'check') : ''}
       ${r.confidence ? `<p class="fine" style="margin-top:12px">Confidence: ${esc(r.confidence)}</p>` : ''}
       ${r.sources.length ? sec('Sources', `<div class="refs">${r.sources.map((s) => `<a class="ref" href="${safeUrl(s.url)}" target="_blank" rel="noopener"><b>${esc(s.title)}</b><small>${esc(host(s.url))}</small></a>`).join('')}</div>`) : ''}`;
@@ -327,7 +400,7 @@
     const ul = (xs) => (xs && xs.length ? `<ul>${xs.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '');
     sh.querySelector('.sheet-body').innerHTML = `<div class="hero ${p.image ? 'photo' : ''}">${p.image ? `<img src="${esc(p.image.src)}" alt="${esc(d.name)}">` : p.sketch ? `<img src="${esc(p.sketch)}" alt="">` : ''}</div>
       ${p.image && p.image.credit ? `<p class="fine" style="margin-top:6px">Photo: <a href="${safeUrl(p.image.source)}" target="_blank" rel="noopener">${esc(p.image.credit)}</a></p>` : ''}
-      <div class="dhead"><h2>${esc(d.name)}</h2><p>${esc(d.oneLiner)}</p></div>
+      <div class="dhead"><h2>${esc(d.name)}</h2><p>${esc(d.oneLiner)}</p>${p.work ? `<p class="fine">${workLine(p.work, 'The Scout')}</p>` : ''}</div>
       ${sec('How it works', `<p>${esc(d.howItWorks)}</p>`)}
       ${sec('What people complain about', d.pains.length ? `<div class="refs">${d.pains.map((x) => `<a class="ref" href="${safeUrl(x.url)}" target="_blank" rel="noopener"><b>${esc(x.pain)}</b>${x.evidence ? `“${esc(x.evidence)}”` : ''}${x.url ? `<small>${esc(host(x.url))}</small>` : ''}</a>`).join('')}</div>` : '')}
       ${sec('Already tried', d.priorArt.length ? `<div class="refs">${d.priorArt.map((x) => `<a class="ref" href="${safeUrl(x.url)}" target="_blank" rel="noopener"><b>${esc(x.name)}</b>${esc(x.what)}${x.url ? `<small>${esc(host(x.url))}</small>` : ''}</a>`).join('')}</div>` : '')}
@@ -398,7 +471,7 @@
         <form id="focusform" style="padding-bottom:14px;display:flex;gap:8px"><input id="focus" value="${esc(s.focus || '')}" placeholder="Any everyday product" maxlength="200"><button class="btn small">Save</button></form>
       </div>
       <h2 class="sub">Models</h2>
-      <div class="panel">${[['scout', 'Scout'], ['inventor', 'Inventors'], ['sourcing', 'Sourcing analyst'], ['chat', 'Chat']].map(([k, t]) => `<div class="row"><span class="grow"><b>${t}</b><small>${MODEL_HINT[s.models[k]] || ''}</small></span><select data-act="model" data-v="${k}">${['haiku', 'sonnet', 'opus'].map((m) => `<option ${s.models[k] === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div>`).join('')}</div>
+      <div class="panel">${[['scout', 'Scout'], ['inventor', 'Inventors'], ['reviewer', 'Reviewer (keeps the three different)'], ['sourcing', 'Sourcing analyst'], ['chat', 'Chat']].map(([k, t]) => `<div class="row"><span class="grow"><b>${t}</b><small>${MODEL_HINT[s.models[k]] || ''}</small></span><select data-act="model" data-v="${k}">${['haiku', 'sonnet', 'opus'].map((m) => `<option ${s.models[k] === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div>`).join('')}</div>
       <h2 class="sub">People</h2>
       <div class="panel"><a class="row" href="#/people" style="text-decoration:none;color:inherit"><span class="grow"><b>Who can use the studio</b><small>Everyone can scroll and save; you choose who can chat and request reports</small></span>${I('caret-right', 18)}</a></div>` : '';
     $('#studio').innerHTML = `<h1 class="title">The studio</h1><p class="lede">${s.products} product${s.products === 1 ? '' : 's'} reinvented so far.</p>
@@ -407,17 +480,23 @@
       <h2 class="sub">Who works here</h2>
       <div class="agents3">
         <div>${I('magnifying-glass', 22)}<span><b>The Scout</b><small>Picks one real product, reads reviews, forums, patents and past redesigns, and writes a sourced dossier.</small></span></div>
-        <div style="--agent:#3b82f6"><span class="agent"><span class="av">M</span></span><span><b>Mara, the Engineer</b><small>TRIZ and first principles: finds the core contradiction and solves it with mechanism and material.</small></span></div>
-        <div style="--agent:#e8613a"><span class="agent"><span class="av">K</span></span><span><b>Kenji, the Human-Centered Designer</b><small>Walks the real use journey and designs for the moments that frustrate people.</small></span></div>
-        <div style="--agent:#10b981"><span class="agent"><span class="av">I</span></span><span><b>Ines, the Systems Futurist</b><small>Lifecycle, ecosystem and biomimicry: modular, refillable, merged with what it is used with.</small></span></div>
+        <div style="--agent:#4f78a8"><span class="agent"><span class="av">M</span></span><span><b>Mara, the Engineer</b><small>TRIZ and first principles: finds the core contradiction and solves it with mechanism and material.</small></span></div>
+        <div style="--agent:#a07a3c"><span class="agent"><span class="av">K</span></span><span><b>Kenji, the Human-Centered Designer</b><small>Walks the real use journey and designs for the moments that frustrate people.</small></span></div>
+        <div style="--agent:#4b8768"><span class="agent"><span class="av">I</span></span><span><b>Ines, the Systems Futurist</b><small>Lifecycle, ecosystem and biomimicry: modular, refillable, merged with what it is used with.</small></span></div>
         <div>${I('factory', 22)}<span><b>The Sourcing Analyst</b><small>On request: cost to make, where in China, suppliers, price, margin and next steps.</small></span></div>
       </div>
-      <p class="fine">The inventors work one after another and each sees what the others proposed, so the three ideas stay different. Each checks the web for existing products and patents before committing.</p>
+      <p class="fine">The inventors work one after another, each pulling a different lever (mechanism, use, system) and seeing what the others proposed. A reviewer sends back any idea that repeats a colleague's. Each checks the web and Google Patents before committing.</p>
+      ${scoreboardHtml(s.scoreboard)}
       ${ownerCtl}
       <h2 class="sub">Account</h2>
       <div class="panel"><div class="row"><span class="grow"><b>${esc(S.me.firstName || S.me.email)}</b><small>${esc(S.me.email)}</small></span><button class="btn small quiet" data-act="logout">${I('sign-out', 16)}Sign out</button></div></div>`;
     const ff = $('#focusform');
     if (ff) ff.onsubmit = async (e) => { e.preventDefault(); try { await api('/api/studio', { method: 'POST', body: { focus: $('#focus').value } }); toast('The Scout will focus there.'); } catch (err) { toast(err.message, true); } };
+  }
+  function scoreboardHtml(board) {
+    if (!board || !board.some((b) => b.picks)) return '';
+    const max = Math.max(...board.map((b) => b.picks), 1);
+    return `<h2 class="sub">Inventor showdown</h2><div class="panel" style="padding:14px 16px"><div class="board">${board.slice().sort((a, b) => b.wins - a.wins || b.picks - a.picks).map((b) => `<div style="--agent:${esc(b.color)}"><span class="agent"><span class="av">${esc(b.name[0])}</span></span><span><b>${esc(b.name)}</b> <span class="fine">${b.wins} product${b.wins === 1 ? '' : 's'} won</span></span><span class="num fine">${b.picks} pick${b.picks === 1 ? '' : 's'}</span><span class="bar"><i style="width:${(b.picks / max) * 100}%"></i></span></div>`).join('')}</div></div>`;
   }
   function studioLiveHtml(s) {
     const l = s.live;
@@ -451,6 +530,24 @@
       document.querySelectorAll(`[data-act="save"][data-v="${v}"]`).forEach((b) => { b.setAttribute('aria-pressed', String(on)); b.innerHTML = I(on ? 'bookmark-simple-fill' : 'bookmark-simple', 22); });
       try { await api(`/api/inventions/${v}/save`, { method: 'POST', body: { on } }); if (on) toast('Saved'); for (const p of S.posts) for (const i of p.inventions || []) if (i.id === v) i.saved = on; } catch (err) { toast(err.message, true); }
     }
+    else if (act === 'buy') openBuy(v);
+    else if (act === 'buy-set' || act === 'buy-off') {
+      try {
+        const price = Number(($('#buyprice') || {}).value || 0);
+        const r = await api(`/api/inventions/${v}/buy`, { method: 'POST', body: act === 'buy-off' ? { off: true } : { price } });
+        closeSheet(true);
+        updateDemand(v, r.demand);
+        if (S.returnTo) { const k = S.returnTo; S.returnTo = null; openDetail(k.postId, k.invId); }
+        toast(act === 'buy-off' ? 'Taken back' : 'Counted. The studio uses this when pricing.');
+      } catch (err) { toast(err.message, true); }
+    }
+    else if (act === 'pick') {
+      const [pid, iid] = v.split(':');
+      const mine = t.getAttribute('aria-pressed') === 'true';
+      try { const r = await api(`/api/posts/${pid}/pick`, { method: 'POST', body: { invId: mine ? null : iid } }); const p = S.posts.find((x) => x.id === pid); if (p) { p.picks = r.picks; const el = document.querySelector(`[data-pick="${pid}"]`); if (el) el.outerHTML = pickHtml(p); } } catch (err) { toast(err.message, true); }
+    }
+    else if (act === 'rfq-lang') { const box = $('#rfqtext'); if (box) { box.textContent = box.dataset[v] || ''; t.parentElement.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === t))); } }
+    else if (act === 'copy-rfq') { const box = $('#rfqtext'); try { await navigator.clipboard.writeText(box.textContent); toast('Copied'); } catch { toast('Select the text and copy it', true); } }
     else if (act === 'sourcing' || act === 'sourcing-again') {
       busy(t, true, 'Starting');
       try { const r = await api(`/api/inventions/${v}/sourcing`, { method: 'POST', body: { again: act === 'sourcing-again' } }); if (S.sheet && S.sheet.kind && S.sheet.kind.type === 'detail') { const k = S.sheet.kind; openDetailKeep(k.postId, k.invId, r.sourcing); } }
@@ -464,6 +561,25 @@
     else if (act === 'resend') { busy(t, true); try { await api('/api/forgot', { method: 'POST', body: { email: v }, anon: true }); toast('Sent again. Both links work.'); } catch (err) { toast(err.message, true); } busy(t, false); }
     else if (act === 'email-person') { try { const r = await api(`/api/people/${v}/email`, { method: 'POST', body: {} }); if (r.sent) toast('Sent.'); else if (r.link) prompt('Email failed. Copy this link and send it to them:', r.link); } catch (err) { toast(err.message, true); } }
   });
+  // "I'd buy this": a price slider anchored on the inventor's price hint.
+  function findInv(invId) {
+    for (const p of S.posts) for (const i of p.inventions || []) if (i.id === invId) return i;
+    return S.detailInv && S.detailInv.id === invId ? S.detailInv : null;
+  }
+  function openBuy(invId) {
+    const inv = findInv(invId); if (!inv) return;
+    S.returnTo = S.sheet && S.sheet.kind && S.sheet.kind.type === 'detail' ? { ...S.sheet.kind } : null;
+    const nums = String(inv.priceHint || '').match(/\d+(\.\d+)?/g) || [];
+    const hint = nums.length ? Number(nums[nums.length - 1]) : 20;
+    const max = Math.max(10, Math.ceil(hint * 2.5 / 5) * 5);
+    const start = inv.demand && inv.demand.mine ? inv.demand.mine : Math.round(hint);
+    const sh = openSheet({ short: true, title: `Would you buy ${esc(inv.title)}?`, body: `<div class="buyform"><p class="fine">At what price would you buy it? Your answer is anonymous; the studio uses everyone's answers as demand evidence when it prices a design.</p><div class="price" id="buyshow">${money(start, 0)}</div><input type="range" id="buyprice" min="1" max="${max}" step="1" value="${start}" aria-label="Price"><button class="btn accent block" data-act="buy-set" data-v="${inv.id}">I'd buy it at this price</button>${inv.demand && inv.demand.mine !== null && inv.demand.mine !== undefined ? `<button class="link" data-act="buy-off" data-v="${inv.id}">Take my answer back</button>` : ''}${demandLine(inv.demand)}</div>` });
+    const r = sh.querySelector('#buyprice'); r.oninput = () => { sh.querySelector('#buyshow').textContent = money(Number(r.value), 0); };
+  }
+  function updateDemand(invId, d) {
+    const inv = findInv(invId); if (inv) inv.demand = d;
+    document.querySelectorAll(`[data-act="buy"][data-v="${invId}"]`).forEach((b) => { b.outerHTML = buyBtn({ id: invId, demand: d }); });
+  }
   async function openDetailKeep(postId, invId, sourcing) {
     // Redraw just the "Make it" block after a request, keeping the scroll position.
     try { const p = await api(`/api/posts/${postId}`); const inv = p.allRounds.flatMap((r) => r.inventions).find((i) => i.id === invId); if (inv) { if (sourcing && (!inv.sourcing || inv.sourcing.status !== 'ready')) inv.sourcing = sourcing; drawMake(inv); } } catch {}

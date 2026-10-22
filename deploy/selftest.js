@@ -48,6 +48,10 @@ const ok = (m) => { n++; console.log(`  ok ${m}`); };
   assert(p.sketch, 'the original gets a fallback drawing');
   assert(events.some((e) => e.event === 'live' && e.live && /Scout/.test(e.live.label)) && events.some((e) => e.event === 'live' && e.live && /Kenji/.test(e.live.label)), 'live status names who is working');
   ok(`cycle: ${p.product.name} → ${invs.map((i) => i.title).join(' / ')}`);
+  assert(invs[0].problem && invs[0].fix && invs[0].lever === 'mechanism' && invs[1].lever === 'interaction' && invs[0].feasibility.score === 8, 'problem, fix, lever and feasibility kept');
+  assert(invs[0].whyBetter[1].basis === 'sourced' && invs[0].whyBetter[0].basis === 'estimate', 'metrics say whether they are sourced');
+  assert(p.rounds[0].review && p.rounds[0].review.redid === 'futurist' && invs[2].redoOf, 'the reviewer sends a repeat back once');
+  ok('reviewer: a design too close to a colleague is redone once');
 
   // Sourcing on demand.
   studio.enqueue({ type: 'sourcing', invId: invs[0].id });
@@ -55,6 +59,10 @@ const ok = (m) => { n++; console.log(`  ok ${m}`); };
   const s = store.findInvention(invs[0].id).inv.sourcing;
   assert(s && s.status === 'ready' && s.report.unitCost.at10k.total === 0.52 && s.report.clusters.length === 2 && s.report.suppliers[0].url, JSON.stringify(s).slice(0, 300));
   ok(`sourcing: ${s.report.unitCost.at10k.total} a unit at 10k, retail ${s.report.pricing.retail}, ${s.report.clusters.map((c) => c.place).join(' & ')}`);
+  const o = s.report.opportunity;
+  assert(o && o.score >= 7.3 && o.score <= 7.4 && Object.keys(o.parts).length === 5 && o.weights.demand === 0.3, JSON.stringify(o));
+  assert(s.report.route.recommended === 'ODM' && s.report.rfq.zh && s.report.rfq.screening.length && s.report.suppliers[0].type === 'factory' && s.report.landed.hts === '3924.10.40' && s.report.landed.dutyAsOf, 'route, RFQ, supplier type and duty date');
+  ok(`make it: opportunity ${o.score}/10, ${s.report.route.recommended}, RFQ in English and Chinese`);
 
   // Chat, with a suggested direction pulled out of the reply.
   await studio.chat(p.id, 'u1', 'Which one works in a spice jar?');
@@ -77,6 +85,24 @@ const ok = (m) => { n++; console.log(`  ok ${m}`); };
   store.setSaved('u1', p.id, invs[1].id, false);
   assert.strictEqual(store.saves('u1').length, 0);
   ok('save and unsave');
+
+  // Demand: "I'd buy this" with a price, and "Whose fix wins?".
+  store.setBuy('u1', invs[0].id, 12); store.setBuy('u2', invs[0].id, 16); store.setBuy('u3', invs[0].id, 0);
+  let d = store.demand(invs[0].id, 'u2');
+  assert(d.count === 3 && d.median === 14 && d.mine === 16, JSON.stringify(d));
+  store.setBuy('u2', invs[0].id, null);
+  assert.strictEqual(store.demand(invs[0].id).count, 2);
+  store.setPick('u1', p.id, invs[1].id); store.setPick('u2', p.id, invs[1].id); store.setPick('u3', p.id, invs[0].id);
+  const pk = store.picks(p.id, 'u3');
+  assert(pk.total === 3 && pk.counts[invs[1].id] === 2 && pk.mine === invs[0].id, JSON.stringify(pk));
+  ok('demand: buy intent with a median price, and picks per product');
+
+  // A restart mid-job leaves nothing stuck.
+  const stuck = store.createPost({ status: 'researching' });
+  store.patchPost(p.id, { status: 'inventing' });
+  const fixed = studio.recover();
+  assert(fixed === 2 && !store.loadPost(stuck.id) && store.loadPost(p.id).status === 'ready', `recover fixed ${fixed}`);
+  ok('restart: half-made posts are tidied');
 
   // The schedule respects the interval and pauses.
   store.setSettings({ lastRunAt: Date.now(), paused: false, intervalMin: 30 });

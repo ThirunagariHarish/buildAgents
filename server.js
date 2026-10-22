@@ -114,27 +114,49 @@ setInterval(() => { for (const res of streams.keys()) { try { res.write(': ping\
 
 // ---- views ----------------------------------------------------------------------------------
 const agentView = (id) => { const a = INVENTORS[id]; return a ? { id, name: a.name, role: a.role, method: a.method, color: a.color } : { id, name: id, role: '', method: '', color: '#888' }; };
-function invSummary(inv) {
-  return { id: inv.id, agent: agentView(inv.agent), title: inv.title, tagline: inv.tagline, sketch: inv.sketch, changes: inv.changes.slice(0, 3), whyBetter: inv.whyBetter.slice(0, 2), priceHint: inv.priceHint, sourcing: inv.sourcing ? inv.sourcing.status : null };
+function invSummary(inv, uid = null) {
+  return { id: inv.id, agent: agentView(inv.agent), title: inv.title, tagline: inv.tagline, problem: inv.problem || '', fix: inv.fix || '', lever: inv.lever || '', feasibility: inv.feasibility ? inv.feasibility.score : null, sketch: inv.sketch, changes: inv.changes.slice(0, 4), whyBetter: inv.whyBetter.slice(0, 2), priceHint: inv.priceHint, sourcing: inv.sourcing ? inv.sourcing.status : null, demand: store.demand(inv.id, uid) };
 }
-function postCard(p, savedIds) {
+/** How much research stands behind a product: shown as chips on the original. */
+function evidence(prod) {
+  if (!prod) return null;
+  const links = [...(prod.pains || []), ...(prod.priorArt || []), ...(prod.sources || [])].map((x) => x.url).filter(Boolean);
+  return { pains: (prod.pains || []).filter((x) => x.url).length, priorArt: (prod.priorArt || []).length, patents: links.filter((u) => /patents\.google|patentimages|uspto|espacenet|wipo/.test(u)).length, reviews: links.filter((u) => /amazon\.|reddit\.|review|forum|walmart|target\.com|homedepot/.test(u)).length, sources: new Set(links).size };
+}
+function postCard(p, savedIds, uid = null) {
   const rounds = p.rounds || [];
   const last = rounds[rounds.length - 1];
   return {
     id: p.id, createdAt: p.createdAt, status: p.status, category: p.category,
     product: p.product ? { name: p.product.name, category: p.product.category, oneLiner: p.product.oneLiner, priceRange: p.product.priceRange, pains: p.product.pains.slice(0, 3).map((x) => x.pain) } : null,
+    evidence: evidence(p.product), picks: store.picks(p.id, uid), work: p.work || null,
     image: p.image ? { src: `/media/${p.image.file}`, credit: p.image.credit, source: p.image.source } : null,
     sketch: p.sketch ? `/media/${p.sketch}` : null,
     round: last ? { id: last.id, n: rounds.length, by: last.by, feedback: last.feedback, at: last.at } : null,
     rounds: rounds.length,
-    inventions: last ? last.inventions.map((i) => ({ ...invSummary(i), sketch: i.sketch ? `/media/${i.sketch}` : null, saved: savedIds.has(i.id) })) : [],
+    inventions: last ? last.inventions.map((i) => ({ ...invSummary(i, uid), sketch: i.sketch ? `/media/${i.sketch}` : null, saved: savedIds.has(i.id) })) : [],
   };
 }
-function postFull(p, savedIds) {
+function postFull(p, savedIds, uid = null) {
   return {
-    ...postCard(p, savedIds), product: p.product,
-    allRounds: (p.rounds || []).map((r, n) => ({ id: r.id, n: n + 1, by: r.by, feedback: r.feedback, at: r.at, inventions: r.inventions.map((i) => ({ ...i, agent: agentView(i.agent), sketch: i.sketch ? `/media/${i.sketch}` : null, saved: savedIds.has(i.id) })) })),
+    ...postCard(p, savedIds, uid), product: p.product,
+    allRounds: (p.rounds || []).map((r, n) => ({ id: r.id, n: n + 1, by: r.by, feedback: r.feedback, at: r.at, review: r.review || null, inventions: r.inventions.map((i) => ({ ...i, agent: agentView(i.agent), sketch: i.sketch ? `/media/${i.sketch}` : null, saved: savedIds.has(i.id), demand: store.demand(i.id, uid) })) })),
   };
+}
+/** Inventor showdown: total picks and products won, per inventor. */
+function scoreboard() {
+  const board = Object.fromEntries(Object.keys(INVENTORS).map((k) => [k, { ...agentView(k), picks: 0, wins: 0 }]));
+  const all = store.allPicks();
+  for (const [postId, m] of Object.entries(all)) {
+    const post = store.loadPost(postId);
+    if (!post) continue;
+    const agentOf = Object.fromEntries((post.rounds || []).flatMap((r) => r.inventions.map((i) => [i.id, i.agent])));
+    const counts = {};
+    for (const invId of Object.values(m)) { const a = agentOf[invId]; if (a && board[a]) { board[a].picks++; counts[a] = (counts[a] || 0) + 1; } }
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    if (top.length && (top.length === 1 || top[0][1] > top[1][1])) board[top[0][0]].wins++;
+  }
+  return Object.values(board);
 }
 const savedSet = (u) => new Set(store.saves(u.id).map((s) => s.invId));
 function liveView() {
@@ -230,7 +252,7 @@ const server = http.createServer(async (req, res) => {
       const limit = Math.min(20, Number(url.searchParams.get('limit')) || 6);
       const saved = savedSet(user);
       const posts = store.listPosts().filter((x) => x.product && (x.rounds || []).length && x.createdAt < before);
-      return json(res, 200, { posts: posts.slice(0, limit).map((x) => postCard(x, saved)), more: posts.length > limit, ...liveView() });
+      return json(res, 200, { posts: posts.slice(0, limit).map((x) => postCard(x, saved, user.id)), more: posts.length > limit, ...liveView() });
     }
     if (p === '/api/live' && req.method === 'GET') return json(res, 200, liveView());
     const pm = p.match(/^\/api\/posts\/([a-f0-9]{12})(\/[a-z]+)?$/);
@@ -238,7 +260,13 @@ const server = http.createServer(async (req, res) => {
       const post = store.loadPost(pm[1]);
       if (!post || !post.product) return json(res, 404, { error: 'No such product.' });
       const sub = pm[2] || '';
-      if (sub === '' && req.method === 'GET') return json(res, 200, postFull(post, savedSet(user)));
+      if (sub === '' && req.method === 'GET') return json(res, 200, postFull(post, savedSet(user), user.id));
+      if (sub === '/pick' && req.method === 'POST') {
+        const b = await readBody(req);
+        const ids = new Set((post.rounds || []).flatMap((r) => r.inventions.map((i) => i.id)));
+        if (b.invId && !ids.has(b.invId)) return json(res, 400, { error: 'No such reinvention.' });
+        return json(res, 200, { picks: store.setPick(user.id, post.id, b.invId || null) });
+      }
       if (sub === '' && req.method === 'DELETE') {
         if (!user.primary) return json(res, 403, { error: 'Only the owner can remove products.' });
         store.removePost(post.id); emit({ event: 'post', id: post.id, removed: true });
@@ -265,7 +293,7 @@ const server = http.createServer(async (req, res) => {
       }
       return json(res, 404, { error: 'Not found.' });
     }
-    const im = p.match(/^\/api\/inventions\/([a-f0-9]{12})\/(sourcing|save)$/);
+    const im = p.match(/^\/api\/inventions\/([a-f0-9]{12})\/(sourcing|save|buy)$/);
     if (im) {
       const found = store.findInvention(im[1]);
       if (!found) return json(res, 404, { error: 'No such reinvention.' });
@@ -273,6 +301,11 @@ const server = http.createServer(async (req, res) => {
         const b = await readBody(req);
         const list = store.setSaved(user.id, found.post.id, found.inv.id, b.on !== false);
         return json(res, 200, { saved: list.some((s) => s.invId === found.inv.id), count: list.length });
+      }
+      if (im[2] === 'buy' && req.method === 'POST') {
+        const b = await readBody(req);
+        const price = b.off ? null : Number(b.price) || 0;
+        return json(res, 200, { demand: store.setBuy(user.id, found.inv.id, price) });
       }
       if (im[2] === 'sourcing' && req.method === 'GET') return json(res, 200, { sourcing: found.inv.sourcing || null, canRun: canClaude(user) });
       if (im[2] === 'sourcing' && req.method === 'POST') {
@@ -290,7 +323,7 @@ const server = http.createServer(async (req, res) => {
       for (const s of store.saves(user.id)) {
         const post = store.loadPost(s.postId);
         const inv = post && (post.rounds || []).flatMap((r) => r.inventions).find((i) => i.id === s.invId);
-        if (inv) out.push({ postId: post.id, product: post.product.name, image: post.image ? `/media/${post.image.file}` : null, savedAt: s.at, ...invSummary(inv), sketch: inv.sketch ? `/media/${inv.sketch}` : null });
+        if (inv) out.push({ postId: post.id, product: post.product.name, image: post.image ? `/media/${post.image.file}` : null, savedAt: s.at, ...invSummary(inv, user.id), sketch: inv.sketch ? `/media/${inv.sketch}` : null });
       }
       return json(res, 200, { saved: out });
     }
@@ -298,7 +331,7 @@ const server = http.createServer(async (req, res) => {
     // ---- the studio (owner) ----
     if (p === '/api/studio' && req.method === 'GET') {
       const s = store.settings();
-      return json(res, 200, { ...liveView(), focus: s.focus, models: s.models, isOwner: !!user.primary, products: store.listPosts().filter((x) => x.product).length });
+      return json(res, 200, { ...liveView(), focus: s.focus, models: s.models, isOwner: !!user.primary, products: store.listPosts().filter((x) => x.product).length, scoreboard: scoreboard() });
     }
     if (p === '/api/studio' && req.method === 'POST') {
       if (!user.primary) return json(res, 403, { error: 'Only the owner runs the studio.' });
@@ -309,7 +342,7 @@ const server = http.createServer(async (req, res) => {
       if (typeof b.focus === 'string') patch.focus = b.focus.trim().slice(0, 200);
       if (b.models && typeof b.models === 'object') {
         const m = { ...store.settings().models };
-        for (const k of ['scout', 'inventor', 'sourcing', 'chat']) if (['haiku', 'sonnet', 'opus'].includes(b.models[k])) m[k] = b.models[k];
+        for (const k of ['scout', 'inventor', 'reviewer', 'sourcing', 'chat']) if (['haiku', 'sonnet', 'opus'].includes(b.models[k])) m[k] = b.models[k];
         patch.models = m;
       }
       if (b.clearHold) patch.holdUntil = 0;
