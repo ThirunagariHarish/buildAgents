@@ -1,0 +1,70 @@
+name: REA competitor teardown
+
+on:
+  push:
+    branches: [research]
+    paths: ['rea/targets.json', 'rea/run.mjs', 'rea/summarize.mjs', '.github/workflows/rea.yml']
+  workflow_dispatch:
+    inputs:
+      only:
+        description: 'Comma-separated target names (blank = all)'
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rea-research
+  cancel-in-progress: true
+
+jobs:
+  teardown:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install REA
+        run: npm i --no-save rea-agents@6.7.0 && npx rea --version
+
+      - name: Start Chrome (iPhone size, remote debugging)
+        run: |
+          CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
+          echo "browser: $CHROME"
+          setsid "$CHROME" --headless=new --no-first-run --no-default-browser-check \
+            --remote-debugging-port=9333 --remote-debugging-address=127.0.0.1 \
+            --user-data-dir="$RUNNER_TEMP/rea-profile" --window-size=390,844 \
+            --user-agent="Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1" \
+            about:blank > "$RUNNER_TEMP/chrome.log" 2>&1 &
+          for i in $(seq 1 30); do curl -s http://127.0.0.1:9333/json/version >/dev/null && break; sleep 1; done
+          curl -s http://127.0.0.1:9333/json/version | grep -E 'Browser|Protocol'
+
+      - name: Capture and analyze with REA
+        env:
+          ONLY: ${{ github.event.inputs.only }}
+        run: NODE_OPTIONS=--max-old-space-size=8192 node rea/run.mjs
+
+      - name: Summarize
+        if: always()
+        run: node rea/summarize.mjs
+
+      - name: Keep raw evidence as an artifact (not committed)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rea-raw
+          path: rea/raw
+          retention-days: 7
+
+      - name: Commit summaries
+        if: always()
+        run: |
+          git config user.name "rea-research-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add rea/out
+          git commit -m "REA teardown results, run ${{ github.run_number }} [skip ci]" || exit 0
+          for i in 1 2 3; do git pull -q --rebase origin research && git push -q origin HEAD:research && break; sleep 3; done
