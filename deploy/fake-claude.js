@@ -22,7 +22,8 @@ process.stdin.on('data', (d) => (input += d)).on('end', () => {
   } else if (/lead of Reinvent/.test(sys)) {
     out = null;
   }
-  const text = out ? JSON.stringify(out) : 'Kenji\'s scoop is the strongest for narrow jars; I would make the wells deeper.\nSUGGEST_ROUND: Make every design work inside a 3 cm spice jar.';
+  const anim = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 450"><rect width="600" height="450" fill="#f7f5f0"/><g><animateTransform attributeName="transform" type="translate" values="0 -80;0 0;0 0;0 -80" keyTimes="0;0.3;0.9;1" dur="8s" repeatCount="indefinite"/><rect x="200" y="180" width="200" height="60" rx="20" fill="#ffffff" stroke="#1d2530" stroke-width="3"/></g><circle cx="420" cy="160" r="11" fill="#1d2530"><animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.7;0.75;1" dur="8s" repeatCount="indefinite"/></circle><animate attributeName="href" to="javascript:alert(1)"/><text x="300" y="430" text-anchor="middle" font-size="15" fill="#5b6470">Assemble</text></svg>`;
+  const text = /Animator of Reinvent/.test(sys) ? anim : out ? JSON.stringify(out) : 'Kenji\'s scoop is the strongest for narrow jars; I would make the wells deeper.\nSUGGEST_ROUND: Make every design work inside a 3 cm spice jar.';
   process.stdout.write(`${JSON.stringify({ type: 'assistant', message: { content: [{ type: 'tool_use', name: 'WebSearch', input: { query: 'test search' } }] } })}\n`);
   setTimeout(() => process.stdout.write(`${JSON.stringify({ type: 'result', result: text, total_cost_usd: 0.01, is_error: false })}\n`), 150);
 });

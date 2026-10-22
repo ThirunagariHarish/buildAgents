@@ -1,6 +1,7 @@
 // Reinvent: the feed of reinvented products. Vanilla JS, hash routes.
 (function () {
   'use strict';
+  const MOTION_OK = !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   const MODEL_HINT = { haiku: 'Fastest and lightest on your plan, less depth', sonnet: 'The balance of depth and speed', opus: 'Thinks deepest but uses your plan fastest' };
   const app = document.getElementById('app');
   const $ = (s, r = document) => r.querySelector(s);
@@ -165,6 +166,7 @@
     { id: 'engineer', n: 'M', name: 'Mara', what: 'reinvents the mechanism', color: '#4f78a8' },
     { id: 'designer', n: 'K', name: 'Kenji', what: 'reinvents how it is used', color: '#a07a3c' },
     { id: 'futurist', n: 'I', name: 'Ines', what: 'reinvents the system around it', color: '#4b8768' },
+    { id: 'animator', n: 'A', name: 'The Animator', what: 'shows how each design works', color: '#6f675a' },
   ];
   function emptyFeed(r) {
     const l = r.live;
@@ -185,7 +187,7 @@
         <div class="cardbar"><button class="btn small quiet" data-act="dossier" data-v="${p.id}">${I('info', 16)}Research</button><button class="iconbtn" data-act="chat" data-v="${p.id}" aria-label="Talk about it">${I('chat-circle-dots', 22)}</button><span class="spacer"></span><span class="fine count">${invs.length} reinvention${invs.length === 1 ? '' : 's'}${I('caret-right', 14)}</span></div>
       </article></div>`;
     const slides = invs.map((inv, k) => `<div class="slide"><article class="card" style="--agent:${esc(inv.agent.color)}">
-        <div class="visual">${inv.sketch ? `<img src="${esc(inv.sketch)}" alt="Concept sketch of ${esc(inv.title)}" loading="lazy">` : `<div class="fine">No sketch</div>`}<span class="tag"><span class="sq">${esc(inv.agent.name[0])}</span>${esc(inv.agent.name)} · ${esc(LEVER[inv.lever] || inv.agent.role.replace(/^The /, ''))}</span><span class="aimark">AI concept sketch</span></div>
+        <div class="visual">${inv.anim && MOTION_OK ? `<img src="${esc(inv.anim)}" alt="Animation of how ${esc(inv.title)} works" loading="lazy">` : inv.sketch ? `<img src="${esc(inv.sketch)}" alt="Concept sketch of ${esc(inv.title)}" loading="lazy">` : `<div class="fine">No sketch</div>`}<span class="tag"><span class="sq">${esc(inv.agent.name[0])}</span>${esc(inv.agent.name)} · ${esc(LEVER[inv.lever] || inv.agent.role.replace(/^The /, ''))}</span><span class="aimark">${inv.anim && MOTION_OK ? 'AI concept animation · loops' : 'AI concept sketch'}</span></div>
         <div class="body"><div class="kicker"><span>${k + 1} of ${invs.length}</span>${inv.priceHint ? `<span>·</span><span>${esc(inv.priceHint)}</span>` : ''}${inv.feasibility ? `<span>·</span><span>feasibility ${inv.feasibility}/10</span>` : ''}</div>
           <h2>${esc(inv.title)}</h2>
           ${inv.problem && inv.fix ? `<div class="pf"><span class="pb">${esc(inv.problem)}</span>${I('arrow-right', 14)}<span class="fx">${esc(inv.fix)}</span></div>` : `<p class="tagline">${esc(inv.tagline)}</p>`}
@@ -281,8 +283,7 @@
   function detailHtml(p, r, inv) {
     const sec = (title, html, ic) => (html ? `<div class="sec"><h3>${ic ? I(ic, 14) : ''}${title}</h3>${html}</div>` : '');
     const ul = (xs) => (xs && xs.length ? `<ul>${xs.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '');
-    return `<div class="hero">${inv.sketch ? `<img src="${esc(inv.sketch)}" alt="Concept sketch of ${esc(inv.title)}">` : ''}</div>
-      <p class="fine" style="margin-top:6px">AI concept sketch. Numbers on the drawing match the list of changes below.</p>
+    return `${heroHtml(inv)}
       <div class="dhead"><span class="agent"><span class="av">${esc(inv.agent.name[0])}</span>${esc(inv.agent.name)}, ${esc(inv.agent.role.toLowerCase())} · ${esc(inv.agent.method)}</span><h2>${esc(inv.title)}</h2><p>${esc(inv.tagline)}</p>
         ${inv.problem && inv.fix ? `<div class="pfbig"><small>Problem → fix</small><span><span class="pb">${esc(inv.problem)}</span></span><span class="fx">${esc(inv.fix)}</span></div>` : ''}
         <div class="demandrow">${buyBtn(inv)}${saveBtn(inv)}<button class="btn small quiet" data-act="chat" data-v="${p.id}">${I('chat-circle-dots', 16)}Talk about it</button>${demandLine(inv.demand)}</div></div>
@@ -302,6 +303,13 @@
       ${inv.considered.length ? sec(`How ${esc(inv.agent.name)} got here`, `<ul class="considered">${inv.considered.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>${inv.ruledOut && inv.ruledOut.length ? `<p class="fine" style="margin-top:8px">Ruled out because a colleague went there: ${esc(inv.ruledOut.join('; '))}</p>` : ''}`) : ''}
       <div class="make" id="make"></div>
       ${inv.sources.length ? sec('Sources', `<div class="refs">${inv.sources.map((s) => `<a class="ref" href="${safeUrl(s.url)}" target="_blank" rel="noopener"><b>${esc(s.title)}</b><small>${esc(host(s.url))}</small></a>`).join('')}</div>`) : ''}`;
+  }
+  // The detail hero: the "how it works" loop and the numbered concept sheet.
+  function heroHtml(inv) {
+    const showAnim = inv.anim && MOTION_OK;
+    return `<div class="hero" id="hero">${showAnim ? `<img src="${esc(inv.anim)}" alt="Animation of how ${esc(inv.title)} works">` : inv.sketch ? `<img src="${esc(inv.sketch)}" alt="Concept sketch of ${esc(inv.title)}">` : ''}</div>
+      <div class="herobar">${inv.anim ? `<div class="seg" role="group"><button data-act="hero" data-v="${esc(inv.anim)}" aria-pressed="${!!showAnim}">How it works</button><button data-act="hero" data-v="${esc(inv.sketch || '')}" aria-pressed="${!showAnim}">Concept sheet</button></div>` : S.me.claude && inv.sketch ? `<button class="btn small quiet" data-act="animate" data-v="${inv.id}">${I('play', 16)}Animate how it works</button>` : ''}
+      <p class="fine">${inv.anim ? 'AI concept animation, an 8-second loop. The concept sheet numbers match the list of changes below.' : 'AI concept sketch. Numbers on the drawing match the list of changes below.'}</p></div>`;
   }
   function meter(score, why) {
     const cls = score >= 7 ? 'hi' : score >= 4 ? 'mid' : 'lo';
@@ -466,12 +474,13 @@
       <h2 class="sub">Schedule</h2>
       <div class="panel">
         <div class="row"><span class="grow"><b>Research new products</b><small>${s.paused ? 'Paused' : `Every ${s.intervalMin >= 60 ? `${s.intervalMin / 60} h` : `${s.intervalMin} min`}`}</small></span><label class="switch"><input type="checkbox" data-act="paused" ${s.paused ? '' : 'checked'} aria-label="Research on a schedule"><span></span></label></div>
+        <div class="row"><span class="grow"><b>How-it-works animations</b><small>The Animator turns each design into an 8-second loop: one more Claude call per design.</small></span><label class="switch"><input type="checkbox" data-act="animate-on" ${s.animate ? 'checked' : ''} aria-label="Animations"><span></span></label></div>
         <div class="row"><span class="grow"><b>How often</b><small>Each product uses the Scout and three inventors on your Claude plan.</small></span><select data-act="interval">${[[30, 'Every 30 min'], [60, 'Every hour'], [120, 'Every 2 hours'], [240, 'Every 4 hours'], [480, 'Every 8 hours']].map(([v, t]) => `<option value="${v}" ${s.intervalMin === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
         <div class="row"><span class="grow"><b>Focus</b><small>Optional: steer the Scout, e.g. "kitchen and baby products"</small></span></div>
         <form id="focusform" style="padding-bottom:14px;display:flex;gap:8px"><input id="focus" value="${esc(s.focus || '')}" placeholder="Any everyday product" maxlength="200"><button class="btn small">Save</button></form>
       </div>
       <h2 class="sub">Models</h2>
-      <div class="panel">${[['scout', 'Scout'], ['inventor', 'Inventors'], ['reviewer', 'Reviewer (keeps the three different)'], ['sourcing', 'Sourcing analyst'], ['chat', 'Chat']].map(([k, t]) => `<div class="row"><span class="grow"><b>${t}</b><small>${MODEL_HINT[s.models[k]] || ''}</small></span><select data-act="model" data-v="${k}">${['haiku', 'sonnet', 'opus'].map((m) => `<option ${s.models[k] === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div>`).join('')}</div>
+      <div class="panel">${[['scout', 'Scout'], ['inventor', 'Inventors'], ['reviewer', 'Reviewer (keeps the three different)'], ['animator', 'Animator'], ['sourcing', 'Sourcing analyst'], ['chat', 'Chat']].map(([k, t]) => `<div class="row"><span class="grow"><b>${t}</b><small>${MODEL_HINT[s.models[k]] || ''}</small></span><select data-act="model" data-v="${k}">${['haiku', 'sonnet', 'opus'].map((m) => `<option ${s.models[k] === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div>`).join('')}</div>
       <h2 class="sub">People</h2>
       <div class="panel"><a class="row" href="#/people" style="text-decoration:none;color:inherit"><span class="grow"><b>Who can use the studio</b><small>Everyone can scroll and save; you choose who can chat and request reports</small></span>${I('caret-right', 18)}</a></div>` : '';
     $('#studio').innerHTML = `<h1 class="title">The studio</h1><p class="lede">${s.products} product${s.products === 1 ? '' : 's'} reinvented so far.</p>
@@ -483,6 +492,7 @@
         <div style="--agent:#4f78a8"><span class="agent"><span class="av">M</span></span><span><b>Mara, the Engineer</b><small>TRIZ and first principles: finds the core contradiction and solves it with mechanism and material.</small></span></div>
         <div style="--agent:#a07a3c"><span class="agent"><span class="av">K</span></span><span><b>Kenji, the Human-Centered Designer</b><small>Walks the real use journey and designs for the moments that frustrate people.</small></span></div>
         <div style="--agent:#4b8768"><span class="agent"><span class="av">I</span></span><span><b>Ines, the Systems Futurist</b><small>Lifecycle, ecosystem and biomimicry: modular, refillable, merged with what it is used with.</small></span></div>
+        <div>${I('play', 22)}<span><b>The Animator</b><small>Turns each design into an 8-second "how it works" loop: parts assemble, the mechanism works, what is new is numbered.</small></span></div>
         <div>${I('factory', 22)}<span><b>The Sourcing Analyst</b><small>On request: cost to make, where in China, suppliers, price, margin and next steps.</small></span></div>
       </div>
       <p class="fine">The inventors work one after another, each pulling a different lever (mechanism, use, system) and seeing what the others proposed. A reviewer sends back any idea that repeats a colleague's. Each checks the web and Google Patents before committing.</p>
@@ -531,6 +541,11 @@
       try { await api(`/api/inventions/${v}/save`, { method: 'POST', body: { on } }); if (on) toast('Saved'); for (const p of S.posts) for (const i of p.inventions || []) if (i.id === v) i.saved = on; } catch (err) { toast(err.message, true); }
     }
     else if (act === 'buy') openBuy(v);
+    else if (act === 'hero') { const img = $('#hero img'); if (img && v) { img.src = v; t.parentElement.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === t))); } }
+    else if (act === 'animate') {
+      busy(t, true, 'Queued');
+      try { const r = await api(`/api/inventions/${v}/animate`, { method: 'POST' }); toast(r.queued ? 'The Animator is on it. About 2 minutes.' : 'Already being animated.'); } catch (err) { busy(t, false); toast(err.message, true); }
+    }
     else if (act === 'buy-set' || act === 'buy-off') {
       try {
         const price = Number(($('#buyprice') || {}).value || 0);
@@ -582,13 +597,22 @@
   }
   async function openDetailKeep(postId, invId, sourcing) {
     // Redraw just the "Make it" block after a request, keeping the scroll position.
-    try { const p = await api(`/api/posts/${postId}`); const inv = p.allRounds.flatMap((r) => r.inventions).find((i) => i.id === invId); if (inv) { if (sourcing && (!inv.sourcing || inv.sourcing.status !== 'ready')) inv.sourcing = sourcing; drawMake(inv); } } catch {}
+    try {
+      const p = await api(`/api/posts/${postId}`); const inv = p.allRounds.flatMap((r) => r.inventions).find((i) => i.id === invId);
+      if (inv) {
+        if (sourcing && (!inv.sourcing || inv.sourcing.status !== 'ready')) inv.sourcing = sourcing;
+        drawMake(inv);
+        const hero = $('#hero');
+        if (hero && inv.anim && !hero.parentElement.querySelector('[data-act="hero"]')) { hero.nextElementSibling.remove(); hero.outerHTML = heroHtml(inv); }
+      }
+    } catch {}
   }
   document.addEventListener('change', async (e) => {
     const t = e.target.closest('[data-act]'); if (!t) return;
     const act = t.dataset.act;
     try {
-      if (act === 'paused') { await api('/api/studio', { method: 'POST', body: { paused: !t.checked } }); toast(t.checked ? 'Research is on.' : 'Paused.'); studioView(); }
+      if (act === 'animate-on') { await api('/api/studio', { method: 'POST', body: { animate: t.checked } }); toast(t.checked ? 'Animations on' : 'Animations off'); }
+      else if (act === 'paused') { await api('/api/studio', { method: 'POST', body: { paused: !t.checked } }); toast(t.checked ? 'Research is on.' : 'Paused.'); studioView(); }
       else if (act === 'interval') { await api('/api/studio', { method: 'POST', body: { intervalMin: Number(t.value) } }); toast('Saved'); }
       else if (act === 'model') { await api('/api/studio', { method: 'POST', body: { models: { [t.dataset.v]: t.value } } }); const sm = t.closest('.row')?.querySelector('small'); if (sm) sm.textContent = MODEL_HINT[t.value] || ''; toast('Saved'); }
       else if (act === 'claude') { await api(`/api/people/${t.dataset.v}`, { method: 'POST', body: { claude: t.checked } }); toast(t.checked ? 'Studio access on' : 'Studio access off'); }

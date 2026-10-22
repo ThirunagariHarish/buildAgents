@@ -1,5 +1,5 @@
 // Network first; the shell (not the API or pictures) works offline from the last visit.
-const CACHE = 'reinvent-v2';
+const CACHE = 'reinvent-v3';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', (e) => {

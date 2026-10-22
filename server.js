@@ -115,7 +115,7 @@ setInterval(() => { for (const res of streams.keys()) { try { res.write(': ping\
 // ---- views ----------------------------------------------------------------------------------
 const agentView = (id) => { const a = INVENTORS[id]; return a ? { id, name: a.name, role: a.role, method: a.method, color: a.color } : { id, name: id, role: '', method: '', color: '#888' }; };
 function invSummary(inv, uid = null) {
-  return { id: inv.id, agent: agentView(inv.agent), title: inv.title, tagline: inv.tagline, problem: inv.problem || '', fix: inv.fix || '', lever: inv.lever || '', feasibility: inv.feasibility ? inv.feasibility.score : null, sketch: inv.sketch, changes: inv.changes.slice(0, 4), whyBetter: inv.whyBetter.slice(0, 2), priceHint: inv.priceHint, sourcing: inv.sourcing ? inv.sourcing.status : null, demand: store.demand(inv.id, uid) };
+  return { id: inv.id, agent: agentView(inv.agent), title: inv.title, tagline: inv.tagline, problem: inv.problem || '', fix: inv.fix || '', lever: inv.lever || '', feasibility: inv.feasibility ? inv.feasibility.score : null, sketch: inv.sketch, anim: inv.anim ? `/media/${inv.anim}` : null, changes: inv.changes.slice(0, 4), whyBetter: inv.whyBetter.slice(0, 2), priceHint: inv.priceHint, sourcing: inv.sourcing ? inv.sourcing.status : null, demand: store.demand(inv.id, uid) };
 }
 /** How much research stands behind a product: shown as chips on the original. */
 function evidence(prod) {
@@ -140,7 +140,7 @@ function postCard(p, savedIds, uid = null) {
 function postFull(p, savedIds, uid = null) {
   return {
     ...postCard(p, savedIds, uid), product: p.product,
-    allRounds: (p.rounds || []).map((r, n) => ({ id: r.id, n: n + 1, by: r.by, feedback: r.feedback, at: r.at, review: r.review || null, inventions: r.inventions.map((i) => ({ ...i, agent: agentView(i.agent), sketch: i.sketch ? `/media/${i.sketch}` : null, saved: savedIds.has(i.id), demand: store.demand(i.id, uid) })) })),
+    allRounds: (p.rounds || []).map((r, n) => ({ id: r.id, n: n + 1, by: r.by, feedback: r.feedback, at: r.at, review: r.review || null, inventions: r.inventions.map((i) => ({ ...i, agent: agentView(i.agent), sketch: i.sketch ? `/media/${i.sketch}` : null, anim: i.anim ? `/media/${i.anim}` : null, saved: savedIds.has(i.id), demand: store.demand(i.id, uid) })) })),
   };
 }
 /** Inventor showdown: total picks and products won, per inventor. */
@@ -293,7 +293,7 @@ const server = http.createServer(async (req, res) => {
       }
       return json(res, 404, { error: 'Not found.' });
     }
-    const im = p.match(/^\/api\/inventions\/([a-f0-9]{12})\/(sourcing|save|buy)$/);
+    const im = p.match(/^\/api\/inventions\/([a-f0-9]{12})\/(sourcing|save|buy|animate)$/);
     if (im) {
       const found = store.findInvention(im[1]);
       if (!found) return json(res, 404, { error: 'No such reinvention.' });
@@ -301,6 +301,12 @@ const server = http.createServer(async (req, res) => {
         const b = await readBody(req);
         const list = store.setSaved(user.id, found.post.id, found.inv.id, b.on !== false);
         return json(res, 200, { saved: list.some((s) => s.invId === found.inv.id), count: list.length });
+      }
+      if (im[2] === 'animate' && req.method === 'POST') {
+        if (!canClaude(user)) return json(res, 403, { error: 'Animations use the owner\'s Claude plan. Ask the owner to turn it on for you.' });
+        if (auth.limited(`animate:${user.id}`, 30, 24 * 3600 * 1000)) return json(res, 429, { error: 'That is a lot of animations today. Try again tomorrow.' });
+        const queued = studio.enqueue({ type: 'animate', invId: found.inv.id, userId: user.id });
+        return json(res, 200, { queued, ...liveView() });
       }
       if (im[2] === 'buy' && req.method === 'POST') {
         const b = await readBody(req);
@@ -331,7 +337,7 @@ const server = http.createServer(async (req, res) => {
     // ---- the studio (owner) ----
     if (p === '/api/studio' && req.method === 'GET') {
       const s = store.settings();
-      return json(res, 200, { ...liveView(), focus: s.focus, models: s.models, isOwner: !!user.primary, products: store.listPosts().filter((x) => x.product).length, scoreboard: scoreboard() });
+      return json(res, 200, { ...liveView(), focus: s.focus, animate: s.animate !== false, models: s.models, isOwner: !!user.primary, products: store.listPosts().filter((x) => x.product).length, scoreboard: scoreboard() });
     }
     if (p === '/api/studio' && req.method === 'POST') {
       if (!user.primary) return json(res, 403, { error: 'Only the owner runs the studio.' });
@@ -339,10 +345,11 @@ const server = http.createServer(async (req, res) => {
       const patch = {};
       if ([30, 60, 120, 240, 480].includes(Number(b.intervalMin))) patch.intervalMin = Number(b.intervalMin);
       if (typeof b.paused === 'boolean') patch.paused = b.paused;
+      if (typeof b.animate === 'boolean') patch.animate = b.animate;
       if (typeof b.focus === 'string') patch.focus = b.focus.trim().slice(0, 200);
       if (b.models && typeof b.models === 'object') {
         const m = { ...store.settings().models };
-        for (const k of ['scout', 'inventor', 'reviewer', 'sourcing', 'chat']) if (['haiku', 'sonnet', 'opus'].includes(b.models[k])) m[k] = b.models[k];
+        for (const k of ['scout', 'inventor', 'reviewer', 'animator', 'sourcing', 'chat']) if (['haiku', 'sonnet', 'opus'].includes(b.models[k])) m[k] = b.models[k];
         patch.models = m;
       }
       if (b.clearHold) patch.holdUntil = 0;

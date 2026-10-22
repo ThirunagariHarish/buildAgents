@@ -342,3 +342,7 @@ ol.callouts li::before { content: counter(c); width: 22px; height: 22px; border-
 .board div { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center; }
 .board .bar { grid-column: 2 / 4; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; margin-top: -4px; }
 .board .bar i { display: block; height: 100%; background: var(--agent); }
+
+.herobar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.herobar .seg { margin: 0; }
+.herobar p { flex: 1 1 100%; }

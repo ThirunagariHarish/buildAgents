@@ -52,6 +52,12 @@ const ok = (m) => { n++; console.log(`  ok ${m}`); };
   assert(invs[0].whyBetter[1].basis === 'sourced' && invs[0].whyBetter[0].basis === 'estimate', 'metrics say whether they are sourced');
   assert(p.rounds[0].review && p.rounds[0].review.redid === 'futurist' && invs[2].redoOf, 'the reviewer sends a repeat back once');
   ok('reviewer: a design too close to a colleague is redone once');
+  for (const i of invs) {
+    assert(i.anim, `${i.title} has an animation`);
+    const a = fs.readFileSync(store.mediaPath(i.anim), 'utf8');
+    assert(/<animateTransform/.test(a) && /<animate attributeName="opacity"/.test(a) && !/href|javascript/i.test(a), 'animation kept, unsafe parts removed');
+  }
+  ok('animator: every design gets a safe 8-second loop');
 
   // Sourcing on demand.
   studio.enqueue({ type: 'sourcing', invId: invs[0].id });
@@ -78,6 +84,18 @@ const ok = (m) => { n++; console.log(`  ok ${m}`); };
   const p2 = store.loadPost(p.id);
   assert(p2.rounds.length === 2 && p2.rounds[1].by === 'feedback' && p2.rounds[1].inventions.length === 3 && p2.rounds[1].feedback);
   ok('feedback round adds a second set of three');
+
+  // Animations can be turned off, and made on demand for older designs.
+  store.setSettings({ animate: false });
+  studio.enqueue({ type: 'round', postId: p.id, feedback: 'smaller', userId: 'u1' });
+  await idle();
+  const r3 = store.loadPost(p.id).rounds[2];
+  assert(r3.inventions.every((i) => !i.anim), 'no animations when switched off');
+  studio.enqueue({ type: 'animate', invId: r3.inventions[0].id });
+  await idle();
+  assert(store.findInvention(r3.inventions[0].id).inv.anim, 'animate on demand');
+  store.setSettings({ animate: true });
+  ok('animations: owner switch and on-demand');
 
   // Saves.
   store.setSaved('u1', p.id, invs[1].id, true);
