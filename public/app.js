@@ -184,7 +184,7 @@
           <h2>${esc(pr.name)}</h2><p class="tagline">${esc(pr.oneLiner)}</p>
           ${pr.pains.length ? `<div class="pains">${pr.pains.slice(0, 2).map((x) => `<div><span>${esc(x)}</span></div>`).join('')}</div>` : ''}
           ${evidenceHtml(p)}</div>
-        <div class="cardbar"><button class="btn small quiet" data-act="dossier" data-v="${p.id}">${I('info', 16)}Research</button><button class="iconbtn" data-act="chat" data-v="${p.id}" aria-label="Talk about it">${I('chat-circle-dots', 22)}</button><span class="spacer"></span><span class="fine count">${invs.length} reinvention${invs.length === 1 ? '' : 's'}${I('caret-right', 14)}</span></div>
+        <div class="cardbar"><button class="btn small quiet" data-act="dossier" data-v="${p.id}">${I('info', 16)}Research</button><button class="iconbtn" data-act="chat" data-v="${p.id}" aria-label="Talk about it">${I('chat-circle-dots', 22)}</button><span class="spacer"></span>${invs.length ? `<button class="count" data-act="next-slide" aria-label="See the ${invs.length} reinventions">${invs.length} reinvention${invs.length === 1 ? '' : 's'}${I('caret-right', 16)}</button>` : ''}</div>
       </article></div>`;
     const slides = invs.map((inv, k) => `<div class="slide"><article class="card" style="--agent:${esc(inv.agent.color)}">
         <div class="visual">${inv.anim && MOTION_OK ? `<img src="${esc(inv.anim)}" alt="Animation of how ${esc(inv.title)} works" loading="lazy">` : inv.sketch ? `<img src="${esc(inv.sketch)}" alt="Concept sketch of ${esc(inv.title)}" loading="lazy">` : `<div class="fine">No sketch</div>`}<span class="tag"><span class="sq">${esc(inv.agent.name[0])}</span>${esc(inv.agent.name)} · ${esc(LEVER[inv.lever] || inv.agent.role.replace(/^The /, ''))}</span><span class="aimark">${inv.anim && MOTION_OK ? 'AI concept animation · loops' : 'AI concept sketch'}</span></div>
@@ -540,6 +540,7 @@
       document.querySelectorAll(`[data-act="save"][data-v="${v}"]`).forEach((b) => { b.setAttribute('aria-pressed', String(on)); b.innerHTML = I(on ? 'bookmark-simple-fill' : 'bookmark-simple', 22); });
       try { await api(`/api/inventions/${v}/save`, { method: 'POST', body: { on } }); if (on) toast('Saved'); for (const p of S.posts) for (const i of p.inventions || []) if (i.id === v) i.saved = on; } catch (err) { toast(err.message, true); }
     }
+    else if (act === 'next-slide') { const sl = t.closest('.post')?.querySelector('[data-slides]'); if (sl) sl.scrollTo({ left: sl.clientWidth, behavior: 'smooth' }); }
     else if (act === 'buy') openBuy(v);
     else if (act === 'hero') { const img = $('#hero img'); if (img && v) { img.src = v; t.parentElement.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === t))); } }
     else if (act === 'animate') {

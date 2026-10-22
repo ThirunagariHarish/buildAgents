@@ -277,7 +277,8 @@ h2.sub { font-size: 15px; font-weight: 650; letter-spacing: -.01em; color: var(-
 @keyframes sk { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001s !important; transition-duration: .001s !important; } }
 
-.fine.count { display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; }
+.count { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 12px; border-radius: 10px; border: 0; background: var(--surface-2); color: var(--ink); font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: transform .15s var(--ease); }
+.count:active { transform: scale(.95); }
 
 /* ---- grain: breaks the digital flatness, never blocks taps ---- */
 body::after { content: ''; position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: .035; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
