@@ -347,3 +347,17 @@ ol.callouts li::before { content: counter(c); width: 22px; height: 22px; border-
 .herobar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
 .herobar .seg { margin: 0; }
 .herobar p { flex: 1 1 100%; }
+
+/* Long agent text must never widen a slide past the screen. */
+.slide, .card, .body, .visual, .cardbar { min-width: 0; max-width: 100%; }
+.body { grid-template-columns: minmax(0, 1fr); }
+.body > * { min-width: 0; }
+.kicker span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kicker .price { max-width: 46%; }
+.pf .pb, .pf .fx { min-width: 0; overflow-wrap: anywhere; }
+.chips { min-width: 0; }
+.chip.metric { max-width: 100%; }
+.cardbar .btn, .cardbar .buy { flex: none; }
+.sheet-body, .sheet-body * { min-width: 0; }
+.sheet-body { overflow-x: hidden; overflow-wrap: anywhere; }
+.metric b { overflow-wrap: anywhere; }

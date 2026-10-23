@@ -188,15 +188,18 @@
       </article></div>`;
     const slides = invs.map((inv, k) => `<div class="slide"><article class="card" style="--agent:${esc(inv.agent.color)}">
         <div class="visual">${inv.anim && MOTION_OK ? `<img src="${esc(inv.anim)}" alt="Animation of how ${esc(inv.title)} works" loading="lazy">` : inv.sketch ? `<img src="${esc(inv.sketch)}" alt="Concept sketch of ${esc(inv.title)}" loading="lazy">` : `<div class="fine">No sketch</div>`}<span class="tag"><span class="sq">${esc(inv.agent.name[0])}</span>${esc(inv.agent.name)} · ${esc(LEVER[inv.lever] || inv.agent.role.replace(/^The /, ''))}</span><span class="aimark">${inv.anim && MOTION_OK ? 'AI concept animation · loops' : 'AI concept sketch'}</span></div>
-        <div class="body"><div class="kicker"><span>${k + 1} of ${invs.length}</span>${inv.priceHint ? `<span>·</span><span>${esc(inv.priceHint)}</span>` : ''}${inv.feasibility ? `<span>·</span><span>feasibility ${inv.feasibility}/10</span>` : ''}</div>
+        <div class="body"><div class="kicker"><span>${k + 1} of ${invs.length}</span>${inv.priceHint ? `<span>·</span><span class="price">${esc(shortPrice(inv.priceHint))}</span>` : ''}${inv.feasibility ? `<span>·</span><span>feasibility ${inv.feasibility}/10</span>` : ''}</div>
           <h2>${esc(inv.title)}</h2>
-          ${inv.problem && inv.fix ? `<div class="pf"><span class="pb">${esc(inv.problem)}</span>${I('arrow-right', 14)}<span class="fx">${esc(inv.fix)}</span></div>` : `<p class="tagline">${esc(inv.tagline)}</p>`}
-          ${inv.whyBetter.length ? `<div class="chips">${inv.whyBetter.map((w) => `<span class="chip metric">${esc(w.metric || w.claim)}</span>`).join('')}</div>` : ''}</div>
+          ${inv.problem && inv.fix ? `<div class="pf"><span class="pb">${esc(shortText(inv.problem, 42))}</span>${I('arrow-right', 14)}<span class="fx">${esc(shortText(inv.fix, 56))}</span></div>` : `<p class="tagline">${esc(inv.tagline)}</p>`}
+          ${inv.whyBetter.length ? `<div class="chips">${inv.whyBetter.map((w) => `<span class="chip metric">${esc(shortText(w.metric || w.claim, 34))}</span>`).join('')}</div>` : ''}</div>
         <div class="cardbar"><button class="btn small" data-act="detail" data-v="${p.id}:${inv.id}">Details</button><button class="iconbtn" data-act="chat" data-v="${p.id}" aria-label="Talk about it">${I('chat-circle-dots', 22)}</button><span class="spacer"></span>${buyBtn(inv)}${saveBtn(inv)}</div>
       </article></div>`).join('');
     const note = p.round && p.round.by === 'feedback' && p.round.feedback ? `<div class="roundnote">${I('sparkle', 14)}Round ${p.round.n}, from your note: “${esc(p.round.feedback.slice(0, 80))}${p.round.feedback.length > 80 ? '…' : ''}”</div>` : '';
     return `<section class="post" data-post="${p.id}">${note}<div class="slides" data-slides>${orig}${slides}</div><div class="dots">${[0, ...invs.map(() => 1)].map((x, i) => `<i class="${x ? 'inv' : ''}${i === 0 ? ' on' : ''}"></i>`).join('')}</div>${invs.length > 1 ? pickHtml(p) : ''}</section>`;
   }
+  // Feed cards show the short form; Details has the full text.
+  const shortText = (t, n) => { const x = String(t || '').trim(); if (x.length <= n) return x; const cut = x.slice(0, n); return `${cut.slice(0, Math.max(cut.lastIndexOf(' '), n - 8)).replace(/[,;:(\s]+$/, '')}…`; };
+  const shortPrice = (t) => shortText(String(t || '').split(/[;(]| for | per /)[0], 22);
   const LEVER = { mechanism: 'mechanism', interaction: 'how it is used', system: 'the system' };
   // How much research stands behind the original; each chip opens the dossier.
   function evidenceHtml(p) {
