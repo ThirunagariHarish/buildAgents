@@ -12,7 +12,9 @@ process.env.RV_NO_PHOTOS = '1';
 process.env.RV_SCHEDULE = '0';
 fs.chmodSync(process.env.RV_CLAUDE_BIN, 0o755);
 
+process.env.RV_ADMIN_EMAIL = 'owner@example.com';
 const store = require('../lib/store');
+const auth = require('../lib/auth');
 const studio = require('../lib/studio');
 const media = require('../lib/media');
 const events = [];
@@ -28,6 +30,22 @@ const ok = (m) => { n++; console.log(`  ok ${m}`); };
   assert(clean && !/script|onload|image|javascript|https:\/\/e/.test(clean) && /<rect/.test(clean) && /xmlns=/.test(clean), clean);
   assert.strictEqual(media.cleanSvg('<div>no svg</div>'), null);
   ok('SVG sketches are cleaned');
+
+  // Accounts: the configured owner is the owner and an administrator; invitations; niches.
+  auth.ensureAdmin();
+  const owner = auth.listUsers().find((u) => u.email === 'owner@example.com');
+  assert(owner && owner.primary && owner.role === 'admin', 'configured owner is primary admin');
+  const inv1 = auth.invite({ email: 'Friend@Example.com', firstName: 'Sam', invitedBy: owner.id });
+  assert(inv1.token && inv1.user.status === 'unverified' && inv1.user.email === 'friend@example.com' && !inv1.existing);
+  assert(auth.invite({ email: 'friend@example.com', invitedBy: owner.id }).existing, 'inviting again sends a fresh link');
+  assert.throws(() => auth.setRole(inv1.user.id, 'admin'), /Approve/, 'an invite who has not joined cannot be made admin');
+  auth.resetPassword({ token: inv1.token, password: 'a-good-pass-123' });
+  auth.setRole(inv1.user.id, 'admin');
+  assert.strictEqual(auth.getUser(inv1.user.id).role, 'admin');
+  auth.setRole(inv1.user.id, 'user');
+  const prof = auth.setProfile(owner.id, { niches: ['Camping', ' camping ', 'x', 'Home espresso'] });
+  assert.deepStrictEqual(prof.niches, ['Camping', 'Home espresso'], 'niches are cleaned and de-duplicated');
+  ok('accounts: owner, invitations, admin role, niches');
 
   // A full cycle: the Scout, then three inventors in turn.
   studio.enqueue({ type: 'cycle' });
@@ -48,6 +66,9 @@ const ok = (m) => { n++; console.log(`  ok ${m}`); };
   assert(p.sketch, 'the original gets a fallback drawing');
   assert(events.some((e) => e.event === 'live' && e.live && /Scout/.test(e.live.label)) && events.some((e) => e.event === 'live' && e.live && /Kenji/.test(e.live.label)), 'live status names who is working');
   ok(`cycle: ${p.product.name} → ${invs.map((i) => i.title).join(' / ')}`);
+  assert(p.niche === 'Camping' || p.niche === 'Home espresso', `the first product comes from a followed niche (${p.niche})`);
+  assert(p.product.currentBest.length === 1 && p.product.currentBest[0].year === 2025 && p.product.baseline, 'the 2026 baseline is kept');
+  ok(`niche and 2026 baseline: made for "${p.niche}", starts from ${p.product.currentBest[0].name}`);
   assert(invs[0].problem && invs[0].fix && invs[0].lever === 'mechanism' && invs[1].lever === 'interaction' && invs[0].feasibility.score === 8, 'problem, fix, lever and feasibility kept');
   assert(invs[0].whyBetter[1].basis === 'sourced' && invs[0].whyBetter[0].basis === 'estimate', 'metrics say whether they are sourced');
   assert(p.rounds[0].review && p.rounds[0].review.redid === 'futurist' && invs[2].redoOf, 'the reviewer sends a repeat back once');
@@ -103,6 +124,12 @@ const ok = (m) => { n++; console.log(`  ok ${m}`); };
   store.setSaved('u1', p.id, invs[1].id, false);
   assert.strictEqual(store.saves('u1').length, 0);
   ok('save and unsave');
+
+  // Activity for the admin panel.
+  store.touch('u1'); store.touch('u1', 'views'); store.touch('u1', 'views');
+  const act = store.activity('u1');
+  assert(act.views === 2 && act.days.length === 1 && act.lastSeen, JSON.stringify(act));
+  ok('activity: last seen, active days and products opened');
 
   // Demand: "I'd buy this" with a price, and "Whose fix wins?".
   store.setBuy('u1', invs[0].id, 12); store.setBuy('u2', invs[0].id, 16); store.setBuy('u3', invs[0].id, 0);

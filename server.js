@@ -55,6 +55,8 @@ const clientIp = (req) => {
 // Claude plan, so they are for the owner and people the owner turns them on for.
 const allowed = (u) => !!u && u.status === 'approved';
 const canClaude = (u) => !!u && (u.role === 'admin' || u.claude === true);
+// Administrators run the studio and the admin panel; only the owner (primary) changes who is an administrator.
+const isAdmin = (u) => !!u && (u.primary || u.role === 'admin');
 const currentUser = (req) => auth.userForSession(cookies(req)[COOKIE]);
 
 const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
@@ -129,7 +131,8 @@ function postCard(p, savedIds, uid = null) {
   return {
     id: p.id, createdAt: p.createdAt, status: p.status, category: p.category,
     product: p.product ? { name: p.product.name, category: p.product.category, oneLiner: p.product.oneLiner, priceRange: p.product.priceRange, pains: p.product.pains.slice(0, 3).map((x) => x.pain) } : null,
-    evidence: evidence(p.product), picks: store.picks(p.id, uid), work: p.work || null,
+    evidence: evidence(p.product), picks: store.picks(p.id, uid), work: p.work || null, niche: p.niche || null,
+    currentBest: p.product && p.product.currentBest && p.product.currentBest[0] ? p.product.currentBest[0] : null,
     image: p.image ? { src: `/media/${p.image.file}`, credit: p.image.credit, source: p.image.source } : null,
     sketch: p.sketch ? `/media/${p.sketch}` : null,
     round: last ? { id: last.id, n: rounds.length, by: last.by, feedback: last.feedback, at: last.at } : null,
@@ -158,6 +161,52 @@ function scoreboard() {
   }
   return Object.values(board);
 }
+/** Does a product belong to one of someone's niches? The niche it was made for, or every word of the niche in its description. */
+const STOP = new Set(['and', 'the', 'for', 'with', 'of', 'to', 'in', 'on', 'a', 'an', 'my', 'gear', 'products', 'stuff', 'things']);
+function matchesNiche(post, niches) {
+  if (!niches || !niches.length || !post.product) return false;
+  const pn = String(post.niche || '').toLowerCase();
+  const text = [post.product.name, post.product.category, post.product.oneLiner, post.category, ...(post.product.currentBest || []).map((c) => c.name)].join(' ').toLowerCase();
+  return niches.some((n) => {
+    const l = n.toLowerCase();
+    if (pn && pn === l) return true;
+    if (text.includes(l)) return true;
+    const words = l.split(/[^a-z0-9]+/).filter((w) => w.length >= 3 && !STOP.has(w));
+    return words.length > 0 && words.every((w) => text.includes(w.replace(/s$/, '')));
+  });
+}
+const NICHE_SUGGESTIONS = ['Home espresso', 'Camping', 'Baby gear', 'Kitchen tools', 'Home gym', 'Gardening', 'Pet care', 'Cycling', 'Travel', 'Desk setup', 'Cleaning', 'Elderly care', 'Kids and school', 'Outdoor cooking', 'Bathroom', 'Storage and organising', 'Fishing', 'Running', 'Crafts and sewing', 'Car accessories'];
+/** Niches people already follow first, then the starter list. */
+function popularNiches() {
+  const counts = {};
+  for (const u of auth.listUsers()) for (const n of u.niches || []) { const k = n.toLowerCase(); counts[k] = counts[k] || { n, c: 0 }; counts[k].c++; }
+  const used = Object.values(counts).sort((a, b) => b.c - a.c).map((x) => x.n);
+  return [...new Set([...used, ...NICHE_SUGGESTIONS].map((x) => x))].filter((x, i, arr) => arr.findIndex((y) => y.toLowerCase() === x.toLowerCase()) === i).slice(0, 24);
+}
+/** The admin panel: who uses the app and how, plus totals. */
+function adminView(viewer) {
+  const day = 24 * 3600 * 1000, now = Date.now();
+  const people = auth.listUsers().map((u) => {
+    const a = store.activity(u.id) || {};
+    const inviter = u.invitedBy ? auth.getUser(u.invitedBy) : null;
+    return {
+      id: u.id, name: u.name || u.email, email: u.email, status: u.status, role: u.role, primary: !!u.primary, admin: !!u.primary || u.role === 'admin', claude: u.role === 'admin' || u.claude === true,
+      niches: u.niches || [], joinedAt: u.createdAt || null, invitedBy: inviter ? inviter.firstName || inviter.email : null,
+      lastSeen: a.lastSeen || null, activeDays30: (a.days || []).filter((d) => now - Date.parse(d) < 30 * day).length, views: a.views || 0, ...store.usage(u.id),
+    };
+  }).sort((x, y) => (y.lastSeen || 0) - (x.lastSeen || 0));
+  const confirmed = people.filter((x) => x.status === 'approved');
+  const sum = (k) => people.reduce((t, x) => t + (x[k] || 0), 0);
+  return {
+    viewerIsOwner: !!viewer.primary,
+    stats: {
+      people: confirmed.length, invitedWaiting: people.filter((x) => x.status === 'unverified').length,
+      activeToday: people.filter((x) => x.lastSeen && now - x.lastSeen < day).length, active7: people.filter((x) => x.lastSeen && now - x.lastSeen < 7 * day).length,
+      products: store.listPosts().filter((x) => x.product).length, views: sum('views'), saves: sum('saves'), buys: sum('buys'), picks: sum('picks'), chats: sum('chats'),
+    },
+    people,
+  };
+}
 const savedSet = (u) => new Set(store.saves(u.id).map((s) => s.invId));
 function liveView() {
   const s = store.settings();
@@ -176,7 +225,7 @@ const server = http.createServer(async (req, res) => {
     // ---- accounts ----
     if (p === '/api/session' && req.method === 'GET') {
       const u = currentUser(req);
-      return json(res, 200, { authed: !!u, allowed: allowed(u), claude: canClaude(u), owner: !!(u && u.primary), user: auth.publicUser(u), version: VERSION, openSignup: config.OPEN_SIGNUP });
+      return json(res, 200, { authed: !!u, allowed: allowed(u), claude: canClaude(u), owner: isAdmin(u), primary: !!(u && u.primary), user: auth.publicUser(u), version: VERSION, openSignup: config.OPEN_SIGNUP });
     }
     if (p === '/api/login' && req.method === 'POST') {
       const b = await readBody(req).catch(() => ({}));
@@ -228,7 +277,12 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/reset' && req.method === 'POST') {
       const b = await readBody(req).catch(() => ({}));
       if (auth.limited(`reset:ip:${ip}`, 10, 3600 * 1000)) return json(res, 429, { error: 'Too many attempts.' });
-      try { const u = auth.resetPassword({ token: b.token, password: b.password }); return json(res, 200, { ok: true, email: u.email }); } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+      try {
+        const u = auth.resetPassword({ token: b.token, password: b.password });
+        const pend = store.takePending(u.id);
+        if (pend && pend.admin) { try { auth.setRole(u.id, 'admin'); } catch {} }
+        return json(res, 200, { ok: true, email: u.email });
+      } catch (e) { return json(res, e.status || 500, { error: e.message }); }
     }
 
     if (!p.startsWith('/api/') && !p.startsWith('/media/')) return serveStatic(req, res, p);
@@ -237,6 +291,7 @@ const server = http.createServer(async (req, res) => {
     if (!user) return json(res, 401, { error: 'Sign in to continue.', login: true });
     if (!allowed(user)) return json(res, 403, { error: 'Confirm your email first: open the link we sent you.' });
     if (p.startsWith('/media/')) return serveMedia(res, p.slice(7));
+    store.touch(user.id);
 
     if (p === '/api/events' && req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
@@ -251,8 +306,10 @@ const server = http.createServer(async (req, res) => {
       const before = Number(url.searchParams.get('before')) || Infinity;
       const limit = Math.min(20, Number(url.searchParams.get('limit')) || 6);
       const saved = savedSet(user);
-      const posts = store.listPosts().filter((x) => x.product && (x.rounds || []).length && x.createdAt < before);
-      return json(res, 200, { posts: posts.slice(0, limit).map((x) => postCard(x, saved, user.id)), more: posts.length > limit, ...liveView() });
+      const forMe = url.searchParams.get('for') === 'me';
+      const niches = (auth.getUser(user.id) || {}).niches || [];
+      const posts = store.listPosts().filter((x) => x.product && (x.rounds || []).length && x.createdAt < before && (!forMe || matchesNiche(x, niches)));
+      return json(res, 200, { posts: posts.slice(0, limit).map((x) => postCard(x, saved, user.id)), more: posts.length > limit, niches, ...liveView() });
     }
     if (p === '/api/live' && req.method === 'GET') return json(res, 200, liveView());
     const pm = p.match(/^\/api\/posts\/([a-f0-9]{12})(\/[a-z]+)?$/);
@@ -260,7 +317,7 @@ const server = http.createServer(async (req, res) => {
       const post = store.loadPost(pm[1]);
       if (!post || !post.product) return json(res, 404, { error: 'No such product.' });
       const sub = pm[2] || '';
-      if (sub === '' && req.method === 'GET') return json(res, 200, postFull(post, savedSet(user), user.id));
+      if (sub === '' && req.method === 'GET') { store.touch(user.id, 'views'); return json(res, 200, postFull(post, savedSet(user), user.id)); }
       if (sub === '/pick' && req.method === 'POST') {
         const b = await readBody(req);
         const ids = new Set((post.rounds || []).flatMap((r) => r.inventions.map((i) => i.id)));
@@ -268,7 +325,7 @@ const server = http.createServer(async (req, res) => {
         return json(res, 200, { picks: store.setPick(user.id, post.id, b.invId || null) });
       }
       if (sub === '' && req.method === 'DELETE') {
-        if (!user.primary) return json(res, 403, { error: 'Only the owner can remove products.' });
+        if (!isAdmin(user)) return json(res, 403, { error: 'Only administrators can remove products.' });
         store.removePost(post.id); emit({ event: 'post', id: post.id, removed: true });
         return json(res, 200, { ok: true });
       }
@@ -337,10 +394,10 @@ const server = http.createServer(async (req, res) => {
     // ---- the studio (owner) ----
     if (p === '/api/studio' && req.method === 'GET') {
       const s = store.settings();
-      return json(res, 200, { ...liveView(), focus: s.focus, animate: s.animate !== false, models: s.models, isOwner: !!user.primary, products: store.listPosts().filter((x) => x.product).length, scoreboard: scoreboard() });
+      return json(res, 200, { ...liveView(), focus: s.focus, animate: s.animate !== false, models: s.models, isOwner: isAdmin(user), products: store.listPosts().filter((x) => x.product).length, scoreboard: scoreboard() });
     }
     if (p === '/api/studio' && req.method === 'POST') {
-      if (!user.primary) return json(res, 403, { error: 'Only the owner runs the studio.' });
+      if (!isAdmin(user)) return json(res, 403, { error: 'Only administrators run the studio.' });
       const b = await readBody(req);
       const patch = {};
       if ([30, 60, 120, 240, 480].includes(Number(b.intervalMin))) patch.intervalMin = Number(b.intervalMin);
@@ -358,19 +415,49 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, liveView());
     }
     if (p === '/api/studio/run' && req.method === 'POST') {
-      if (!user.primary) return json(res, 403, { error: 'Only the owner runs the studio.' });
+      if (!isAdmin(user)) return json(res, 403, { error: 'Only administrators run the studio.' });
       const queued = studio.enqueue({ type: 'cycle' });
       return json(res, 200, { queued, ...liveView() });
     }
 
-    // ---- people (owner) ----
+    // ---- your profile ----
+    if (p === '/api/profile' && req.method === 'GET') {
+      const me = auth.publicUser(auth.getUser(user.id));
+      return json(res, 200, { user: me, popular: popularNiches(), admin: isAdmin(user) });
+    }
+    if (p === '/api/profile' && req.method === 'POST') {
+      const b = await readBody(req).catch(() => ({}));
+      try { return json(res, 200, { user: auth.setProfile(user.id, b) }); } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+    }
+
+    // ---- the admin panel ----
+    if (p === '/api/admin' && req.method === 'GET') {
+      if (!isAdmin(user)) return json(res, 403, { error: 'Only administrators see this.' });
+      return json(res, 200, adminView(user));
+    }
+    if (p === '/api/admin/invite' && req.method === 'POST') {
+      if (!isAdmin(user)) return json(res, 403, { error: 'Only administrators invite people.' });
+      const b = await readBody(req).catch(() => ({}));
+      if (auth.limited(`invite:${user.id}`, 40, 24 * 3600 * 1000)) return json(res, 429, { error: 'That is a lot of invitations today. Try again tomorrow.' });
+      try {
+        const r = auth.invite({ email: b.email, firstName: b.name, invitedBy: user.id });
+        if (b.admin === true && user.primary && !r.existing) { /* promoted once they confirm */ store.setPending(r.user.id, { admin: true }); }
+        if (b.claude === true) auth.setClaude(r.user.id, true);
+        const link = `${BASE_URL}/#/reset/${r.token}`;
+        const who = user.firstName || 'The Reinvent team';
+        const d = await mail.send({ to: r.user.email, subject: `${who} invited you to Reinvent`, text: `Hi ${r.user.firstName},\n\n${who} invited you to Reinvent: every half hour, one everyday product and three ways to reinvent it, with what it would cost to make.\n\nChoose a password to get in (link works for 24 hours):\n\n${link}\n\nOn iPhone, open it in Safari and use Share, then Add to Home Screen, to keep it like an app.\n` }).catch((e) => ({ sent: false, error: e.message }));
+        return json(res, 200, { sent: !!d.sent, error: d.error || null, link: d.sent ? null : link, existing: r.existing });
+      } catch (e) { return json(res, e.status || 500, { error: e.message }); }
+    }
+
+    // ---- people (administrators) ----
     if (p === '/api/people' && req.method === 'GET') {
-      if (!user.primary) return json(res, 403, { error: 'Only the owner manages people.' });
+      if (!isAdmin(user)) return json(res, 403, { error: 'Only administrators manage people.' });
       return json(res, 200, { people: auth.listUsers().map((x) => ({ id: x.id, name: x.name, email: x.email, status: x.status, role: x.role, primary: !!x.primary, claude: x.role === 'admin' || x.claude === true, saved: store.saves(x.id).length })) });
     }
     const pe = p.match(/^\/api\/people\/([a-f0-9]{12})(\/email)?$/);
     if (pe && req.method === 'POST') {
-      if (!user.primary) return json(res, 403, { error: 'Only the owner manages people.' });
+      if (!isAdmin(user)) return json(res, 403, { error: 'Only administrators manage people.' });
       const b = await readBody(req).catch(() => ({}));
       try {
         if (pe[2]) {
@@ -380,6 +467,16 @@ const server = http.createServer(async (req, res) => {
           const confirm = t.status === 'unverified';
           const r = await mail.send({ to: t.email, subject: confirm ? 'Confirm your email for Reinvent' : 'Set your Reinvent password', text: `Hi ${t.firstName},\n\n${confirm ? 'Confirm your email and choose a password' : 'Set a new Reinvent password'} with this link (24 hours):\n\n${BASE_URL}/#/reset/${token}\n` }).catch((e) => ({ sent: false, error: e.message }));
           return json(res, 200, { sent: r.sent, error: r.error || null, link: r.sent ? null : `${BASE_URL}/#/reset/${token}` });
+        }
+        if (b.role) {
+          if (!user.primary) return json(res, 403, { error: 'Only the owner makes or removes administrators.' });
+          auth.setRole(pe[1], b.role === 'admin' ? 'admin' : 'user');
+        }
+        if (b.remove === true) {
+          if (!user.primary) return json(res, 403, { error: 'Only the owner removes people.' });
+          if (pe[1] === user.id) return json(res, 400, { error: 'You cannot remove yourself.' });
+          if (!auth.deleteUser(pe[1])) return json(res, 400, { error: 'That account cannot be removed.' });
+          return json(res, 200, { ok: true });
         }
         if (typeof b.claude === 'boolean') auth.setClaude(pe[1], b.claude);
         if (['approved', 'disabled'].includes(b.status)) auth.setStatus(pe[1], b.status);
@@ -401,4 +498,4 @@ setTimeout(tick, 20 * 1000);
 
 auth.ensureAdmin();
 server.listen(PORT, () => console.log(`\n  Reinvent on http://localhost:${PORT} (public ${BASE_URL})\n`));
-for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, () => { server.close(); process.exit(0); });
+for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, () => { try { store.flushActivity(); } catch {} server.close(); process.exit(0); });

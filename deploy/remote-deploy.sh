@@ -50,6 +50,7 @@ fi
 chown root:root "$DATA"; chmod 700 "$DATA"
 find "$DATA" -maxdepth 1 -type f -exec chmod 600 {} +
 echo "accounts: $(node -e "try{const u=JSON.parse(require('fs').readFileSync('$DATA/users.json'));console.log(u.length+' user(s): '+u.map(x=>x.email.replace(/^([^@]{1,2})[^@]*@/,'\$1***@')+' ('+x.role+(x.primary?', owner':'')+', '+x.status+')').join(', '))}catch(e){console.log('none yet')}")"
+echo "configured owner account: $(node -e "try{const u=JSON.parse(require('fs').readFileSync('$DATA/users.json'));const e=(process.env.RV_ADMIN_EMAIL||require('/opt/reinvent/lib/auth').ADMIN_EMAIL).toLowerCase();const me=u.find(x=>x.email===e);console.log(me?'exists, '+(me.primary?'owner':'not owner yet (set on start)')+', '+(me.role)+', '+me.status:'not signed up yet: sign up with that address and it becomes the owner')}catch(e){console.log('unknown: '+e.message)}" 2>/dev/null)"
 echo "products so far: $(ls "$DATA/posts" 2>/dev/null | grep -c '\.json$')"
 node -e "
 const fs=require('fs'),d='$DATA/posts';let l=[];try{l=fs.readdirSync(d).map(f=>JSON.parse(fs.readFileSync(d+'/'+f))).sort((a,b)=>b.createdAt-a.createdAt).slice(0,6)}catch{}

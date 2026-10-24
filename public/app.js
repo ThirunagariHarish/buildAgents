@@ -34,7 +34,7 @@
   const route = () => (location.hash.replace(/^#\/?/, '') || 'feed').split('/');
   window.addEventListener('hashchange', () => render());
   async function boot() {
-    try { const s = await api('/api/session', { anon: true }); S.me = s.authed && s.allowed ? { ...s.user, claude: s.claude, owner: s.owner } : null; } catch { S.me = null; }
+    try { const s = await api('/api/session', { anon: true }); S.me = s.authed && s.allowed ? { ...s.user, claude: s.claude, owner: s.owner, primary: s.primary } : null; } catch { S.me = null; }
     if (S.me) connect();
     render();
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
@@ -48,10 +48,11 @@
     if (!S.me) return r0 === 'signup' ? signupView() : r0 === 'forgot' ? forgotView() : loginView();
     if (r0 === 'saved') return savedView();
     if (r0 === 'studio') return studioView();
-    if (r0 === 'people' && S.me.owner) return peopleView();
+    if ((r0 === 'admin' || r0 === 'people') && S.me.owner) return adminView();
+    if (r0 === 'profile') return profileView();
     return feedView();
   }
-  const nav = (tab) => `<nav class="nav" aria-label="Main">${[['feed', 'Feed', 'house'], ['saved', 'Saved', 'bookmark-simple'], ['studio', 'Studio', 'flask']].map(([id, label, ic]) => `<a href="#/${id}" ${tab === id ? 'aria-current="page"' : ''}>${I(ic, 24)}<span>${label}</span></a>`).join('')}</nav>`;
+  const nav = (tab) => `<nav class="nav" aria-label="Main">${[['feed', 'Feed', 'house'], ['saved', 'Saved', 'bookmark-simple'], ['studio', 'Studio', 'flask'], ...(S.me && S.me.owner ? [['admin', 'Admin', 'users-three']] : []), ['profile', 'Profile', 'user-circle']].map(([id, label, ic]) => `<a href="#/${id}" ${tab === id ? 'aria-current="page"' : ''}>${I(ic, 24)}<span>${label}</span></a>`).join('')}</nav>`;
   const mark = () => `<span class="brand-mark">${I('lightbulb', 18)}</span>`;
 
   // ---- accounts -----------------------------------------------------------------------------
@@ -137,7 +138,8 @@
   }
   function drawLive() { const el = $('#livepill'); if (el) el.innerHTML = livePill(); }
   async function feedView() {
-    app.innerHTML = `<header class="top"><a class="brand" href="#/feed">${mark()}<span>Reinvent</span></a><span class="spacer"></span><span id="livepill">${livePill()}</span></header>
+    S.mode = S.mode || (() => { try { return localStorage.getItem('rv-mode') || 'all'; } catch { return 'all'; } })();
+    app.innerHTML = `<header class="top"><a class="brand" href="#/feed" aria-label="Reinvent">${mark()}</a><div class="feedtabs" role="tablist"><button role="tab" data-act="mode" data-v="me" aria-selected="${S.mode === 'me'}">For you</button><button role="tab" data-act="mode" data-v="all" aria-selected="${S.mode === 'all'}">Everything</button></div><span class="spacer"></span><span id="livepill">${livePill()}</span></header>
       <div class="newbar" id="newbar" hidden><button class="btn small accent" data-act="fresh">${I('sparkle', 16)}New product</button></div>
       <main class="feed" id="feed"><section class="post"><div class="slide"><div class="card"><div class="visual sk"></div><div class="body"><div class="sk" style="height:14px;width:40%"></div><div class="sk" style="height:26px;width:70%"></div><div class="sk" style="height:14px"></div></div></div></div></section></main>${nav('feed')}`;
     S.newCount = 0;
@@ -148,13 +150,14 @@
     S.loading = true;
     try {
       const before = !reset && S.posts.length ? S.posts[S.posts.length - 1].createdAt : '';
-      const r = await api(`/api/feed?limit=6${before ? `&before=${before}` : ''}`);
+      const r = await api(`/api/feed?limit=6${before ? `&before=${before}` : ''}${S.mode === 'me' ? '&for=me' : ''}`);
+      S.niches = r.niches || [];
       S.info = r; S.live = r.live; drawLive();
       S.posts = reset ? r.posts : [...S.posts, ...r.posts];
       S.more = r.more;
       const feed = $('#feed'); if (!feed) return;
       if (reset) feed.innerHTML = '';
-      if (!S.posts.length) { feed.innerHTML = emptyFeed(r); return; }
+      if (!S.posts.length) { feed.innerHTML = S.mode === 'me' ? emptyForYou() : emptyFeed(r); return; }
       feed.insertAdjacentHTML('beforeend', r.posts.map(postHtml).join(''));
       wireSlides(feed);
       watchEnd();
@@ -168,6 +171,10 @@
     { id: 'futurist', n: 'I', name: 'Ines', what: 'reinvents the system around it', color: '#4b8768' },
     { id: 'animator', n: 'A', name: 'The Animator', what: 'shows how each design works', color: '#6f675a' },
   ];
+  function emptyForYou() {
+    const n = S.niches || [];
+    return `<div class="warm"><h2>${n.length ? 'Nothing in your niches yet' : 'Tell us what you are into'}</h2><p>${n.length ? `You follow ${esc(n.join(', '))}. Every other product the Scout researches comes from a niche people follow, so yours are in the queue.` : 'Add a few niches to your profile (anything: "home espresso", "camping", "baby gear") and this tab fills with products from them.'}</p><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="#/profile">${I('user-circle', 18)}${n.length ? 'Edit my niches' : 'Choose my niches'}</a><button class="btn quiet" data-act="mode" data-v="all">See everything</button></div></div>`;
+  }
   function emptyFeed(r) {
     const l = r.live;
     const at = l ? CREW.findIndex((c) => c.id === (l.agent || 'scout')) : -1;
@@ -183,6 +190,7 @@
         <div class="body"><div class="kicker">${esc(pr.category || p.category || '')}${pr.priceRange ? `<span>·</span><span>${esc(pr.priceRange)}</span>` : ''}</div>
           <h2>${esc(pr.name)}</h2><p class="tagline">${esc(pr.oneLiner)}</p>
           ${pr.pains.length ? `<div class="pains">${pr.pains.slice(0, 2).map((x) => `<div><span>${esc(x)}</span></div>`).join('')}</div>` : ''}
+          ${p.currentBest ? `<p class="best">${I('star', 14)}<span>Starts from today's best: <b>${esc(shortText(p.currentBest.name, 40))}</b>${p.currentBest.year ? ` (${p.currentBest.year})` : ''}</span></p>` : ''}
           ${evidenceHtml(p)}</div>
         <div class="cardbar"><button class="btn small quiet" data-act="dossier" data-v="${p.id}">${I('info', 16)}Research</button><button class="iconbtn" data-act="chat" data-v="${p.id}" aria-label="Talk about it">${I('chat-circle-dots', 22)}</button><span class="spacer"></span>${invs.length ? `<button class="count" data-act="next-slide" aria-label="See the ${invs.length} reinventions">${invs.length} reinvention${invs.length === 1 ? '' : 's'}${I('caret-right', 16)}</button>` : ''}</div>
       </article></div>`;
@@ -412,6 +420,7 @@
     sh.querySelector('.sheet-body').innerHTML = `<div class="hero ${p.image ? 'photo' : ''}">${p.image ? `<img src="${esc(p.image.src)}" alt="${esc(d.name)}">` : p.sketch ? `<img src="${esc(p.sketch)}" alt="">` : ''}</div>
       ${p.image && p.image.credit ? `<p class="fine" style="margin-top:6px">Photo: <a href="${safeUrl(p.image.source)}" target="_blank" rel="noopener">${esc(p.image.credit)}</a></p>` : ''}
       <div class="dhead"><h2>${esc(d.name)}</h2><p>${esc(d.oneLiner)}</p>${p.work ? `<p class="fine">${workLine(p.work, 'The Scout')}</p>` : ''}</div>
+      ${d.baseline || (d.currentBest && d.currentBest.length) ? sec('The 2026 baseline', `${d.baseline ? `<p>${esc(d.baseline)}</p>` : ''}${d.currentBest && d.currentBest.length ? `<div class="refs" style="margin-top:10px">${d.currentBest.map((c) => `<a class="ref" href="${safeUrl(c.url)}" target="_blank" rel="noopener"><b>${esc(c.name)}${c.year ? ` · ${c.year}` : ''}${c.price ? ` · ${esc(c.price)}` : ''}</b>${esc(c.whatsNew)}${c.url ? `<small>${esc(host(c.url))}</small>` : ''}</a>`).join('')}</div>` : ''}<p class="fine" style="margin-top:8px">The inventors start from these models, not the old generic version.</p>`) : ''}
       ${sec('How it works', `<p>${esc(d.howItWorks)}</p>`)}
       ${sec('What people complain about', d.pains.length ? `<div class="refs">${d.pains.map((x) => `<a class="ref" href="${safeUrl(x.url)}" target="_blank" rel="noopener"><b>${esc(x.pain)}</b>${x.evidence ? `“${esc(x.evidence)}”` : ''}${x.url ? `<small>${esc(host(x.url))}</small>` : ''}</a>`).join('')}</div>` : '')}
       ${sec('Already tried', d.priorArt.length ? `<div class="refs">${d.priorArt.map((x) => `<a class="ref" href="${safeUrl(x.url)}" target="_blank" rel="noopener"><b>${esc(x.name)}</b>${esc(x.what)}${x.url ? `<small>${esc(host(x.url))}</small>` : ''}</a>`).join('')}</div>` : '')}
@@ -485,7 +494,7 @@
       <h2 class="sub">Models</h2>
       <div class="panel">${[['scout', 'Scout'], ['inventor', 'Inventors'], ['reviewer', 'Reviewer (keeps the three different)'], ['animator', 'Animator'], ['sourcing', 'Sourcing analyst'], ['chat', 'Chat']].map(([k, t]) => `<div class="row"><span class="grow"><b>${t}</b><small>${MODEL_HINT[s.models[k]] || ''}</small></span><select data-act="model" data-v="${k}">${['haiku', 'sonnet', 'opus'].map((m) => `<option ${s.models[k] === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div>`).join('')}</div>
       <h2 class="sub">People</h2>
-      <div class="panel"><a class="row" href="#/people" style="text-decoration:none;color:inherit"><span class="grow"><b>Who can use the studio</b><small>Everyone can scroll and save; you choose who can chat and request reports</small></span>${I('caret-right', 18)}</a></div>` : '';
+      <div class="panel"><a class="row" href="#/admin" style="text-decoration:none;color:inherit"><span class="grow"><b>Admin</b><small>Who uses the app, invitations, administrators and studio access</small></span>${I('caret-right', 18)}</a></div>` : '';
     $('#studio').innerHTML = `<h1 class="title">The studio</h1><p class="lede">${s.products} product${s.products === 1 ? '' : 's'} reinvented so far.</p>
       <div class="studio-live" id="studiolive">${studioLiveHtml(s)}</div>
       ${s.isOwner ? `<button class="btn block" data-act="run-now">${I('lightning', 18)}Research a product now</button>` : ''}
@@ -517,12 +526,84 @@
     return `<div class="now">${I(s.paused ? 'pause' : 'clock', 20)}<span>${s.paused ? 'Paused' : s.nextRunAt ? `Next product ${inMin(s.nextRunAt)}` : 'Idle'}</span></div>${s.holdUntil ? `<p class="fine">Resting until ${new Date(s.holdUntil).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} after hitting a limit. ${S.me.owner ? '<button class="link" data-act="clear-hold">Start again now</button>' : ''}</p>` : ''}${s.lastError ? `<p class="fine">Last problem: ${esc(s.lastError)}</p>` : ''}`;
   }
 
-  async function peopleView() {
-    app.innerHTML = `<header class="top solid"><a class="iconbtn" href="#/studio" aria-label="Back">${I('arrow-left', 22)}</a><b>People</b></header><main class="page"><p class="lede">Everyone with a confirmed account can scroll and save. Chat, new rounds and sourcing reports run on your Claude plan, so you choose who gets them.</p><div class="panel" id="people"><div class="sk" style="height:60px;margin:12px 0"></div></div></main>${nav('studio')}`;
-    try {
-      const { people } = await api('/api/people');
-      $('#people').innerHTML = people.map((u) => `<div class="row"><span class="grow"><b>${esc(u.name || u.email)}${u.primary ? ' · owner' : ''}</b><small>${esc(u.email)} · ${u.status === 'unverified' ? 'has not confirmed yet' : esc(u.status)} · ${u.saved} saved</small>${u.primary ? '' : `<button class="link" data-act="email-person" data-v="${esc(u.id)}" style="margin-top:4px">${u.status === 'unverified' ? 'Email a confirm link' : 'Email a set-password link'}</button>`}</span>${u.primary || u.role === 'admin' ? '<span class="fine">Studio on</span>' : `<label class="switch"><input type="checkbox" data-act="claude" data-v="${esc(u.id)}" ${u.claude ? 'checked' : ''} aria-label="Studio access for ${esc(u.name || u.email)}"><span></span></label>`}</div>`).join('');
-    } catch (e) { $('#people').innerHTML = `<p>${esc(e.message)}</p>`; }
+  // ---- profile: your niches shape the For you feed ----------------------------------------------
+  async function profileView() {
+    app.innerHTML = `<header class="top solid"><a class="brand" href="#/feed">${mark()}<span>Profile</span></a></header><main class="page" id="profile"><div class="sk" style="height:160px;border-radius:22px"></div></main>${nav('profile')}`;
+    let r;
+    try { r = await api('/api/profile'); } catch (e) { $('#profile').innerHTML = `<p>${esc(e.message)}</p>`; return; }
+    S.profile = r;
+    drawProfile();
+  }
+  function drawProfile() {
+    const { user: u, popular } = S.profile;
+    const mine = u.niches || [];
+    const sugg = popular.filter((x) => !mine.some((m) => m.toLowerCase() === x.toLowerCase())).slice(0, 14);
+    $('#profile').innerHTML = `<h1 class="title">${esc(u.firstName || 'You')}</h1><p class="lede">${esc(u.email)}${S.me.primary ? ' · owner' : S.me.owner ? ' · administrator' : ''}</p>
+      <h2 class="sub">Your niches</h2>
+      <div class="panel" style="padding:16px">
+        <p class="fine" style="margin-bottom:12px">What you are into. Type anything: a hobby, a job, a room, a kind of product. Your <b>For you</b> feed shows products from these, and the Scout researches people's niches every other round.</p>
+        <div class="tags" id="mytags">${mine.length ? mine.map((n) => `<span class="tag2">${esc(n)}<button data-act="niche-del" data-v="${esc(n)}" aria-label="Remove ${esc(n)}">${I('x', 14)}</button></span>`).join('') : '<span class="fine">None yet.</span>'}</div>
+        <form id="nicheform" class="nicheform"><input id="nichein" placeholder="Type a niche, e.g. home espresso" maxlength="40" autocomplete="off" enterkeyhint="done"><button class="btn small">${I('plus', 16)}Add</button></form>
+        ${sugg.length ? `<p class="fine" style="margin:14px 0 8px">Or tap a suggestion</p><div class="tags">${sugg.map((n) => `<button class="tag2 sugg" data-act="niche-add" data-v="${esc(n)}">${I('plus', 13)}${esc(n)}</button>`).join('')}</div>` : ''}
+      </div>
+      <h2 class="sub">Your name</h2>
+      <form class="panel" id="nameform" style="padding:16px;display:grid;gap:10px"><div style="display:flex;gap:8px"><input id="fn" value="${esc(u.firstName || '')}" placeholder="First name" maxlength="60" aria-label="First name"><input id="ln" value="${esc(u.lastName || '')}" placeholder="Last name" maxlength="60" aria-label="Last name"></div><button class="btn small quiet" style="justify-self:start">Save name</button></form>
+      ${S.me.owner ? `<h2 class="sub">Administration</h2><div class="panel"><a class="row" href="#/admin" style="text-decoration:none;color:inherit"><span class="grow"><b>Admin panel</b><small>Who uses the app, invitations and administrators</small></span>${I('caret-right', 18)}</a></div>` : ''}
+      <h2 class="sub">Account</h2>
+      <div class="panel"><div class="row"><span class="grow"><b>Sign out</b><small>On this device</small></span><button class="btn small quiet" data-act="logout">${I('sign-out', 16)}Sign out</button></div></div>`;
+    $('#nicheform').onsubmit = (e) => { e.preventDefault(); const v = $('#nichein').value.trim(); if (v.length >= 2) saveNiches([...mine, v]); };
+    $('#nameform').onsubmit = async (e) => { e.preventDefault(); try { const r = await api('/api/profile', { method: 'POST', body: { firstName: $('#fn').value, lastName: $('#ln').value } }); S.profile.user = r.user; S.me.firstName = r.user.firstName; toast('Saved'); drawProfile(); } catch (err) { toast(err.message, true); } };
+  }
+  async function saveNiches(list) {
+    try { const r = await api('/api/profile', { method: 'POST', body: { niches: list } }); S.profile.user = r.user; S.niches = r.user.niches || []; drawProfile(); const i = $('#nichein'); if (i) i.focus(); } catch (err) { toast(err.message, true); }
+  }
+
+  // ---- admin: who uses the app, invitations, administrators ----------------------------------------
+  async function adminView() {
+    app.innerHTML = `<header class="top solid"><a class="brand" href="#/feed">${mark()}<span>Admin</span></a></header><main class="page" id="admin"><div class="sk" style="height:140px;border-radius:22px"></div></main>${nav('admin')}`;
+    let r;
+    try { r = await api('/api/admin'); } catch (e) { $('#admin').innerHTML = `<p>${esc(e.message)}</p>`; return; }
+    S.admin = r;
+    const st = r.stats;
+    const tile = (n, label) => `<div class="tile"><small>${label}</small><b class="num">${n}</b></div>`;
+    $('#admin').innerHTML = `<h1 class="title">Admin</h1><p class="lede">Who uses Reinvent and how. ${r.viewerIsOwner ? 'You are the owner: you can make or remove administrators.' : 'You are an administrator.'}</p>
+      <div class="tiles">${tile(st.people, 'People')}${tile(st.activeToday, 'Active today')}${tile(st.active7, 'Active this week')}${tile(st.invitedWaiting, 'Invited, not joined')}${tile(st.products, 'Products')}${tile(st.views, 'Products opened')}${tile(st.saves, 'Saves')}${tile(st.buys, "I'd buy")}${tile(st.chats, 'Chat messages')}</div>
+      <h2 class="sub">Invite someone</h2>
+      <form class="panel" id="inviteform" style="padding:16px;display:grid;gap:10px">
+        <div class="field"><label for="iv-email">Email</label><input id="iv-email" type="email" autocomplete="off" required placeholder="name@example.com"></div>
+        <div class="field"><label for="iv-name">First name (optional)</label><input id="iv-name" maxlength="60"></div>
+        <label class="check"><input type="checkbox" id="iv-claude"> Can use the studio (chat, new rounds, reports, on your Claude plan)</label>
+        ${r.viewerIsOwner ? '<label class="check"><input type="checkbox" id="iv-admin"> Make them an administrator once they join</label>' : ''}
+        <button class="btn">${I('envelope-simple', 18)}Send invitation</button>
+        <div id="ivout"></div>
+      </form>
+      <h2 class="sub" id="pcount">People (${r.people.length})</h2>
+      <div class="plist">${r.people.map(personHtml).join('')}</div>`;
+    $('#inviteform').onsubmit = async (e) => {
+      e.preventDefault();
+      const b = e.target.querySelector('button.btn'); busy(b, true, 'Sending');
+      try {
+        const x = await api('/api/admin/invite', { method: 'POST', body: { email: $('#iv-email').value, name: $('#iv-name').value, claude: $('#iv-claude').checked, admin: !!($('#iv-admin') && $('#iv-admin').checked) } });
+        $('#ivout').innerHTML = x.sent ? `<div class="notice">Invitation sent${x.existing ? ' (they already had an account, so it is a fresh sign-in link)' : ''}. The link works for 24 hours.</div>` : `<div class="notice bad">The email did not go out${x.error ? ` (${esc(x.error)})` : ''}. Send them this link yourself:</div><div class="rfq" style="margin-top:8px;user-select:all">${esc(x.link)}</div><button type="button" class="btn small" style="margin-top:8px" data-act="copy-text" data-v="${esc(x.link)}">${I('copy', 16)}Copy link</button>`;
+        busy(b, false); toast(x.sent ? 'Invitation sent' : 'Copy the link and send it', !x.sent);
+        if (x.sent) { $('#iv-email').value = ''; $('#iv-name').value = ''; }
+        const fresh = await api('/api/admin'); S.admin = fresh; document.querySelector('.plist').innerHTML = fresh.people.map(personHtml).join(''); $('#pcount').textContent = `People (${fresh.people.length})`;
+      } catch (err) { busy(b, false); toast(err.message, true); }
+    };
+  }
+  function personHtml(u) {
+    const owner = S.admin && S.admin.viewerIsOwner;
+    const badges = [u.primary ? 'Owner' : u.admin ? 'Administrator' : '', u.status === 'unverified' ? 'Invited, not joined' : u.status === 'disabled' ? 'Disabled' : ''].filter(Boolean);
+    const stats = u.lastSeen ? `Last seen ${ago(u.lastSeen)} · ${u.activeDays30} active day${u.activeDays30 === 1 ? '' : 's'} this month · ${u.views} opened · ${u.saves} saved · ${u.buys} "I'd buy" · ${u.picks} pick${u.picks === 1 ? '' : 's'} · ${u.chats} chat message${u.chats === 1 ? '' : 's'}` : 'Has not used the app yet';
+    return `<div class="person"><div class="ptop"><span class="agent"><span class="av" style="--agent:${u.admin ? 'var(--accent)' : '#6f675a'}">${esc((u.name || u.email)[0].toUpperCase())}</span></span><span class="grow"><b>${esc(u.name || u.email)}</b>${badges.map((x) => `<span class="badge${/Invited|Disabled/.test(x) ? ' warn' : ''}">${x}</span>`).join('')}<small>${esc(u.email)}${u.invitedBy ? ` · invited by ${esc(u.invitedBy)}` : ''}${u.joinedAt ? ` · since ${new Date(u.joinedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}` : ''}</small></span></div>
+      <p class="fine">${esc(stats)}</p>
+      ${u.niches.length ? `<div class="tags">${u.niches.map((n) => `<span class="tag2 ro">${esc(n)}</span>`).join('')}</div>` : ''}
+      ${u.primary ? '' : `<div class="pacts">
+        ${u.admin ? '<span class="fine">Studio on (administrator)</span>' : `<label class="check"><input type="checkbox" data-act="claude" data-v="${esc(u.id)}" ${u.claude ? 'checked' : ''}> Studio access</label>`}
+        ${owner && u.status === 'approved' ? `<button class="btn small quiet" data-act="set-role" data-v="${esc(u.id)}:${u.admin ? 'user' : 'admin'}">${I('shield-check', 16)}${u.admin ? 'Remove admin' : 'Make admin'}</button>` : ''}
+        <button class="btn small quiet" data-act="email-person" data-v="${esc(u.id)}">${I('envelope-simple', 16)}${u.status === 'unverified' ? 'Resend invite' : 'Send sign-in link'}</button>
+        ${owner ? `<button class="iconbtn" data-act="remove-person" data-v="${esc(u.id)}" aria-label="Remove ${esc(u.name || u.email)}">${I('trash', 18)}</button>` : ''}
+      </div>`}</div>`;
   }
 
   // ---- actions ---------------------------------------------------------------------------------
@@ -543,6 +624,19 @@
       document.querySelectorAll(`[data-act="save"][data-v="${v}"]`).forEach((b) => { b.setAttribute('aria-pressed', String(on)); b.innerHTML = I(on ? 'bookmark-simple-fill' : 'bookmark-simple', 22); });
       try { await api(`/api/inventions/${v}/save`, { method: 'POST', body: { on } }); if (on) toast('Saved'); for (const p of S.posts) for (const i of p.inventions || []) if (i.id === v) i.saved = on; } catch (err) { toast(err.message, true); }
     }
+    else if (act === 'niche-add') saveNiches([...((S.profile && S.profile.user.niches) || []), v]);
+    else if (act === 'niche-del') saveNiches(((S.profile && S.profile.user.niches) || []).filter((n) => n !== v));
+    else if (act === 'set-role') {
+      const [id, role] = v.split(':');
+      if (role === 'admin' && !confirm('Make this person an administrator? They will see everyone, invite people and run the studio.')) return;
+      try { await api(`/api/people/${id}`, { method: 'POST', body: { role } }); toast(role === 'admin' ? 'Now an administrator' : 'No longer an administrator'); adminView(); } catch (err) { toast(err.message, true); }
+    }
+    else if (act === 'remove-person') {
+      if (!confirm('Remove this person? Their account is deleted and they are signed out.')) return;
+      try { await api(`/api/people/${v}`, { method: 'POST', body: { remove: true } }); toast('Removed'); adminView(); } catch (err) { toast(err.message, true); }
+    }
+    else if (act === 'copy-text') { try { await navigator.clipboard.writeText(v); toast('Copied'); } catch { toast('Select the link and copy it', true); } }
+    else if (act === 'mode') { S.mode = v; try { localStorage.setItem('rv-mode', v); } catch {} if (route()[0] !== 'feed' && route()[0] !== '') location.hash = '#/feed'; else feedView(); }
     else if (act === 'next-slide') { const sl = t.closest('.post')?.querySelector('[data-slides]'); if (sl) sl.scrollTo({ left: sl.clientWidth, behavior: 'smooth' }); }
     else if (act === 'buy') openBuy(v);
     else if (act === 'hero') { const img = $('#hero img'); if (img && v) { img.src = v; t.parentElement.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === t))); } }
