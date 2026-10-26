@@ -393,3 +393,6 @@ ol.callouts li::before { content: counter(c); width: 22px; height: 22px; border-
 #inviteform { grid-template-columns: minmax(0, 1fr); }
 .rfq, .notice { overflow-wrap: anywhere; }
 .check { min-width: 0; }
+
+.aimark.onphoto { color: #fff; background: rgba(23, 20, 15, .55); padding: 3px 8px; border-radius: 6px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.hero.photo img { object-fit: cover; }

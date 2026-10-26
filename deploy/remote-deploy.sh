@@ -100,6 +100,8 @@ fi
 echo "== product photos, as this server reaches them =="
 echo "Wikimedia Commons: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 10 'https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=kettle&format=json')"
 
+echo "Pollinations (free AI renders): HTTP $(curl -s -o /tmp/rv-pol.img -w '%{http_code}' --max-time 90 'https://image.pollinations.ai/prompt/a%20ceramic%20coffee%20mug%20studio%20photo?width=256&height=256&nologo=true&private=true&seed=7') ($(stat -c %s /tmp/rv-pol.img 2>/dev/null || echo 0) bytes, $(head -c 4 /tmp/rv-pol.img 2>/dev/null | od -An -tx1 | tr -d ' \n'))"; rm -f /tmp/rv-pol.img
+echo "image service: $(node -e "try{const s=JSON.parse(require('fs').readFileSync('$DATA/settings.json'));console.log((s.render&&s.render.provider)||'pollinations (default)')}catch(e){console.log('pollinations (default)')}")"
 echo "== route (k3s Traefik) =="
 if [ -f /etc/box-kubeconfig ]; then
   K="kubectl --kubeconfig /etc/box-kubeconfig"

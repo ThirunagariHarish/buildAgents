@@ -16,6 +16,7 @@ const auth = require('./lib/auth');
 const mail = require('./lib/mail');
 const store = require('./lib/store');
 const studio = require('./lib/studio');
+const render = require('./lib/render');
 const { INVENTORS } = require('./lib/agents');
 
 const { PORT, BASE_URL } = config;
@@ -117,7 +118,7 @@ setInterval(() => { for (const res of streams.keys()) { try { res.write(': ping\
 // ---- views ----------------------------------------------------------------------------------
 const agentView = (id) => { const a = INVENTORS[id]; return a ? { id, name: a.name, role: a.role, method: a.method, color: a.color } : { id, name: id, role: '', method: '', color: '#888' }; };
 function invSummary(inv, uid = null) {
-  return { id: inv.id, agent: agentView(inv.agent), title: inv.title, tagline: inv.tagline, problem: inv.problem || '', fix: inv.fix || '', lever: inv.lever || '', feasibility: inv.feasibility ? inv.feasibility.score : null, sketch: inv.sketch, anim: inv.anim ? `/media/${inv.anim}` : null, changes: inv.changes.slice(0, 4), whyBetter: inv.whyBetter.slice(0, 2), priceHint: inv.priceHint, sourcing: inv.sourcing ? inv.sourcing.status : null, demand: store.demand(inv.id, uid) };
+  return { id: inv.id, agent: agentView(inv.agent), title: inv.title, tagline: inv.tagline, problem: inv.problem || '', fix: inv.fix || '', lever: inv.lever || '', feasibility: inv.feasibility ? inv.feasibility.score : null, sketch: inv.sketch, anim: inv.anim ? `/media/${inv.anim}` : null, render: inv.render ? `/media/${inv.render.file}` : null, rendering: studio.isRendering(inv.id), changes: inv.changes.slice(0, 4), whyBetter: inv.whyBetter.slice(0, 2), priceHint: inv.priceHint, sourcing: inv.sourcing ? inv.sourcing.status : null, demand: store.demand(inv.id, uid) };
 }
 /** How much research stands behind a product: shown as chips on the original. */
 function evidence(prod) {
@@ -143,7 +144,7 @@ function postCard(p, savedIds, uid = null) {
 function postFull(p, savedIds, uid = null) {
   return {
     ...postCard(p, savedIds, uid), product: p.product,
-    allRounds: (p.rounds || []).map((r, n) => ({ id: r.id, n: n + 1, by: r.by, feedback: r.feedback, at: r.at, review: r.review || null, inventions: r.inventions.map((i) => ({ ...i, agent: agentView(i.agent), sketch: i.sketch ? `/media/${i.sketch}` : null, anim: i.anim ? `/media/${i.anim}` : null, saved: savedIds.has(i.id), demand: store.demand(i.id, uid) })) })),
+    allRounds: (p.rounds || []).map((r, n) => ({ id: r.id, n: n + 1, by: r.by, feedback: r.feedback, at: r.at, review: r.review || null, inventions: r.inventions.map((i) => ({ ...i, agent: agentView(i.agent), sketch: i.sketch ? `/media/${i.sketch}` : null, anim: i.anim ? `/media/${i.anim}` : null, render: i.render ? `/media/${i.render.file}` : null, renderBy: i.render ? i.render.provider : null, rendering: studio.isRendering(i.id), renderPrompt: undefined, saved: savedIds.has(i.id), demand: store.demand(i.id, uid) })) })),
   };
 }
 /** Inventor showdown: total picks and products won, per inventor. */
@@ -350,7 +351,7 @@ const server = http.createServer(async (req, res) => {
       }
       return json(res, 404, { error: 'Not found.' });
     }
-    const im = p.match(/^\/api\/inventions\/([a-f0-9]{12})\/(sourcing|save|buy|animate)$/);
+    const im = p.match(/^\/api\/inventions\/([a-f0-9]{12})\/(sourcing|save|buy|animate|render)$/);
     if (im) {
       const found = store.findInvention(im[1]);
       if (!found) return json(res, 404, { error: 'No such reinvention.' });
@@ -358,6 +359,11 @@ const server = http.createServer(async (req, res) => {
         const b = await readBody(req);
         const list = store.setSaved(user.id, found.post.id, found.inv.id, b.on !== false);
         return json(res, 200, { saved: list.some((s) => s.invId === found.inv.id), count: list.length });
+      }
+      if (im[2] === 'render' && req.method === 'POST') {
+        if (!canClaude(user) && !isAdmin(user)) return json(res, 403, { error: 'Ask an administrator for studio access to make pictures.' });
+        if (auth.limited(`render:${user.id}`, 40, 24 * 3600 * 1000)) return json(res, 429, { error: 'That is a lot of pictures today. Try again tomorrow.' });
+        try { return json(res, 200, { started: await studio.renderNow(found.inv.id) }); } catch (e) { return json(res, e.status || 500, { error: e.message }); }
       }
       if (im[2] === 'animate' && req.method === 'POST') {
         if (!canClaude(user)) return json(res, 403, { error: 'Animations use the owner\'s Claude plan. Ask the owner to turn it on for you.' });
@@ -435,6 +441,21 @@ const server = http.createServer(async (req, res) => {
       if (!isAdmin(user)) return json(res, 403, { error: 'Only administrators see this.' });
       return json(res, 200, adminView(user));
     }
+    if (p === '/api/admin/render' && req.method === 'GET') {
+      if (!isAdmin(user)) return json(res, 403, { error: 'Only administrators see this.' });
+      return json(res, 200, { ...render.config(), canEdit: !!user.primary });
+    }
+    if (p === '/api/admin/render' && req.method === 'POST') {
+      if (!user.primary) return json(res, 403, { error: 'Only the owner changes the image service and its keys.' });
+      const b = await readBody(req).catch(() => ({}));
+      return json(res, 200, { ...render.setConfig({ provider: b.provider, model: b.model, key: b.clearKey ? null : b.key }), canEdit: true });
+    }
+    if (p === '/api/admin/render/test' && req.method === 'POST') {
+      if (!user.primary) return json(res, 403, { error: 'Only the owner can test the image service.' });
+      if (auth.limited(`rendertest:${user.id}`, 20, 3600 * 1000)) return json(res, 429, { error: 'Enough tests for this hour.' });
+      try { const r = await render.renderPrompt(render.promptFor({ title: 'Test mug', tagline: 'A stoneware coffee mug with a wide thumb rest on the handle', materials: 'matte sand-coloured glazed stoneware' }, 'coffee mug')); return json(res, 200, { ok: true, src: `/media/${r.file}`, provider: r.provider, model: r.model }); }
+      catch (e) { return json(res, 200, { ok: false, error: e.message }); }
+    }
     if (p === '/api/admin/invite' && req.method === 'POST') {
       if (!isAdmin(user)) return json(res, 403, { error: 'Only administrators invite people.' });
       const b = await readBody(req).catch(() => ({}));
@@ -495,6 +516,8 @@ const server = http.createServer(async (req, res) => {
 function tick() { if (config.SCHEDULE && studio.due()) studio.enqueue({ type: 'cycle' }); }
 setInterval(tick, 60 * 1000);
 setTimeout(tick, 20 * 1000);
+// Pictures for designs made before renders existed (free service by default).
+if (config.SCHEDULE) setTimeout(() => studio.renderMissing().then((n) => n && console.log(`rendered ${n} older designs`)).catch(() => {}), 90 * 1000);
 
 auth.ensureAdmin();
 server.listen(PORT, () => console.log(`\n  Reinvent on http://localhost:${PORT} (public ${BASE_URL})\n`));

@@ -195,7 +195,7 @@
         <div class="cardbar"><button class="btn small quiet" data-act="dossier" data-v="${p.id}">${I('info', 16)}Research</button><button class="iconbtn" data-act="chat" data-v="${p.id}" aria-label="Talk about it">${I('chat-circle-dots', 22)}</button><span class="spacer"></span>${invs.length ? `<button class="count" data-act="next-slide" aria-label="See the ${invs.length} reinventions">${invs.length} reinvention${invs.length === 1 ? '' : 's'}${I('caret-right', 16)}</button>` : ''}</div>
       </article></div>`;
     const slides = invs.map((inv, k) => `<div class="slide"><article class="card" style="--agent:${esc(inv.agent.color)}">
-        <div class="visual">${inv.anim && MOTION_OK ? `<img src="${esc(inv.anim)}" alt="Animation of how ${esc(inv.title)} works" loading="lazy">` : inv.sketch ? `<img src="${esc(inv.sketch)}" alt="Concept sketch of ${esc(inv.title)}" loading="lazy">` : `<div class="fine">No sketch</div>`}<span class="tag"><span class="sq">${esc(inv.agent.name[0])}</span>${esc(inv.agent.name)} · ${esc(LEVER[inv.lever] || inv.agent.role.replace(/^The /, ''))}</span><span class="aimark">${inv.anim && MOTION_OK ? 'AI concept animation · loops' : 'AI concept sketch'}</span></div>
+        <div class="visual${inv.render ? ' photo' : ''}">${inv.render ? `<img src="${esc(inv.render)}" alt="AI render of ${esc(inv.title)}" loading="lazy">` : inv.anim && MOTION_OK ? `<img src="${esc(inv.anim)}" alt="Animation of how ${esc(inv.title)} works" loading="lazy">` : inv.sketch ? `<img src="${esc(inv.sketch)}" alt="Concept sketch of ${esc(inv.title)}" loading="lazy">` : `<div class="fine">No sketch</div>`}<span class="tag"><span class="sq">${esc(inv.agent.name[0])}</span>${esc(inv.agent.name)} · ${esc(LEVER[inv.lever] || inv.agent.role.replace(/^The /, ''))}</span><span class="aimark${inv.render ? ' onphoto' : ''}">${inv.render ? 'AI render · illustrative' : inv.anim && MOTION_OK ? 'AI concept animation · loops' : 'AI concept sketch'}</span></div>
         <div class="body"><div class="kicker"><span>${k + 1} of ${invs.length}</span>${inv.priceHint ? `<span>·</span><span class="price">${esc(shortPrice(inv.priceHint))}</span>` : ''}${inv.feasibility ? `<span>·</span><span>feasibility ${inv.feasibility}/10</span>` : ''}</div>
           <h2>${esc(inv.title)}</h2>
           ${inv.problem && inv.fix ? `<div class="pf"><span class="pb">${esc(shortText(inv.problem, 42))}</span>${I('arrow-right', 14)}<span class="fx">${esc(shortText(inv.fix, 56))}</span></div>` : `<p class="tagline">${esc(inv.tagline)}</p>`}
@@ -285,6 +285,7 @@
     if (!inv) { sh.querySelector('.sheet-body').innerHTML = '<p>This design is no longer here.</p>'; return; }
     S.sheet.kind = { type: 'detail', postId, invId };
     S.detailInv = inv;
+    S.heroKey = `${inv.render}|${inv.anim}|${inv.rendering}|${inv.renderError}`;
     sh.style.setProperty('--agent', inv.agent.color);
     sh.querySelector('.sheet-head h3').textContent = inv.title;
     sh.querySelector('.sheet-head').insertAdjacentHTML('beforeend', '');
@@ -317,10 +318,17 @@
   }
   // The detail hero: the "how it works" loop and the numbered concept sheet.
   function heroHtml(inv) {
-    const showAnim = inv.anim && MOTION_OK;
-    return `<div class="hero" id="hero">${showAnim ? `<img src="${esc(inv.anim)}" alt="Animation of how ${esc(inv.title)} works">` : inv.sketch ? `<img src="${esc(inv.sketch)}" alt="Concept sketch of ${esc(inv.title)}">` : ''}</div>
-      <div class="herobar">${inv.anim ? `<div class="seg" role="group"><button data-act="hero" data-v="${esc(inv.anim)}" aria-pressed="${!!showAnim}">How it works</button><button data-act="hero" data-v="${esc(inv.sketch || '')}" aria-pressed="${!showAnim}">Concept sheet</button></div>` : S.me.claude && inv.sketch ? `<button class="btn small quiet" data-act="animate" data-v="${inv.id}">${I('play', 16)}Animate how it works</button>` : ''}
-      <p class="fine">${inv.anim ? 'AI concept animation, an 8-second loop. The concept sheet numbers match the list of changes below.' : 'AI concept sketch. Numbers on the drawing match the list of changes below.'}</p></div>`;
+    const views = [inv.render && ['render', 'Picture', inv.render], inv.anim && MOTION_OK && ['anim', 'How it works', inv.anim], inv.sketch && ['sketch', 'Concept sheet', inv.sketch]].filter(Boolean);
+    const first = views[0];
+    const note = first && first[0] === 'render' ? 'AI render from the design brief: illustrative, details may differ from the concept sheet.' : first && first[0] === 'anim' ? 'AI concept animation, an 8-second loop.' : 'AI concept sketch.';
+    const make = S.me.claude || S.me.owner;
+    const extra = [
+      !inv.render && make ? (inv.rendering ? `<span class="fine"><span class="spin" style="width:14px;height:14px;vertical-align:-2px"></span> Making the picture…</span>` : `<button class="btn small quiet" data-act="render" data-v="${inv.id}">${I('sparkle', 16)}Make a realistic picture</button>`) : '',
+      !inv.anim && make && inv.sketch ? `<button class="btn small quiet" data-act="animate" data-v="${inv.id}">${I('play', 16)}Animate how it works</button>` : '',
+    ].filter(Boolean).join('');
+    return `<div class="hero${first && first[0] === 'render' ? ' photo' : ''}" id="hero">${first ? `<img src="${esc(first[2])}" alt="${esc(first[1])} of ${esc(inv.title)}">` : ''}</div>
+      <div class="herobar" id="herobar">${views.length > 1 ? `<div class="seg" role="group">${views.map((v, i) => `<button data-act="hero" data-v="${esc(v[2])}" data-kind="${v[0]}" aria-pressed="${i === 0}">${v[1]}</button>`).join('')}</div>` : ''}${extra}
+      <p class="fine" id="heronote">${note}${inv.renderError && !inv.render ? ` Last picture attempt failed: ${esc(inv.renderError)}` : ''} The concept sheet numbers match the list of changes below.</p></div>`;
   }
   function meter(score, why) {
     const cls = score >= 7 ? 'hi' : score >= 4 ? 'mid' : 'lo';
@@ -568,6 +576,8 @@
     const tile = (n, label) => `<div class="tile"><small>${label}</small><b class="num">${n}</b></div>`;
     $('#admin').innerHTML = `<h1 class="title">Admin</h1><p class="lede">Who uses Reinvent and how. ${r.viewerIsOwner ? 'You are the owner: you can make or remove administrators.' : 'You are an administrator.'}</p>
       <div class="tiles">${tile(st.people, 'People')}${tile(st.activeToday, 'Active today')}${tile(st.active7, 'Active this week')}${tile(st.invitedWaiting, 'Invited, not joined')}${tile(st.products, 'Products')}${tile(st.views, 'Products opened')}${tile(st.saves, 'Saves')}${tile(st.buys, "I'd buy")}${tile(st.chats, 'Chat messages')}</div>
+      <h2 class="sub">Pictures (AI renders)</h2>
+      <div class="panel" id="renderpanel" style="padding:16px"><div class="sk" style="height:60px"></div></div>
       <h2 class="sub">Invite someone</h2>
       <form class="panel" id="inviteform" style="padding:16px;display:grid;gap:10px">
         <div class="field"><label for="iv-email">Email</label><input id="iv-email" type="email" autocomplete="off" required placeholder="name@example.com"></div>
@@ -579,6 +589,7 @@
       </form>
       <h2 class="sub" id="pcount">People (${r.people.length})</h2>
       <div class="plist">${r.people.map(personHtml).join('')}</div>`;
+    drawRenderPanel();
     $('#inviteform').onsubmit = async (e) => {
       e.preventDefault();
       const b = e.target.querySelector('button.btn'); busy(b, true, 'Sending');
@@ -590,6 +601,24 @@
         const fresh = await api('/api/admin'); S.admin = fresh; document.querySelector('.plist').innerHTML = fresh.people.map(personHtml).join(''); $('#pcount').textContent = `People (${fresh.people.length})`;
       } catch (err) { busy(b, false); toast(err.message, true); }
     };
+  }
+  async function drawRenderPanel() {
+    const el = $('#renderpanel'); if (!el) return;
+    let c; try { c = await api('/api/admin/render'); } catch (e) { el.innerHTML = `<p class="fine">${esc(e.message)}</p>`; return; }
+    const cur = c.providers.find((x) => x.id === c.provider);
+    const key = cur && cur.needsKey ? c.keys[c.provider] : null;
+    el.innerHTML = `<p class="fine" style="margin-bottom:12px">Every design gets a realistic picture made from the inventor's brief, so people can see what the new product would look like. Claude cannot draw photos, so this uses an image service.</p>
+      ${c.canEdit ? `<form id="renderform" style="display:grid;gap:10px">
+        <div class="field"><label for="rp">Image service</label><select id="rp">${c.providers.map((x) => `<option value="${x.id}" ${x.id === c.provider ? 'selected' : ''}>${esc(x.label)}${x.needsKey ? ' (API key)' : x.id === 'pollinations' ? ', no key' : ''}</option>`).join('')}</select></div>
+        <div class="field" id="rkeyf" ${cur && cur.needsKey ? '' : 'hidden'}><label for="rk">API key${key ? ` <span class="fine">(saved, ${esc(key)})</span>` : ''}</label><input id="rk" type="password" autocomplete="off" placeholder="${key ? 'Leave empty to keep the saved key' : 'Paste the key'}"></div>
+        <div class="field"><label for="rm">Model</label><input id="rm" value="${esc(c.model)}" autocomplete="off"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small">Save</button><button type="button" class="btn small quiet" data-act="render-test">${I('sparkle', 16)}Try it</button></div>
+        <div id="rtest"></div>
+        <p class="fine">Free: Pollinations, no key, slower and sometimes busy. Better: Google Gemini (key from aistudio.google.com) or OpenAI (key from platform.openai.com), a few cents a picture. Keys stay on the server.</p>
+      </form>` : `<p>Using <b>${esc(cur ? cur.label : c.provider)}</b>${c.model ? ` (${esc(c.model)})` : ''}. Only the owner changes this.</p>`}`;
+    const f = $('#renderform'); if (!f) return;
+    $('#rp').onchange = () => { const p = c.providers.find((x) => x.id === $('#rp').value); $('#rkeyf').hidden = !(p && p.needsKey); $('#rm').value = p ? p.model : ''; };
+    f.onsubmit = async (e) => { e.preventDefault(); try { await api('/api/admin/render', { method: 'POST', body: { provider: $('#rp').value, model: $('#rm').value, key: $('#rk').value } }); toast('Saved'); drawRenderPanel(); } catch (err) { toast(err.message, true); } };
   }
   function personHtml(u) {
     const owner = S.admin && S.admin.viewerIsOwner;
@@ -635,11 +664,20 @@
       if (!confirm('Remove this person? Their account is deleted and they are signed out.')) return;
       try { await api(`/api/people/${v}`, { method: 'POST', body: { remove: true } }); toast('Removed'); adminView(); } catch (err) { toast(err.message, true); }
     }
+    else if (act === 'render-test') {
+      busy(t, true, 'Drawing'); const out = $('#rtest');
+      try { const r = await api('/api/admin/render/test', { method: 'POST' }); out.innerHTML = r.ok ? `<img src="${esc(r.src)}" alt="Test picture" style="width:100%;border-radius:14px;margin-top:4px"><p class="fine">It works (${esc(r.provider)}${r.model ? `, ${esc(r.model)}` : ''}).</p>` : `<div class="notice bad">${esc(r.error)}</div>`; } catch (err) { out.innerHTML = `<div class="notice bad">${esc(err.message)}</div>`; }
+      busy(t, false);
+    }
     else if (act === 'copy-text') { try { await navigator.clipboard.writeText(v); toast('Copied'); } catch { toast('Select the link and copy it', true); } }
     else if (act === 'mode') { S.mode = v; try { localStorage.setItem('rv-mode', v); } catch {} if (route()[0] !== 'feed' && route()[0] !== '') location.hash = '#/feed'; else feedView(); }
     else if (act === 'next-slide') { const sl = t.closest('.post')?.querySelector('[data-slides]'); if (sl) sl.scrollTo({ left: sl.clientWidth, behavior: 'smooth' }); }
     else if (act === 'buy') openBuy(v);
-    else if (act === 'hero') { const img = $('#hero img'); if (img && v) { img.src = v; t.parentElement.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === t))); } }
+    else if (act === 'hero') { const img = $('#hero img'); if (img && v) { img.src = v; $('#hero').classList.toggle('photo', t.dataset.kind === 'render'); t.parentElement.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === t))); } }
+    else if (act === 'render') {
+      busy(t, true, 'Starting');
+      try { await api(`/api/inventions/${v}/render`, { method: 'POST' }); toast('Making the picture. About 30 seconds.'); } catch (err) { busy(t, false); toast(err.message, true); }
+    }
     else if (act === 'animate') {
       busy(t, true, 'Queued');
       try { const r = await api(`/api/inventions/${v}/animate`, { method: 'POST' }); toast(r.queued ? 'The Animator is on it. About 2 minutes.' : 'Already being animated.'); } catch (err) { busy(t, false); toast(err.message, true); }
@@ -701,7 +739,8 @@
         if (sourcing && (!inv.sourcing || inv.sourcing.status !== 'ready')) inv.sourcing = sourcing;
         drawMake(inv);
         const hero = $('#hero');
-        if (hero && inv.anim && !hero.parentElement.querySelector('[data-act="hero"]')) { hero.nextElementSibling.remove(); hero.outerHTML = heroHtml(inv); }
+        const key = `${inv.render}|${inv.anim}|${inv.rendering}|${inv.renderError}`;
+        if (hero && S.heroKey !== key) { S.heroKey = key; $('#herobar')?.remove(); hero.outerHTML = heroHtml(inv); }
       }
     } catch {}
   }

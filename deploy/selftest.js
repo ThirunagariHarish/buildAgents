@@ -10,6 +10,7 @@ process.env.RV_DATA_DIR = path.join(tmp, 'data');
 process.env.RV_CLAUDE_BIN = path.join(__dirname, 'fake-claude.js');
 process.env.RV_NO_PHOTOS = '1';
 process.env.RV_SCHEDULE = '0';
+process.env.RV_FAKE_RENDER = '1';
 fs.chmodSync(process.env.RV_CLAUDE_BIN, 0o755);
 
 process.env.RV_ADMIN_EMAIL = 'owner@example.com';
@@ -79,6 +80,11 @@ const ok = (m) => { n++; console.log(`  ok ${m}`); };
     assert(/<animateTransform/.test(a) && /<animate attributeName="opacity"/.test(a) && !/href|javascript/i.test(a), 'animation kept, unsafe parts removed');
   }
   ok('animator: every design gets a safe 8-second loop');
+  assert(invs.every((i) => i.render && i.render.file && store.mediaPath(i.render.file)), 'every design gets a picture');
+  assert(invs[0].renderPrompt, 'the inventor writes a photo brief');
+  const render = require('../lib/render');
+  assert(/Photorealistic/.test(render.promptFor(invs[0], 'measuring spoons')) && render.promptFor({ title: 'X', changes: ['a'] }, 'y').includes('X'), 'render prompt');
+  ok('renders: a realistic picture for every design, from the inventor\'s brief');
 
   // Sourcing on demand.
   studio.enqueue({ type: 'sourcing', invId: invs[0].id });
