@@ -1,0 +1,5 @@
+node_modules/
+data/
+*.log
+!deploy/last-run.log
+.DS_Store
