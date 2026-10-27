@@ -43,17 +43,18 @@ jobs:
           capture_stdout: true
           command_timeout: 20m
           script: |
-            set -e
             APP_DIR=/opt/jot
             REPO_URL=https://github.com/ThirunagariHarish/buildAgents.git
             BRANCH=jot
             command -v git >/dev/null || (apt-get update -y && apt-get install -y git curl)
             if [ ! -d "$APP_DIR/.git" ]; then
-              git clone -b "$BRANCH" --single-branch "$REPO_URL" "$APP_DIR"
+              [ -d "$APP_DIR/data" ] || rm -rf "$APP_DIR"
+              git clone -q -b "$BRANCH" --single-branch "$REPO_URL" "$APP_DIR" 2>&1 || echo "clone failed"
             else
-              cd "$APP_DIR" && git fetch -q origin "$BRANCH" && git reset -q --hard "origin/$BRANCH"
+              cd "$APP_DIR" && git fetch -q origin "$BRANCH" 2>&1 && git reset -q --hard "origin/$BRANCH" 2>&1 || echo "update failed"
             fi
-            bash "$APP_DIR/deploy/remote-deploy.sh" 2>&1
+            bash "$APP_DIR/deploy/remote-deploy.sh" 2>&1 | tr -d '\r' | sed 's/^EOF$/E0F/'
+            echo "deploy script exit: ${PIPESTATUS[0]}"
 
       - name: Commit deploy log
         if: always()
