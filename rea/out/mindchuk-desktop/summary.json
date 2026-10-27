@@ -1,0 +1,209 @@
+{
+  "name": "mindchuk-desktop",
+  "log": [
+    "capture: ok  (1207208 bytes)",
+    "export scripts: ok",
+    "analyze javascript: ok (13215684 bytes)"
+  ],
+  "network": {
+    "requests": 37,
+    "responses": 37,
+    "failed": 2,
+    "byType": {
+      "document": 3,
+      "script": 12,
+      "stylesheet": 1,
+      "xhr": 8,
+      "fetch": 3,
+      "image": 3,
+      "media": 2,
+      "ping": 4,
+      "other": 1
+    },
+    "topHosts": [
+      [
+        "mindchuk.com",
+        6
+      ],
+      [
+        "analytics.tiktok.com",
+        6
+      ],
+      [
+        "222329.t.hyros.com",
+        6
+      ],
+      [
+        "js.stripe.com",
+        3
+      ],
+      [
+        "edeshyvopammjmnzjyog.supabase.co",
+        3
+      ],
+      [
+        "datafa.st",
+        2
+      ],
+      [
+        "connect.facebook.net",
+        2
+      ],
+      [
+        "track.mindchuk.com",
+        2
+      ],
+      [
+        "m.stripe.network",
+        2
+      ],
+      [
+        "lg.hyr.so",
+        1
+      ],
+      [
+        "7s-d309b5b93ece4e188e0aa4e9c7906f0f.ecs.us-west-1.on.aws",
+        1
+      ],
+      [
+        "www.facebook.com",
+        1
+      ],
+      [
+        "analytics-ipv6.tiktokw.us",
+        1
+      ],
+      [
+        "m.stripe.com",
+        1
+      ]
+    ],
+    "apiCalls": [
+      "GET 222329.t.hyros.com/v1/lst/gusid",
+      "GET 222329.t.hyros.com/v1/lst/gusid ?r_c_id",
+      "GET lg.hyr.so/v1/lst/session",
+      "GET 222329.t.hyros.com/v1/lst/pc ?ref_url&u_agent&tid",
+      "POST datafa.st/api/events",
+      "POST 7s-d309b5b93ece4e188e0aa4e9c7906f0f.ecs.us-west-1.on.aws/events ?cee",
+      "POST edeshyvopammjmnzjyog.supabase.co/rest/v1/rpc/assign_homepage_test",
+      "POST m.stripe.com/6",
+      "PUT 222329.t.hyros.com/v1/lst/pcu ?tid",
+      "POST track.mindchuk.com/v1/pixel/events"
+    ],
+    "services": [
+      "Meta pixel",
+      "Stripe",
+      "TikTok pixel"
+    ]
+  },
+  "consoleSample": [
+    "[Trybe] Pixel initializing with code: px_b8bd8e9d6379 storeId: 3518b00e-d875-4d30-a082-92458779aedc platform: CUSTOM autoTracking: false",
+    "[Trybe] Auto-tracking disabled. Use manual tracking methods (window.trybe.productViewed, window.trybe.addToCart, etc.)",
+    "%c [UTS] [cf042] [e_c] [tid: 5cc5051439a2] Initialized: web 693e71e911f color: green;",
+    "%c [UTS] [cf042] [gusid] HB-ET_c3026d5942688cf12f072b0c614ab116b3122b79babc938ee5e9f2b08c56dad0 color: green;",
+    "%c [UTS] [cf042] [pc]  color: green;",
+    "DataFast: pageview tracked successfully",
+    "%c [UTS] [cf042] [pcu]  color: green;",
+    "%c [UTS] [cf042] [pcu]  color: green;"
+  ],
+  "finalUrl": "https://mindchuk.com/",
+  "title": null,
+  "steps": 15,
+  "pageTextChars": 6200,
+  "screenshot": true,
+  "javascript": {
+    "statistics": {
+      "relevant_files": 4,
+      "nested_asar_containers": 0,
+      "text_bytes_read": 51937,
+      "invalid_utf8_files": 0,
+      "parsed_javascript_files": 4,
+      "skipped_javascript_files": 0,
+      "visited_ast_nodes": 12319,
+      "findings": 26,
+      "modules": 0,
+      "parse_failures": 0
+    },
+    "appGraph": {
+      "javascript-module": 4,
+      "storage": 5,
+      "endpoint": 9,
+      "javascript-asset": 4,
+      "artifact": 1
+    },
+    "endpoints": [
+      "literal partial i",
+      "candidate trybe",
+      "candidate order_id",
+      "candidate order_number",
+      "candidate order",
+      "candidate orderNumber",
+      "candidate id",
+      "candidate quantity",
+      "candidate orderId"
+    ],
+    "storage": [
+      "session-storage: datafast_pageview_state",
+      "local-storage: datafast_ignore",
+      "session-storage: sessionStorage.getItem",
+      "session-storage: sessionStorage.setItem",
+      "session-storage: ugc_session"
+    ],
+    "serviceWorkers": [],
+    "behaviour": {
+      "module": 4,
+      "call-site": 829,
+      "boundary": 37,
+      "function": 151,
+      "timer": 17,
+      "promise": 6,
+      "request": 1
+    },
+    "labels": [
+      [
+        "construct",
+        38
+      ],
+      [
+        "parseFloat",
+        27
+      ],
+      [
+        "setTimeout",
+        16
+      ],
+      [
+        "JSON.parse",
+        4
+      ],
+      [
+        "parseInt",
+        4
+      ],
+      [
+        "String",
+        1
+      ],
+      [
+        "parse",
+        1
+      ],
+      [
+        "fetch",
+        1
+      ],
+      [
+        "setInterval",
+        1
+      ]
+    ],
+    "limitations": [
+      "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+      "Graph coverage is incomplete; unavailable facts remain explicit and must not be read as absence.",
+      "JavaScript and HTML were parsed as inert text; bundle bootstrap code was never executed.",
+      "Static imports, entrypoints, workers, endpoints, and storage relationships do not prove runtime execution.",
+      "Static paths and relationships may remain unresolved when expressions are dynamic or obfuscated.",
+      "Webpack/Rspack factories were recovered from AST literals; REA did not invoke push handlers or bundle bootstrap code."
+    ]
+  }
+}

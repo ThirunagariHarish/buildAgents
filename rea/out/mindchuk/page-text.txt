@@ -1,0 +1,143 @@
+- document:
+  - text: Light Mode is Now Available In All MindChuk Accounts
+  - banner:
+    - img "MindChuk"
+    - link "Sign in":
+      - /url: /email
+    - link "Get MindChuk":
+      - /url: /checkout
+  - heading "Save Worth Remembering." [level=1]
+  - paragraph: The fastest way to get something out of your head and into your own private searchable feed.
+  - link "Get MindChuk":
+    - /url: /checkout
+    - text: Get MindChuk
+    - img
+  - paragraph: 100+ Five Star Reviews
+  - link "Watch MindChuk tutorial":
+    - /url: https://www.youtube.com/watch?v=uz8WjdbC4a4
+    - img
+    - text: Watch MindChuk tutorial
+  - heading "Built for people who save things." [level=2]
+  - paragraph: If you have a mind that runs — this is for you.
+  - text: Creators Save content ideas, inspiration, hooks, captions, screenshots, and trends. Developers Save code snippets, errors, stack overflow fixes, commands, APIs, and prompts. AI Users Save prompts, workflows, outputs, jailbreaks, automations, and ideas. Founders Save startup ideas, marketing angles, business notes, and random late-night thoughts. Designers Save UI inspiration, color palettes, layouts, typography, and references. Writers Save story ideas, quotes, research, drafts, and observations. Students Save notes, study guides, research, lecture screenshots, and links. Researchers Save articles, sources, findings, quotes, and internet rabbit holes. Journalists Save sources, interview notes, screenshots, ideas, and references. Marketers Save ad ideas, hooks, copywriting angles, campaigns, and winning creatives. Editors Save transitions, effects, pacing ideas, clips, and inspiration. Photographers Save poses, edits, locations, lighting ideas, and references. Filmmakers Save shots, scripts, scenes, soundtracks, and visual inspiration. Musicians Save lyrics, melodies, ideas, samples, and inspiration. Anyone with ideas Save thoughts before they disappear.
+  - paragraph: Zero setup
+  - heading "Works on every device" [level=2]
+  - paragraph: iPhone, Android, Mac, Windows — if it can send a text message, it works with MindChuk. No app to download. No account setup on your phone.
+  - text: iPhone Android Mac Windows iPad Any SMS app
+  - heading "How It Works" [level=2]
+  - paragraph: No system required. It Just works.
+  - paragraph: 01 — Capture
+  - heading "Capturing Thoughts Has Never Been This Easy." [level=2]
+  - paragraph: When you sign up you get a personal MindChuk number. Text it anything. An idea. A reminder. A thought. It shows up instantly in your feed. No app to open. Just text.
+  - img "MindChuk"
+  - paragraph: MindChuk
+  - paragraph: Always active
+  - text: "remind me to call john in 30 minutes Reminder: Call john Delivered rebrand Q3? test with enterprise segment first Delivered check stripe fees vs. braintree Delivered dinner idea"
+  - button:
+    - img
+  - paragraph: 02 — Organize
+  - heading "Everything In One place." [level=2]
+  - paragraph: Text in notes, links, ideas, and images. Everything lands in your personal feed so the things you want to remember stop getting lost.
+  - img "MindChuk"
+  - text: "Search by text or date... + #strategy #product #ops #personal Today · 9:41 AM #strategy"
+  - paragraph: competitor raised $4M — need to double down on retention before they catch up
+  - text: "Today · 10:02 AM #product"
+  - paragraph: fix onboarding drop-off at step 3 — users are confused by the permissions screen
+  - text: "Today · 11:15 AM #brand"
+  - paragraph: rebrand in Q3? current name tests well with 25-34 but poorly with enterprise
+  - text: "Yesterday · 3:22 PM #ops"
+  - paragraph: shipping cost killing margin — explore 3PL or raise AOV threshold to $75
+  - text: Yesterday · 7:48 PM
+  - paragraph: "idea: coffee subscription for offices — monthly box, curated roasters, b2b billing"
+  - text: "2 days ago · 8:30 AM #personal"
+  - paragraph: call dentist tmrw — also ask about the crown quote from last time
+  - paragraph: 03 — Retrieve
+  - heading "Never Lose Another Note, Idea, or Link Again." [level=2]
+  - paragraph: Type anything you remember and it shows up instantly. Search by word, filter by tag, scroll back through months. No folders. No digging. Just find it.
+  - paragraph: Search your notes
+  - text: "Search Today · 10:02 AM #product"
+  - paragraph:
+    - text: fix
+    - mark: onboarding
+    - text: drop-off at step 3 — users are confused by the permissions screen
+  - paragraph: Set tags/folders — add keywords to help with hands-off organization
+  - text: "Tags #strategy #product #ops #personal Today · 10:02 AM #product"
+  - paragraph: fix onboarding drop-off at step 3 — users are confused by the permissions screen
+  - img
+  - img
+  - img
+  - img
+  - img
+  - text: "5.0"
+  - heading "What people are saying" [level=2]
+  - paragraph: 109 verified reviews
+  - button:
+    - img
+  - text: 1 / 8
+  - button:
+    - img
+  - img
+  - img
+  - img
+  - img
+  - img
+  - paragraph: "\"MindChuk changed how I think. No more scattered notes across 6 apps.\""
+  - paragraph: James T.
+  - img
+  - img
+  - img
+  - img
+  - img
+  - paragraph: "\"I used to lose ideas constantly. Now they're all here, tagged, searchable. It just works.\""
+  - paragraph: Priya M.
+  - img
+  - img
+  - img
+  - img
+  - img
+  - paragraph: "\"Worth every penny.\""
+  - paragraph: Derek S.
+  - img
+  - img
+  - img
+  - img
+  - img
+  - paragraph: "\"The tagging system is brilliant. I searched a half-remembered thought from 3 months ago and found it instantly.\""
+  - paragraph: Sophia R.
+  - img
+  - img
+  - img
+  - img
+  - img
+  - paragraph: "\"I've tried Notion, Obsidian, Apple Notes. MindChuk is the one that actually stuck.\""
+  - paragraph: Carlos F.
+  - img
+  - img
+  - img
+  - img
+  - img
+  - paragraph: "\"Love it.\""
+  - paragraph: Nina K.
+  - button
+  - button
+  - button
+  - button
+  - button
+  - button
+  - button
+  - button
+  - img "MindChuk"
+  - heading "One place for everything in your head." [level=2]
+  - paragraph
+  - link "Get MindChuk — $55":
+    - /url: /checkout
+  - paragraph: One-time payment. Yours forever.
+  - contentinfo:
+    - img "MindChuk"
+    - link "Privacy":
+      - /url: /privacy
+    - link "Terms":
+      - /url: /terms
+    - link "Contact":
+      - /url: mailto:support@mindchuk.com
+  - paragraph: Someone from Atlanta just purchased MindChuk
