@@ -69,7 +69,7 @@ for (const name of fs.existsSync(RAW) ? fs.readdirSync(RAW) : []) {
   s.consoleSample = consoleLines.slice(0, 10);
 
   // Final URL, accessibility text and screenshot.
-  let a11y = '', shot = null, finalUrl = null, title = null;
+  let a11y = '', shot = null, finalUrl = null, title = null; const shots = [];
   walk(cap, (k, v) => {
     if (k === 'final_url' || (k === 'url' && typeof v === 'string' && /^https?:/.test(v) && !finalUrl)) finalUrl = finalUrl || v;
     if (/title/i.test(k) && typeof v === 'string' && !title) title = v.slice(0, 200);
@@ -78,11 +78,13 @@ for (const name of fs.existsSync(RAW) ? fs.readdirSync(RAW) : []) {
       walk(v, (k2, v2) => { if ((k2 === 'name' || k2 === 'text' || k2 === 'value') && typeof v2 === 'string' && v2.trim()) names.push(v2.trim()); });
       if (names.length) a11y = names.join(' | ');
     }
-    if (typeof v === 'string' && v.length > 2000 && /^iVBORw0KGgo/.test(v) && !shot) shot = v;
+    if (typeof v === 'string' && v.length > 2000 && /^iVBORw0KGgo/.test(v)) { if (!shot) shot = v; shots.push(v); }
   });
   s.finalUrl = finalUrl; s.title = title;
   if (a11y) fs.writeFileSync(path.join(out, 'page-text.txt'), a11y.slice(0, 12000));
   if (shot) fs.writeFileSync(path.join(out, 'screenshot.png'), Buffer.from(shot, 'base64'));
+  // Step-by-step captures: one picture per screen, top to bottom (skipping repeats at the end of the page).
+  if (shots.length > 1) { let k = 0, prev = ''; for (const b of shots) { if (b === prev) continue; prev = b; fs.writeFileSync(path.join(out, `step-${String(++k).padStart(2, '0')}.png`), Buffer.from(b, 'base64')); } s.steps = k; }
   s.pageTextChars = a11y.length; s.screenshot = !!shot;
 
   // REA's JavaScript application graph: frameworks, packages, routes, endpoints.

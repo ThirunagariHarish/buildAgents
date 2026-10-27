@@ -1,12 +1,19 @@
 [
-  { "name": "yankodesign", "url": "https://www.yankodesign.com/", "why": "Concept product design feed (closest to Reinvent)" },
-  { "name": "designboom", "url": "https://www.designboom.com/design/", "why": "Design news and concept feed" },
-  { "name": "core77", "url": "https://www.core77.com/", "why": "Industrial design community and feed" },
-  { "name": "producthunt", "url": "https://www.producthunt.com/", "why": "Product discovery feed with votes and comments" },
-  { "name": "pinterest-ideas", "url": "https://www.pinterest.com/ideas/", "why": "Visual discovery, save to boards" },
-  { "name": "behance-industrial", "url": "https://www.behance.net/galleries/industrial-design", "why": "Designer portfolios, product concept presentation" },
-  { "name": "kickstarter-product", "url": "https://www.kickstarter.com/discover/categories/design/product%20design", "why": "How new physical products are pitched" },
-  { "name": "accio", "url": "https://www.accio.com/", "why": "Alibaba AI sourcing agent" },
-  { "name": "vizcom", "url": "https://www.vizcom.com/", "why": "AI industrial design rendering" },
-  { "name": "junglescout", "url": "https://www.junglescout.com/", "why": "Product research, margins, opportunity scores" }
+  {
+    "name": "mindchuk",
+    "url": "https://mindchuk.com/",
+    "why": "Requested teardown (phone)",
+    "steps": 10
+  },
+  {
+    "name": "mindchuk-desktop",
+    "url": "https://mindchuk.com/",
+    "why": "Requested teardown (desktop)",
+    "steps": 6,
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "device_scale_factor": 1
+    }
+  }
 ]

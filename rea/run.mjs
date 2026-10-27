@@ -27,15 +27,24 @@ for (const t of targets) {
   const scenario = {
     browser: { mode: 'connect', cdp_endpoint: CDP, target_id: tab.id },
     start_url: { url: t.url },
-    environment: { viewport: { width: 390, height: 844, device_scale_factor: 2 }, service_workers: 'allow' },
-    actions: [
+    environment: { viewport: t.viewport || { width: 390, height: 844, device_scale_factor: 2 }, service_workers: 'allow' },
+    // Either step down the page a screen at a time (a screenshot after each step), or jump to the end twice.
+    actions: t.steps ? [
+      { step_id: 'settle', action: 'wait_for_timeout', duration_ms: 6000 },
+      ...Array.from({ length: t.steps }, (_, i) => [
+        { step_id: `down${i + 1}`, action: 'press', locator: { kind: 'css', selector: 'body' }, key: 'PageDown', timeout_ms: 8000 },
+        { step_id: `look${i + 1}`, action: 'wait_for_timeout', duration_ms: 1200 },
+      ]).flat(),
+    ] : [
       { step_id: 'settle', action: 'wait_for_timeout', duration_ms: 6000 },
       { step_id: 'scroll1', action: 'press', locator: { kind: 'css', selector: 'body' }, key: 'End', timeout_ms: 8000 },
       { step_id: 'more', action: 'wait_for_timeout', duration_ms: 4000 },
       { step_id: 'scroll2', action: 'press', locator: { kind: 'css', selector: 'body' }, key: 'End', timeout_ms: 8000 },
       { step_id: 'final', action: 'wait_for_timeout', duration_ms: 4000 },
     ],
-    capture: { at_end: ['url', 'accessibility', 'screenshot'], events: ['network', 'console', 'page-errors'], network: { response_body: true } },
+    capture: t.steps
+      ? { after_each_step: ['screenshot'], at_end: ['url', 'accessibility'], events: ['network', 'console', 'page-errors'], network: { response_body: true } }
+      : { at_end: ['url', 'accessibility', 'screenshot'], events: ['network', 'console', 'page-errors'], network: { response_body: true } },
   };
   fs.writeFileSync(path.join(raw, 'scenario.json'), JSON.stringify(scenario, null, 2));
   let r = rea(['capture-browser-scenario', path.join(raw, 'scenario.json')]);
