@@ -1,3 +1,46 @@
-run: 165  commit: 7b2b93e  ssh step: failure  at: 2026-10-27T23:07:23Z
+run: 166  commit: e72e54a  ssh step: success  at: 2026-10-27T23:09:05Z
 
-
+HEAD: e72e54a   domain: jot.cashflowus.com   port: 3404
+== prerequisites ==
+node v22.23.3, claude 2.1.287 (Claude Code)
+== env file ==
+keys in /etc/jot.env: JT_PORT JT_DOMAIN JT_DATA_DIR CLAUDE_CODE_OAUTH_TOKEN JT_SMTP_HOST JT_SMTP_PORT JT_SMTP_USER JT_SMTP_PASS JT_MAIL_FROM JT_PUSH_CONTACT 
+== data ==
+accounts: the owner's sign-in copied from /opt/reinvent/data/users.json
+accounts: 1 user(s): ha***@gmail.com (admin, owner, approved)
+jots: 0 from 0 people
+settings: defaults (access open)
+keys set in Admin: none
+== service ==
+service: active
+   Oct 27 23:08:30 srv1349789 systemd[1]: Started jot.service - Jot - text it once, find it any time.
+   Oct 27 23:08:30 srv1349789 node[1422326]:   Jot on http://localhost:3404 (public https://jot.cashflowus.com)
+local /: HTTP 200
+api without sign-in: HTTP 401 (401 = sign-in enforced)
+public: {"access":"open","priceCents":2900,"currency":"usd","payReady":false,"telegram":false,"sms":false}
+mail: SMTP login OK
+   SMTP host smtp.gmail.com:465, login ha***@gmail.com
+   From header "Jot" <ha***@gmail.com>, domain gmail.com; same domain as the login (aligned)
+   gmail.com: SPF v=spf1 redirect=_spf.google.com | DMARC v=DMARC1; p=none; sp=quarantine; rua=mailto:mailauth-reports@google.com | MX alt3.gmail-smtp-in.l.google.com, gmail-smtp-in.l.google.com
+   mail log: 0 attempt(s), 0 failed
+== outside services, as this server reaches them ==
+Telegram API: HTTP 302
+Twilio API: HTTP 200
+Stripe API: HTTP 404
+== route (k3s Traefik) ==
+   namespace/jot created
+   service/jot created
+   endpointslice.discovery.k8s.io/jot-host created
+   ingress.networking.k8s.io/jot created
+   certificate: jot-tls ready=False 
+== claude ==
+haiku: OK (2s)
+== the domain, as the internet reaches it ==
+DNS: jot.cashflowus.com -> 2.25.157.104 
+https://jot.cashflowus.com/ -> HTTP 200
+cert -> issuer=C = US, O = Let's Encrypt, CN = YR1 notAfter=Jan 25 22:10:27 2027 GMT 
+== done ==
+deploy script exit: 0
+===============================================
+✅ Successfully executed commands to all hosts.
+===============================================
