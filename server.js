@@ -25,6 +25,7 @@ const secrets = require('./lib/secrets');
 const pay = require('./lib/pay');
 const ai = require('./lib/ai');
 const when = require('./lib/when');
+const voice = require('./lib/voice');
 
 const { PORT, BASE_URL } = config;
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -36,11 +37,12 @@ function json(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Content-Length': Buffer.byteLength(body) });
   res.end(body);
 }
-function readRaw(req, limit = 64000) {
+const readRaw = (req, limit = 64000) => readBuf(req, limit).then((b) => b.toString('utf8'));
+function readBuf(req, limit = 64000) {
   return new Promise((resolve, reject) => {
     const chunks = []; let size = 0, done = false;
     req.on('data', (c) => { if (done) return; size += c.length; if (size > limit) { done = true; reject(Object.assign(new Error('Too large.'), { status: 413 })); req.destroy(); } else chunks.push(c); });
-    req.on('end', () => { if (!done) { done = true; resolve(Buffer.concat(chunks).toString('utf8')); } });
+    req.on('end', () => { if (!done) { done = true; resolve(Buffer.concat(chunks)); } });
     req.on('error', (e) => { if (!done) { done = true; reject(e); } });
   });
 }
@@ -73,7 +75,7 @@ function securityHeaders(req, res) {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'no-referrer');
   res.setHeader('Content-Security-Policy', CSP);
-  res.setHeader('Permissions-Policy', 'microphone=(), camera=(), geolocation=(), payment=()');
+  res.setHeader('Permissions-Policy', 'microphone=(self), camera=(), geolocation=(), payment=()');
   if (isHttps(req)) res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 }
 function crossSiteWrite(req) {
@@ -125,7 +127,7 @@ reminders.setEmitter(emit);
 const media = (f) => (f ? `/media/${f}` : null);
 function noteView(n) {
   return {
-    id: n.id, text: n.text, tags: n.tags, aiTags: n.aiTags || [], pinned: !!n.pinned, source: n.source, createdAt: n.createdAt, updatedAt: n.updatedAt,
+    id: n.id, text: n.text, tags: n.tags, aiTags: n.aiTags || [], pinned: !!n.pinned, voice: !!n.voice, source: n.source, createdAt: n.createdAt, updatedAt: n.updatedAt,
     images: (n.images || []).map(media), links: (n.links || []).map((l) => ({ url: l.url, title: l.title || '', site: l.site || '', description: l.description || '', image: media(l.image) })),
     remind: n.remind ? { at: n.remind.at, text: n.remind.text, done: !!n.remind.done, sentAt: n.remind.sentAt || null, via: n.remind.via || [] } : null,
   };
@@ -175,12 +177,12 @@ function adminView(viewer) {
       people: people.filter((x) => x.status === 'approved').length, invitedWaiting: people.filter((x) => x.status === 'unverified').length,
       activeToday: people.filter((x) => x.lastSeen && now - x.lastSeen < day).length, active7: people.filter((x) => x.lastSeen && now - x.lastSeen < 7 * day).length,
       notes: all.length, notes7: all.filter((n) => now - n.createdAt < 7 * day).length, reminders: all.filter((n) => n.remind).length,
-      viaTelegram: all.filter((n) => n.source === 'telegram').length, viaSms: all.filter((n) => n.source === 'sms').length, viaShortcut: all.filter((n) => n.source === 'shortcut').length,
+      viaTelegram: all.filter((n) => n.source === 'telegram').length, viaSms: all.filter((n) => n.source === 'sms').length, viaShortcut: all.filter((n) => n.source === 'shortcut').length, viaVoice: all.filter((n) => n.voice).length,
       purchases: pay.purchases().length, revenue: pay.purchases().reduce((t, p) => t + (p.amount || 0), 0),
     },
     settings: { access: s.access, priceCents: s.priceCents, currency: s.currency, productName: s.productName },
     secrets: viewer.primary ? secrets.overview() : null,
-    channels: { telegramBot: telegram.botName(), smsNumber: sms.number(), stripe: pay.configured(), webhookUrl: `${BASE_URL}/stripe/webhook`, smsWebhookUrl: `${BASE_URL}/sms/twilio`, mail: mail.configured() },
+    channels: { telegramBot: telegram.botName(), smsNumber: sms.number(), stripe: pay.configured(), webhookUrl: `${BASE_URL}/stripe/webhook`, smsWebhookUrl: `${BASE_URL}/sms/twilio`, mail: mail.configured(), speech: voice.available(), voiceNotes: voice.available() && !!voice.ffmpeg() },
     people,
   };
 }
@@ -248,7 +250,7 @@ const server = http.createServer(async (req, res) => {
     // ---- accounts ----
     if (p === '/api/session' && req.method === 'GET') {
       const u = currentUser(req);
-      return json(res, 200, { authed: !!u, allowed: allowed(u), admin: isAdmin(u), primary: !!(u && u.primary), ai: ai.allowed(u), user: auth.publicUser(u), version: VERSION, access: access() });
+      return json(res, 200, { authed: !!u, allowed: allowed(u), admin: isAdmin(u), primary: !!(u && u.primary), ai: ai.allowed(u), speech: voice.available(), user: auth.publicUser(u), version: VERSION, access: access() });
     }
     if (p === '/api/login' && req.method === 'POST') {
       const b = await readBody(req).catch(() => ({}));
@@ -320,7 +322,7 @@ const server = http.createServer(async (req, res) => {
       const b = await readBody(req, 24 * 1024 * 1024);
       if (b.tz && when.validTz(b.tz) && b.tz !== tzOf(uid)) store.setPrefs(uid, { tz: b.tz });
       const images = (Array.isArray(b.images) ? b.images : []).slice(0, 6).map((x) => Buffer.from(String(x).replace(/^data:[^,]+,/, ''), 'base64'));
-      const r = await capture.jot(uid, { text: b.text, images, source: 'web', tz: tzOf(uid) });
+      const r = await capture.jot(uid, { text: b.text, images, source: 'web', voice: b.voice === true, tz: tzOf(uid) });
       if (!r.note) return json(res, 400, { error: r.reply });
       return json(res, 200, { note: noteView(r.note), reply: r.reply });
     }
@@ -369,6 +371,15 @@ const server = http.createServer(async (req, res) => {
       }
       res.writeHead(200, { 'Content-Type': 'application/json', 'Content-Disposition': 'attachment; filename="jot-export.json"' });
       return res.end(JSON.stringify({ exportedAt: new Date().toISOString(), notes: ns.map(({ images, ...n }) => n) }, null, 1));
+    }
+
+    // ---- speaking instead of typing (the browser sends 16 kHz mono PCM) ----
+    if (p === '/api/transcribe' && req.method === 'POST') {
+      if (auth.limited(`voice:${uid}`, 120, 3600 * 1000)) return json(res, 429, { error: 'That is a lot of recordings this hour.' });
+      const pcm = await readBuf(req, 2400000);
+      if (pcm.length < 3200) return json(res, 400, { error: "Didn't catch that. Hold the mic a little longer." });
+      try { return json(res, 200, { text: await voice.transcribe(pcm) }); }
+      catch (e) { console.error(`voice: ${e.message}`); return json(res, e.status || 502, { error: e.status ? e.message : 'Could not turn that into text just now. Try again.' }); }
     }
 
     // ---- AI (the owner's Claude plan; owner, admins and people granted it) ----

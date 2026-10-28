@@ -102,6 +102,15 @@ echo "Telegram API: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 10 
 echo "Twilio API: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 10 https://api.twilio.com/)"
 echo "Stripe API: HTTP $(curl -s -o /dev/null -w '%{http_code}' --max-time 10 https://api.stripe.com/v1/)"
 
+echo "== speech (shared with Run Scenario) =="
+if [ -x /opt/scenario-venv/bin/python ] && [ -f /opt/scenario/models/sidecar.py ]; then
+  echo "speech model: installed ($( [ -f /opt/scenario/data/speech-ready ] && echo 'warmed up' || echo 'not warmed up yet: the first recording takes longer'))"
+else
+  echo "speech model: not installed; phones that dictate by themselves still work"
+fi
+command -v ffmpeg >/dev/null || timeout 300 apt-get install -y -qq ffmpeg >/dev/null 2>&1 || true
+echo "ffmpeg (Telegram voice notes): $(command -v ffmpeg >/dev/null && ffmpeg -version 2>/dev/null | head -1 | cut -c1-40 || echo missing)"
+
 echo "== route (k3s Traefik) =="
 if [ -f /etc/box-kubeconfig ]; then
   K="kubectl --kubeconfig /etc/box-kubeconfig"

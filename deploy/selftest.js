@@ -15,7 +15,7 @@ const env = {
   JT_DATA_DIR: path.join(tmp, 'data'), JT_PORT: String(PORT), JT_PUBLIC_URL: BASE, JT_SCHEDULE: '0',
   JT_CLAUDE_BIN: path.join(__dirname, 'fake-claude.js'), JT_ADMIN_EMAIL: 'owner@example.com',
   JT_TWILIO_SID: `AC${'a'.repeat(32)}`, JT_TWILIO_TOKEN: 'b'.repeat(32), JT_TWILIO_FROM: '+15550001111',
-  JT_STRIPE_WEBHOOK: `whsec_${'c'.repeat(24)}`,
+  JT_STRIPE_WEBHOOK: `whsec_${'c'.repeat(24)}`, JT_FAKE_SPEECH: 'remind me to call the plumber in 2 hours',
 };
 Object.assign(process.env, env);
 fs.chmodSync(env.JT_CLAUDE_BIN, 0o755);
@@ -118,6 +118,18 @@ let server;
   assert.deepStrictEqual(r.j.tags.map((t) => t.tag).sort(), ['growth', 'work']);
   assert.strictEqual((await B.c('/api/notes?q=annual')).j.notes.length, 0);
   ok('search by words, tag and date');
+
+  // Speaking instead of typing.
+  assert(/microphone=\(self\)/.test(home.headers.get('permissions-policy')), 'the page may use the microphone');
+  assert.strictEqual((await A.c('/api/session')).j.speech, true);
+  r = await A.c('/api/transcribe', { method: 'POST', raw: Buffer.alloc(32000), headers: { 'Content-Type': 'application/octet-stream' } });
+  assert.strictEqual(r.j.text, 'remind me to call the plumber in 2 hours', r.t);
+  assert.strictEqual((await A.c('/api/transcribe', { method: 'POST', raw: Buffer.alloc(100), headers: { 'Content-Type': 'application/octet-stream' } })).status, 400, 'too short');
+  assert.strictEqual((await anon('/api/transcribe', { method: 'POST', raw: Buffer.alloc(32000), headers: { 'Content-Type': 'application/octet-stream' } })).status, 401);
+  r = await A.c('/api/notes', { method: 'POST', body: { text: r.j.text, voice: true, tz } });
+  assert(r.j.note.voice && r.j.note.remind, 'a spoken jot is marked and its reminder set');
+  await A.c(`/api/notes/${r.j.note.id}`, { method: 'DELETE' });
+  ok('voice: transcription, spoken jots, microphone allowed');
 
   r = await A.c(`/api/notes/${n1}`, { method: 'PATCH', body: { pinned: true, text: 'pricing idea: annual plan at 2 months free #growth #pricing' } });
   assert(r.j.note.pinned && r.j.note.tags.includes('pricing'));

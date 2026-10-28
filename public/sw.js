@@ -1,6 +1,6 @@
 // Jot service worker: reminder notifications, and the app shell offline.
-const CACHE = 'jot-v1';
-const SHELL = ['/', '/app.js', '/app.css', '/icons.js', '/install-banner.js', '/icon.svg', '/icon-180.png', '/icon-192.png', '/manifest.webmanifest', '/Geist-Variable.woff2', '/GeistMono-Variable.woff2'];
+const CACHE = 'jot-v2';
+const SHELL = ['/', '/app.js', '/app.css', '/icons.js', '/install-banner.js', '/voice.js', '/icon.svg', '/icon-180.png', '/icon-192.png', '/manifest.webmanifest', '/GeistMono-Variable.woff2'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener('activate', (e) => { e.waitUntil((async () => { for (const k of await caches.keys()) if (k !== CACHE) await caches.delete(k); await self.clients.claim(); })()); });
 // Network first; the cache answers only when offline. Notes and pictures always come from the server.
