@@ -1,4 +1,4 @@
-run 17 at 2026-11-13T22:33:20Z, commit 9485361
+run 18 at 2026-11-13T22:34:11Z, commit 9a3dab3
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,11 +6,6 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-key fingerprints (sha256, first 8):
-  midas/midas-credentials: MASSIVE d4dd3e73 POLYGON -
-  selfagentbot/selfagentbot-credentials: MASSIVE d4dd3e73 POLYGON ec270fc2
-  agent-m/project10-secrets: MASSIVE d4dd3e73 POLYGON -
-vendor key already configured: no
-PUT vendor_api_key -> 200 configured=true
-Test: {"ok":false,"message":"Test failed: the vendor rejected this key or plan"}
-health: {"status":"degraded"}
+MASSIVE_API_KEY (midas): /v2/aggs/ticker/AAPL/prev=200; /v3/reference/options/contracts=200; /v3/trades/O:B1SPY261113C00710000=200 (DELAYED ); /v3/quotes/O:B1SPY261113C00710000=403 (NOT_AUTHORIZED You are not entitled to this data. Please upgrade your plan at https://mass); /v3/snapshot/options/SPY=200;
+POLYGON_API_KEY (selfagentbot): /v2/aggs/ticker/AAPL/prev=200; /v3/reference/options/contracts=200; /v3/trades/O:B1SPY261113C00710000=403 (NOT_AUTHORIZED You are not entitled to this data. Please upgrade your plan at https://mass); /v3/quotes/O:B1SPY261113C00710000=403 (NOT_AUTHORIZED You are not entitled to this data. Please upgrade your plan at https://mass); /v3/snapshot/options/SPY=403 (NOT_AUTHORIZED You are not entitled to this data. Please upgrade your plan at https://mass);
+option trades: massive key 200, polygon key 403
