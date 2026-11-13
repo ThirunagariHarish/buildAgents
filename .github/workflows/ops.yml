@@ -53,12 +53,7 @@ jobs:
             umask 077
             if printf '%s' "$BOX_KUBECONFIG" | grep -q 'apiVersion'; then printf '%s\n' "$BOX_KUBECONFIG" > kc; else printf '%s' "$BOX_KUBECONFIG" | base64 -d > kc; fi
             echo "BOX_KUBECONFIG: set; API server port $(grep -o 'server: https://[^ ]*' kc | sed -E 's#.*:([0-9]+).*#\1#')"
-            KCFG="$PWD/kc" timeout 300 bash doppler.sh 2>&1
-            ns=unusual-options-detector
-            kubectl --kubeconfig kc -n $ns get secret $ns-env -o json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const d=JSON.parse(s).data;const v=k=>Buffer.from(d[k],"base64").toString();require("fs").writeFileSync("login.txt",v("FIRST_ADMIN_EMAIL")+"\n"+v("FIRST_ADMIN_PASSWORD"),{mode:0o600});console.log("FIRST_ADMIN_EMAIL is harishkumart1994@gmail.com: "+(v("FIRST_ADMIN_EMAIL").toLowerCase()==="harishkumart1994@gmail.com"?"yes":"no"))})'
-            echo "== the real login page in a browser =="
-            (npm i -s --no-save playwright@1 >/dev/null 2>&1 && npx -y playwright install --with-deps chromium >/dev/null 2>&1 && timeout 120 node login-ui.mjs login.txt) 2>&1 | tail -20
-            rm -f login.txt
+            KCFG="$PWD/kc" timeout 300 bash doppler2.sh 2>&1
             rm -f kc
           } | tr -d '\r' > server.txt
 
