@@ -1,4 +1,4 @@
-run 12 at 2026-11-13T15:23:27Z, commit 238c437
+run 13 at 2026-11-13T15:24:45Z, commit 16647c4
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,24 +6,10 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-== health and today's jobs ==
-health: {"status":"degraded"}
-refresh | 2026-11-12 | failed | skipped_no_key | {"skipped": "skipped_no_key"}
-cutoff | 2026-11-13 | failed | incomplete_ingest | 
-3 | cutoff_skipped | incomplete_ingest
-1 | cutoff_skipped | error
-0
-worker: 
-== Chatter ==
-worker chatter lines: 
-118 | 0 | 
-824 | 123 | 2026-11-06 | 2026-11-13 15:21:35.701+00
-SPX | 156
-NVDA | 132
-AMD | 53
-TSLA | 28
-SPY | 21
-AAPL | 18
-QQQ | 17
-MSFT | 16
-4252
+Box HEAD: e13c9a2, uncommitted files: 0
+7bc433f in Box's copy: yes
+e13c9a2 in Box's copy: yes
+Box commits since e13c9a2: 0
+Google sign-in code present: 1
+Chatter code present: 1 files, migration 0005: 1
+files Box changed since e13c9a2: 0; touching my files: 0
