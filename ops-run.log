@@ -1,4 +1,4 @@
-run 11 at 2026-11-13T15:22:22Z, commit ec11201
+run 12 at 2026-11-13T15:23:27Z, commit 238c437
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,47 +6,24 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-== code ==
-main: 1c51429 Deploy: pin image to e13c9a2 [skip ci];e13c9a2 Chatter: what the Discord groups talk about most;5a431da Deploy: pin image to 7bc433f [skip ci];
-manifest image: e13c9a2
-== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
-   secret/doppler-token-secret created
-== tidy: deploy Jobs for an image that was never built ==
-   job.batch "backup-bb17fb9" deleted from unusual-options-detector namespace
-   job.batch "gate-bb17fb9" deleted from unusual-options-detector namespace
-   job.batch "migrate-bb17fb9" deleted from unusual-options-detector namespace
-   job.batch "role-check-bb17fb9" deleted from unusual-options-detector namespace
-== apply ==
-   statefulset.apps/unusual-options-detector-db configured
-   job.batch/gate-e13c9a2 created
-   job.batch/backup-e13c9a2 created
-   job.batch/migrate-e13c9a2 created
-   job.batch/role-check-e13c9a2 created
-   dopplersecret.secrets.doppler.com/unusual-options-detector-google created
-   deployment.apps/unusual-options-detector configured
-   deployment.apps/unusual-options-detector-worker configured
-   ingress.networking.k8s.io/unusual-options-detector configured
-job gate-e13c9a2: complete
-job backup-e13c9a2: complete
-job migrate-e13c9a2: complete
-job role-check-e13c9a2: complete
-unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
-unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
-images now: unusual-options-detector=e13c9a2 unusual-options-detector-worker=e13c9a2 
-== Google keys from Doppler ==
-synced Secret keys: DOPPLER_CONFIG, DOPPLER_ENVIRONMENT, DOPPLER_PROJECT, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
-DopplerSecret: secrets.doppler.com/SecretSyncReady=True Controller is continuously syncing secrets; secrets.doppler.com/DeploymentReloadReady=True Controller is ready to reload deployments. 2 found.; 
-site pod has both Google keys: yes
-== the live site ==
+== health and today's jobs ==
 health: {"status":"degraded"}
-login page shows the Google button: 1
-social start goes to accounts.google.com/o/oauth2/v2/auth, redirect_uri=https://unusual-options-detector.cashflowus.com/api/auth/callback/google
-admin sign-in with the stored login: 200
-worker:       1 "msg":"admin password ok"       1 "msg":"seed done"       1 "msg":"worker started" 
-== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
-already configured: no
-source has token: yes, server id: yes
-PUT discord_bot_token -> 200 configured=true
-PUT discord_server_id -> 200 configured=true
-Test: {"ok":true,"message":"Connected as Phoneix Claw, reading Project Claw"}
-Chatter API: configured=true tickers=0 last_read=null
+refresh | 2026-11-12 | failed | skipped_no_key | {"skipped": "skipped_no_key"}
+cutoff | 2026-11-13 | failed | incomplete_ingest | 
+3 | cutoff_skipped | incomplete_ingest
+1 | cutoff_skipped | error
+0
+worker: 
+== Chatter ==
+worker chatter lines: 
+118 | 0 | 
+824 | 123 | 2026-11-06 | 2026-11-13 15:21:35.701+00
+SPX | 156
+NVDA | 132
+AMD | 53
+TSLA | 28
+SPY | 21
+AAPL | 18
+QQQ | 17
+MSFT | 16
+4252
