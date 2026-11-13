@@ -1,4 +1,4 @@
-run 15 at 2026-11-13T15:26:27Z, commit ad25954
+run 16 at 2026-11-13T22:22:36Z, commit e4294e0
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,22 +6,12 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-time: 15:26Z
-images: unusual-options-detector=e13c9a2 unusual-options-detector-worker=e13c9a2 
-pod backup-9748dd8-8h6bm 0/1 Completed 149m
-pod backup-e13c9a2-p5qrc 0/1 Completed 4m52s
-pod gate-9748dd8-8bg6h 0/1 Completed 149m
-pod gate-e13c9a2-qq89k 0/1 Completed 4m52s
-pod migrate-9748dd8-8qvcp 0/1 Completed 149m
-pod migrate-e13c9a2-xft7h 0/1 Completed 4m52s
-pod role-check-9748dd8-spm7l 0/1 Completed 149m
-pod role-check-e13c9a2-bzkcf 0/1 Completed 4m52s
-pod unusual-options-detector-7c64cc9bcc-f99m4 1/1 Running 4m51s
-pod unusual-options-detector-db-0 1/1 Running 10h
-pod unusual-options-detector-worker-846bd8f6b5-vff44 1/1 Running 4m51s
-GET /login -> 200; Google button: 1; email field: 1
-health: {"status":"degraded"}
-Google start -> accounts.google.com/o/oauth2/v2/auth redirect_uri=https://unusual-options-detector.cashflowus.com/api/auth/callback/google
-Google answers: HTTP 200; redirect_uri_mismatch: 3; invalid_client: 0
-admin email+password sign-in: 200
-recent web errors: 
+agent-m/project10-secrets: MASSIVE_API_KEY
+midas/midas-credentials: FINNHUB_API_KEY, MASSIVE_API_KEY
+selfagentbot/selfagentbot-credentials: FINNHUB_API_KEY, MASSIVE_API_KEY, POLYGON_API_KEY, UNUSUAL_OPTIONS_FLOW_CHANNEL_ID, UNUSUAL_WHALES_API_TOKEN
+settings rows in the app (configured or not):
+discord_bot_token|t
+discord_server_id|t
+vapid_private_key|t
+vapid_public_key|t
+vendor_api_key|f
