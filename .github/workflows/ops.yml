@@ -44,30 +44,19 @@ jobs:
           } | tee names.txt
           echo "report<<ENDOFREPORT" >> "$GITHUB_OUTPUT"; cat names.txt >> "$GITHUB_OUTPUT"; echo "ENDOFREPORT" >> "$GITHUB_OUTPUT"
 
-      - name: Checks on the server
-        id: ssh
-        continue-on-error: true
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          capture_stdout: true
-          command_timeout: 10m
-          script: |
-            { rm -rf /opt/ops && git clone -q --depth 1 -b ops https://github.com/ThirunagariHarish/buildAgents.git /opt/ops 2>&1 || echo "clone failed"; bash /opt/ops/run.sh 2>&1; echo "ops script exit: $?"; } > /tmp/ops-out.txt 2>&1
-            echo "B64:$(base64 -w0 /tmp/ops-out.txt)"
-            rm -f /tmp/ops-out.txt
-            exit 0
-
-      - name: Decode
-        if: always()
+      - name: Checks against the cluster (kubeconfig from BOX_KUBECONFIG)
         env:
-          OUT: ${{ steps.ssh.outputs.stdout }}
-          OUTCOME: ${{ steps.ssh.outcome }}
+          BOX_KUBECONFIG: ${{ secrets.BOX_KUBECONFIG }}
         run: |
-          { echo "ssh step: $OUTCOME"; printf '%s\n' "$OUT" | grep -o 'B64:[A-Za-z0-9+/=]*' | head -1 | cut -c5- | base64 -d 2>/dev/null || echo "no output came back"; } | tr -d '\r' > server.txt
+          {
+            if [ -z "$BOX_KUBECONFIG" ]; then echo "BOX_KUBECONFIG: missing"; exit 0; fi
+            umask 077
+            if printf '%s' "$BOX_KUBECONFIG" | grep -q 'apiVersion'; then printf '%s\n' "$BOX_KUBECONFIG" > kc; else printf '%s' "$BOX_KUBECONFIG" | base64 -d > kc; fi
+            echo "BOX_KUBECONFIG: set; API server port $(grep -o 'server: https://[^ ]*' kc | sed -E 's#.*:([0-9]+).*#\1#')"
+            KCFG="$PWD/kc" timeout 480 bash run.sh 2>&1
+            echo "ops script exit: $?"
+            rm -f kc
+          } | tr -d '\r' > server.txt
 
       - name: Commit the output
         if: always()

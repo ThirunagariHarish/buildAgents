@@ -4,7 +4,8 @@
 set -uo pipefail
 NS=unusual-options-detector
 SITE=https://unusual-options-detector.cashflowus.com
-K="kubectl --kubeconfig /etc/box-kubeconfig -n $NS"
+KC="kubectl --kubeconfig ${KCFG:-/etc/box-kubeconfig} --request-timeout=20s"
+K="$KC -n $NS"
 mask() { sed -E 's/([A-Za-z0-9._%+-]{1,2})[A-Za-z0-9._%+-]*@/\1***@/g'; }
 TMP=$(mktemp -d); chmod 700 "$TMP"; trap 'rm -rf "$TMP"' EXIT
 
@@ -26,6 +27,7 @@ console.log("FIRST_ADMIN_PASSWORD: "+(p?"set, "+p.length+" chars"+(/\s/.test(p)?
 console.log("BETTER_AUTH_URL: "+d("BETTER_AUTH_URL")+"  APP_URL: "+d("APP_URL"));
 ' "$TMP/secret.json" 2>&1
 
+if [ -d /opt/box ]; then
 echo "== does Box's stored copy match the cluster? =="
 node -e '
 const fs=require("fs"),path=require("path");
@@ -48,6 +50,7 @@ let users=[];try{users=JSON.parse(fs.readFileSync("/opt/box/data/users.json"))}c
 const owner=users.find(u=>u.primary)||{};
 console.log("Box owner email equals FIRST_ADMIN_EMAIL: "+(owner.email&&owner.email.toLowerCase()===d("FIRST_ADMIN_EMAIL").toLowerCase()?"yes":"NO ("+String(owner.email||"").replace(/^(.{2}).*@/,"$1***@")+")"));
 ' "$TMP/secret.json" 2>&1
+fi
 
 echo "== admin rows in the database (no passwords) =="
 $K exec statefulset/$NS-db -c postgres -- sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -F " | " -c "
@@ -73,7 +76,7 @@ echo "cookie set: $(grep -c session_token "$TMP/jar" 2>/dev/null || echo 0)"
 
 echo "== Doppler on this machine and in the cluster =="
 echo "doppler CLI: $(command -v doppler || echo none)"
-kubectl --kubeconfig /etc/box-kubeconfig get crd 2>/dev/null | grep -i doppler || echo "no Doppler operator in the cluster"
+$KC get crd 2>/dev/null | grep -i doppler || echo "no Doppler operator in the cluster"
 grep -l -i doppler /etc/*.env 2>/dev/null | sed 's/^/env file mentioning doppler: /'
 grep -h -o -i -E '^[A-Z_]*(DOPPLER|GOOGLE)[A-Z_]*' /etc/*.env /opt/box/data/shared-env.json 2>/dev/null | sort -u | sed 's/^/name found: /'
 node -e 'try{console.log("Box shared keys: "+Object.keys(JSON.parse(require("fs").readFileSync("/opt/box/data/shared-env.json"))).join(", "))}catch{console.log("Box shared keys: none")}'
@@ -81,7 +84,7 @@ node -e 'try{console.log("Box shared keys: "+Object.keys(JSON.parse(require("fs"
 echo "== Discord Mirror on this machine =="
 ls -d /opt/*discord* /opt/*Discord* /root/*iscord* 2>/dev/null || echo "no Discord folders in /opt or /root"
 command -v docker >/dev/null && docker ps --format '{{.Names}}  {{.Image}}  {{.Status}}' 2>/dev/null | grep -i -E 'dm-|discord' || echo "no Discord Mirror containers running here"
-kubectl --kubeconfig /etc/box-kubeconfig get ns 2>/dev/null | grep -i -E 'discord|dm' || echo "no Discord namespace in the cluster"
+$KC get ns 2>/dev/null | grep -i -E 'discord|dm' || echo "no Discord namespace in the cluster"
 if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx dm-postgres; then
   docker exec dm-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -F " " -c "SELECT relname, n_live_tup FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 25"' 2>&1
   docker exec dm-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -c "SELECT column_name FROM information_schema.columns WHERE table_name = '\''outbox'\'' ORDER BY ordinal_position"' 2>&1 | tr '\n' ' '; echo
