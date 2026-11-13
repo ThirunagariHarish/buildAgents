@@ -1,10 +1,8 @@
-run 2 at 2026-11-13T14:28:10Z, commit a4562ed
+run 3 at 2026-11-13T14:28:49Z, commit 4c37565
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
 GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
-ssh auth: key missing, password set
-root@69.62.86.166: Permission denied (publickey).
-ssh exit 255
+ssh step: failure
