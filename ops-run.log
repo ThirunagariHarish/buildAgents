@@ -1,4 +1,4 @@
-run 14 at 2026-11-13T15:25:25Z, commit 14b7e80
+run 15 at 2026-11-13T15:26:27Z, commit ad25954
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,13 +6,22 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-Box HEAD: e13c9a2, uncommitted files: 0
-7bc433f in Box's copy: yes
-e13c9a2 in Box's copy: yes
-Box commits since e13c9a2: 0
-Google sign-in code present: 1
-Chatter code present: 1 files, migration 0005: 1
-ae60a46: commit; in HEAD history: yes; date 2026-11-13T14:09:00Z
-branches: main=e13c9a2 
-worktrees: 1; last reflog: e13c9a2 merge ops-tip: Fast-forward;7bc433f merge ops-tip: Fast-forward;c88fa52 commit: T59: Deploy latest image and prove live admi;
-files Box changed since e13c9a2: 0; touching my files: 0
+time: 15:26Z
+images: unusual-options-detector=e13c9a2 unusual-options-detector-worker=e13c9a2 
+pod backup-9748dd8-8h6bm 0/1 Completed 149m
+pod backup-e13c9a2-p5qrc 0/1 Completed 4m52s
+pod gate-9748dd8-8bg6h 0/1 Completed 149m
+pod gate-e13c9a2-qq89k 0/1 Completed 4m52s
+pod migrate-9748dd8-8qvcp 0/1 Completed 149m
+pod migrate-e13c9a2-xft7h 0/1 Completed 4m52s
+pod role-check-9748dd8-spm7l 0/1 Completed 149m
+pod role-check-e13c9a2-bzkcf 0/1 Completed 4m52s
+pod unusual-options-detector-7c64cc9bcc-f99m4 1/1 Running 4m51s
+pod unusual-options-detector-db-0 1/1 Running 10h
+pod unusual-options-detector-worker-846bd8f6b5-vff44 1/1 Running 4m51s
+GET /login -> 200; Google button: 1; email field: 1
+health: {"status":"degraded"}
+Google start -> accounts.google.com/o/oauth2/v2/auth redirect_uri=https://unusual-options-detector.cashflowus.com/api/auth/callback/google
+Google answers: HTTP 200; redirect_uri_mismatch: 3; invalid_client: 0
+admin email+password sign-in: 200
+recent web errors: 
