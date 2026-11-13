@@ -1,4 +1,4 @@
-run 23 at 2026-11-13T23:10:33Z, commit 14b46f9
+run 24 at 2026-11-13T23:21:33Z, commit c7d44e3
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,19 +6,53 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-full-tape 2026-11-12 -> 302
-full-tape 2026-10-20 -> 302
-full-tape 2026-10-01 -> 302
-full-tape 2026-09-15 -> 302
-magic 4034b50
-entry 2026-11-12-option_trades.csv method 8 flags 0 csize ffffffff usize ffffffff extra 48
-header: id,underlying_symbol,executed_at,nbbo_bid,nbbo_ask,size,price,option_chain_id,alert_score,created_at,report_flags,tags,expiry,option_type,open_interest,strike,premium,aggregated_trade_id,volume,underlying_price,ewma_nbbo_ask,ewma_nbbo_bid,implied_volatility,delta,theta,gamma,vega,rho,theo,upstream_condition_detail,market_center_locate,canceled,trade_id,exchange,ask_vol,bid_vol,no_side_vol,mid_vol,multi_vol,stock_multi_vol,trading_hours,exchange_id,nbbo_bid_exchange_id,nbbo_ask_exchange_id,nbbo_bid_size,nbbo_bid_time,nbbo_ask_size,nbbo_ask_time,nbbo_bid_exchange,nbbo_ask_exchange
-cols 50
-row1: <uuid>,QQQ,9999-99-99 99:99:99.999999+99,9.99,9.99,9,9.99,QQQ999999P99999999,,9999-99-99 99:99:99.999999+99,{extended_hours},"{ask_side,bearish,etf}",9999-99-99,put,999,999,999.99,,9,999.99,9.99,9.99,9.9999999999999999,-9.9999999999999999,-9.9999999999999999,9.999999999999999999,9.9999999999999999,-9.99999999999999999,9,exht,99,f,9,NYSE AMERICAN OPTIONS,9,9,9,9,9,9,gth,9,9,9,9,9999-99-99 99:99:99.999999+99,9,9999-99-99 99:99:99.999999+99,NYSE AMERICAN OPTIONS,NYSE AMERICAN OPTIONS
-row2: <uuid>,QQQ,9999-99-99 99:99:99.999999+99,9.99,9.99,9,9.99,QQQ999999C99999999,,9999-99-99 99:99:99.999999+99,{extended_hours},"{ask_side,bullish,etf}",9999-99-99,call,9999,999,99.99,,9,999.99,9.99,9.99,9.999999999999999,9.99999999999999999,-9.9999999999999,9.99999999999999999,9.99999999999999999,9.9999999999999999999,9.9999999999999999,exht,99,f,9,NYSE AMERICAN OPTIONS,9,9,9,9,9,9,gth,9,9,9,9,9999-99-99 99:99:99.999999+99,9,9999-99-99 99:99:99.999999+99,NYSE AMERICAN OPTIONS,NYSE AMERICAN OPTIONS
-row3: <uuid>,QQQ,9999-99-99 99:99:99.99999+99,9.99,9.99,9,9.99,QQQ999999P99999999,,9999-99-99 99:99:99.999999+99,{extended_hours},"{bid_side,bullish,etf}",9999-99-99,put,999,999,999.99,,9,999.9999,9.99,9.99,9.9999999999999999,-9.9999999999999999,-9.999999999999999,9.99999999999999999,9.9999999999999999,-9.999999999999999999,9.999999999999999,exht,99,f,9,NYSE AMERICAN OPTIONS,9,9,9,9,9,9,gth,9,9,9,9,9999-99-99 99:99:99.999999+99,9,9999-99-99 99:99:99.999999+99,NYSE AMERICAN OPTIONS,NYSE AMERICAN OPTIONS
-first ts-ish fields: 2026-11-12 12:30:00.197737+00 | 2026-11-12 12:30:00.218843+00 | 2026-11-12 12:30:00.197637+00 | 2026-11-12 12:30:00.197637+00
-central dir entries in tail: 1
-EOCD entries 1
-intraday -> 200
-  rows 2; fields close:string high:string low:string open:string start_time:string trading_hours:string premium_mid_side:number premium_no_side:number premium_ask_side:number premium_bid_side:number volume_bid_side:number volume_ask_side:number volume_no_side:number volume_mid_side:number iv_low:string iv_high:string avg_price:string volume_multi:number volume_stock_multi:number
+## sync
+Box copy: HEAD e13c9a2, uncommitted files 0
+GitHub main 1c51429; branch 5d8d8bc
+GitHub main is now 5d8d8bc
+Box copy moved to 5d8d8bc
+## wait for the image pin of 5d8d8bc
+pinned after ~180s
+## deploy
+== code ==
+main: 2cdc946 Deploy: pin image to 5d8d8bc [skip ci];5d8d8bc Vendor: replace Massive with Unusual Whales;1c51429 Deploy: pin image to e13c9a2 [skip ci];
+manifest image: 5d8d8bc
+== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
+already there
+== tidy: deploy Jobs for an image that was never built ==
+== apply ==
+   statefulset.apps/unusual-options-detector-db configured
+   job.batch/gate-5d8d8bc created
+   job.batch/backup-5d8d8bc created
+   job.batch/migrate-5d8d8bc created
+   job.batch/role-check-5d8d8bc created
+   deployment.apps/unusual-options-detector configured
+   deployment.apps/unusual-options-detector-worker configured
+job gate-5d8d8bc: complete
+job backup-5d8d8bc: complete
+job migrate-5d8d8bc: complete
+job role-check-5d8d8bc: complete
+unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
+unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
+images now: unusual-options-detector=5d8d8bc unusual-options-detector-worker=5d8d8bc 
+== Google keys from Doppler ==
+synced Secret keys: DOPPLER_CONFIG, DOPPLER_ENVIRONMENT, DOPPLER_PROJECT, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+DopplerSecret: secrets.doppler.com/SecretSyncReady=True Controller is continuously syncing secrets; secrets.doppler.com/DeploymentReloadReady=True Controller is ready to reload deployments. 2 found.; 
+site pod has both Google keys: yes
+== the live site ==
+health: {"status":"degraded"}
+login page shows the Google button: 1
+social start goes to accounts.google.com/o/oauth2/v2/auth, redirect_uri=https://unusual-options-detector.cashflowus.com/api/auth/callback/google
+admin sign-in with the stored login: 200
+worker:       1 "msg":"admin password ok"       1 "msg":"seed done"       1 "msg":"worker started" 
+== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
+already configured: yes
+Test: {"ok":true,"message":"Connected as Phoneix Claw, reading Project Claw"}
+Chatter API: configured=true tickers=30 last_read=2026-11-13T23:16:57.916Z
+## vendor token
+sign-in: 200
+settings label: Unusual Whales API token; configured true
+PUT vendor_api_key -> 200 configured=true
+Test: {"ok":true,"message":"Test passed: 50 sample prints, all with per-trade exchange timestamps and bid/ask."}
+health: {"status":"degraded"}
+today: state cutoff_skipped skip incomplete_ingest
