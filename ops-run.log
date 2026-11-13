@@ -1,4 +1,4 @@
-run 13 at 2026-11-13T15:24:45Z, commit 16647c4
+run 14 at 2026-11-13T15:25:25Z, commit 14b7e80
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -12,4 +12,7 @@ e13c9a2 in Box's copy: yes
 Box commits since e13c9a2: 0
 Google sign-in code present: 1
 Chatter code present: 1 files, migration 0005: 1
+ae60a46: commit; in HEAD history: yes; date 2026-11-13T14:09:00Z
+branches: main=e13c9a2 
+worktrees: 1; last reflog: e13c9a2 merge ops-tip: Fast-forward;7bc433f merge ops-tip: Fast-forward;c88fa52 commit: T59: Deploy latest image and prove live admi;
 files Box changed since e13c9a2: 0; touching my files: 0
