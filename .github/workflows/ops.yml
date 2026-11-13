@@ -1,0 +1,71 @@
+name: Ops checks
+
+# Read-only checks on the server, run by pushing to the ops branch. The output
+# is committed back as ops-run.log. This repository is public, so the scripts
+# print names, counts and yes/no answers only: emails are masked and no secret
+# value is ever printed.
+
+on:
+  push:
+    branches: [ops]
+    paths-ignore: ['ops-run.log']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ops
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Which secrets exist (names only)
+        id: names
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          DOPPLER_SERVICE_TOKEN: ${{ secrets.DOPPLER_SERVICE_TOKEN }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        run: |
+          {
+            for k in DOPPLER_TOKEN DOPPLER_SERVICE_TOKEN GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET; do
+              v="${!k}"; printf '%s: %s\n' "$k" "$([ -n "$v" ] && echo set || echo missing)"
+            done
+            T="${DOPPLER_SERVICE_TOKEN:-$DOPPLER_TOKEN}"
+            if [ -n "$T" ]; then
+              echo "doppler: token type $(printf '%s' "$T" | cut -c1-6 | sed 's/_[^_]*$//')"
+              curl -s -u "$T:" 'https://api.doppler.com/v3/me' | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);console.log("doppler me: "+(j.type||"?")+" workplace="+((j.workplace&&j.workplace.name)||"?"))}catch{console.log("doppler me: unreadable")}})'
+              curl -s -u "$T:" 'https://api.doppler.com/v3/projects?per_page=50' | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);console.log("doppler projects: "+((j.projects||[]).map(p=>p.slug).join(", ")||JSON.stringify(j.messages||"none")))}catch{console.log("doppler projects: unreadable")}})'
+            fi
+          } | tee names.txt
+          echo "report<<ENDOFREPORT" >> "$GITHUB_OUTPUT"; cat names.txt >> "$GITHUB_OUTPUT"; echo "ENDOFREPORT" >> "$GITHUB_OUTPUT"
+
+      - name: Checks on the server
+        id: ssh
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          capture_stdout: true
+          command_timeout: 10m
+          script: |
+            rm -rf /opt/ops && git clone -q --depth 1 -b ops https://github.com/ThirunagariHarish/buildAgents.git /opt/ops 2>&1 || echo "clone failed"
+            bash /opt/ops/run.sh 2>&1 | tr -d '\r' | sed 's/^EOF$/E0F/'
+            echo "ops script exit: ${PIPESTATUS[0]}"
+
+      - name: Commit the output
+        if: always()
+        env:
+          NAMES: ${{ steps.names.outputs.report }}
+          OUT: ${{ steps.ssh.outputs.stdout }}
+        run: |
+          { echo "run ${{ github.run_number }} at $(date -u +%FT%TZ), commit ${GITHUB_SHA::7}"; echo; printf '%s\n\n%s\n' "$NAMES" "$OUT"; } > ops-run.log
+          git config user.name ops-bot; git config user.email actions@users.noreply.github.com
+          git add ops-run.log; git commit -qm "Ops output for run ${{ github.run_number }} [skip ci]" || exit 0
+          for i in 1 2 3; do git pull -q --rebase origin ops && git push -q origin HEAD:ops && break; sleep 3; done
