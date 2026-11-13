@@ -45,24 +45,29 @@ jobs:
           echo "report<<ENDOFREPORT" >> "$GITHUB_OUTPUT"; cat names.txt >> "$GITHUB_OUTPUT"; echo "ENDOFREPORT" >> "$GITHUB_OUTPUT"
 
       - name: Checks on the server
+        id: ssh
+        continue-on-error: true
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          capture_stdout: true
+          command_timeout: 10m
+          script: |
+            { rm -rf /opt/ops && git clone -q --depth 1 -b ops https://github.com/ThirunagariHarish/buildAgents.git /opt/ops 2>&1 || echo "clone failed"; bash /opt/ops/run.sh 2>&1; echo "ops script exit: $?"; } > /tmp/ops-out.txt 2>&1
+            echo "B64:$(base64 -w0 /tmp/ops-out.txt)"
+            rm -f /tmp/ops-out.txt
+            exit 0
+
+      - name: Decode
+        if: always()
         env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+          OUT: ${{ steps.ssh.outputs.stdout }}
+          OUTCOME: ${{ steps.ssh.outcome }}
         run: |
-          echo "ssh auth: key $([ -n "$VPS_SSH_KEY" ] && echo set || echo missing), password $([ -n "$VPS_PASSWORD" ] && echo set || echo missing)" > server.txt
-          REMOTE='rm -rf /opt/ops && git clone -q --depth 1 -b ops https://github.com/ThirunagariHarish/buildAgents.git /opt/ops 2>&1 || echo "clone failed"; bash /opt/ops/run.sh 2>&1; echo "ops script exit: $?"'
-          OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 -o LogLevel=ERROR"
-          if [ -n "$VPS_SSH_KEY" ]; then
-            printf '%s\n' "$VPS_SSH_KEY" > key; chmod 600 key
-            timeout 600 ssh -i key $OPTS "$VPS_USER@$VPS_HOST" "$REMOTE" >> server.txt 2>&1 || echo "ssh exit $?" >> server.txt
-            rm -f key
-          else
-            sudo apt-get install -y -qq sshpass >/dev/null
-            SSHPASS="$VPS_PASSWORD" timeout 600 sshpass -e ssh $OPTS "$VPS_USER@$VPS_HOST" "$REMOTE" >> server.txt 2>&1 || echo "ssh exit $?" >> server.txt
-          fi
-          tr -d '\r' < server.txt > server.clean && mv server.clean server.txt
+          { echo "ssh step: $OUTCOME"; printf '%s\n' "$OUT" | grep -o 'B64:[A-Za-z0-9+/=]*' | head -1 | cut -c5- | base64 -d 2>/dev/null || echo "no output came back"; } | tr -d '\r' > server.txt
 
       - name: Commit the output
         if: always()
