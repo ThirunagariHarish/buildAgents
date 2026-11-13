@@ -1,4 +1,4 @@
-run 25 at 2026-11-13T23:33:17Z, commit 5bc44be
+run 26 at 2026-11-13T23:34:04Z, commit 7ff43b4
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -7,13 +7,12 @@ GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
 time: 23:33Z
-ERROR:  column "updated_at" does not exist
-LINE 1: ...''), left(coalesce(result::text,''),300), run_at, updated_at...
-                                                             ^
-HINT:  Perhaps you meant to reference the column "jobs.created_at".
-command terminated with exit code 1
+cutoff | failed | 2 | 2026-11-13 15:05:00+00
+refresh | failed | 2 | 2026-11-13 22:00:00+00
+refresh | 2026-11-13 | failed | vendor returned HTTP 403 for /v3/quotes/O:AAPL261113C00255000 | {} | 2026-11-13 22:00:00+00 | 2026-11-13 22:00:03.28272+00
+refresh | 2026-11-12 | failed | skipped_no_key | {"skipped": "skipped_no_key"} | 2026-11-12 22:00:00+00 | 2026-11-13 02:22:05.505147+00
 worker:       1 "msg":"admin password ok"       3 "msg":"chatter read"       1 "msg":"seed done"       1 "msg":"worker started" 
 worker errors: {"level":30,"time":1794612129666,"app":"worker","status":"ok","channels":132,"messages":2,"mentions":0,"channelErrors":0,"msg":"chatter read"}
 {"level":30,"time":1794612400974,"app":"worker","status":"ok","channels":132,"messages":2,"mentions":0,"channelErrors":0,"msg":"chatter read"}
 {"level":30,"time":1794612707843,"app":"worker","status":"ok","channels":132,"messages":4,"mentions":0,"channelErrors":0,"msg":"chatter read"}
-worker memory: NAME                                               CPU(cores)   MEMORY(bytes)   ;unusual-options-detector-5674cf4695-xlnjs          1m           91Mi            ;unusual-options-detector-db-0                      13m          30Mi            ;unusual-options-detector-worker-744655ff57-lzlj8   1m           40Mi            ;
+worker memory: NAME                                               CPU(cores)   MEMORY(bytes)   ;unusual-options-detector-5674cf4695-xlnjs          2m           91Mi            ;unusual-options-detector-db-0                      18m          33Mi            ;unusual-options-detector-worker-744655ff57-lzlj8   2m           40Mi            ;
