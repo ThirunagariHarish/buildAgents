@@ -1,4 +1,4 @@
-run 18 at 2026-11-13T22:34:11Z, commit 9a3dab3
+run 19 at 2026-11-13T23:01:13Z, commit f449d1a
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,6 +6,153 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-MASSIVE_API_KEY (midas): /v2/aggs/ticker/AAPL/prev=200; /v3/reference/options/contracts=200; /v3/trades/O:B1SPY261113C00710000=200 (DELAYED ); /v3/quotes/O:B1SPY261113C00710000=403 (NOT_AUTHORIZED You are not entitled to this data. Please upgrade your plan at https://mass); /v3/snapshot/options/SPY=200;
-POLYGON_API_KEY (selfagentbot): /v2/aggs/ticker/AAPL/prev=200; /v3/reference/options/contracts=200; /v3/trades/O:B1SPY261113C00710000=403 (NOT_AUTHORIZED You are not entitled to this data. Please upgrade your plan at https://mass); /v3/quotes/O:B1SPY261113C00710000=403 (NOT_AUTHORIZED You are not entitled to this data. Please upgrade your plan at https://mass); /v3/snapshot/options/SPY=403 (NOT_AUTHORIZED You are not entitled to this data. Please upgrade your plan at https://mass);
-option trades: massive key 200, polygon key 403
+token: 36 chars
+spec /api/openapi -> 200 1448026
+spec /api/openapi.json -> 404 302
+spec /openapi.json -> 404 302
+spec /docs/openapi.json -> 404 0
+GET /api/stock/SPY/flow-recent -> 200
+[eval]:2
+  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
+                                                                                                                                                              ^^^^^^
+Return statement is not allowed here
+
+SyntaxError: Illegal return statement
+    at makeContextifyScript (node:internal/vm:194:14)
+    at compileScript (node:internal/process/execution:388:10)
+    at evalTypeScript (node:internal/process/execution:260:22)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.22.2
+GET /api/option-trades/flow-alerts?limit=5 -> 200
+[eval]:2
+  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
+                                                                                                                                                              ^^^^^^
+Return statement is not allowed here
+
+SyntaxError: Illegal return statement
+    at makeContextifyScript (node:internal/vm:194:14)
+    at compileScript (node:internal/process/execution:388:10)
+    at evalTypeScript (node:internal/process/execution:260:22)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.22.2
+GET /api/stock/SPY/option-contracts?limit=5 -> 200
+[eval]:2
+  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
+                                                                                                                                                              ^^^^^^
+Return statement is not allowed here
+
+SyntaxError: Illegal return statement
+    at makeContextifyScript (node:internal/vm:194:14)
+    at compileScript (node:internal/process/execution:388:10)
+    at evalTypeScript (node:internal/process/execution:260:22)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.22.2
+sample contract id format: SPY999999P99999999
+GET /api/option-contract/SPY261113P00750000/flow?date=2026-11-13 -> 200
+[eval]:2
+  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
+                                                                                                                                                              ^^^^^^
+Return statement is not allowed here
+
+SyntaxError: Illegal return statement
+    at makeContextifyScript (node:internal/vm:194:14)
+    at compileScript (node:internal/process/execution:388:10)
+    at evalTypeScript (node:internal/process/execution:260:22)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.22.2
+GET /api/option-contract/SPY261113P00750000/flow?date=2026-11-06 -> 200
+[eval]:2
+  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
+                                                                                                                                                              ^^^^^^
+Return statement is not allowed here
+
+SyntaxError: Illegal return statement
+    at makeContextifyScript (node:internal/vm:194:14)
+    at compileScript (node:internal/process/execution:388:10)
+    at evalTypeScript (node:internal/process/execution:260:22)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.22.2
+GET /api/option-contract/SPY261113P00750000/intraday?date=2026-11-13 -> 200
+[eval]:2
+  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
+                                                                                                                                                              ^^^^^^
+Return statement is not allowed here
+
+SyntaxError: Illegal return statement
+    at makeContextifyScript (node:internal/vm:194:14)
+    at compileScript (node:internal/process/execution:388:10)
+    at evalTypeScript (node:internal/process/execution:260:22)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.22.2
+GET /api/option-contract/SPY261113P00750000/historic -> 200
+[eval]:2
+  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
+                                                                                                                                                              ^^^^^^
+Return statement is not allowed here
+
+SyntaxError: Illegal return statement
+    at makeContextifyScript (node:internal/vm:194:14)
+    at compileScript (node:internal/process/execution:388:10)
+    at evalTypeScript (node:internal/process/execution:260:22)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.22.2
+GET /api/option-trades/full-tape/2026-11-13 -> 302
+[eval]:2
+  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
+                                                                                                                                                              ^^^^^^
+Return statement is not allowed here
+
+SyntaxError: Illegal return statement
+    at makeContextifyScript (node:internal/vm:194:14)
+    at compileScript (node:internal/process/execution:388:10)
+    at evalTypeScript (node:internal/process/execution:260:22)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.22.2
+GET /api/stock/SPY/oi-per-strike -> 200
+[eval]:2
+  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
+                                                                                                                                                              ^^^^^^
+Return statement is not allowed here
+
+SyntaxError: Illegal return statement
+    at makeContextifyScript (node:internal/vm:194:14)
+    at compileScript (node:internal/process/execution:388:10)
+    at evalTypeScript (node:internal/process/execution:260:22)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.22.2
+GET /api/stock/SPY/option-chains -> 200
+[eval]:2
+  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
+                                                                                                                                                              ^^^^^^
+Return statement is not allowed here
+
+SyntaxError: Illegal return statement
+    at makeContextifyScript (node:internal/vm:194:14)
+    at compileScript (node:internal/process/execution:388:10)
+    at evalTypeScript (node:internal/process/execution:260:22)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.22.2
+GET /api/earnings/premarket -> 200
+[eval]:2
+  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
+                                                                                                                                                              ^^^^^^
+Return statement is not allowed here
+
+SyntaxError: Illegal return statement
+    at makeContextifyScript (node:internal/vm:194:14)
+    at compileScript (node:internal/process/execution:388:10)
+    at evalTypeScript (node:internal/process/execution:260:22)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.22.2
+rate headers: x-request-id: GOe9FKssWk4r1-gAfsoB x-uw-req-per-minute-remaining: 1000000 x-uw-req-per-minute-reset: 60000 
