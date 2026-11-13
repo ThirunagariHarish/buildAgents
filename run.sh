@@ -78,6 +78,12 @@ grep -l -i doppler /etc/*.env 2>/dev/null | sed 's/^/env file mentioning doppler
 grep -h -o -i -E '^[A-Z_]*(DOPPLER|GOOGLE)[A-Z_]*' /etc/*.env /opt/box/data/shared-env.json 2>/dev/null | sort -u | sed 's/^/name found: /'
 node -e 'try{console.log("Box shared keys: "+Object.keys(JSON.parse(require("fs").readFileSync("/opt/box/data/shared-env.json"))).join(", "))}catch{console.log("Box shared keys: none")}'
 
-echo "== Discord data on this machine =="
-ls -d /opt/*discord* /opt/*Discord* 2>/dev/null || echo "no Discord app folders in /opt"
+echo "== Discord Mirror on this machine =="
+ls -d /opt/*discord* /opt/*Discord* /root/*iscord* 2>/dev/null || echo "no Discord folders in /opt or /root"
+command -v docker >/dev/null && docker ps --format '{{.Names}}  {{.Image}}  {{.Status}}' 2>/dev/null | grep -i -E 'dm-|discord' || echo "no Discord Mirror containers running here"
+kubectl --kubeconfig /etc/box-kubeconfig get ns 2>/dev/null | grep -i -E 'discord|dm' || echo "no Discord namespace in the cluster"
+if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx dm-postgres; then
+  docker exec dm-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -F " " -c "SELECT relname, n_live_tup FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 25"' 2>&1
+  docker exec dm-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -c "SELECT column_name FROM information_schema.columns WHERE table_name = '\''outbox'\'' ORDER BY ordinal_position"' 2>&1 | tr '\n' ' '; echo
+fi
 echo "== done =="
