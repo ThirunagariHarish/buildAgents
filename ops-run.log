@@ -1,4 +1,4 @@
-run 8 at 2026-11-13T14:39:51Z, commit 0c82550
+run 9 at 2026-11-13T14:53:03Z, commit 42dfa50
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -7,8 +7,6 @@ GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
 Box copy: HEAD c88fa52, uncommitted files 0
-bundled
-GitHub main 4ad865e; Box main c88fa52
-commits on GitHub main that Box's copy lacks (not counting image pins): 0
-commits to add: 2
-STOP: cherry-pick 60b40de conflicts in: CLAUDE.md docs/login-diagnosis.md 
+GitHub main 4ad865e; branch 7bc433f
+GitHub main is now 7bc433f
+Box copy moved to 7bc433f
