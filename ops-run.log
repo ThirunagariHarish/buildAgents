@@ -1,4 +1,4 @@
-run 26 at 2026-11-13T23:34:04Z, commit 7ff43b4
+run 27 at 2026-11-13T23:48:24Z, commit 8332dbe
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,13 +6,10 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-time: 23:33Z
-cutoff | failed | 2 | 2026-11-13 15:05:00+00
-refresh | failed | 2 | 2026-11-13 22:00:00+00
-refresh | 2026-11-13 | failed | vendor returned HTTP 403 for /v3/quotes/O:AAPL261113C00255000 | {} | 2026-11-13 22:00:00+00 | 2026-11-13 22:00:03.28272+00
-refresh | 2026-11-12 | failed | skipped_no_key | {"skipped": "skipped_no_key"} | 2026-11-12 22:00:00+00 | 2026-11-13 02:22:05.505147+00
-worker:       1 "msg":"admin password ok"       3 "msg":"chatter read"       1 "msg":"seed done"       1 "msg":"worker started" 
-worker errors: {"level":30,"time":1794612129666,"app":"worker","status":"ok","channels":132,"messages":2,"mentions":0,"channelErrors":0,"msg":"chatter read"}
-{"level":30,"time":1794612400974,"app":"worker","status":"ok","channels":132,"messages":2,"mentions":0,"channelErrors":0,"msg":"chatter read"}
-{"level":30,"time":1794612707843,"app":"worker","status":"ok","channels":132,"messages":4,"mentions":0,"channelErrors":0,"msg":"chatter read"}
-worker memory: NAME                                               CPU(cores)   MEMORY(bytes)   ;unusual-options-detector-5674cf4695-xlnjs          2m           91Mi            ;unusual-options-detector-db-0                      18m          33Mi            ;unusual-options-detector-worker-744655ff57-lzlj8   2m           40Mi            ;
+refresh | 2026-11-13 | pending
+UPDATE 1
+after 823s:
+running | 1 |  | 
+worker:       1 "msg":"admin password ok"       1 "msg":"seed done"       1 "msg":"worker started" 
+worker memory: unusual-options-detector-worker-744655ff57-lzlj8   2m           41Mi            
+restarts: backup-5d8d8bc-7m78b 0;backup-9748dd8-8h6bm 0;backup-e13c9a2-p5qrc 0;gate-5d8d8bc-lrvmr 0;gate-9748dd8-8bg6h 0;gate-e13c9a2-qq89k 0;migrate-5d8d8bc-78dld 0;migrate-9748dd8-8qvcp 0;migrate-e13c9a2-xft7h 0;role-check-5d8d8bc-wkt8z 0;role-check-9748dd8-spm7l 0;role-check-e13c9a2-bzkcf 0;unusual-options-detector-5674cf4695-xlnjs 0;unusual-options-detector-db-0 0;unusual-options-detector-worker-744655ff57-lzlj8 1;
