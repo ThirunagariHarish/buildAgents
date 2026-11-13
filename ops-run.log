@@ -1,4 +1,4 @@
-run 4 at 2026-11-13T14:29:40Z, commit 8663b47
+run 5 at 2026-11-13T14:31:26Z, commit 4a7b439
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,57 +6,28 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-== pods and jobs ==
-NAME                                              READY  STATUS                 RESTARTS  AGE
-backup-9748dd8-8h6bm                              0/1    Completed              0         92m
-backup-bb17fb9-dvlwd                              0/1    Init:ImagePullBackOff  0         9h
-gate-9748dd8-8bg6h                                0/1    Completed              0         92m
-gate-bb17fb9-xq4kp                                0/1    ImagePullBackOff       0         9h
-migrate-9748dd8-8qvcp                             0/1    Completed              0         92m
-migrate-bb17fb9-z8cxj                             0/1    Init:ImagePullBackOff  0         9h
-role-check-9748dd8-spm7l                          0/1    Completed              0         92m
-role-check-bb17fb9-bw9p6                          0/1    Init:ImagePullBackOff  0         9h
-unusual-options-detector-db-0                     1/1    Running                0         9h
-unusual-options-detector-fb45d889-fdfv8           1/1    Running                0         4m49s
-unusual-options-detector-worker-68b74dfd85-548gv  1/1    Running                0         37m
-NAME                STATUS    COMPLETIONS  DURATION  AGE
-backup-9748dd8      Complete  1/1          14s       92m
-backup-bb17fb9      Running   0/1          9h        9h
-gate-9748dd8        Complete  1/1          11s       92m
-gate-bb17fb9        Running   0/1          9h        9h
-migrate-9748dd8     Complete  1/1          22s       92m
-migrate-bb17fb9     Running   0/1          9h        9h
-role-check-9748dd8  Complete  1/1          27s       92m
-role-check-bb17fb9  Running   0/1          9h        9h
-images: unusual-options-detector=9748dd8083183a9bca368b54684c722750c66bc1 unusual-options-detector-worker=9748dd8083183a9bca368b54684c722750c66bc1 
-recent warnings:
-LAST SEEN   TYPE      REASON   OBJECT                         MESSAGE
-8m9s        Warning   Failed   pod/gate-bb17fb9-xq4kp         Error: ImagePullBackOff
-3m16s       Warning   Failed   pod/role-check-bb17fb9-bw9p6   Error: ImagePullBackOff
-3m13s       Warning   Failed   pod/backup-bb17fb9-dvlwd       Error: ImagePullBackOff
-3m11s       Warning   Failed   pod/gate-bb17fb9-xq4kp         Failed to pull image "ghcr.io/thirunagariharish/unusual-options-detector:bb17fb9c3a1d5d793c04fd157d5f1ea09039313f": rpc error: code = NotF
-3m8s        Warning   Failed   pod/migrate-bb17fb9-z8cxj      Error: ImagePullBackOff
-== the app's Secret (key names only) ==
-keys: APP_DB_PASSWORD, APP_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, DATABASE_URL, DATA_DIR, FIRST_ADMIN_EMAIL, FIRST_ADMIN_PASSWORD, LOG_LEVEL, MIGRATION_DATABASE_URL, POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_USER, SETTINGS_ENC_KEY
-FIRST_ADMIN_EMAIL: ha***@gmail.com
-FIRST_ADMIN_PASSWORD: set, 14 chars
-BETTER_AUTH_URL: https://unusual-options-detector.cashflowus.com  APP_URL: https://unusual-options-detector.cashflowus.com
-== admin rows in the database (no passwords) ==
-ha***@gmail.com | admin | enabled | credential (password set) | 2026-11-13 02:21
-sessions: 0
-== worker log lines about the seed ==
-{"level":30,"time":1794577957590,"app":"worker","adminCreated":false,"adminPromoted":false,"warning":null,"msg":"seed done"}
-== sign in on the live site with the Secret's FIRST_ADMIN login ==
-POST /api/auth/sign-in/email -> 200 signed in, role admin
-cookie set: 1
-GET /api/me -> 200
-== Doppler on this machine and in the cluster ==
-doppler CLI: none
-dopplersecrets.secrets.doppler.com             2026-06-03T06:42:00Z
-Box shared keys: none
-== Discord Mirror on this machine ==
-no Discord folders in /opt or /root
-no Discord Mirror containers running here
-no Discord namespace in the cluster
-== done ==
-ops script exit: 0
+== DopplerSecrets ==
+analyst-team/analyst-team-credentials: project=(from token) config=(from token) -> secret analyst-team/analyst-team-credentials; token in analyst-team/doppler-token-secret; ready=secrets.doppler.com/SecretSyncReady:True,secrets.doppler.com/DeploymentReloadReady:True
+jobplatform/jobplatform-credentials: project=(from token) config=(from token) -> secret jobplatform/jobplatform-credentials; token in jobplatform/doppler-token-secret; ready=secrets.doppler.com/SecretSyncReady:True,secrets.doppler.com/DeploymentReloadReady:True
+midas/midas-credentials: project=(from token) config=(from token) -> secret midas/midas-credentials; token in midas/doppler-token-secret; ready=secrets.doppler.com/SecretSyncReady:True,secrets.doppler.com/DeploymentReloadReady:True
+selfagentbot/selfagentbot-credentials: project=(from token) config=(from token) -> secret selfagentbot/selfagentbot-credentials; token in selfagentbot/doppler-token-secret; ready=secrets.doppler.com/SecretSyncReady:True,secrets.doppler.com/DeploymentReloadReady:True
+ytclipper/ytclipper-credentials: project=(from token) config=(from token) -> secret ytclipper/ytclipper-credentials; token in ytclipper/doppler-token-secret; ready=secrets.doppler.com/SecretSyncReady:True,secrets.doppler.com/DeploymentReloadReady:True
+== secrets in any namespace with GOOGLE or DISCORD keys (names only) ==
+agent-m/project10-secrets: DISCORD_ALLOW_BOT_AUTHORS, DISCORD_BOT_TOKEN, DISCORD_CHANNEL_IDS, DISCORD_GUILD_ID, ENTRY_REQUIRE_DISCORD_SIGNAL
+analyst-team/analyst-team-credentials: DISCORD_ALBERT_CHANNEL_ID, DISCORD_BOT_TOKEN, DISCORD_CHARAN_CLUTCH_CHANNEL_ID, DISCORD_CHARAN_INSTINCTS_CHANNEL_ID, DISCORD_CHARAN_MAIN_CHANNEL_ID, DISCORD_EVEREST_CHANNEL_ID, DISCORD_PREMIUM_ALERTS_CHANNEL_ID, DISCORD_SERVER_ID, DISCORD_SRI_CHANNEL_ID, DISCORD_VINOD_OTHER_CHANNEL_ID, DISCORD_VINOD_SPX_CHANNEL_ID, DISCORD_ZABES_CHANNEL_ID
+idea-deck/idea-deck-credentials: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+jobplatform/jobplatform-credentials: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_PUBSUB_VERIFICATION_TOKEN
+midas/midas-credentials: CLAUDE_CODE_OAUTH_TOKEN, DISCORD_BOT_TOKEN, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+plainview/plainview-env: GOOGLE_CLIENT_ID
+selfagentbot/selfagentbot-credentials: DISCORD_BOT_TOKEN, DISCORD_PLUS_TELEGRAM_BOT_TOKEN, DISCORD_PLUS_TELEGRAM_CHAT_ID, DISCORD_SERVER_ID, DISCORD_TOKEN, GOOGLE_CLIENT_ID
+ytclipper/ytclipper-credentials: CLAUDE_CODE_OAUTH_TOKEN, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+== namespaces ==
+agent-m analyst-team box building-youtube-clipper-automation cert-manager cnpg-system default dev-platform doppler doppler-operator-system global-product-scout idea-deck jobplatform jot kube-node-lease kube-public kube-system market-gain-forecast-tool midas o-1-achievement-tracker plainview pocketbox reinvent scenario selfagentbot two-k-product-ideas unusual-options-detector ytclipper 
+FIRST_ADMIN_EMAIL is harishkumart1994@gmail.com: yes
+== the real login page in a browser ==
+[desktop] login page inputs: email:email, password:password
+[desktop] after submit: /; calls: POST /api/auth/sign-in/email 200 | GET /api/me 200 | GET /api/signals 200 | GET /api/health 200 | GET /api/admin/freeze 200
+[desktop] cookies: __Secure-better-auth.session_token secure=true sameSite=Lax
+[iphone] login page inputs: email:email, password:password
+[iphone] after submit: /; calls: POST /api/auth/sign-in/email 200 | GET /api/me 200 | GET /api/signals 200 | GET /api/health 200 | GET /api/admin/freeze 200
+[iphone] cookies: __Secure-better-auth.session_token secure=true sameSite=Lax
