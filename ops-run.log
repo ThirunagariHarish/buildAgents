@@ -1,4 +1,4 @@
-run 24 at 2026-11-13T23:21:33Z, commit c7d44e3
+run 25 at 2026-11-13T23:33:17Z, commit 5bc44be
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,53 +6,14 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-## sync
-Box copy: HEAD e13c9a2, uncommitted files 0
-GitHub main 1c51429; branch 5d8d8bc
-GitHub main is now 5d8d8bc
-Box copy moved to 5d8d8bc
-## wait for the image pin of 5d8d8bc
-pinned after ~180s
-## deploy
-== code ==
-main: 2cdc946 Deploy: pin image to 5d8d8bc [skip ci];5d8d8bc Vendor: replace Massive with Unusual Whales;1c51429 Deploy: pin image to e13c9a2 [skip ci];
-manifest image: 5d8d8bc
-== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
-already there
-== tidy: deploy Jobs for an image that was never built ==
-== apply ==
-   statefulset.apps/unusual-options-detector-db configured
-   job.batch/gate-5d8d8bc created
-   job.batch/backup-5d8d8bc created
-   job.batch/migrate-5d8d8bc created
-   job.batch/role-check-5d8d8bc created
-   deployment.apps/unusual-options-detector configured
-   deployment.apps/unusual-options-detector-worker configured
-job gate-5d8d8bc: complete
-job backup-5d8d8bc: complete
-job migrate-5d8d8bc: complete
-job role-check-5d8d8bc: complete
-unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
-unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
-images now: unusual-options-detector=5d8d8bc unusual-options-detector-worker=5d8d8bc 
-== Google keys from Doppler ==
-synced Secret keys: DOPPLER_CONFIG, DOPPLER_ENVIRONMENT, DOPPLER_PROJECT, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
-DopplerSecret: secrets.doppler.com/SecretSyncReady=True Controller is continuously syncing secrets; secrets.doppler.com/DeploymentReloadReady=True Controller is ready to reload deployments. 2 found.; 
-site pod has both Google keys: yes
-== the live site ==
-health: {"status":"degraded"}
-login page shows the Google button: 1
-social start goes to accounts.google.com/o/oauth2/v2/auth, redirect_uri=https://unusual-options-detector.cashflowus.com/api/auth/callback/google
-admin sign-in with the stored login: 200
-worker:       1 "msg":"admin password ok"       1 "msg":"seed done"       1 "msg":"worker started" 
-== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
-already configured: yes
-Test: {"ok":true,"message":"Connected as Phoneix Claw, reading Project Claw"}
-Chatter API: configured=true tickers=30 last_read=2026-11-13T23:16:57.916Z
-## vendor token
-sign-in: 200
-settings label: Unusual Whales API token; configured true
-PUT vendor_api_key -> 200 configured=true
-Test: {"ok":true,"message":"Test passed: 50 sample prints, all with per-trade exchange timestamps and bid/ask."}
-health: {"status":"degraded"}
-today: state cutoff_skipped skip incomplete_ingest
+time: 23:33Z
+ERROR:  column "updated_at" does not exist
+LINE 1: ...''), left(coalesce(result::text,''),300), run_at, updated_at...
+                                                             ^
+HINT:  Perhaps you meant to reference the column "jobs.created_at".
+command terminated with exit code 1
+worker:       1 "msg":"admin password ok"       3 "msg":"chatter read"       1 "msg":"seed done"       1 "msg":"worker started" 
+worker errors: {"level":30,"time":1794612129666,"app":"worker","status":"ok","channels":132,"messages":2,"mentions":0,"channelErrors":0,"msg":"chatter read"}
+{"level":30,"time":1794612400974,"app":"worker","status":"ok","channels":132,"messages":2,"mentions":0,"channelErrors":0,"msg":"chatter read"}
+{"level":30,"time":1794612707843,"app":"worker","status":"ok","channels":132,"messages":4,"mentions":0,"channelErrors":0,"msg":"chatter read"}
+worker memory: NAME                                               CPU(cores)   MEMORY(bytes)   ;unusual-options-detector-5674cf4695-xlnjs          1m           91Mi            ;unusual-options-detector-db-0                      13m          30Mi            ;unusual-options-detector-worker-744655ff57-lzlj8   1m           40Mi            ;
