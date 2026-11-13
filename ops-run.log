@@ -1,4 +1,4 @@
-run 22 at 2026-11-13T23:09:06Z, commit 8f9ab4b
+run 23 at 2026-11-13T23:10:33Z, commit 14b46f9
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,25 +6,19 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-chains plain -> 200
-  symbols 12996
-chains greeks p0 -> 200
-  rows 500; keys data; fields expires:string delta:string theta:string gamma:string open_interest:number volume:number option_symbol:string strike:string option_type:string rho:string vega:string implied_volatility:string last_tape_time:string nbbo_ask:string nbbo_bid:string
-  with volume>0: 418; oi>0: 440
-  SPY 2026-11-12 chain total 12996, traded 5427, pages 26
-contract form SPY999999P99999999
-  flow -> 200 rows 250; first 2026-11-12T21:14:59.855651Z last 2026-11-12T21:06:31.595370Z; nbbo_bid_time 2026-11-12T21:14:59.750346Z; volume field 560832; canceled 0; codes ["auto","slan","mlet","mlat","isoi"]; flags ["intermarket_sweep"]
-  flow&limit=500 -> 200 rows 250; first 2026-11-12T21:14:59.855651Z last 2026-11-12T21:06:31.595370Z; nbbo_bid_time 2026-11-12T21:14:59.750346Z; volume field 560832; canceled 0; codes ["auto","slan","mlet","mlat","isoi"]; flags ["intermarket_sweep"]
-  flow&limit=100000 -> 422 rows 0
-flow today no date -> 200
-option-trades by contract (today) -> 200
-  rows 0
-earnings premarket -> 200
-  rows 5; fields symbol:string source:string country_code:null full_name:string sector:string is_s_p_500:boolean reaction:string has_options:boolean marketcap:null report_time:string expected_move_perc:null report_date:string ending_fiscal_quarter:string country_name:null continent:null expected_move:null street_mean_est:string actual_eps:string pre_earnings_date:string pre_earnings_close:string post_earnings_date:string post_earnings_close:string
-earnings afterhours -> 200
-  rows 5; fields symbol:string source:string country_code:null full_name:string sector:string is_s_p_500:boolean reaction:string has_options:boolean marketcap:null report_time:string expected_move_perc:null report_date:string ending_fiscal_quarter:string expected_move:null street_mean_est:string country_name:null continent:null actual_eps:null pre_earnings_date:string pre_earnings_close:string post_earnings_date:string post_earnings_close:string
-option-trades older than 30 days via newer_than (expect 400) -> 400
-codes seen, wider sample (5 x 500 trades, all tickers):
-  codes {"auto":1039,"mlet":1403,"mesl":18,"slan":38,"mlat":2}
-  flags {"extended_hours":2500}
-  canceled 0
+full-tape 2026-11-12 -> 302
+full-tape 2026-10-20 -> 302
+full-tape 2026-10-01 -> 302
+full-tape 2026-09-15 -> 302
+magic 4034b50
+entry 2026-11-12-option_trades.csv method 8 flags 0 csize ffffffff usize ffffffff extra 48
+header: id,underlying_symbol,executed_at,nbbo_bid,nbbo_ask,size,price,option_chain_id,alert_score,created_at,report_flags,tags,expiry,option_type,open_interest,strike,premium,aggregated_trade_id,volume,underlying_price,ewma_nbbo_ask,ewma_nbbo_bid,implied_volatility,delta,theta,gamma,vega,rho,theo,upstream_condition_detail,market_center_locate,canceled,trade_id,exchange,ask_vol,bid_vol,no_side_vol,mid_vol,multi_vol,stock_multi_vol,trading_hours,exchange_id,nbbo_bid_exchange_id,nbbo_ask_exchange_id,nbbo_bid_size,nbbo_bid_time,nbbo_ask_size,nbbo_ask_time,nbbo_bid_exchange,nbbo_ask_exchange
+cols 50
+row1: <uuid>,QQQ,9999-99-99 99:99:99.999999+99,9.99,9.99,9,9.99,QQQ999999P99999999,,9999-99-99 99:99:99.999999+99,{extended_hours},"{ask_side,bearish,etf}",9999-99-99,put,999,999,999.99,,9,999.99,9.99,9.99,9.9999999999999999,-9.9999999999999999,-9.9999999999999999,9.999999999999999999,9.9999999999999999,-9.99999999999999999,9,exht,99,f,9,NYSE AMERICAN OPTIONS,9,9,9,9,9,9,gth,9,9,9,9,9999-99-99 99:99:99.999999+99,9,9999-99-99 99:99:99.999999+99,NYSE AMERICAN OPTIONS,NYSE AMERICAN OPTIONS
+row2: <uuid>,QQQ,9999-99-99 99:99:99.999999+99,9.99,9.99,9,9.99,QQQ999999C99999999,,9999-99-99 99:99:99.999999+99,{extended_hours},"{ask_side,bullish,etf}",9999-99-99,call,9999,999,99.99,,9,999.99,9.99,9.99,9.999999999999999,9.99999999999999999,-9.9999999999999,9.99999999999999999,9.99999999999999999,9.9999999999999999999,9.9999999999999999,exht,99,f,9,NYSE AMERICAN OPTIONS,9,9,9,9,9,9,gth,9,9,9,9,9999-99-99 99:99:99.999999+99,9,9999-99-99 99:99:99.999999+99,NYSE AMERICAN OPTIONS,NYSE AMERICAN OPTIONS
+row3: <uuid>,QQQ,9999-99-99 99:99:99.99999+99,9.99,9.99,9,9.99,QQQ999999P99999999,,9999-99-99 99:99:99.999999+99,{extended_hours},"{bid_side,bullish,etf}",9999-99-99,put,999,999,999.99,,9,999.9999,9.99,9.99,9.9999999999999999,-9.9999999999999999,-9.999999999999999,9.99999999999999999,9.9999999999999999,-9.999999999999999999,9.999999999999999,exht,99,f,9,NYSE AMERICAN OPTIONS,9,9,9,9,9,9,gth,9,9,9,9,9999-99-99 99:99:99.999999+99,9,9999-99-99 99:99:99.999999+99,NYSE AMERICAN OPTIONS,NYSE AMERICAN OPTIONS
+first ts-ish fields: 2026-11-12 12:30:00.197737+00 | 2026-11-12 12:30:00.218843+00 | 2026-11-12 12:30:00.197637+00 | 2026-11-12 12:30:00.197637+00
+central dir entries in tail: 1
+EOCD entries 1
+intraday -> 200
+  rows 2; fields close:string high:string low:string open:string start_time:string trading_hours:string premium_mid_side:number premium_no_side:number premium_ask_side:number premium_bid_side:number volume_bid_side:number volume_ask_side:number volume_no_side:number volume_mid_side:number iv_low:string iv_high:string avg_price:string volume_multi:number volume_stock_multi:number
