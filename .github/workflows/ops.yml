@@ -53,7 +53,7 @@ jobs:
             umask 077
             if printf '%s' "$BOX_KUBECONFIG" | grep -q 'apiVersion'; then printf '%s\n' "$BOX_KUBECONFIG" > kc; else printf '%s' "$BOX_KUBECONFIG" | base64 -d > kc; fi
             echo "BOX_KUBECONFIG: set; API server port $(grep -o 'server: https://[^ ]*' kc | sed -E 's#.*:([0-9]+).*#\1#')"
-            KCFG="$PWD/kc" timeout 300 bash doppler2.sh 2>&1
+            KCFG="$PWD/kc" timeout 400 bash box-state.sh 2>&1
             rm -f kc
           } | tr -d '\r' > server.txt
 
