@@ -1,4 +1,4 @@
-run 7 at 2026-11-13T14:37:46Z, commit becef3b
+run 8 at 2026-11-13T14:39:51Z, commit 0c82550
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,30 +6,9 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-== nodes ==
-srv1349789 Ready 69.62.86.166
-vps2-control Ready 2.25.157.104
-== box namespace ==
-NAME          TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE   SELECTOR
-service/box   ClusterIP   10.43.188.7   <none>        80/TCP    45d   <none>
-
-NAME                                      ADDRESSTYPE   PORTS   ENDPOINTS      AGE
-endpointslice.discovery.k8s.io/box-host   IPv4          3400    69.62.86.166   45d
-VPS node: srv1349789
-== Box's copy of the repo ==
-HEAD c88fa52 branch main
-c88fa52 T59: Deploy latest image and prove live admin sign-in
-79c6b19 T46, T47: Reproduce live login failure and capture exact evidence (+1)
-2884bd3 T47: Verify worker boot, seed and cluster rollout state live
-uncommitted files: 0
-== Box's record of the project ==
-status: ?; running: false; paused: false
-tasks: 59 total, 7 not done
-  T39 [blocked] Fix the cluster rollout failure (attempt 1)
-  T44 [blocked] Fix the failing rollout (rejected ghcr-pull registry credential) so the live site serves s
-  T46 [blocked] Reproduce live login failure and capture exact evidence
-  T47 [blocked] Verify worker boot, seed and cluster rollout state live
-  T49 [blocked] Safe admin credential recovery path
-  T56 [blocked] Deploy and run login smoke check against live site, report honestly
-  T59 [blocked] Deploy latest image and prove live admin sign-in
-last activity: 2026-11-13T14:25:16.350Z
+Box copy: HEAD c88fa52, uncommitted files 0
+bundled
+GitHub main 4ad865e; Box main c88fa52
+commits on GitHub main that Box's copy lacks (not counting image pins): 0
+commits to add: 2
+STOP: cherry-pick 60b40de conflicts in: CLAUDE.md docs/login-diagnosis.md 
