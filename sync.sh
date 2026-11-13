@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Put a branch's commits on top of Box's own copy of a project, push that to GitHub main, and move Box's copy to
-# the same commit (Box force-pushes its copy when it deploys, so both must agree). Stops without changing
-# anything when GitHub main has commits Box does not know (other than the image-pin bot), when the cherry-pick
-# conflicts, or when Box's copy is busy. Prints short SHAs and counts only (this log is public).
+# Fast-forward GitHub main to a branch built on top of it, then move Box's own copy of the project to the same
+# commit (Box force-pushes its copy when it deploys, so both must agree). Stops without changing anything when
+# the branch does not sit on top of GitHub main, when Box's copy is not an ancestor of it, or when Box's copy has
+# uncommitted work. Prints short SHAs and counts only (this log is public).
 set -uo pipefail
 SLUG=unusual-options-detector
-BRANCH=claude/google-signin
+BRANCH=${SYNC_BRANCH:-claude/google-signin-v2}
 KC="kubectl --kubeconfig ${KCFG} --request-timeout=60s"
 NODE=srv1349789
 POD=ops-box-sync
@@ -35,34 +35,23 @@ DIRTY=$(X 'git status --porcelain | wc -l')
 OWNER=$(X 'stat -c %u:%g .')
 echo "Box copy: HEAD ${BOX_HEAD:0:7}, uncommitted files ${DIRTY}"
 [ "$DIRTY" = 0 ] || { echo "STOP: Box's copy has uncommitted changes (a task may be running)"; exit 1; }
-X 'git bundle create /tmp/box.bundle HEAD >/dev/null 2>&1 && echo bundled' || { echo "STOP: bundle failed"; exit 1; }
-$KC -n default cp $POD:/tmp/box.bundle box.bundle >/dev/null 2>&1 || { echo "STOP: copy failed"; exit 1; }
 
 rm -rf work && git clone -q "https://x-access-token:${BOX_GITHUB_TOKEN}@github.com/ThirunagariHarish/$SLUG.git" work || { echo "STOP: clone failed"; exit 1; }
 cd work
-git config user.name "ThirunagariHarish"; git config user.email "ThirunagariHarish@users.noreply.github.com"
-git fetch -q ../box.bundle HEAD:refs/box/main && git fetch -q origin "$BRANCH"
-GH_MAIN=$(git rev-parse origin/main)
-echo "GitHub main ${GH_MAIN:0:7}; Box main $(git rev-parse --short refs/box/main)"
-UNKNOWN=$(git log refs/box/main..origin/main --format='%s' | grep -v -c '^Deploy: pin image')
-echo "commits on GitHub main that Box's copy lacks (not counting image pins): $UNKNOWN"
-[ "$UNKNOWN" = 0 ] || { echo "STOP: GitHub has work Box does not; nothing changed"; exit 1; }
-PICKS=$(git rev-list --reverse "$(git merge-base origin/main origin/$BRANCH)..origin/$BRANCH")
-echo "commits to add: $(echo "$PICKS" | wc -w)"
-git checkout -q -B merged refs/box/main
-for c in $PICKS; do
-  if ! git cherry-pick -x "$c" >/dev/null 2>&1; then
-    echo "STOP: cherry-pick ${c:0:7} conflicts in: $(git diff --name-only --diff-filter=U | tr '\n' ' ')"; git cherry-pick --abort; exit 1
-  fi
-done
-MERGED=$(git rev-parse HEAD)
-git push -q --force-with-lease=main:"$GH_MAIN" origin merged:main 2>&1 | grep -v -i "location\|moved" || true
-[ "$(git ls-remote origin refs/heads/main | cut -c1-40)" = "$MERGED" ] && echo "GitHub main is now ${MERGED:0:7}" || { echo "STOP: push did not land"; exit 1; }
+git fetch -q origin "$BRANCH"
+GH_MAIN=$(git rev-parse origin/main); TIP=$(git rev-parse "origin/$BRANCH")
+echo "GitHub main ${GH_MAIN:0:7}; branch ${TIP:0:7}"
+git merge-base --is-ancestor "$GH_MAIN" "$TIP" || { echo "STOP: the branch is not on top of GitHub main"; exit 1; }
+git cat-file -e "$BOX_HEAD" 2>/dev/null && git merge-base --is-ancestor "$BOX_HEAD" "$TIP" || { echo "STOP: Box's copy has commits GitHub does not; nothing changed"; exit 1; }
+if [ "$GH_MAIN" != "$TIP" ]; then
+  git push -q origin "$TIP:refs/heads/main" 2>&1 | grep -v -i "location\|moved" || true
+fi
+[ "$(git ls-remote origin refs/heads/main | cut -c1-40)" = "$TIP" ] && echo "GitHub main is now ${TIP:0:7}" || { echo "STOP: push did not land"; exit 1; }
 
 # Move Box's copy to the same commit, only if it did not change meanwhile.
-git bundle create ../merged.bundle merged >/dev/null 2>&1
+git bundle create ../tip.bundle "origin/$BRANCH" >/dev/null 2>&1
 cd ..
-$KC -n default cp merged.bundle $POD:/tmp/merged.bundle >/dev/null 2>&1
+$KC -n default cp tip.bundle $POD:/tmp/tip.bundle >/dev/null 2>&1
 NOW=$(X 'git rev-parse HEAD'); NOWDIRTY=$(X 'git status --porcelain | wc -l')
 if [ "$NOW" != "$BOX_HEAD" ] || [ "$NOWDIRTY" != 0 ]; then echo "WARNING: Box's copy changed meanwhile; not moved (GitHub main has the change)"; exit 0; fi
-X "git fetch -q /tmp/merged.bundle merged:refs/heads/ops-merged && git reset -q --hard ops-merged && git branch -q -D ops-merged && chown -R $OWNER /work/repo && echo \"Box copy moved to \$(git rev-parse --short HEAD)\""
+X "git fetch -q /tmp/tip.bundle 'refs/remotes/origin/$BRANCH:refs/heads/ops-tip' && git merge -q --ff-only ops-tip && git branch -q -D ops-tip && chown -R $OWNER /work/repo && echo \"Box copy moved to \$(git rev-parse --short HEAD)\""
