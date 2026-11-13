@@ -65,3 +65,21 @@ curl -s --max-time 15 -X POST "$SITE/api/auth/sign-in/social" -H 'Content-Type: 
 $K get secret $NS-env -o json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const d=JSON.parse(s).data;const v=k=>Buffer.from(d[k],"base64").toString();require("fs").writeFileSync(process.argv[1],JSON.stringify({email:v("FIRST_ADMIN_EMAIL"),password:v("FIRST_ADMIN_PASSWORD")}),{mode:0o600})})' "$TMP/login.json"
 echo "admin sign-in with the stored login: $(curl -s -o /dev/null -w '%{http_code}' --max-time 15 -X POST "$SITE/api/auth/sign-in/email" -H 'Content-Type: application/json' -H "Origin: $SITE" --data-binary @"$TMP/login.json")"
 echo "worker: $($K logs deploy/$NS-worker --tail=300 2>/dev/null | grep -o -E '"msg":"(admin password[^"]*|seed done|worker started)"' | sort | uniq -c | tr '\n' ' ')"
+
+echo "== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) =="
+J="$TMP/jar"
+curl -s -o /dev/null -c "$J" --max-time 15 -X POST "$SITE/api/auth/sign-in/email" -H 'Content-Type: application/json' -H "Origin: $SITE" --data-binary @"$TMP/login.json"
+CONF=$(curl -s -b "$J" --max-time 15 "$SITE/api/admin/settings" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);const c=k=>((j.settings||[]).find(x=>x.key===k)||{}).configured;console.log(c("discord_bot_token")&&c("discord_server_id")?"yes":"no")}catch{console.log("unreadable")}})')
+echo "already configured: $CONF"
+if [ "$CONF" = no ]; then
+  $KC -n analyst-team get secret analyst-team-credentials -o json | node -e '
+    let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const d=JSON.parse(s).data;const v=k=>d[k]?Buffer.from(d[k],"base64").toString().trim():"";
+    const fs=require("fs");fs.writeFileSync(process.argv[1],JSON.stringify({value:v("DISCORD_BOT_TOKEN")}),{mode:0o600});fs.writeFileSync(process.argv[2],JSON.stringify({value:v("DISCORD_SERVER_ID")}),{mode:0o600});
+    console.log("source has token: "+(v("DISCORD_BOT_TOKEN")?"yes":"no")+", server id: "+(/^\d{17,20}$/.test(v("DISCORD_SERVER_ID"))?"yes":"no"))})' "$TMP/tok.json" "$TMP/srv.json"
+  for k in discord_bot_token:tok discord_server_id:srv; do
+    key=${k%%:*}; f=${k##*:}
+    echo "PUT $key -> $(curl -s -o "$TMP/put.json" -w '%{http_code}' -b "$J" --max-time 15 -X PUT "$SITE/api/admin/settings/$key" -H 'Content-Type: application/json' -H "Origin: $SITE" --data-binary @"$TMP/$f.json") $(node -e 'try{const j=JSON.parse(require("fs").readFileSync(process.argv[1]));console.log(j.error?j.error+" "+(j.message||""):"configured="+j.setting.configured)}catch{}' "$TMP/put.json")"
+  done
+fi
+echo "Test: $(curl -s -b "$J" --max-time 30 -X POST "$SITE/api/admin/settings/discord_bot_token/test" -H "Origin: $SITE")"
+echo "Chatter API: $(curl -s -b "$J" --max-time 15 "$SITE/api/chatter?window=24h" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);console.log("configured="+j.configured+" tickers="+j.tickers.length+" last_read="+j.last_read_at)}catch{console.log(s.slice(0,120))}})')"
