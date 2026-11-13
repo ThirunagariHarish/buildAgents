@@ -5,7 +5,7 @@ NS=unusual-options-detector
 KC="kubectl --kubeconfig ${KCFG} --request-timeout=60s"
 K="$KC -n $NS"
 Q() { $K exec statefulset/$NS-db -c postgres -- sh -c "psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -At -F ' | ' -c \"$1\"" 2>&1; }
-Q "UPDATE jobs SET status='pending', attempts=0, error=NULL, result=NULL WHERE kind='refresh' AND run_key='2026-11-13' AND status='failed' RETURNING kind, run_key, status"
+Q "UPDATE jobs SET status='pending', attempts=0, error=NULL, result=NULL WHERE kind='refresh' AND run_key='2026-11-13' AND status<>'done' RETURNING kind, run_key, status"
 start=$(date +%s)
 for i in $(seq 1 40); do
   s=$(Q "SELECT status FROM jobs WHERE kind='refresh' AND run_key='2026-11-13'")
