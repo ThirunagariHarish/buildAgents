@@ -1,4 +1,4 @@
-run 19 at 2026-11-13T23:01:13Z, commit f449d1a
+run 20 at 2026-11-13T23:02:01Z, commit c266edc
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -8,151 +8,68 @@ GOOGLE_CLIENT_SECRET: missing
 BOX_KUBECONFIG: set; API server port 6443
 token: 36 chars
 spec /api/openapi -> 200 1448026
-spec /api/openapi.json -> 404 302
-spec /openapi.json -> 404 302
-spec /docs/openapi.json -> 404 0
+--- components:   responses: {}   schemas:     Accession Number:       description: SEC EDGAR accession number of the fi
+<anonymous_script>:1
+---
+ ^
+
+SyntaxError: No number after minus sign in JSON at position 1 (line 1 column 2)
+    at JSON.parse (<anonymous>)
+    at [eval]:2:16
+    at runScriptInThisContext (node:internal/vm:219:10)
+    at node:internal/process/execution:451:12
+    at [eval]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:449:60)
+    at evalFunction (node:internal/process/execution:283:30)
+    at evalTypeScript (node:internal/process/execution:295:3)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.22.2
 GET /api/stock/SPY/flow-recent -> 200
-[eval]:2
-  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
-                                                                                                                                                              ^^^^^^
-Return statement is not allowed here
-
-SyntaxError: Illegal return statement
-    at makeContextifyScript (node:internal/vm:194:14)
-    at compileScript (node:internal/process/execution:388:10)
-    at evalTypeScript (node:internal/process/execution:260:22)
-    at node:internal/main/eval_string:71:3
-
-Node.js v24.22.2
+    rows: 50; fields: stock_multi_vol, nbbo_ask_time, price, ewma_nbbo_ask, nbbo_ask, nbbo_bid_size, underlying_price, nbbo_bid_time, tags, upstream_condition_detail, full_name, rule_id, trading_hours, er_time, option_type, rho, size, theo, sector, next_earnings_date, report_flags, multi_vol, no_side_vol, underlying_symbol, executed_at, canceled, strike, theta, expiry, mid_vol, nbbo_ask_size, delta, open_interest, volume, gamma, flow_alert_id, vega, nbbo_bid, id, bid_vol, implied_volatility, ask_vol, ewma_nbbo_bid, premium, option_chain_id, exchange, marketcap, industry_type
+    types: executed_at=string(27) option_chain_id=string nbbo_bid=string nbbo_ask=string exchange=string tags=array upstream_condition_detail=string report_flags=array price=string size=number open_interest=number
 GET /api/option-trades/flow-alerts?limit=5 -> 200
-[eval]:2
-  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
-                                                                                                                                                              ^^^^^^
-Return statement is not allowed here
-
-SyntaxError: Illegal return statement
-    at makeContextifyScript (node:internal/vm:194:14)
-    at compileScript (node:internal/process/execution:388:10)
-    at evalTypeScript (node:internal/process/execution:260:22)
-    at node:internal/main/eval_string:71:3
-
-Node.js v24.22.2
+    rows: 5; fields: price, has_singleleg, alert_rule, underlying_price, all_opening_trades, bid, volume_oi_ratio, rule_id, er_time, rho, start_time, total_size, theo, sector, total_ask_side_prem, next_earnings_date, iv_start, has_sweep, expiry_count, ticker, missing_periscope, iv_end, option_chain, issue_type, strike, has_multileg, theta, expiry, iv, total_premium, delta, trade_count, ask, open_interest, volume, gamma, end_time, vega, id, total_bid_side_prem, has_floor, type, created_at, marketcap
+    types: price=string open_interest=number bid=string ask=string start_time=number(13)
 GET /api/stock/SPY/option-contracts?limit=5 -> 200
-[eval]:2
-  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
-                                                                                                                                                              ^^^^^^
-Return statement is not allowed here
-
-SyntaxError: Illegal return statement
-    at makeContextifyScript (node:internal/vm:194:14)
-    at compileScript (node:internal/process/execution:388:10)
-    at evalTypeScript (node:internal/process/execution:260:22)
-    at node:internal/main/eval_string:71:3
-
-Node.js v24.22.2
+    rows: 5; fields: delta, theta, gamma, open_interest, volume, last_price, option_symbol, prev_oi, ask_volume, bid_volume, nbbo_bid, nbbo_ask, implied_volatility, rho, vega, avg_price, mid_volume, floor_volume, high_price, last_tape_time, low_price, multi_leg_volume, stock_multi_leg_volume, sweep_volume, total_premium, no_side_volume
+    types: nbbo_bid=string nbbo_ask=string open_interest=number
 sample contract id format: SPY999999P99999999
 GET /api/option-contract/SPY261113P00750000/flow?date=2026-11-13 -> 200
-[eval]:2
-  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
-                                                                                                                                                              ^^^^^^
-Return statement is not allowed here
-
-SyntaxError: Illegal return statement
-    at makeContextifyScript (node:internal/vm:194:14)
-    at compileScript (node:internal/process/execution:388:10)
-    at evalTypeScript (node:internal/process/execution:260:22)
-    at node:internal/main/eval_string:71:3
-
-Node.js v24.22.2
+    rows: 500; fields: stock_multi_vol, nbbo_ask_time, price, ewma_nbbo_ask, nbbo_ask, nbbo_bid_size, underlying_price, nbbo_bid_time, tags, upstream_condition_detail, full_name, rule_id, er_time, option_type, rho, size, theo, sector, next_earnings_date, report_flags, multi_vol, no_side_vol, underlying_symbol, executed_at, issue_type, canceled, strike, theta, expiry, mid_vol, nbbo_ask_size, delta, open_interest, volume, gamma, flow_alert_id, vega, nbbo_bid, id, bid_vol, implied_volatility, matched_noti_configs, ask_vol, ewma_nbbo_bid, premium, option_chain_id, exchange, marketcap, industry_type
+    types: executed_at=string(27) option_chain_id=string nbbo_bid=string nbbo_ask=string exchange=string tags=array upstream_condition_detail=string report_flags=array price=string size=number open_interest=number
 GET /api/option-contract/SPY261113P00750000/flow?date=2026-11-06 -> 200
-[eval]:2
-  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
-                                                                                                                                                              ^^^^^^
-Return statement is not allowed here
-
-SyntaxError: Illegal return statement
-    at makeContextifyScript (node:internal/vm:194:14)
-    at compileScript (node:internal/process/execution:388:10)
-    at evalTypeScript (node:internal/process/execution:260:22)
-    at node:internal/main/eval_string:71:3
-
-Node.js v24.22.2
+    rows: 16; fields: delta, canceled, nbbo_bid_size, multi_vol, full_name, price, marketcap, report_flags, tags, nbbo_bid_time, premium, size, theo, theta, bid_vol, stock_multi_vol, expiry, upstream_condition_detail, implied_volatility, open_interest, gamma, next_earnings_date, ewma_nbbo_ask, underlying_symbol, flow_alert_id, vega, strike, industry_type, trading_hours, ewma_nbbo_bid, nbbo_ask_size, nbbo_ask_time, ask_vol, mid_vol, sector, rule_id, id, underlying_price, no_side_vol, nbbo_bid, executed_at, option_chain_id, nbbo_ask, option_type, rho, er_time, volume, exchange
+    types: executed_at=string(27) option_chain_id=string nbbo_bid=string nbbo_ask=string exchange=string tags=array upstream_condition_detail=string report_flags=array price=string size=number open_interest=number
 GET /api/option-contract/SPY261113P00750000/intraday?date=2026-11-13 -> 200
-[eval]:2
-  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
-                                                                                                                                                              ^^^^^^
-Return statement is not allowed here
-
-SyntaxError: Illegal return statement
-    at makeContextifyScript (node:internal/vm:194:14)
-    at compileScript (node:internal/process/execution:388:10)
-    at evalTypeScript (node:internal/process/execution:260:22)
-    at node:internal/main/eval_string:71:3
-
-Node.js v24.22.2
+    rows: 405; fields: close, high, low, open, start_time, trading_hours, premium_mid_side, premium_no_side, premium_ask_side, premium_bid_side, volume_bid_side, volume_ask_side, volume_no_side, volume_mid_side, iv_low, iv_high, avg_price, volume_multi, volume_stock_multi
+    types: start_time=string(20)
 GET /api/option-contract/SPY261113P00750000/historic -> 200
-[eval]:2
-  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
-                                                                                                                                                              ^^^^^^
-Return statement is not allowed here
-
-SyntaxError: Illegal return statement
-    at makeContextifyScript (node:internal/vm:194:14)
-    at compileScript (node:internal/process/execution:388:10)
-    at evalTypeScript (node:internal/process/execution:260:22)
-    at node:internal/main/eval_string:71:3
-
-Node.js v24.22.2
-GET /api/option-trades/full-tape/2026-11-13 -> 302
-[eval]:2
-  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
-                                                                                                                                                              ^^^^^^
-Return statement is not allowed here
-
-SyntaxError: Illegal return statement
-    at makeContextifyScript (node:internal/vm:194:14)
-    at compileScript (node:internal/process/execution:388:10)
-    at evalTypeScript (node:internal/process/execution:260:22)
-    at node:internal/main/eval_string:71:3
-
-Node.js v24.22.2
+    keys: chains, etf_holdings
+full-tape: 302 -> https://storage.googleapis.com/old-db/option-trades/2026-11-12-option_trades.zip
 GET /api/stock/SPY/oi-per-strike -> 200
-[eval]:2
-  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
-                                                                                                                                                              ^^^^^^
-Return statement is not allowed here
-
-SyntaxError: Illegal return statement
-    at makeContextifyScript (node:internal/vm:194:14)
-    at compileScript (node:internal/process/execution:388:10)
-    at evalTypeScript (node:internal/process/execution:260:22)
-    at node:internal/main/eval_string:71:3
-
-Node.js v24.22.2
+    rows: 491; fields: date, strike, call_oi, put_oi
+    types: date=string(10)
 GET /api/stock/SPY/option-chains -> 200
-[eval]:2
-  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
-                                                                                                                                                              ^^^^^^
-Return statement is not allowed here
+    rows: 12738; fields: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
+[eval]:6
+  if(d[0]){const f=d[0];const pick=["executed_at","option_chain_id","nbbo_bid","nbbo_ask","exchange","tags","upstream_condition_detail","report_flags","price","size","date","open_interest","bid","ask","timestamp","start_time"];console.log("    types: "+pick.filter(k=>k in f).map(k=>k+"="+(f[k]===null?"null":Array.isArray(f[k])?"array":typeof f[k])+(k==="executed_at"||k==="date"||k==="timestamp"||k==="start_time"?"("+String(f[k]).length+")":"")).join(" "))}
+                                                                                                                                                                                                                                                                              ^
 
-SyntaxError: Illegal return statement
-    at makeContextifyScript (node:internal/vm:194:14)
-    at compileScript (node:internal/process/execution:388:10)
-    at evalTypeScript (node:internal/process/execution:260:22)
-    at node:internal/main/eval_string:71:3
+TypeError: Cannot use 'in' operator to search for 'executed_at' in SPY261117P00721000
+    at [eval]:6:271
+    at Array.filter (<anonymous>)
+    at [eval]:6:259
+    at [eval]:7:5
+    at runScriptInThisContext (node:internal/vm:219:10)
+    at node:internal/process/execution:451:12
+    at [eval]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:449:60)
+    at evalFunction (node:internal/process/execution:283:30)
+    at evalTypeScript (node:internal/process/execution:295:3)
 
 Node.js v24.22.2
 GET /api/earnings/premarket -> 200
-[eval]:2
-  const t=require("fs").readFileSync(process.argv[1],"utf8");let j;try{j=JSON.parse(t)}catch{console.log("    (not json) "+t.slice(0,80).replace(/\s+/g," "));return}
-                                                                                                                                                              ^^^^^^
-Return statement is not allowed here
-
-SyntaxError: Illegal return statement
-    at makeContextifyScript (node:internal/vm:194:14)
-    at compileScript (node:internal/process/execution:388:10)
-    at evalTypeScript (node:internal/process/execution:260:22)
-    at node:internal/main/eval_string:71:3
-
-Node.js v24.22.2
-rate headers: x-request-id: GOe9FKssWk4r1-gAfsoB x-uw-req-per-minute-remaining: 1000000 x-uw-req-per-minute-reset: 60000 
+    rows: 27; fields: symbol, source, country_code, full_name, sector, reaction, is_s_p_500, has_options, marketcap, report_date, report_time, expected_move_perc, country_name, continent, ending_fiscal_quarter, expected_move, street_mean_est, actual_eps, pre_earnings_date, pre_earnings_close, post_earnings_date, post_earnings_close
+    types: 
+rate headers: x-request-id: GOe9IApCIxDU-M4Ac2uD x-uw-req-per-minute-remaining: 1000000 x-uw-req-per-minute-reset: 60000 
