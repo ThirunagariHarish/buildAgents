@@ -1,4 +1,4 @@
-run 32 at 2026-11-14T22:07:25Z, commit 5fbd424
+run 33 at 2026-11-14T22:11:07Z, commit c3bb639
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -7,12 +7,11 @@ GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
 ## sync
-Box copy: HEAD 4e4ef9c, uncommitted files 0
-GitHub main 2c5fd13; branch 369a229
-GitHub main is now 369a229
-Box copy moved to 369a229
+Box copy: HEAD 369a229, uncommitted files 0
+GitHub main ad8a457; branch 369a229
+STOP: the branch is not on top of GitHub main
 ## wait for the image pin of 369a229
-pinned after ~180s
+pinned after ~30s
 ## deploy
 == code ==
 == Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
@@ -32,11 +31,9 @@ health: {"status":"ok"}
 image: 369a229
   job.batch/history-backfill created
 job: failed
-pod: Error 0;Error 0;Error 0;
+pod: OOMKilled 0;OOMKilled 0;OOMKilled 0;
 log:
-Found 3 pods, using pod/history-backfill-ffk8c
-{"msg":"invalid environment","issues":"FIRST_ADMIN_EMAIL: required in production; FIRST_ADMIN_PASSWORD: required in production"}
-{"msg":"backfill crashed","error":"[\n  {\n    \"code\": \"custom\",\n    \"path\": [\n      \"FIRST_ADMIN_EMAIL\"\n    ],\n    \"message\": \"required in production\"\n  },\n  {\n    \"code\": \"custom\",\n    \"path\": [\n      \"FIRST_ADMIN_PASSWORD\"\n    ],\n    \"message\": \"required in production\"\n  }\n]"}
+Found 3 pods, using pod/history-backfill-hqcrg
 memory: 
 stats days: 1 | 2026-11-13 | 2026-11-13
 historical prints: 0; quotes: 0; oi rows: 90940
