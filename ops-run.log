@@ -1,4 +1,4 @@
-run 30 at 2026-11-14T21:20:26Z, commit c57beae
+run 31 at 2026-11-14T21:55:14Z, commit 2465348
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,25 +6,7 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-headers on a 1-row call:
-x-uw-req-per-minute-remaining: 1000000
-x-uw-req-per-minute-reset: 60000
-GET /api/congress/recent-trades -> 200 rows 1; fields name,ticker,issuer,is_active,transaction_date,notes,txn_type,politician_id,member_type,reporter,amounts,filed_at_date
-GET /api/insider/transactions -> 200 rows 1; fields id,ticker,amount,transactions,price,sector,transaction_date,is_officer,is_ten_percent_owner,is_s_p_500,ids,is_director,owner_name,reporter_is_public_company,marketcap,next_earnings_date
-GET /api/institutions -> 200 rows 1; fields name,date,description,tags,cik,filing_date,short_name,people,put_value,call_value,share_value,website,founder_img_url,logo_url,is_hedge_fund,name_changes
-GET /api/institution/BERKSHIRE%20HATHAWAY%20INC/holdings -> 200 rows 1; fields close,value,date,ticker,units,full_name,sector,security_type,avg_price,shares_outstanding,put_call,price_change_since_first_buy_perc,avg_price_change_perc,historical_units,first_buy,units_change
-GET /api/market/economic-calendar -> 200 rows 36; fields type,time,prev,event,forecast,reported_period
-GET /api/darkpool/recent -> 200 rows 1; fields size,ticker,price,volume,executed_at,canceled,premium,sale_cond_codes,nbbo_ask,nbbo_bid,ext_hour_sold_codes,market_center,nbbo_ask_quantity,nbbo_bid_quantity,tracking_id,trade_code
-GET /api/etfs/SPY/holdings -> 200 rows 250; fields close,high,low,name,open,type,ticker,updated,weight,country_code,etf,volume,sector,call_volume,put_volume,isin
-GET /api/shorts/NVDA/interest-float -> 200 rows 17; fields symbol,created_at,market_date,days_to_cover_returned,percent_returned,si_float_returned,total_float_returned
-GET /api/news/headlines -> 200 rows 1; fields meta,source,created_at,tags,tickers,headline,is_major,sentiment
-GET /api/stock/NVDA/info -> 200 rows 1; fields symbol,logo,beta,full_name,sector,issue_type,outstanding,marketcap_size,has_options,announce_time,marketcap,next_earnings_date,uw_tags,avg30_volume,short_name,short_description
-GET /api/stock/NVDA/ohlc/1d -> 200 rows 1; fields close,date,high,low,market_time,open,total_volume,volume
-GET /api/screener/stocks -> 200 rows 1; fields gex_charm_per_one_percent_move_vol,dividend_yield,ask,put_call_ratio,beta,iv30d_1w,relative_volume,avg_7_day_call_volume,one_month_close,volatility_5,distance_to_52w_low_30d_stddevs,gex_net_change,insider_sell_volume_6m,three_month_perc,volatility_365,implied_move_perc_5
-GET /api/market/market-tide -> 200 rows 105; fields timestamp,date,net_call_premium,net_put_premium,net_volume
-GET /api/stock/NVDA/greek-exposure -> 200 rows 250; fields date,call_charm,call_delta,call_vanna,put_charm,put_delta,put_vanna,call_gamma,put_gamma
-GET /api/seasonality/NVDA/monthly -> 200 rows 12; fields month,ticker,years,sector,max_change,min_change,marketcap,avg_change,median_change,positive_closes,positive_months_perc
-ingest runs by day:
-2026-11-13 | ok | 3 | 0
-2026-11-13 | skipped_no_key | 92 | 0
-worker memory: unusual-options-detector-worker-95bc7fd88-22l96   2m           92Mi            
+uncompressed MB 391, rows 730138, first 2026-11-12T12:30:00.197Z, last 2026-11-12T14:36:09.572Z
+rows more than 1s behind the running max: 723433; more than 60s behind: 278729; worst lag s 7198; created_at inversions >1s: 723137
+rows per 10 min (UTC): 12:30=12665 14:30=611483 12:40=6032 12:50=4938 13:00=7375 13:10=12705 13:20=8112 13:30=7457 13:50=14447 13:40=8507 14:00=11235 14:10=16123 14:20=9059
+size: content-length: 2035236185
