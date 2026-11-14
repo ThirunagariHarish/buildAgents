@@ -1,4 +1,4 @@
-run 31 at 2026-11-14T21:55:14Z, commit 2465348
+run 32 at 2026-11-14T22:07:25Z, commit 5fbd424
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,7 +6,38 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-uncompressed MB 391, rows 730138, first 2026-11-12T12:30:00.197Z, last 2026-11-12T14:36:09.572Z
-rows more than 1s behind the running max: 723433; more than 60s behind: 278729; worst lag s 7198; created_at inversions >1s: 723137
-rows per 10 min (UTC): 12:30=12665 14:30=611483 12:40=6032 12:50=4938 13:00=7375 13:10=12705 13:20=8112 13:30=7457 13:50=14447 13:40=8507 14:00=11235 14:10=16123 14:20=9059
-size: content-length: 2035236185
+## sync
+Box copy: HEAD 4e4ef9c, uncommitted files 0
+GitHub main 2c5fd13; branch 369a229
+GitHub main is now 369a229
+Box copy moved to 369a229
+## wait for the image pin of 369a229
+pinned after ~180s
+## deploy
+== code ==
+== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
+== tidy: deploy Jobs for an image that was never built ==
+== apply ==
+job gate-369a229: complete
+job backup-369a229: complete
+job migrate-369a229: complete
+job role-check-369a229: complete
+unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
+unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
+images now: unusual-options-detector=369a229 unusual-options-detector-worker=369a229 
+== Google keys from Doppler ==
+== the live site ==
+health: {"status":"ok"}
+== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
+image: 369a229
+  job.batch/history-backfill created
+job: failed
+pod: Error 0;Error 0;Error 0;
+log:
+Found 3 pods, using pod/history-backfill-ffk8c
+{"msg":"invalid environment","issues":"FIRST_ADMIN_EMAIL: required in production; FIRST_ADMIN_PASSWORD: required in production"}
+{"msg":"backfill crashed","error":"[\n  {\n    \"code\": \"custom\",\n    \"path\": [\n      \"FIRST_ADMIN_EMAIL\"\n    ],\n    \"message\": \"required in production\"\n  },\n  {\n    \"code\": \"custom\",\n    \"path\": [\n      \"FIRST_ADMIN_PASSWORD\"\n    ],\n    \"message\": \"required in production\"\n  }\n]"}
+memory: 
+stats days: 1 | 2026-11-13 | 2026-11-13
+historical prints: 0; quotes: 0; oi rows: 90940
+db size: 21 MB
