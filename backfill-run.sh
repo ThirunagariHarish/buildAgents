@@ -8,9 +8,9 @@ ET=$(TZ=America/New_York date +%H%M); DOW=$(TZ=America/New_York date +%u)
 if [ "$DOW" -le 5 ] && [ "$ET" -ge 0925 ] && [ "$ET" -le 1020 ]; then echo "STOP: not during the morning window"; exit 1; fi
 IMG=$($K get deploy $NS-worker -o jsonpath='{.spec.template.spec.containers[0].image}')
 echo "image: ${IMG##*:}" | cut -c1-14
-[ -f /tmp/pinchk/k8s/backfill-job.yaml ] || { rm -rf /tmp/pinchk; git clone -q --depth 3 "https://x-access-token:${BOX_GITHUB_TOKEN}@github.com/ThirunagariHarish/unusual-options-detector.git" /tmp/pinchk; }
+MAN="$PWD/backfill-job.yaml"
 $K delete job history-backfill --ignore-not-found --wait=true >/dev/null 2>&1
-sed -e "s|IMAGE_PLACEHOLDER|$IMG|" -e "s|SESSIONS_PLACEHOLDER|$SESSIONS|" /tmp/pinchk/k8s/backfill-job.yaml | $KC apply -f - 2>&1 | sed 's/^/  /'
+sed -e "s|IMAGE_PLACEHOLDER|$IMG|" -e "s|SESSIONS_PLACEHOLDER|$SESSIONS|" "$MAN" | $KC apply -f - 2>&1 | sed 's/^/  /'
 for i in $(seq 1 $((WAIT*4))); do
   s=$($K get job history-backfill -o jsonpath='{.status.succeeded}/{.status.failed}' 2>/dev/null)
   [ "${s%%/*}" = 1 ] && { echo "job: succeeded"; break; }
