@@ -1,4 +1,4 @@
-run 28 at 2026-11-13T23:48:56Z, commit 575c4db
+run 29 at 2026-11-14T00:06:21Z, commit 4a470ee
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,24 +6,45 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-pod pod/unusual-options-detector-worker-744655ff57-lzlj8
-worker restarts 1 last {"terminated":{"containerID":"containerd://072a9c82a31887aa16977d063793850caa844478640c2be687d362c97bbba198","exitCode":139,"finishedAt":"2026-11-13T23:35:52Z","reason":"Error","startedAt":"2026-11-13T23:21:13Z"}}
-previous log (last 15, no chatter):
-[1:0x278ee000]   878926 ms: Mark-Compact (reduce) 499.1 (509.7) -> 496.5 (507.4) MB, pooled: 0 MB, 8.46 / 0.01 ms  (+ 773.3 ms in 0 steps since start of marking, biggest step 0.0 ms, walltime since start of marking 1083 ms) (average mu = 0.370, current mu
-
-<--- JS stacktrace --->
-
-FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
------ Native stack trace -----
-
- 1: 0xe48c12 node::OOMErrorHandler(char const*, v8::OOMDetails const&) [node]
- 2: 0x1249780 v8::Utils::ReportOOMFailure(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [node]
- 3: 0x1249a57 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [node]
- 4: 0x1478965  [node]
- 5: 0x1478993  [node]
- 6: 0x1491a6a  [node]
- 7: 0x1494c38  [node]
- 8: 0x1cfd6e1  [node]
-running | 1 | 2026-11-13 23:34:43.823+00 | 
-0
-0
+node memory: srv1349789=32865080Ki vps2-control=32865084Ki 
+  NAME           CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)   
+  srv1349789     473m         5%       9606Mi          29%         
+  vps2-control   355m         4%       9718Mi          30%         
+## sync
+Box copy: HEAD 5d8d8bc, uncommitted files 0
+GitHub main 2cdc946; branch 4e4ef9c
+GitHub main is now 4e4ef9c
+Box copy moved to 4e4ef9c
+## wait for the image pin of 4e4ef9c
+pinned after ~180s
+## deploy
+== code ==
+== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
+== tidy: deploy Jobs for an image that was never built ==
+== apply ==
+job gate-4e4ef9c: complete
+job backup-4e4ef9c: complete
+job migrate-4e4ef9c: complete
+job role-check-4e4ef9c: complete
+unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
+unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
+images now: unusual-options-detector=4e4ef9c unusual-options-detector-worker=4e4ef9c 
+== Google keys from Doppler ==
+== the live site ==
+health: {"status":"degraded"}
+== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
+## refresh
+UPDATE 0
+after 451s:
+done | 2 |  | {"oi_rows": 90940, "stats_rows": 17, "events_rows": 337, "trades_fetched": 728307, "dropped_condition": 0}
+2026-11-13 | 17 | 728307 | 1331708524
+NVDA | 151975 | 976960
+SPY | 145904 | 784826
+QQQ | 116450 | 583881
+TSLA | 96407 | 364316
+AAPL | 46752 | 219919
+2026-11-13 | unusual_whales | 90940
+vendor | 337 | 2026-11-13 | 2026-12-24
+worker:       1 "msg":"admin password ok"       1 "msg":"seed done"       1 "msg":"worker started" 
+worker memory: unusual-options-detector-worker-95bc7fd88-22l96   39m          679Mi           
+restarts: backup-4e4ef9c-2sgrb 0;backup-5d8d8bc-7m78b 0;backup-9748dd8-8h6bm 0;backup-e13c9a2-p5qrc 0;gate-4e4ef9c-c6zqk 0;gate-5d8d8bc-lrvmr 0;gate-9748dd8-8bg6h 0;gate-e13c9a2-qq89k 0;migrate-4e4ef9c-bbbr6 0;migrate-5d8d8bc-78dld 0;migrate-9748dd8-8qvcp 0;migrate-e13c9a2-xft7h 0;role-check-4e4ef9c-w8xgx 0;role-check-5d8d8bc-wkt8z 0;role-check-9748dd8-spm7l 0;role-check-e13c9a2-bzkcf 0;unusual-options-detector-76bbf477cc-c6jgd 0;unusual-options-detector-db-0 0;unusual-options-detector-worker-95bc7fd88-22l96 0;
