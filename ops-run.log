@@ -1,4 +1,4 @@
-run 37 at 2026-11-15T00:32:04Z, commit a0b854a
+run 38 at 2026-11-15T00:37:12Z, commit 1172a0d
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,14 +6,115 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-image: 12d3aa8
-  job.batch/history-backfill created
+## sync
+Box copy: HEAD 12d3aa8, uncommitted files 0
+GitHub main 6507570; branch 6633e6f
+GitHub main is now 6633e6f
+Box copy moved to 6633e6f
+## wait for the image pin of 6633e6f
+pinned after ~210s
+## deploy
+== code ==
+== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
+== tidy: deploy Jobs for an image that was never built ==
+== apply ==
+job gate-6633e6f: complete
+job backup-6633e6f: complete
+job migrate-6633e6f: complete
+job role-check-6633e6f: complete
+unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
+unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
+images now: unusual-options-detector=6633e6f unusual-options-detector-worker=6633e6f 
+== Google keys from Doppler ==
+== the live site ==
+health: {"status":"ok"}
+== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
+congress recent-trades -> 200
+  top: data,page,total_pages; rows 200
+  name:string ticker:string/null issuer:string is_active:boolean notes:string transaction_date:string txn_type:string politician_id:string reporter:string amounts:string filed_at_date:string member_type:string
+  example member_type: "house"
+  example txn_type: "Buy"
+  example amounts: "$1,001 - $15,000"
+  example transaction_date: "2026-11-05"
+  example filed_at_date: "2026-11-13"
+  example is_active: true
+  txn_type values: {"Buy":87,"Sell":112,"Exchange":1}
+  member_type values: {"house":196,"senate":4}
+  amounts values: {"$1,001 - $15,000":138,"$250,001 - $500,000":10,"$100,001 - $250,000":7,"$15,001 - $50,000":32,"$344.99":1,"$50,001 - $100,000":9,"$5,000,001 - $25,000,000":2,"$710.52":1}
+  null tickers: 28; dates 2026-10-13 .. 2026-11-13
+congress page 2 -> 200
+  top: data,page,total_pages; rows 200
+  name:string ticker:string/null issuer:string is_active:boolean notes:string transaction_date:string txn_type:string politician_id:string reporter:string amounts:string filed_at_date:string member_type:string
+insider transactions -> 200
+  top: data,cursor,has_more; rows 200
+  id:string ticker:string amount:number transactions:number price:string/null sector:string transaction_date:string is_officer:boolean is_ten_percent_owner:boolean is_s_p_500:boolean ids:array(string) is_director:boolean owner_name:string reporter_is_public_company:boolean marketcap:string next_earnings_date:string/null filing_date:string stock_price:string formtype:string transaction_code:string security_title:null/string is_10b5_1:boolean reporter_cik:string security_ad_code:null/string shares_owned_after:null/number officer_title:null/string shares_owned_before:null/number director_indirect:null/string natureofownership:null/string date_excercisable:null price_excercisable:null expiration_date:null
+  example transaction_code: "S"
+  example security_ad_code: null
+  example amount: -46321
+  example price: "14.0300"
+  example transactions: 1
+  example formtype: "144"
+  example transaction_date: "2026-11-27"
+  example filing_date: "2026-11-13"
+  example is_10b5_1: false
+  example ids: ["60be264e-123f-4b50-a11d-df88951d77f4"]
+  codes: {"S":132,"J":4,"A":11,"F":18,"P":15,"M":11,"G":9} ad: {"null":93,"ND":65,"NA":42} form: {"4":106,"144":93,"4/A":1}
+  top keys: data,cursor,has_more; cursor {"next":"WyIyMDI9LTExLTEzIiwiMjAyNi9xMS9xMiIsImM9NDZkZjZjLTMwNDctNGM9Yi99OTljLTI9ZmQ9ZDNmYTQ9NiJd","has_more":true}; filing dates 2026-11-13 .. 2026-11-13; negative amounts 158
+insider purchases -> 200
+  rows 200; filing dates 2026-11-10 .. 2026-11-13; codes P
+holdings (berkshire by cik) -> 200
+  top: data; rows 30
+  close:string value:number date:string ticker:string units:number full_name:string/null sector:string/null security_type:string avg_price:string/null shares_outstanding:string/null put_call:null price_change_since_first_buy_perc:string/null avg_price_change_perc:string/null historical_units:array(number) first_buy:string units_change:number price_first_buy:string change_perc:string/null perc_of_share_value:number perc_of_total:number/null
+  example date: "2026-06-30"
+  example security_type: "Share"
+  example put_call: null
+  example perc_of_total: 0.01561703418760081
+  example units: 227917808
+  example units_change: 0
+  example value: 65950296923
+  example first_buy: "2016-03-31"
+  example historical_units: [227917808,227917808,227917808,238212764,280000000,300000000,300000000,300000000
+institution by cik -> 200
+  top: data; rows 1
+  name:string date:string description:string tags:array(string) cik:string filing_date:string short_name:string people:array(string) put_value:string call_value:string share_value:string website:null founder_img_url:string logo_url:string is_hedge_fund:boolean name_changes:array() buy_value:string sell_value:string succession:null fund_value:string total_value:string warrant_value:string pfd_value:string debt_value:string share_holdings:string call_holdings:string put_holdings:string warrant_holdings:string fund_holdings:string pfd_holdings:string debt_holdings:string
+  example date: "2026-06-30"
+  example filing_date: "2026-08-14"
+  example total_value: "299253556246"
+  example share_value: "299253556246"
+  example is_hedge_fund: false
+  example people: ["Greg Abel","Warren Buffett","Charlie Munger"]
+  example tags: ["known","activist","value_investor"]
+0001067983 200 rows 1 | BERKSHIRE HATHAWAY INC [0001067983] filed 2026-08-14 for 2026-06-30
+0001350694 200 rows 1 | BRIDGEWATER ASSOCIATES, LP [0001350694] filed 2026-08-14 for 2026-06-30
+0001336528 200 rows 0 | 
+0001649339 200 rows 0 | 
+0001656456 200 rows 1 | APPALOOSA LP [0001656456] filed 2026-08-14 for 2026-06-30
+0001536411 200 rows 1 | DUQUESNE FAMILY OFFICE LLC [0001536411] filed 2026-08-14 for 2026-06-30
+0001061768 200 rows 1 | BAUPOST GROUP LLC/MA [0001061768] filed 2026-11-13 for 2026-09-30
+0001040273 200 rows 1 | THIRD POINT LLC [0001040273] filed 2026-08-14 for 2026-06-30
+0001079114 200 rows 0 | 
+0001167483 200 rows 1 | TIGER GLOBAL MANAGEMENT LLC [0001167483] filed 2026-08-14 for 2026-06-30
+0001135730 200 rows 1 | COATUE MANAGEMENT LLC [0001135730] filed 2026-08-14 for 2026-06-30
+0001037389 200 rows 1 | RENAISSANCE TECHNOLOGIES LLC [0001037389] filed 2026-11-12 for 2026-09-30
+0001029160 200 rows 1 | SOROS FUND MANAGEMENT LLC [0001029160] filed 2026-11-13 for 2026-09-30
+0001061165 200 rows 1 | LONE PINE CAPITAL LLC [0001061165] filed 2026-08-14 for 2026-06-30
+0001103804 200 rows 1 | VIKING GLOBAL INVESTORS LP [0001103804] filed 2026-08-14 for 2026-06-30
+0000949509 200 rows 1 | OAKTREE CAPITAL MANAGEMENT LP [0000949509] filed 2026-08-14 for 2026-06-30
+0001697748 200 rows 2 | ARK INVESTMENT MANAGEMENT LLC [0001697748] filed 2026-11-13 for 2026-09-30 ; SPARK INVESTMENT MANAGEMENT LLC [0001554871] filed 2026-11-13 for 2026-09-30
+0000921669 200 rows 1 | ICAHN CARL C [0000921669] filed 2026-11-13 for 2026-09-30
+0001709323 200 rows 1 | HIMALAYA CAPITAL MANAGEMENT LLC [0001709323] filed 2026-08-14 for 2026-06-30
+0001112520 200 rows 1 | AKRE CAPITAL MANAGEMENT LLC [0001112520] filed 2026-11-13 for 2026-09-30
+job: succeeded= failed= active=1
 pod: Running 0;
+sessions logged: 7
 log:
-{"msg":"backfill session","date":"2026-08-21","rows":5248886,"window_prints":459352,"dropped_condition":1,"dropped_universe":457265,"stats_rows":17,"prints_stored":2086,"quotes_stored":0,"oi_rows":884,"seconds":73}
 {"msg":"backfill session","date":"2026-08-24","rows":4880732,"window_prints":507479,"dropped_condition":2,"dropped_universe":505051,"stats_rows":17,"prints_stored":2426,"quotes_stored":0,"oi_rows":1031,"seconds":78}
 {"msg":"backfill session","date":"2026-08-25","rows":4074335,"window_prints":394229,"dropped_condition":1,"dropped_universe":392302,"stats_rows":17,"prints_stored":1926,"quotes_stored":0,"oi_rows":815,"seconds":59}
-memory: history-backfill-4xp7n                             1038m        91Mi            
-stats days: 5 | 2026-08-21 | 2026-11-13
-historical prints: 16188; quotes: 21865; oi rows: 96482
-db size: 35 MB
+{"msg":"backfill session","date":"2026-08-26","rows":4487761,"window_prints":449325,"dropped_condition":0,"dropped_universe":447040,"stats_rows":17,"prints_stored":2285,"quotes_stored":0,"oi_rows":867,"seconds":61}
+{"msg":"backfill session","date":"2026-08-27","rows":5341473,"window_prints":607989,"dropped_condition":1,"dropped_universe":604452,"stats_rows":17,"prints_stored":3536,"quotes_stored":0,"oi_rows":1028,"seconds":72}
+{"msg":"backfill session","date":"2026-08-28","rows":6179680,"window_prints":484570,"dropped_condition":0,"dropped_universe":482675,"stats_rows":17,"prints_stored":1895,"quotes_stored":0,"oi_rows":828,"seconds":80}
+{"msg":"backfill session","date":"2026-08-31","rows":4959859,"window_prints":463484,"dropped_condition":0,"dropped_universe":461755,"stats_rows":17,"prints_stored":1729,"quotes_stored":0,"oi_rows":833,"seconds":66}
+stats days: 9 | 2026-08-21 | 2026-11-13
+historical prints: 25633; quotes: 21865; oi rows: 100038
+signals: 0 | 
+db size: 42 MB
