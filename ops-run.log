@@ -1,4 +1,4 @@
-run 44 at 2026-11-15T01:24:35Z, commit 2ad7793
+run 45 at 2026-11-15T01:58:41Z, commit 13eac67
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,40 +6,73 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-## sync
-Box copy: HEAD a6fe03a, uncommitted files 0
-GitHub main d93e4a4; branch d0006b7
-GitHub main is now d0006b7
-Box copy moved to d0006b71
-## wait for the image pin of d0006b7
-pinned after ~180s
-## deploy
-== code ==
-== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
-== tidy: deploy Jobs for an image that was never built ==
-== apply ==
-job gate-d0006b7: complete
-job backup-d0006b7: complete
-job migrate-d0006b7: complete
-job role-check-d0006b7: complete
-unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
-unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
-images now: unusual-options-detector=d0006b7 unusual-options-detector-worker=d0006b7 
-== Google keys from Doppler ==
-== the live site ==
-health: {"status":"ok"}
-== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
-job: succeeded= failed= active=1
-pod: Running 0;
-sessions logged: 32
-log:
-{"msg":"backfill session","date":"2026-09-29","rows":4759971,"window_prints":464679,"dropped_condition":0,"dropped_universe":462415,"stats_rows":17,"prints_stored":2264,"quotes_stored":16618,"oi_rows":923,"seconds":109}
-{"msg":"backfill session","date":"2026-09-30","rows":5223669,"window_prints":512713,"dropped_condition":0,"dropped_universe":509986,"stats_rows":17,"prints_stored":2727,"quotes_stored":17451,"oi_rows":1071,"seconds":113}
-{"msg":"backfill session","date":"2026-10-01","rows":5718492,"window_prints":506520,"dropped_condition":0,"dropped_universe":503460,"stats_rows":17,"prints_stored":3060,"quotes_stored":17430,"oi_rows":1096,"seconds":126}
-{"msg":"backfill session","date":"2026-10-02","rows":5999365,"window_prints":727340,"dropped_condition":0,"dropped_universe":722666,"stats_rows":17,"prints_stored":4674,"quotes_stored":19589,"oi_rows":1579,"seconds":135}
-{"msg":"backfill session","date":"2026-10-05","rows":5306520,"window_prints":530467,"dropped_condition":1,"dropped_universe":528064,"stats_rows":17,"prints_stored":2402,"quotes_stored":16799,"oi_rows":1018,"seconds":121}
-{"msg":"backfill session","date":"2026-10-06","rows":4882416,"window_prints":507396,"dropped_condition":0,"dropped_universe":504437,"stats_rows":17,"prints_stored":2959,"quotes_stored":17062,"oi_rows":1219,"seconds":110}
-stats days: 34 | 2026-08-21 | 2026-11-13
-historical prints: 103395; quotes: 443926; oi rows: 129427
-signals: 0 | 
-db size: 195 MB
+pod found: yes
+https://assets.ark-funds.com/fund-documents/funds-etf-csv/ARK_INNOVATION_ETF_ARKK_HOLDINGS.csv
+Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
+  200 application/octet-stream bytes 6031
+  header: date,fund,company,ticker,cusip,shares,market value ($),weight (%)
+  row1: 11/13/2026,ARKK,TESLA INC,TSLA,88160R101,"2,196,770","$873,106,236.50",11.98%
+  rows 45 last: 11/13/2026,ARKK,BRERA HOLDINGS PLC WTS,,BREADUMMY,"431,626","$483,420.78",0.01%
+https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2026-08-01
+Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
+  200 application/csv bytes 1195
+  header: observation_date,DGS10
+  row1: 2026-08-03,4.70
+  rows 76 last: 2026-11-12,5.10
+https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFEDTARU&cosd=2026-08-01
+Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
+  200 application/csv bytes 1722
+  header: observation_date,DFEDTARU
+  row1: 2026-08-01,3.75
+  rows 108 last: 2026-11-14,4.00
+https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFEDTARL&cosd=2026-08-01
+Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
+  200 application/csv bytes 1722
+  header: observation_date,DFEDTARL
+  row1: 2026-08-01,3.50
+  rows 108 last: 2026-11-14,3.75
+https://www.federalreserve.gov/feeds/press_monetary.xml
+Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
+  200 text/xml bytes 9758
+  items 15; first title: ?; link: ?; root: rss
+https://aswathdamodaran.blogspot.com/feeds/posts/default
+Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
+  200 application/atom+xml; charset=UTF-8 bytes 1352580
+  items 25; first title: ?; link: ?; root: feed
+https://awealthofcommonsense.com/feed/
+Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
+  200 application/rss+xml; charset=UTF-8 bytes 27010
+  items 10; first title: Living a Better Life Now; link: https://awealthofcommonsense.com/2026/11/living-a-better-life-now/; root: rss
+https://ofdollarsanddata.com/feed/
+Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
+  200 application/rss+xml; charset=UTF-8 bytes 285907
+  items 10; first title: The Gamble of Your Life; link: https://ofdollarsanddata.com/the-gamble-of-your-life/; root: rss
+https://www.visualcapitalist.com/feed/
+Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
+  200 application/rss+xml; charset=UTF-8 bytes 209359
+  items 10; first title: Mapped: The Most Popular Boys&#8217; Names in Every U.S. State; link: https://www.visualcapitalist.com/mapped-most-popular-boys-baby-name-every-state/; root: rss
+https://fs.blog/feed/
+Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
+  200 application/rss+xml; charset=UTF-8 bytes 867550
+  items 20; first title: Jon McNeill: How Elon Musk Makes Decisions; link: https://fs.blog/knowledge-project-podcast/jon-mcneill/; root: rss
+https://www.bridgewater.com/research-and-insights.rss
+Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
+  200 application/xml;charset=UTF-8 bytes 2594
+  items 3; first title: Carbon Pricing’s Impact on Global Industry Is Quietly Growing; link: https://www.bridgewater.com/research-and-insights/carbon-pricings-impact-on-global-industr; root: rss
+https://collabfund.com/blog/feed/
+Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
+  404 text/html; charset=utf-8 bytes 1476
+  items 0; first title: ?; link: ?; root: ?
+darkpool NVDA -> 200
+  rows 500: size:number ticker:string price:string volume:number executed_at:string premium:string canceled:boolean sale_cond_codes:null nbbo_bid:string nbbo_ask:string ext_hour_sold_codes:string market_center:string nbbo_ask_quantity:number nbbo_bid_quantity:number tracking_id:number trade_code:null trade_settlement:string trf_executed_at:string
+  row0: executed_at="2026-11-14T00:59:37Z" market_center="L" canceled=false ext_hour_sold_codes="extended_hours_trade" sale_cond_codes=null trade_settlement="regular"
+  row499: executed_at="2026-11-13T21:45:05Z" market_center="L" canceled=false ext_hour_sold_codes="extended_hours_trade" sale_cond_codes=null trade_settlement="regular"
+  days in 500 rows: 2026-11-14,2026-11-13; price/size/premium types string/number/string
+darkpool NVDA by date -> 200
+  rows 500 2026-11-14T00:59:37 .. 2026-11-13T21:45:05
+greek-exposure NVDA -> 200
+  rows 250: date:string call_charm:string call_delta:string call_vanna:string put_charm:string put_delta:string put_vanna:string call_gamma:string put_gamma:string
+  row0: date="2025-11-17"
+  row249: date="2026-11-13"
+etf holdings QQQ -> 200
+  rows 104; weight sum 99.86; max 8.417; types stock,cash; null names 101
