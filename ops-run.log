@@ -1,4 +1,4 @@
-run 45 at 2026-11-15T01:58:41Z, commit 13eac67
+run 46 at 2026-11-15T02:25:57Z, commit 699c2e6
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,73 +6,67 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-pod found: yes
-https://assets.ark-funds.com/fund-documents/funds-etf-csv/ARK_INNOVATION_ETF_ARKK_HOLDINGS.csv
-Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
-  200 application/octet-stream bytes 6031
-  header: date,fund,company,ticker,cusip,shares,market value ($),weight (%)
-  row1: 11/13/2026,ARKK,TESLA INC,TSLA,88160R101,"2,196,770","$873,106,236.50",11.98%
-  rows 45 last: 11/13/2026,ARKK,BRERA HOLDINGS PLC WTS,,BREADUMMY,"431,626","$483,420.78",0.01%
-https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2026-08-01
-Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
-  200 application/csv bytes 1195
-  header: observation_date,DGS10
-  row1: 2026-08-03,4.70
-  rows 76 last: 2026-11-12,5.10
-https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFEDTARU&cosd=2026-08-01
-Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
-  200 application/csv bytes 1722
-  header: observation_date,DFEDTARU
-  row1: 2026-08-01,3.75
-  rows 108 last: 2026-11-14,4.00
-https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFEDTARL&cosd=2026-08-01
-Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
-  200 application/csv bytes 1722
-  header: observation_date,DFEDTARL
-  row1: 2026-08-01,3.50
-  rows 108 last: 2026-11-14,3.75
-https://www.federalreserve.gov/feeds/press_monetary.xml
-Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
-  200 text/xml bytes 9758
-  items 15; first title: ?; link: ?; root: rss
-https://aswathdamodaran.blogspot.com/feeds/posts/default
-Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
-  200 application/atom+xml; charset=UTF-8 bytes 1352580
-  items 25; first title: ?; link: ?; root: feed
-https://awealthofcommonsense.com/feed/
-Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
-  200 application/rss+xml; charset=UTF-8 bytes 27010
-  items 10; first title: Living a Better Life Now; link: https://awealthofcommonsense.com/2026/11/living-a-better-life-now/; root: rss
-https://ofdollarsanddata.com/feed/
-Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
-  200 application/rss+xml; charset=UTF-8 bytes 285907
-  items 10; first title: The Gamble of Your Life; link: https://ofdollarsanddata.com/the-gamble-of-your-life/; root: rss
-https://www.visualcapitalist.com/feed/
-Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
-  200 application/rss+xml; charset=UTF-8 bytes 209359
-  items 10; first title: Mapped: The Most Popular Boys&#8217; Names in Every U.S. State; link: https://www.visualcapitalist.com/mapped-most-popular-boys-baby-name-every-state/; root: rss
-https://fs.blog/feed/
-Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
-  200 application/rss+xml; charset=UTF-8 bytes 867550
-  items 20; first title: Jon McNeill: How Elon Musk Makes Decisions; link: https://fs.blog/knowledge-project-podcast/jon-mcneill/; root: rss
-https://www.bridgewater.com/research-and-insights.rss
-Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
-  200 application/xml;charset=UTF-8 bytes 2594
-  items 3; first title: Carbon Pricing’s Impact on Global Industry Is Quietly Growing; link: https://www.bridgewater.com/research-and-insights/carbon-pricings-impact-on-global-industr; root: rss
-https://collabfund.com/blog/feed/
-Defaulted container "worker" out of: worker, wait-for-db (init), wait-for-gates (init)
-  404 text/html; charset=utf-8 bytes 1476
-  items 0; first title: ?; link: ?; root: ?
-darkpool NVDA -> 200
-  rows 500: size:number ticker:string price:string volume:number executed_at:string premium:string canceled:boolean sale_cond_codes:null nbbo_bid:string nbbo_ask:string ext_hour_sold_codes:string market_center:string nbbo_ask_quantity:number nbbo_bid_quantity:number tracking_id:number trade_code:null trade_settlement:string trf_executed_at:string
-  row0: executed_at="2026-11-14T00:59:37Z" market_center="L" canceled=false ext_hour_sold_codes="extended_hours_trade" sale_cond_codes=null trade_settlement="regular"
-  row499: executed_at="2026-11-13T21:45:05Z" market_center="L" canceled=false ext_hour_sold_codes="extended_hours_trade" sale_cond_codes=null trade_settlement="regular"
-  days in 500 rows: 2026-11-14,2026-11-13; price/size/premium types string/number/string
-darkpool NVDA by date -> 200
-  rows 500 2026-11-14T00:59:37 .. 2026-11-13T21:45:05
-greek-exposure NVDA -> 200
-  rows 250: date:string call_charm:string call_delta:string call_vanna:string put_charm:string put_delta:string put_vanna:string call_gamma:string put_gamma:string
-  row0: date="2025-11-17"
-  row249: date="2026-11-13"
-etf holdings QQQ -> 200
-  rows 104; weight sum 99.86; max 8.417; types stock,cash; null names 101
+## sync
+Box copy: HEAD d0006b7, uncommitted files 0
+GitHub main 7e6f70c; branch 03ad39a
+GitHub main is now 03ad39a
+Box copy moved to 03ad39a0
+## wait for the image pin of 03ad39a
+pinned after ~180s
+## deploy
+== code ==
+== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
+== tidy: deploy Jobs for an image that was never built ==
+== apply ==
+job gate-03ad39a: complete
+job backup-03ad39a: complete
+job migrate-03ad39a: complete
+job role-check-03ad39a: complete
+unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
+unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
+images now: unusual-options-detector=03ad39a unusual-options-detector-worker=03ad39a 
+== Google keys from Doppler ==
+== the live site ==
+health: {"status":"ok"}
+== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
+forced daily read: DELETE 1
+worker: {"level":30,"time":1794709517343,"app":"worker","status":"ok","hourly":true,"daily":true,"tickers":17,"ticker_errors":0,"public_errors":0,"requests":84,"msg":"markets read"}
+macro: DFEDTARL | 2026-11-14 | 120;DFEDTARU | 2026-11-14 | 120;DGS10 | 2026-11-12 | 84;
+ark: 39 | 1 | 2026-11-13
+reading: Aswath Damodaran | 8;A Wealth of Common Sense | 8;Bridgewater | 3;Farnam Street | 8;Of Dollars and Data | 8;Visual Capitalist | 8;
+etf: QQQ | 101;SPY | 250;
+darkpool: 111 | 17 | 2026-11-13
+gamma: 1020 | 17 | 2026-11-13
+next fed on calendar: 0; calendar event kinds: Federal Open Market Committe;Kansas City Fed Survey;Money Marketeers dinner even;Philadelphia Fed Business Ou;
+admin sign-in: 200
+/api/me -> 200 id=str email=str name=str role=str push_subscribed=true chatter=true flow=true money=true markets=true new_design=false
+/api/flow/board -> 200 trading_date=str dates=60 bullish=15 bearish=15 map=17
+/api/flow/filters -> 200 trading_date=null filters=0
+/api/money/funds -> 200 funds=17 consensus=25 read_at=str
+/api/money/insiders -> 200 rows=50 next_offset=50 clusters=20 read_at=str
+/api/money/congress -> 200 member=null rows=50 next_offset=50 read_at=str
+/api/markets -> 200 tide={2} calendar=18 earnings=2 macro={3} ark=null headlines=40
+/api/tickers/SPY -> 200 ticker=str name=str watching=false signals=0 market={10} flow={5} funds=6 insiders={3} congress={2} chatter={3}
+/api/tickers/NVDA -> 200 ticker=str name=str watching=false signals=0 market={10} flow={5} funds=8 insiders={3} congress={2} chatter={3}
+/api/watchlist -> 200 items=0 follows=0 events=0
+/api/learn/reading -> 200 items=28
+/api/search?q=nv -> 200 tickers=8 funds=2 politicians=0
+/api/record/summary -> 200 signals=0 days=0 first_date=null bullish=0 bearish=0 unclear=0
+SPY market: closes 126 etf 15 darkpool levels 3 gamma 30 seasonality 12
+markets: macro ten_year yes, fed yes, next_fed no; ark waiting for a second day; tide points 105
+/ -> 200; /flow -> 200; /money -> 200; /markets -> 200; /watching -> 200; /search -> 200; /learn -> 200; /method -> 200; /ticker/NVDA -> 200; /record -> 200; /me -> 200; 
+recent web errors: 
+job: succeeded=1 failed= active=
+pod: Completed 0;
+sessions logged: 60
+log:
+{"msg":"backfill session","date":"2026-11-10","rows":5904571,"window_prints":556845,"dropped_condition":1,"dropped_universe":553046,"stats_rows":17,"prints_stored":3798,"quotes_stored":23420,"oi_rows":1295,"seconds":131}
+{"msg":"backfill session","date":"2026-11-11","rows":6258433,"window_prints":644409,"dropped_condition":1,"dropped_universe":640205,"stats_rows":17,"prints_stored":4203,"quotes_stored":24702,"oi_rows":1469,"seconds":142}
+{"msg":"backfill session","date":"2026-11-12","rows":0,"window_prints":0,"dropped_condition":0,"dropped_universe":0,"stats_rows":0,"prints_stored":0,"quotes_stored":0,"oi_rows":0,"seconds":0,"skipped":true}
+{"msg":"backfill session","date":"2026-11-13","rows":0,"window_prints":0,"dropped_condition":0,"dropped_universe":0,"stats_rows":0,"prints_stored":0,"quotes_stored":0,"oi_rows":0,"seconds":0,"skipped":true}
+{"msg":"baseline coverage","tickers":17,"short":0,"threshold":40,"lookback":60}
+{"msg":"backfill finished","sessions":60,"errors":0}
+stats days: 60 | 2026-08-21 | 2026-11-13
+historical prints: 199750; quotes: 972570; oi rows: 165791
+signals: 0 | 
+db size: 383 MB
