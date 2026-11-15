@@ -1,4 +1,4 @@
-run 41 at 2026-11-15T01:03:57Z, commit cda6f11
+run 42 at 2026-11-15T01:04:20Z, commit c838157
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,50 +6,60 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-## sync
-Box copy: HEAD aa75767, uncommitted files 0
-GitHub main c4c3472; branch 8956f4a
-GitHub main is now 8956f4a
-Box copy moved to 8956f4ad
-## wait for the image pin of 8956f4a
-pinned after ~150s
-## deploy
-== code ==
-== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
-== tidy: deploy Jobs for an image that was never built ==
-== apply ==
-job gate-8956f4a: complete
-job backup-8956f4a: complete
-job migrate-8956f4a: complete
-job role-check-8956f4a: complete
-unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
-unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
-images now: unusual-options-detector=8956f4a unusual-options-detector-worker=8956f4a 
-== Google keys from Doppler ==
-== the live site ==
-health: {"status":"ok"}
-== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
-worker: 
-congress: 1874 | 2026-07-24 | 2026-11-13 | 715 | 183
-insiders: P | 2111 | 2026-08-17 | 2026-11-13 | 89;S | 2265 | 2026-10-16 | 2026-11-13 | 1135;
-funds: 17 | 17 | 0 | 2026-11-15 00:55:38+00
-fund errors: 
-holdings: 2388 | 17 | 44 | 7
-security types: Share |  | 2082;Debt |  | 101;Principal |  | 78;Fund |  | 67;Option | call | 28;Option | put | 16;Warrant |  | 9;Pref |  | 7;
-most held: GOOGL | 11;TSM | 11;AMZN | 10;GOOG | 9;AMD | 8;SE | 8;META | 7;SPCX | 7;
-clusters: 20
-site: 200 money page (signed out): 307
-job: succeeded= failed= active=1
-pod: Running 0;
-sessions logged: 22
-log:
-{"msg":"backfill session","date":"2026-09-15","rows":4301995,"window_prints":431928,"dropped_condition":59,"dropped_universe":429837,"stats_rows":17,"prints_stored":2032,"quotes_stored":15806,"oi_rows":827,"seconds":92}
-{"msg":"backfill session","date":"2026-09-16","rows":5409824,"window_prints":405701,"dropped_condition":0,"dropped_universe":403616,"stats_rows":17,"prints_stored":2085,"quotes_stored":15303,"oi_rows":894,"seconds":112}
-{"msg":"backfill session","date":"2026-09-17","rows":4772360,"window_prints":587005,"dropped_condition":4,"dropped_universe":582856,"stats_rows":17,"prints_stored":4145,"quotes_stored":17148,"oi_rows":1380,"seconds":106}
-{"msg":"backfill session","date":"2026-09-18","rows":5446361,"window_prints":546676,"dropped_condition":2,"dropped_universe":543989,"stats_rows":17,"prints_stored":2685,"quotes_stored":17705,"oi_rows":1072,"seconds":113}
-{"msg":"backfill session","date":"2026-09-21","rows":6518649,"window_prints":632112,"dropped_condition":2,"dropped_universe":626843,"stats_rows":17,"prints_stored":5267,"quotes_stored":19755,"oi_rows":1781,"seconds":160}
-{"msg":"backfill session","date":"2026-09-22","rows":4955703,"window_prints":571730,"dropped_condition":0,"dropped_universe":567792,"stats_rows":17,"prints_stored":3938,"quotes_stored":18784,"oi_rows":1425,"seconds":116}
-stats days: 24 | 2026-08-21 | 2026-11-13
-historical prints: 73265; quotes: 258240; oi rows: 117533
-signals: 0 | 
-db size: 130 MB
+economic-calendar -> 200
+  top: data; rows 36
+  type:string time:string prev:string/null event:string forecast:null reported_period:string/null
+  row0: time="2026-11-18T13:30:00Z" event="Housing Starts" type="report" prev="1200000" forecast=null reported_period="October"
+  row35: time="2026-11-16T13:30:00Z" event="Empire State Manufacturing Survey" type="report" prev="25.5" forecast=null reported_period="November"
+market-tide -> 200
+  top: data,date; rows 105
+  timestamp:string date:string net_call_premium:string net_put_premium:string net_volume:number
+  row0: timestamp="2026-11-13T07:30:00-05:00" date="2026-11-13"
+  row104: timestamp="2026-11-13T16:10:00-05:00" date="2026-11-13"
+market-tide 5m -> 200
+  top: data,date; rows 105
+  timestamp:string date:string net_call_premium:string net_put_premium:string net_volume:number
+  row0: timestamp="2026-11-13T07:30:00-05:00" date="2026-11-13"
+  row104: timestamp="2026-11-13T16:10:00-05:00" date="2026-11-13"
+headlines -> 200
+  top: data; rows 100
+  meta:object source:string created_at:string tags:array() tickers:array()/array(string) headline:string is_major:boolean sentiment:string
+  row0: created_at="2026-11-15T00:39:28Z" source="NYT" is_major=false sentiment="neutral" tickers=[] tags=[]
+  row99: created_at="2026-11-13T22:37:43Z" source="PR NewsWire" is_major=false sentiment="neutral" tickers=["SAN"] tags=[]
+headlines major -> 200
+  top: data; rows 100
+  meta:object source:string created_at:string tags:array() tickers:array()/array(string) headline:string is_major:boolean sentiment:string
+  row0: created_at="2026-11-14T17:02:50Z" is_major=true
+  row99: created_at="2026-11-13T18:00:51Z" is_major=true
+stock info -> 200
+  top: data; rows 1
+  symbol:string logo:string beta:string full_name:string sector:string issue_type:string marketcap_size:string has_options:boolean outstanding:string marketcap:string announce_time:string next_earnings_date:string uw_tags:array(string) avg30_volume:string short_name:string short_description:string has_investment_arm:boolean has_dividend:boolean has_earnings_history:boolean next_earnings_confirmed:boolean
+  row0: symbol="NVDA" sector="Technology" marketcap="3924685000000" next_earnings_date="2026-11-17" announce_time="postmarket" avg30_volume="201146883.09090909" issue_type="Common Stock" has_options=true
+  row0: symbol="NVDA" sector="Technology" marketcap="3924685000000" next_earnings_date="2026-11-17" announce_time="postmarket" avg30_volume="201146883.09090909" issue_type="Common Stock" has_options=true
+ohlc 1d -> 200
+  top: data; rows 200
+  close:string date:string high:string low:string market_time:string open:string total_volume:number volume:number
+  row0: date="2026-11-13" start_time=undefined end_time=undefined market_time="pr" open="166.83" close="169.86" volume=24964485
+  row199: date="2026-08-12" start_time=undefined end_time=undefined market_time="r" open="221.04" close="224.09" volume=108783637
+ohlc 1d default -> 200
+  rows 755 distinct days 252 2025-11-13 .. 2026-11-13 market_time {"pr":252,"po":251,"r":252}
+shorts interest-float -> 200
+  top: data; rows 17
+  symbol:string created_at:string market_date:string days_to_cover_returned:string percent_returned:string si_float_returned:number total_float_returned:number
+  row0: market_date="2021-07-16" created_at="2021-07-17T22:12:45Z"
+  row16: market_date="2021-06-24" created_at="2021-07-05T00:17:01Z"
+seasonality monthly -> 200
+  top: data; rows 12
+  month:number ticker:string years:number sector:string max_change:string min_change:string marketcap:string avg_change:string median_change:string positive_closes:number positive_months_perc:string
+  row0: month=1 years=20
+  row11: month=12 years=19
+etf holdings -> 200
+  top: data; rows 250
+  close:string high:string low:string name:null/string open:string type:string ticker:string updated:string weight:string country_code:string/null volume:string etf:string sector:string call_volume:number put_volume:number isin:null has_options:boolean put_premium:string call_premium:string short_name:string avg30_volume:string week52_high:string week52_low:string bearish_premium:string bullish_premium:string prev_price:string country_name:string/null continent:string/null shares:string cusip:null
+  row0: ticker="AAPL" type="stock" sector="Technology"
+  row249: ticker="WAT" type="stock" sector="Healthcare"
+earnings afterhours -> 200
+  top: data; rows 2
+  symbol:string source:string country_code:null/string full_name:string sector:string reaction:null is_s_p_500:boolean has_options:boolean marketcap:string report_date:string report_time:string expected_move_perc:null ending_fiscal_quarter:string expected_move:null street_mean_est:null/string country_name:null/string continent:null/string actual_eps:null/string pre_earnings_date:string pre_earnings_close:string post_earnings_date:null post_earnings_close:null
+  row0: symbol="ROLR" report_date="2026-11-13" report_time="postmarket"
+  row1: symbol="BBGI" report_date="2026-11-13" report_time="postmarket"
