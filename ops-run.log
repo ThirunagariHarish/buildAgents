@@ -1,4 +1,4 @@
-run 35 at 2026-11-15T00:10:26Z, commit c152532
+run 36 at 2026-11-15T00:24:43Z, commit fbf6d75
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -7,35 +7,38 @@ GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
 ## sync
-Box copy: HEAD 369a229, uncommitted files 0
-GitHub main ad8a457; branch c24f5b6
-GitHub main is now c24f5b6
-Box copy moved to c24f5b6
-## wait for the image pin of c24f5b6
+Box copy: HEAD c24f5b6, uncommitted files 0
+GitHub main b710d40; branch 12d3aa8
+GitHub main is now 12d3aa8
+Box copy moved to 12d3aa8
+## wait for the image pin of 12d3aa8
 pinned after ~150s
 ## deploy
 == code ==
 == Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
 == tidy: deploy Jobs for an image that was never built ==
 == apply ==
-job gate-c24f5b6: complete
-job backup-c24f5b6: complete
-job migrate-c24f5b6: complete
-job role-check-c24f5b6: complete
+job gate-12d3aa8: complete
+job backup-12d3aa8: complete
+job migrate-12d3aa8: complete
+job role-check-12d3aa8: complete
 unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
 unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
-images now: unusual-options-detector=c24f5b6 unusual-options-detector-worker=c24f5b6 
+images now: unusual-options-detector=12d3aa8 unusual-options-detector-worker=12d3aa8 
 == Google keys from Doppler ==
 == the live site ==
-health: Bad Gateway
+health: {"status":"ok"}
 == Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
-image: c24f5b6
+image: 12d3aa8
   job.batch/history-backfill created
-job: failed
-pod: OOMKilled 0;OOMKilled 0;OOMKilled 0;
+job: succeeded
+pod: Completed 0;
 log:
-Found 3 pods, using pod/history-backfill-8sx46
+{"msg":"backfill session","date":"2026-11-12","rows":6575108,"window_prints":812654,"dropped_condition":12,"dropped_universe":806252,"stats_rows":17,"prints_stored":6390,"quotes_stored":9107,"oi_rows":1557,"seconds":138}
+{"msg":"backfill session","date":"2026-11-13","rows":6743085,"window_prints":728307,"dropped_condition":0,"dropped_universe":724947,"stats_rows":17,"prints_stored":3360,"quotes_stored":12758,"oi_rows":1255,"seconds":140}
+{"msg":"baseline coverage","tickers":17,"short":17,"threshold":40,"lookback":60}
+{"msg":"backfill finished","sessions":2,"errors":0}
 memory: 
-stats days: 1 | 2026-11-13 | 2026-11-13
-historical prints: 0; quotes: 0; oi rows: 90940
-db size: 21 MB
+stats days: 2 | 2026-11-12 | 2026-11-13
+historical prints: 9750; quotes: 21865; oi rows: 93752
+db size: 32 MB
