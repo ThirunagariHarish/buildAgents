@@ -1,4 +1,4 @@
-run 33 at 2026-11-14T22:11:07Z, commit c3bb639
+run 35 at 2026-11-15T00:10:26Z, commit c152532
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -8,32 +8,33 @@ GOOGLE_CLIENT_SECRET: missing
 BOX_KUBECONFIG: set; API server port 6443
 ## sync
 Box copy: HEAD 369a229, uncommitted files 0
-GitHub main ad8a457; branch 369a229
-STOP: the branch is not on top of GitHub main
-## wait for the image pin of 369a229
-pinned after ~30s
+GitHub main ad8a457; branch c24f5b6
+GitHub main is now c24f5b6
+Box copy moved to c24f5b6
+## wait for the image pin of c24f5b6
+pinned after ~150s
 ## deploy
 == code ==
 == Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
 == tidy: deploy Jobs for an image that was never built ==
 == apply ==
-job gate-369a229: complete
-job backup-369a229: complete
-job migrate-369a229: complete
-job role-check-369a229: complete
+job gate-c24f5b6: complete
+job backup-c24f5b6: complete
+job migrate-c24f5b6: complete
+job role-check-c24f5b6: complete
 unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
 unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
-images now: unusual-options-detector=369a229 unusual-options-detector-worker=369a229 
+images now: unusual-options-detector=c24f5b6 unusual-options-detector-worker=c24f5b6 
 == Google keys from Doppler ==
 == the live site ==
-health: {"status":"ok"}
+health: Bad Gateway
 == Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
-image: 369a229
+image: c24f5b6
   job.batch/history-backfill created
 job: failed
 pod: OOMKilled 0;OOMKilled 0;OOMKilled 0;
 log:
-Found 3 pods, using pod/history-backfill-hqcrg
+Found 3 pods, using pod/history-backfill-8sx46
 memory: 
 stats days: 1 | 2026-11-13 | 2026-11-13
 historical prints: 0; quotes: 0; oi rows: 90940
