@@ -1,4 +1,4 @@
-run 40 at 2026-11-15T00:55:47Z, commit c172171
+run 41 at 2026-11-15T01:03:57Z, commit cda6f11
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -7,29 +7,29 @@ GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
 ## sync
-Box copy: HEAD 6633e6f, uncommitted files 0
-GitHub main dbb6114; branch aa75767
-GitHub main is now aa75767
-Box copy moved to aa75767
-## wait for the image pin of aa75767
-pinned after ~210s
+Box copy: HEAD aa75767, uncommitted files 0
+GitHub main c4c3472; branch 8956f4a
+GitHub main is now 8956f4a
+Box copy moved to 8956f4ad
+## wait for the image pin of 8956f4a
+pinned after ~150s
 ## deploy
 == code ==
 == Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
 == tidy: deploy Jobs for an image that was never built ==
 == apply ==
-job gate-aa75767: complete
-job backup-aa75767: complete
-job migrate-aa75767: complete
-job role-check-aa75767: complete
+job gate-8956f4a: complete
+job backup-8956f4a: complete
+job migrate-8956f4a: complete
+job role-check-8956f4a: complete
 unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
 unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
-images now: unusual-options-detector=aa75767 unusual-options-detector-worker=aa75767 
+images now: unusual-options-detector=8956f4a unusual-options-detector-worker=8956f4a 
 == Google keys from Doppler ==
 == the live site ==
 health: {"status":"ok"}
 == Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
-worker: {"level":30,"time":1794704138193,"app":"worker","status":"ok","congress":1874,"insiders":4376,"funds_read":17,"funds_failed":0,"requests":50,"msg":"filings read"}
+worker: 
 congress: 1874 | 2026-07-24 | 2026-11-13 | 715 | 183
 insiders: P | 2111 | 2026-08-17 | 2026-11-13 | 89;S | 2265 | 2026-10-16 | 2026-11-13 | 1135;
 funds: 17 | 17 | 0 | 2026-11-15 00:55:38+00
@@ -41,15 +41,15 @@ clusters: 20
 site: 200 money page (signed out): 307
 job: succeeded= failed= active=1
 pod: Running 0;
-sessions logged: 18
+sessions logged: 22
 log:
-{"msg":"backfill session","date":"2026-09-09","rows":5256306,"window_prints":507014,"dropped_condition":0,"dropped_universe":504120,"stats_rows":17,"prints_stored":2894,"quotes_stored":17105,"oi_rows":1022,"seconds":110}
-{"msg":"backfill session","date":"2026-09-10","rows":4803907,"window_prints":567391,"dropped_condition":1,"dropped_universe":563968,"stats_rows":17,"prints_stored":3422,"quotes_stored":16537,"oi_rows":1195,"seconds":99}
-{"msg":"backfill session","date":"2026-09-11","rows":4951271,"window_prints":619862,"dropped_condition":8,"dropped_universe":616881,"stats_rows":17,"prints_stored":2973,"quotes_stored":17459,"oi_rows":1057,"seconds":102}
-{"msg":"backfill session","date":"2026-09-14","rows":5287380,"window_prints":552720,"dropped_condition":2,"dropped_universe":549074,"stats_rows":17,"prints_stored":3644,"quotes_stored":17174,"oi_rows":1409,"seconds":116}
 {"msg":"backfill session","date":"2026-09-15","rows":4301995,"window_prints":431928,"dropped_condition":59,"dropped_universe":429837,"stats_rows":17,"prints_stored":2032,"quotes_stored":15806,"oi_rows":827,"seconds":92}
 {"msg":"backfill session","date":"2026-09-16","rows":5409824,"window_prints":405701,"dropped_condition":0,"dropped_universe":403616,"stats_rows":17,"prints_stored":2085,"quotes_stored":15303,"oi_rows":894,"seconds":112}
-stats days: 20 | 2026-08-21 | 2026-11-13
-historical prints: 57230; quotes: 184848; oi rows: 111875
+{"msg":"backfill session","date":"2026-09-17","rows":4772360,"window_prints":587005,"dropped_condition":4,"dropped_universe":582856,"stats_rows":17,"prints_stored":4145,"quotes_stored":17148,"oi_rows":1380,"seconds":106}
+{"msg":"backfill session","date":"2026-09-18","rows":5446361,"window_prints":546676,"dropped_condition":2,"dropped_universe":543989,"stats_rows":17,"prints_stored":2685,"quotes_stored":17705,"oi_rows":1072,"seconds":113}
+{"msg":"backfill session","date":"2026-09-21","rows":6518649,"window_prints":632112,"dropped_condition":2,"dropped_universe":626843,"stats_rows":17,"prints_stored":5267,"quotes_stored":19755,"oi_rows":1781,"seconds":160}
+{"msg":"backfill session","date":"2026-09-22","rows":4955703,"window_prints":571730,"dropped_condition":0,"dropped_universe":567792,"stats_rows":17,"prints_stored":3938,"quotes_stored":18784,"oi_rows":1425,"seconds":116}
+stats days: 24 | 2026-08-21 | 2026-11-13
+historical prints: 73265; quotes: 258240; oi rows: 117533
 signals: 0 | 
-db size: 102 MB
+db size: 130 MB
