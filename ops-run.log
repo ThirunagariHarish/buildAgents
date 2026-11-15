@@ -1,4 +1,4 @@
-run 39 at 2026-11-15T00:37:46Z, commit 297439c
+run 40 at 2026-11-15T00:55:47Z, commit c172171
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,70 +6,50 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-== 2026-08-21 ==
-cols 40; nbbo cols: executed_at@2 nbbo_bid@3 nbbo_ask@4 ewma_nbbo_ask@20 ewma_nbbo_bid@21
-  nbbo_bid filled 46603/46603
-  nbbo_ask filled 46603/46603
-  nbbo_bid_time filled absent
-  nbbo_ask_time filled absent
-  ewma_nbbo_bid filled 46514/46603
-  ewma_nbbo_ask filled 45010/46603
-  sample: executed_at=9999-99-99 99:99:99.999999+99 nbbo_bid=9.99 nbbo_bid_time=undefined nbbo_ask_time=undefined
-  sample: executed_at=9999-99-99 99:99:99.999999+99 nbbo_bid=9.99 nbbo_bid_time=undefined nbbo_ask_time=undefined
-== 2026-09-15 ==
-cols 49; nbbo cols: executed_at@2 nbbo_bid@3 nbbo_ask@4 ewma_nbbo_ask@20 ewma_nbbo_bid@21 nbbo_bid_exchange_id@41 nbbo_ask_exchange_id@42 nbbo_bid_size@43 nbbo_bid_time@44 nbbo_ask_size@45 nbbo_ask_time@46 nbbo_bid_exchange@47 nbbo_ask_exchange@48
-  nbbo_bid filled 37766/37766
-  nbbo_ask filled 37766/37766
-  nbbo_bid_time filled 37361/37766
-  nbbo_ask_time filled 37766/37766
-  ewma_nbbo_bid filled 37685/37766
-  ewma_nbbo_ask filled 36606/37766
-  sample: executed_at=9999-99-99 99:99:99.999999+99 nbbo_bid=9 nbbo_bid_time= nbbo_ask_time=9999-99-99 99:99:99.999999+99
-  sample: executed_at=9999-99-99 99:99:99.999999+99 nbbo_bid=9 nbbo_bid_time= nbbo_ask_time=9999-99-99 99:99:99.999999+99
-== 2026-10-15 ==
-cols 50; nbbo cols: executed_at@2 nbbo_bid@3 nbbo_ask@4 ewma_nbbo_ask@20 ewma_nbbo_bid@21 nbbo_bid_exchange_id@42 nbbo_ask_exchange_id@43 nbbo_bid_size@44 nbbo_bid_time@45 nbbo_ask_size@46 nbbo_ask_time@47 nbbo_bid_exchange@48 nbbo_ask_exchange@49
-  nbbo_bid filled 37421/37421
-  nbbo_ask filled 37421/37421
-  nbbo_bid_time filled 37199/37421
-  nbbo_ask_time filled 37413/37421
-  ewma_nbbo_bid filled 37310/37421
-  ewma_nbbo_ask filled 35793/37421
-  sample: executed_at=9999-99-99 99:99:99.999999+99 nbbo_bid=9 nbbo_bid_time=9 nbbo_ask_time=9
-  sample: executed_at=9999-99-99 99:99:99.999999+99 nbbo_bid=9 nbbo_bid_time=9 nbbo_ask_time=9
-== 2026-11-12 ==
-cols 50; nbbo cols: executed_at@2 nbbo_bid@3 nbbo_ask@4 ewma_nbbo_ask@20 ewma_nbbo_bid@21 nbbo_bid_exchange_id@42 nbbo_ask_exchange_id@43 nbbo_bid_size@44 nbbo_bid_time@45 nbbo_ask_size@46 nbbo_ask_time@47 nbbo_bid_exchange@48 nbbo_ask_exchange@49
-  nbbo_bid filled 37963/37963
-  nbbo_ask filled 37963/37963
-  nbbo_bid_time filled 37724/37963
-  nbbo_ask_time filled 37963/37963
-  ewma_nbbo_bid filled 37963/37963
-  ewma_nbbo_ask filled 37865/37963
-  sample: executed_at=9999-99-99 99:99:99.999999+99 nbbo_bid=9.99 nbbo_bid_time=9 nbbo_ask_time=9999-99-99 99:99:99.999999+99
-  sample: executed_at=9999-99-99 99:99:99.999999+99 nbbo_bid=9.99 nbbo_bid_time=9 nbbo_ask_time=9999-99-99 99:99:99.999999+99
-stored historical prints by day and side (first and last days):
-2026-08-21 | 2086 | 2086 | 2086
-2026-08-24 | 2426 | 2426 | 2426
-2026-08-25 | 1926 | 1926 | 1926
-2026-08-26 | 2285 | 2285 | 2285
-2026-08-27 | 3536 | 3536 | 3536
-2026-08-28 | 1895 | 1895 | 1895
-2026-08-31 | 1729 | 1729 | 1729
-2026-09-01 | 2576 | 2576 | 2576
-...
-historical quotes by day:
-2026-11-12 | 9107
-2026-11-13 | 12758
+## sync
+Box copy: HEAD 6633e6f, uncommitted files 0
+GitHub main dbb6114; branch aa75767
+GitHub main is now aa75767
+Box copy moved to aa75767
+## wait for the image pin of aa75767
+pinned after ~210s
+## deploy
+== code ==
+== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
+== tidy: deploy Jobs for an image that was never built ==
+== apply ==
+job gate-aa75767: complete
+job backup-aa75767: complete
+job migrate-aa75767: complete
+job role-check-aa75767: complete
+unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
+unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
+images now: unusual-options-detector=aa75767 unusual-options-detector-worker=aa75767 
+== Google keys from Doppler ==
+== the live site ==
+health: {"status":"ok"}
+== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
+worker: {"level":30,"time":1794704138193,"app":"worker","status":"ok","congress":1874,"insiders":4376,"funds_read":17,"funds_failed":0,"requests":50,"msg":"filings read"}
+congress: 1874 | 2026-07-24 | 2026-11-13 | 715 | 183
+insiders: P | 2111 | 2026-08-17 | 2026-11-13 | 89;S | 2265 | 2026-10-16 | 2026-11-13 | 1135;
+funds: 17 | 17 | 0 | 2026-11-15 00:55:38+00
+fund errors: 
+holdings: 2388 | 17 | 44 | 7
+security types: Share |  | 2082;Debt |  | 101;Principal |  | 78;Fund |  | 67;Option | call | 28;Option | put | 16;Warrant |  | 9;Pref |  | 7;
+most held: GOOGL | 11;TSM | 11;AMZN | 10;GOOG | 9;AMD | 8;SE | 8;META | 7;SPCX | 7;
+clusters: 20
+site: 200 money page (signed out): 307
 job: succeeded= failed= active=1
 pod: Running 0;
-sessions logged: 8
+sessions logged: 18
 log:
-{"msg":"backfill session","date":"2026-08-25","rows":4074335,"window_prints":394229,"dropped_condition":1,"dropped_universe":392302,"stats_rows":17,"prints_stored":1926,"quotes_stored":0,"oi_rows":815,"seconds":59}
-{"msg":"backfill session","date":"2026-08-26","rows":4487761,"window_prints":449325,"dropped_condition":0,"dropped_universe":447040,"stats_rows":17,"prints_stored":2285,"quotes_stored":0,"oi_rows":867,"seconds":61}
-{"msg":"backfill session","date":"2026-08-27","rows":5341473,"window_prints":607989,"dropped_condition":1,"dropped_universe":604452,"stats_rows":17,"prints_stored":3536,"quotes_stored":0,"oi_rows":1028,"seconds":72}
-{"msg":"backfill session","date":"2026-08-28","rows":6179680,"window_prints":484570,"dropped_condition":0,"dropped_universe":482675,"stats_rows":17,"prints_stored":1895,"quotes_stored":0,"oi_rows":828,"seconds":80}
-{"msg":"backfill session","date":"2026-08-31","rows":4959859,"window_prints":463484,"dropped_condition":0,"dropped_universe":461755,"stats_rows":17,"prints_stored":1729,"quotes_stored":0,"oi_rows":833,"seconds":66}
-{"msg":"backfill session","date":"2026-09-01","rows":5146364,"window_prints":523633,"dropped_condition":0,"dropped_universe":521057,"stats_rows":17,"prints_stored":2576,"quotes_stored":0,"oi_rows":1077,"seconds":74}
-stats days: 10 | 2026-08-21 | 2026-11-13
-historical prints: 28209; quotes: 21865; oi rows: 101115
+{"msg":"backfill session","date":"2026-09-09","rows":5256306,"window_prints":507014,"dropped_condition":0,"dropped_universe":504120,"stats_rows":17,"prints_stored":2894,"quotes_stored":17105,"oi_rows":1022,"seconds":110}
+{"msg":"backfill session","date":"2026-09-10","rows":4803907,"window_prints":567391,"dropped_condition":1,"dropped_universe":563968,"stats_rows":17,"prints_stored":3422,"quotes_stored":16537,"oi_rows":1195,"seconds":99}
+{"msg":"backfill session","date":"2026-09-11","rows":4951271,"window_prints":619862,"dropped_condition":8,"dropped_universe":616881,"stats_rows":17,"prints_stored":2973,"quotes_stored":17459,"oi_rows":1057,"seconds":102}
+{"msg":"backfill session","date":"2026-09-14","rows":5287380,"window_prints":552720,"dropped_condition":2,"dropped_universe":549074,"stats_rows":17,"prints_stored":3644,"quotes_stored":17174,"oi_rows":1409,"seconds":116}
+{"msg":"backfill session","date":"2026-09-15","rows":4301995,"window_prints":431928,"dropped_condition":59,"dropped_universe":429837,"stats_rows":17,"prints_stored":2032,"quotes_stored":15806,"oi_rows":827,"seconds":92}
+{"msg":"backfill session","date":"2026-09-16","rows":5409824,"window_prints":405701,"dropped_condition":0,"dropped_universe":403616,"stats_rows":17,"prints_stored":2085,"quotes_stored":15303,"oi_rows":894,"seconds":112}
+stats days: 20 | 2026-08-21 | 2026-11-13
+historical prints: 57230; quotes: 184848; oi rows: 111875
 signals: 0 | 
-db size: 43 MB
+db size: 102 MB
