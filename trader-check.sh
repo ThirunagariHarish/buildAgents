@@ -7,19 +7,15 @@ KC="kubectl --kubeconfig ${KCFG} --request-timeout=60s"; K="$KC -n $NS"
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 Q() { $K exec statefulset/$NS-db -c postgres -- sh -c "psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -At -F ' | ' -c \"$1\"" 2>&1; }
 echo "health: $(curl -s --max-time 20 $SITE/api/health | cut -c1-160)"
-echo "forced daily read: $(Q "DELETE FROM markets_state WHERE key = 'daily'")"
 for i in $(seq 1 60); do
   L=$($K logs deploy/$NS-worker --since=40m 2>/dev/null | grep -E '"trader( failed)?"' | tail -3)
   echo "$L" | grep -q -E '"msg":"trader' && break; sleep 15
 done
 echo "trader log:"; echo "$L" | cut -c1-420
-for i in $(seq 1 40); do
-  M=$($K logs deploy/$NS-worker --since=40m 2>/dev/null | grep -E '"markets (read|failed)"' | tail -1)
-  [ -n "$M" ] && break; sleep 15
-done
+M=$($K logs deploy/$NS-worker --since=40m 2>/dev/null | grep -E '"markets (read|failed)"' | tail -1)
 echo "markets log: $(echo "$M" | cut -c1-300)"
 echo "settings: $(Q "SELECT key, value_plain FROM settings WHERE key IN ('legacy_signals','show_trader','show_chatter') ORDER BY 1" | tr '\n' ';')"
-echo "ideas: $(Q "SELECT trade_date, horizon, count(*), count(*) FILTER (WHERE score >= 60), min(seen_at)::time(0), max(seen_at)::time(0) FROM option_ideas GROUP BY 1, 2 ORDER BY 1, 2" | tr '\n' ';')"
+echo "ideas: $(Q "SELECT trade_date, horizon, count(*), count(*) FILTER (WHERE score >= 60), min(seen_at)::time(0), max(seen_at)::time(0) FROM option_ideas GROUP BY 1, 2 ORDER BY 1 DESC, 2 LIMIT 4" | tr '\n' ';')"
 echo "alerts counted: $(Q "SELECT count(*) FROM idea_alerts"); marks: $(Q "SELECT count(*), count(DISTINCT option_symbol), max(marked_at)::timestamp(0) FROM idea_marks")"
 echo "outcomes: $(Q "SELECT i.horizon, o.status, count(*), round(avg(o.ret)::numeric, 3) FROM idea_outcomes o JOIN option_ideas i ON i.id = o.idea_id GROUP BY 1, 2 ORDER BY 1, 2" | tr '\n' ';')"
 echo "tiers: $(Q "SELECT tier, lean, count(*) FROM option_ideas GROUP BY 1, 2 ORDER BY 1, 2" | tr '\n' ';')"
@@ -46,3 +42,10 @@ echo "macro -> $(G /api/trader/macro) $(J '"kpis="+j.read.kpis.length+" tail="+j
 for P in / "/?view=swing" /direction "/direction?view=calendar" /chatter /news /macro /me /today /record /ticker/NVDA; do printf "%s -> %s; " "$P" "$(curl -s -o /dev/null -b "$TMP/jar" -w '%{http_code}' --max-time 30 "$SITE$P")"; done; echo
 echo "recent web errors: $($K logs deploy/$NS --since=15m 2>/dev/null | grep -i -E 'error|unhandled' | tail -4 | sed -E 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/<email>/g' | cut -c1-240)"
 echo "recent worker errors: $($K logs deploy/$NS-worker --since=30m 2>/dev/null | grep -i -E 'failed|unhandled|error' | tail -5 | sed -E 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/<email>/g' | cut -c1-260)"
+
+echo "marks by 15-minute slot today: $(Q "SELECT to_char(date_trunc('minute', marked_at) AT TIME ZONE 'America/New_York', 'HH24:MI'), count(*) FROM idea_marks WHERE marked_at > now() - interval '3 hours' GROUP BY 1 ORDER BY 1" | tr '\n' ';')"
+echo "ideas per 10 minutes today: $(Q "SELECT to_char(date_trunc('hour', seen_at AT TIME ZONE 'America/New_York') + floor(extract(minute FROM seen_at) / 10) * interval '10 minutes', 'HH24:MI'), count(*) FROM option_ideas WHERE trade_date = (now() AT TIME ZONE 'America/New_York')::date GROUP BY 1 ORDER BY 1" | tr '\n' ';')"
+echo "direction calls today: $(Q "SELECT slot, lean, score, spot_at_call, to_char(called_at AT TIME ZONE 'America/New_York', 'HH24:MI:SS') FROM direction_calls WHERE trade_date = (now() AT TIME ZONE 'America/New_York')::date ORDER BY slot" | tr '\n' ';')"
+echo "today series points: $(Q "SELECT split_part(name, ':', 1), count(DISTINCT name), count(*), to_char(now() - max(ts), 'HH24:MI:SS') FROM live_series WHERE ts > (now() AT TIME ZONE 'America/New_York')::date::timestamp AT TIME ZONE 'America/New_York' + interval '9 hours 30 minutes' GROUP BY 1 ORDER BY 1" | tr '\n' ';')"
+echo "worker trader lines (last 6): "; $K logs deploy/$NS-worker --since=90m 2>/dev/null | grep -E '"msg":"trader' | tail -6 | cut -c1-330
+echo "worker failures in 2h: $($K logs deploy/$NS-worker --since=2h 2>/dev/null | grep -c -i -E 'failed|unhandled')"; $K logs deploy/$NS-worker --since=2h 2>/dev/null | grep -i -E 'failed|unhandled' | tail -4 | cut -c1-300
