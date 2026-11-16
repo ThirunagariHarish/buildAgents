@@ -1,4 +1,4 @@
-run 55 at 2026-11-16T10:22:14Z, commit 499e0fa
+run 56 at 2026-11-16T10:24:17Z, commit cff6d8b
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,19 +6,97 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-now (ET): Mon 2026-11-16 05:21:57
-images: unusual-options-detector=fc1168a unusual-options-detector-worker=fc1168a 
-options   | newest bet age: 02d 12:49:14 | 0
-options   | newest quote check age: 00d 00:49:11 | 0
-options   | graded sessions: 2026-11-13 | intraday | 820;
-series    | newest point age by family: px | 02d 09:27:01 | 0;sector | 00d 00:02:01 | 24;sectorpc | 00d 00:02:01 | 24;sectorprem | 00d 00:02:01 | 24;spy | 02d 13:07:01 | 0;tide | 02d 13:12:01 | 0;
-series    | px per ticker (age, bars in last hour): GOOGL | 02d 09:27 | 0;ORCL | 02d 09:27 | 0;IWM | 02d 09:27 | 0;BTC | 02d 09:27 | 0;BIDU | 02d 09:27 | 0;GLD | 02d 09:27 | 0;META | 02d 09:27 | 0;MSTR | 02d 09:27 | 0;AI | 02d 09:27 | 0;AMZN | 02d 09:27 | 0;AAPL | 02d 09:27 | 0;MSFT | 02d 09:27 | 0;SPY | 02d 09:27 | 0;QQQ | 02d 09:27 | 0;AMD | 02d 09:27 | 0;TLT | 02d 09:27 | 0;F | 02d 09:27 | 0;USO | 02d 09:27 | 0;NVDA | 02d 09:27 | 0;VIXY | 02d 09:27 | 0;ON | 02d 09:52 | 0;HYG | 02d 11:27 | 0;VIA | 02d 12:02 | 0;EPS | 02d 12:12 | 0;UUP | 02d 12:22 | 0;NDAQ | 02d 13:12 | 0;RSI | 02d 13:22 | 0;
-direction | calls today: ; market_tide newest age: 02d 13:12:04
-direction | gamma estimate as of: 2026-11-13 | 40; VIX (FRED) latest: 2026-11-12
-calendar  | econ events ahead: 18 | 2026-11-16 | 2026-11-20; earnings read age: 00d 00:49; econ read (daily) age: 00d 00:33
-chatter   | last Discord read age: 00d 00:00:32 | 132 | 0 | 132; newest message age: 00d 07:30:07 | 0 | 4
-chatter   | all messages per hour, last 6 hours: 00:00 | 1;01:00 | 1;
-news      | newest headline age: 00d 00:08:30 | 67 | 16
-macro     | official series, days since latest reading: DFEDTARL | 1;DFEDTARU | 1;SP500 | 3;T10Y2Y | 3;T10Y3M | 3;T5YIE | 3;BAMLH0A0HYM2 | 4;DFF | 4;DGS10 | 4;DGS2 | 4;MORTGAGE30US | 4;VIXCLS | 4;WALCL | 5;ICSA | 9;DTWEXBGS | 10;NFCI | 10;CPIAUCSL | 46;CPILFESL | 46;GACDFSA066MSFRBPHI | 46;PAYEMS | 46;UNRATE | 46;HOUST | 76;INDPRO | 76;PCEPILFE | 76;RSAFS | 76;UMCSENT | 76;
-worker    | last lines: 
-worker    | errors in 2h: 0
+now ET: 2026-11-16 05:24:13
+/api/stock/SPY/ohlc/5m?limit=6 -> 200
+  rows 6 keys close,end_time,high,low,market_time,open,start_time,total_volume,volume
+  first: start_time="2026-11-14T00:55:00Z" end_time="2026-11-14T01:00:00Z" market_time="po" close="749.6" volume=23551
+  last:  start_time="2026-11-14T00:30:00Z" end_time="2026-11-14T00:35:00Z" market_time="po" close="750.001" volume=20631
+/api/stock/SPY/ohlc/5m?limit=6&date=2026-11-16 -> 200
+  rows 6 keys close,end_time,high,low,market_time,open,start_time,total_volume,volume
+  first: start_time="2026-11-16T10:20:00Z" end_time="2026-11-16T10:25:00Z" market_time="pr" close="751.5881" volume=209
+  last:  start_time="2026-11-16T09:55:00Z" end_time="2026-11-16T10:00:00Z" market_time="pr" close="751.78" volume=403
+/api/stock/SPY/ohlc/5m?limit=6&end_date=2026-11-16 -> 200
+  rows 6 keys close,end_time,high,low,market_time,open,start_time,total_volume,volume
+  first: start_time="2026-11-16T10:20:00Z" end_time="2026-11-16T10:25:00Z" market_time="pr" close="751.5881" volume=209
+  last:  start_time="2026-11-16T09:55:00Z" end_time="2026-11-16T10:00:00Z" market_time="pr" close="751.78" volume=403
+/api/stock/SPY/ohlc/1m?limit=6 -> 200
+  rows 6 keys close,end_time,high,low,market_time,open,start_time,total_volume,volume
+  first: start_time="2026-11-14T00:59:00Z" end_time="2026-11-14T01:00:00Z" market_time="po" close="749.6" volume=1444
+  last:  start_time="2026-11-14T00:53:00Z" end_time="2026-11-14T00:54:00Z" market_time="po" close="749.4707" volume=2936
+/api/stock/SPY/ohlc/5m?limit=6&timeframe=1D -> 200
+  rows 6 keys close,end_time,high,low,market_time,open,start_time,total_volume,volume
+  first: start_time="2026-11-14T00:55:00Z" end_time="2026-11-14T01:00:00Z" market_time="po" close="749.6" volume=23551
+  last:  start_time="2026-11-14T00:30:00Z" end_time="2026-11-14T00:35:00Z" market_time="po" close="750.001" volume=20631
+stock-state SPY -> 200
+  rows 1 keys close,high,low,open,volume,total_volume,market_time,tape_time,prev_close
+  first: tape_time="2026-11-16T10:20:46Z" market_time="premarket" close="751.5881" prev_close="754.37" volume=114228
+  last:  tape_time="2026-11-16T10:20:46Z" market_time="premarket" close="751.5881" prev_close="754.37" volume=114228
+stock-state NVDA -> 200
+  rows 1 keys close,high,low,open,volume,total_volume,market_time,tape_time,prev_close
+  first: tape_time="2026-11-16T10:24:14Z" market_time="premarket" close="159.26" prev_close="162.85"
+  last:  tape_time="2026-11-16T10:24:14Z" market_time="premarket" close="159.26" prev_close="162.85"
+ohlc VIX -> 422
+  rows 1 keys code,path,msg,query,url
+  first: start_time=undefined market_time=undefined close=undefined
+  last:  start_time=undefined market_time=undefined close=undefined
+stock-state VIX -> 422
+  rows 1 keys path,msg,query,url
+  first: tape_time=undefined market_time=undefined close=undefined prev_close=undefined
+  last:  tape_time=undefined market_time=undefined close=undefined prev_close=undefined
+ohlc SPX -> 422
+  rows 1 keys code,path,msg,query,url
+  first: start_time=undefined market_time=undefined close=undefined
+  last:  start_time=undefined market_time=undefined close=undefined
+stock-state SPX -> 422
+  rows 1 keys path,msg,query,url
+  first: tape_time=undefined market_time=undefined close=undefined prev_close=undefined
+  last:  tape_time=undefined market_time=undefined close=undefined prev_close=undefined
+ohlc VIXY -> 200
+  rows 3 keys close,end_time,high,low,market_time,open,start_time,total_volume,volume
+  first: start_time="2026-11-14T00:55:00Z" market_time="po" close="18.5516"
+  last:  start_time="2026-11-14T00:30:00Z" market_time="po" close="18.53"
+stock-state VIXY -> 200
+  rows 1 keys close,high,low,open,volume,total_volume,market_time,tape_time,prev_close
+  first: tape_time="2026-11-16T10:17:31Z" market_time="premarket" close="17.92" prev_close="17.94"
+  last:  tape_time="2026-11-16T10:17:31Z" market_time="premarket" close="17.92" prev_close="17.94"
+spot-exposures/strike SPY -> 200
+  rows 491 keys call_gamma_vol,put_vanna_oi,call_charm_bid,call_vanna_oi,call_charm_vol,put_vanna_vol,call_vanna_ask,ticker,call_vanna_bid,call_vanna_vol,call_delta_bid,call_delta_oi,put_vanna_bid,call_gamma_bid,call_delta_ask,time,put_gamma_ask,put_charm_ask,put_delta_bid,call_gamma_ask,price,put_delta_ask,call_gamma_oi,put_gamma_vol
+  first: time="2026-11-13T21:15:00.000000Z" strike="50" price="754.37"
+  last:  time="2026-11-13T21:15:00.000000Z" strike="1480" price="754.37"
+spot-exposures SPY (per minute) -> 200
+  rows 543 keys charm_per_one_percent_move_dir,charm_per_one_percent_move_oi,charm_per_one_percent_move_vol,gamma_per_one_percent_move_dir,gamma_per_one_percent_move_oi,gamma_per_one_percent_move_vol,price,start_time,ticker,ticker_id,time,vanna_per_one_percent_move_dir,vanna_per_one_percent_move_oi,vanna_per_one_percent_move_vol
+  first: time="2026-11-13T11:37:58.818000Z" price="758.26" gamma_per_one_percent_move_oi="-7401073747.21" gamma_per_one_percent_move_vol="0"
+  last:  time="2026-11-13T21:00:58.520000Z" price="753.31" gamma_per_one_percent_move_oi="-14528030836.24" gamma_per_one_percent_move_vol="96103895146.42"
+greek-exposure SPY -> 200
+  rows 250 keys date,call_charm,call_delta,call_vanna,put_charm,put_delta,put_vanna,call_gamma,put_gamma
+  first: date="2025-11-17" call_gamma="3601569.9222" put_gamma="-4824840.1658"
+  last:  date="2026-11-13" call_gamma="3894466.6252" put_gamma="-4656425.5044"
+market tide -> 200
+  rows 105 keys timestamp,date,net_call_premium,net_put_premium,net_volume
+  first: timestamp="2026-11-13T07:30:00-05:00" date="2026-11-13"
+  last:  timestamp="2026-11-13T16:10:00-05:00" date="2026-11-13"
+market tide 5m -> 200
+  rows 521 keys timestamp,date,net_call_premium,net_put_premium,net_volume
+  first: timestamp="2026-11-13T07:30:00-05:00" date="2026-11-13"
+  last:  timestamp="2026-11-13T16:14:00-05:00" date="2026-11-13"
+flow alerts newest -> 200
+  rows 3 keys has_multileg,iv,open_interest,underlying_price,option_chain,expiry,iv_start,sector,end_time,delta,rule_id,ask,issue_type,has_floor,theta,iv_end,trade_count,total_size,total_bid_side_prem,bid,rho,has_singleleg,gamma,price
+  first: created_at="2026-11-13T21:32:44.246565Z" ticker="SPXW" issue_type=null
+  last:  created_at="2026-11-13T21:23:41.827174Z" ticker="SPXW" issue_type=null
+news newest -> 200
+  rows 3 keys meta,source,created_at,tags,tickers,headline,is_major,sentiment
+  first: created_at="2026-11-16T10:24:05Z" source="Tradex" sentiment="neutral" tickers=[]
+  last:  created_at="2026-11-16T10:19:40Z" source="Blockchain News" sentiment="neutral" tickers=["COIN"]
+economic calendar -> 200
+  rows 36 keys type,time,prev,event,forecast,reported_period
+  first: time="2026-11-18T13:30:00Z" event="Housing Starts"
+  last:  time="2026-11-16T13:30:00Z" event="Empire State Manufacturing Survey"
+interest/yields? treasury -> 200
+screener stocks (movers stand-in) -> 200
+  rows 3 keys week_52_low,put_premium_mid_side,implied_move_perc_90,gex_charm_per_one_percent_move_dir,one_week_return_stddevs,put_volume_ask_side,cum_dir_vega,three_month_perc,gex_delta_per_one_percent_move_vol,stoch_5_3_3_k,one_week_perc,prev_4_day_option_volume,gex_perc_change,beta,call_premium_mid_side,iv30d,gex_charm_per_one_percent_move_oi,sma_10,full_name,reg_sho_status,prev_put_volume,gex_charm_per_one_percent_move_vol,prev_call_oi,repeated_hits
+  first: ticker="PMCB" close="6.68" prev_close="0.402" perc_change=undefined
+  last:  ticker="VTSI" close="4.2399" prev_close="2.62" perc_change=undefined
+market spike -> 404
+  rows 1 keys error,help
+  first: time=undefined value=undefined
+  last:  time=undefined value=undefined
