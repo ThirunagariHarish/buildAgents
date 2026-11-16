@@ -21,7 +21,7 @@ echo "px freshness: $(Q "SELECT substr(name, 4), to_char(now() - max(ts), 'DD\\\
 G() { curl -s -o "$TMP/r" -b "$TMP/jar" -w '%{http_code}' --max-time 40 "$SITE$1"; }
 J() { node -e '(function(){let j;try{j=JSON.parse(require("fs").readFileSync(process.argv[1]))}catch{console.log("not json");return}try{console.log(String(eval(process.argv[2])).slice(0,400))}catch(e){console.log("shape: "+String(e).slice(0,120))}})()' "$TMP/r" "$1"; }
 echo "macro -> $(G /api/trader/macro) $(J '"live_at="+j.live_at+" live="+j.live.map(l=>l.ticker+(l.change===null?"":":"+(l.change*100).toFixed(2))).join(",")+" kpis="+j.read.kpis.length+" corr="+j.read.stock_bond')"
-echo "news -> $(G /api/trader/news) $(J '"newest="+j.last_headline_at+" items="+j.items.length+" with_move="+j.items.filter(i=>i.tickers.some(t=>t.move!==null)).length')"
+echo "news -> $(G /api/trader/news) $(J '"newest="+j.last_headline_at+" items="+j.items.length+" with_tickers="+j.items.filter(i=>i.tickers.length).length+" with_move="+j.items.filter(i=>i.tickers.some(t=>t.move!==null)).length+" board="+j.board.slice(0,10).map(b=>b.ticker+":"+b.headlines).join(",")')"
 echo "direction -> $(G /api/trader/direction) $(J '"date="+j.read.trading_date+" as_of="+j.read.as_of+" lean="+j.read.lean+" gamma="+j.gamma.net+" sectors="+j.sectors.length')"
 echo "ideas -> $(G /api/trader/ideas) $(J '"date="+j.trading_date+" live="+j.live+" total="+j.total+" last_alert="+j.last_alert_at+" last_quote="+j.last_quote_at')"
 for P in / /direction /chatter /news /macro /status /me /today /record /ticker/NVDA /login; do printf "%s -> %s; " "$P" "$(curl -s -o /dev/null -b "$TMP/jar" -w '%{http_code}' --max-time 30 "$SITE$P")"; done; echo
