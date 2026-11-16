@@ -1,4 +1,4 @@
-run 52 at 2026-11-16T09:35:36Z, commit 4fdf8e3
+run 53 at 2026-11-16T09:37:38Z, commit 38b3657
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,57 +6,14 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-## sync
-Box copy: HEAD 4d50919, uncommitted files 0
-GitHub main d43d9b0; branch eb780e0
-GitHub main is now eb780e0
-Box copy moved to eb780e01
-## wait for the image pin of eb780e0
-pinned after ~180s
-## deploy
-== code ==
-== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
-== tidy: deploy Jobs for an image that was never built ==
-== apply ==
-job gate-eb780e0: complete
-job backup-eb780e0: complete
-job migrate-eb780e0: complete
-job role-check-eb780e0: complete
-unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
-unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
-images now: unusual-options-detector=eb780e0 unusual-options-detector-worker=eb780e0 
-== Google keys from Doppler ==
-== the live site ==
-health: {"status":"ok"}
-== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
-health: {"status":"ok"}
-forced daily read: DELETE 1
-trader log:
-{"level":30,"time":1794821580577,"app":"worker","status":"ok","session":"2026-11-13","in_session":false,"alerts":5000,"ideas":2448,"marks":500,"graded":820,"closed":true,"errors":0,"requests":179,"msg":"trader"}
-markets log: {"level":30,"time":1794821718918,"app":"worker","status":"ok","hourly":false,"daily":true,"tickers":17,"ticker_errors":0,"public_errors":0,"requests":131,"msg":"markets read"}
-settings: legacy_signals | false;show_chatter | false;show_trader | false;
-ideas: 2026-11-13 | intraday | 820 | 196 | 15:07:15 | 21:32:44;2026-11-13 | swing | 1628 | 49 | 15:07:15 | 21:23:42;
-alerts counted: 5000; marks: 431 | 431 | 2026-11-16 09:32:48
-outcomes: intraday | loss | 155 | -0.434;intraday | no_quote | 617 | ;intraday | win | 48 | 0.376;
-tiers: high | bearish | 14;high | bullish | 8;high | unclear | 1;low | bearish | 947;low | bullish | 946;low | unclear | 310;watch | bearish | 98;watch | bullish | 99;watch | unclear | 25;
-series: px | 16 | 6400 | 2026-11-14 00:55:00;sector | 12 | 12 | 2026-11-16 09:30:00;sectorpc | 12 | 12 | 2026-11-16 09:30:00;sectorprem | 12 | 12 | 2026-11-16 09:30:00;spy | 5 | 2610 | 2026-11-13 21:15:00;tide | 2 | 210 | 2026-11-13 21:10:00;
-models: ; direction calls: 0
-headlines: 424 | 96 | 14 | 2026-11-16 09:32:40; vendor sentiment: null | 352;neutral | 72;
-earnings: 2026-11-16 | 83;2026-11-17 | 40;2026-11-18 | 36;2026-11-19 | 36;2026-11-20 | 8;2026-11-23 | 20;
-macro: 26 | 7830 | 2026-11-15
-chatter: 1004 | 2026-11-16 02:52:04; channels read: 132 | 2026-11-16 09:35:03
-admin sign-in: 200
-/api/me -> 200 trader=true chatter=true
-ideas intraday -> 200 date=2026-11-13 live=false dates=1 shown=100 total=820 card={"w":48,"l":155,"nq":617,"pending":0,"ahead":0,"behind":0,"avg":-0.24219261083743843,"due":null} tiers=high:11/3/5,watch:128/23/72,low:681/22/78 model={"v":null,"use":false,"graded":203,"days":1}
-ideas swing -> 200 date=2026-11-13 live=false dates=1 shown=100 total=1628 card={"w":0,"l":0,"nq":0,"pending":1628,"ahead":49,"behind":179,"avg":null,"due":"2026-11-20"} tiers=high:2/0/0,watch:32/0/0,low:1594/0/0 model={"v":null,"use":false,"graded":0,"days":0}
-top idea -> 200 {"score":87.4,"tier":"high","lean":"bullish","type":"C","dte":3,"premium":9951276,"ask_share":0.94,"has_ask":true,"itm":0.4696,"be":0.31,"factors":7,"now":true,"outcome":"win"}
-direction -> 200 date=2026-11-13 lean=down score=-0.667 spot=true prev=true inputs=open_move:-1,trend:-1,tide:1,spy_flow:-1,breadth:na,gamma:0 price=79 tide=79 spyflow=391 sectors=0 gamma=neg vix=2026-11-12 calls=0 caldays=11 events=18 earnings=223 expirations=2026-11-20
-chatter 1h -> 200 span=24h widened=true configured=true rows=3 read=2026-11-16T09:35:02 newest=2026-11-16T02:52:04 top=META:2/2p/0.6,VIX:1/1p/0.3,NVDA:1/1p/-1.9
-chatter 24h -> 200 span=24h widened=false configured=true rows=3 read=2026-11-16T09:35:02 newest=2026-11-16T02:52:04 top=META:2/2p/0.6,VIX:1/1p/0.3,NVDA:1/1p/-1.9
-news -> 200 items=150 newest=2026-11-16T09:32:40 pos=5 neg=9 vendor_basis=0 with_tickers=35 with_move=0 board=AI:13,RSI:7,PM:4,GOLD:3,BIDU:2,NEAR:2
-macro -> 200 kpis=21 tail=7 head=2 growth=0.375 inflation=0 regime=unclear corr=na summary=5 live=SPY:-0.99,QQQ:-2.02,IWM:-1.03,TLT:-0.38,UUP:0.23,GLD:0.23,USO:-0.06,HYG:-0.06,VIXY:5.89 tags=core_pce:n,breakeven:n,unemployment:n,payrolls:t,claims:n,factories:t,production:t,retail:t,housing:h,sentiment:n,fed_funds:h,two_year:n,ten_year:n,curve:n,mortgage:t,balance_sheet:n,credit:n,conditions:t,dollar:n,vix:n,trend:t
-/ -> 200; /?view=swing -> 200; /direction -> 200; /direction?view=calendar -> 200; /chatter -> 200; /news -> 200; /macro -> 200; /me -> 200; /today -> 200; /record -> 200; /ticker/NVDA -> 200; 
-recent web errors: 
-recent worker errors: {"level":30,"time":1794821580577,"app":"worker","status":"ok","session":"2026-11-13","in_session":false,"alerts":5000,"ideas":2448,"marks":500,"graded":820,"closed":true,"errors":0,"requests":179,"msg":"trader"}
-{"level":30,"time":1794821580633,"app":"worker","status":"ok","channels":132,"messages":0,"mentions":0,"channelErrors":0,"msg":"chatter read"}
-{"level":30,"time":1794821718918,"app":"worker","status":"ok","hourly":false,"daily":true,"tickers":17,"ticker_errors":0,"public_errors":0,"requests":131,"msg":"markets read"}
+series: BAMLH0A0HYM2 | 547 | 2024-10-17 | 2026-11-12;CPIAUCSL | 25 | 2024-10-01 | 2026-10-01;CPILFESL | 25 | 2024-10-01 | 2026-10-01;DFEDTARL | 760 | 2024-10-17 | 2026-11-15;DFEDTARU | 760 | 2024-10-17 | 2026-11-15;DFF | 757 | 2024-10-17 | 2026-11-12;DGS10 | 541 | 2024-10-17 | 2026-11-12;DGS2 | 541 | 2024-10-17 | 2026-11-12;DTWEXBGS | 537 | 2024-10-17 | 2026-11-06;GACDFSA066MSFRBPHI | 25 | 2024-10-01 | 2026-10-01;HOUST | 24 | 2024-10-01 | 2026-09-01;ICSA | 108 | 2024-10-19 | 2026-11-07;INDPRO | 24 | 2024-10-01 | 2026-09-01;MORTGAGE30US | 109 | 2024-10-17 | 2026-11-12;NFCI | 108 | 2024-10-18 | 2026-11-06;PAYEMS | 25 | 2024-10-01 | 2026-10-01;PCEPILFE | 24 | 2024-10-01 | 2026-09-01;RSAFS | 24 | 2024-10-01 | 2026-09-01;SP500 | 542 | 2024-10-17 | 2026-11-13;T10Y2Y | 542 | 2024-10-17 | 2026-11-13;T10Y3M | 542 | 2024-10-17 | 2026-11-13;T5YIE | 542 | 2024-10-17 | 2026-11-13;UMCSENT | 24 | 2024-10-01 | 2026-09-01;UNRATE | 25 | 2024-10-01 | 2026-10-01;VIXCLS | 541 | 2024-10-17 | 2026-11-12;WALCL | 108 | 2024-10-23 | 2026-11-11;
+overlap SP500 x DGS10: 541 | 2024-10-17 | 2026-11-12
+last SP500: 2026-11-13 | 7561.6700;2026-11-12 | 7592.4000;2026-11-11 | 7619.3800;2026-11-10 | 7520.9300;
+last DGS10: 2026-11-12 | 5.1000;2026-11-11 | 0.0000;2026-11-10 | 4.9800;2026-11-09 | 4.8800;
+cpi tail: 2026-10-01 | 337.4760;2026-09-01 | 336.2980;2026-08-01 | 334.1310;2026-07-01 | 332.8130;2026-06-01 | 332.5680;2026-05-01 | 333.9790;2026-04-01 | 332.4070;2026-03-01 | 330.2930;2026-02-01 | 327.4600;2026-01-01 | 326.5880;2025-12-01 | 326.0310;2025-11-01 | 325.0630;2025-10-01 | 0.0000;2025-09-01 | 324.2450;2025-08-01 | 323.2910;2025-07-01 | 322.1690;
+px names: px:AAPL | 400 | 2026-11-11 23:30:00 | 2026-11-14 00:55:00;px:AI | 400 | 2026-11-09 20:55:00 | 2026-11-14 00:55:00;px:BIDU | 400 | 2026-11-10 20:10:00 | 2026-11-14 00:55:00;px:GLD | 400 | 2026-11-11 21:10:00 | 2026-11-14 00:55:00;px:GOOGL | 400 | 2026-11-11 23:35:00 | 2026-11-14 00:55:00;px:HYG | 400 | 2026-11-09 16:45:00 | 2026-11-13 22:55:00;px:IWM | 400 | 2026-11-11 18:20:00 | 2026-11-14 00:55:00;px:MSFT | 400 | 2026-11-11 23:00:00 | 2026-11-14 00:55:00;px:NVDA | 400 | 2026-11-11 23:40:00 | 2026-11-14 00:55:00;px:QQQ | 400 | 2026-11-11 23:40:00 | 2026-11-14 00:55:00;px:RSI | 400 | 2026-11-09 14:55:00 | 2026-11-13 21:00:00;px:SPY | 400 | 2026-11-11 23:15:00 | 2026-11-14 00:55:00;px:TLT | 400 | 2026-11-11 19:45:00 | 2026-11-14 00:55:00;px:USO | 400 | 2026-11-11 14:20:00 | 2026-11-14 00:55:00;px:UUP | 400 | 2026-11-09 12:20:00 | 2026-11-13 22:00:00;px:VIXY | 400 | 2026-11-10 18:35:00 | 2026-11-14 00:55:00;
+score spread: intraday | 2 | 1;intraday | 3 | 58;intraday | 4 | 144;intraday | 5 | 210;intraday | 6 | 211;intraday | 7 | 137;intraday | 8 | 52;intraday | 9 | 7;swing | 1 | 2;swing | 2 | 132;swing | 3 | 421;swing | 4 | 477;swing | 5 | 384;swing | 6 | 163;swing | 7 | 35;swing | 8 | 13;swing | 9 | 1;
+graded by score: 2 | no_quote | 1;3 | no_quote | 58;4 | no_quote | 144;5 | no_quote | 210;6 | loss | 40;6 | no_quote | 162;6 | win | 9;7 | loss | 89;7 | no_quote | 23;7 | win | 25;8 | loss | 23;8 | no_quote | 16;8 | win | 13;9 | loss | 3;9 | no_quote | 3;9 | win | 1;
+no_quote by expiry: 2026-11-13 | 160 | 229;2026-11-16 | 72 | 132;2026-11-17 | 24 | 26;2026-11-18 | 50 | 60;2026-11-19 | 11 | 16;2026-11-20 | 300 | 357;
+issue types: Common Stock | 1462;ETF | 758;null | 177;ADR | 50;Structured Product | 1;
+null fields: 0 | 0 | 0 | 173 | 174 | 45 | 2448
