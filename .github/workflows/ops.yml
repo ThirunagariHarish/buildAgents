@@ -54,7 +54,7 @@ jobs:
             umask 077
             if printf '%s' "$BOX_KUBECONFIG" | grep -q 'apiVersion'; then printf '%s\n' "$BOX_KUBECONFIG" > kc; else printf '%s' "$BOX_KUBECONFIG" | base64 -d > kc; fi
             echo "BOX_KUBECONFIG: set; API server port $(grep -o 'server: https://[^ ]*' kc | sed -E 's#.*:([0-9]+).*#\1#')"
-            KCFG="$PWD/kc" SYNC_BRANCH=claude/charts WANT_SHA=4d509197a7d141c0e110858f26ca4bd3e3d6f1b5 timeout 3400 bash -c "bash rollout.sh; bash final-check.sh" 2>&1 | sed -E "s/x-access-token:[^@]*@/x-access-token:***@/g"
+            KCFG="$PWD/kc" timeout 3400 bash -c "bash uw-probe9.sh" 2>&1 | sed -E "s/x-access-token:[^@]*@/x-access-token:***@/g"
             rm -f kc
           } | tr -d '\r' > server.txt
 
