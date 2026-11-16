@@ -1,4 +1,4 @@
-run 49 at 2026-11-16T03:21:32Z, commit 2c6a3d2
+run 50 at 2026-11-16T08:15:03Z, commit 1892871
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,65 +6,74 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-## sync
-Box copy: HEAD f5be042, uncommitted files 0
-GitHub main 53e7507; branch 4d50919
-GitHub main is now 4d50919
-Box copy moved to 4d509197
-## wait for the image pin of 4d50919
-pinned after ~180s
-## deploy
-== code ==
-== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
-== tidy: deploy Jobs for an image that was never built ==
-== apply ==
-job gate-4d50919: complete
-job backup-4d50919: complete
-job migrate-4d50919: complete
-job role-check-4d50919: complete
-unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
-unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
-images now: unusual-options-detector=4d50919 unusual-options-detector-worker=4d50919 
-== Google keys from Doppler ==
-== the live site ==
-health: {"status":"ok"}
-== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
-forced daily read: DELETE 1
-worker: {"level":30,"time":1794799274625,"app":"worker","status":"ok","hourly":false,"daily":true,"tickers":17,"ticker_errors":0,"public_errors":0,"requests":108,"msg":"markets read"}
-macro: DFEDTARL | 2026-11-15 | 121;DFEDTARU | 2026-11-15 | 121;DGS10 | 2026-11-12 | 84;
-ark: 39 | 1 | 2026-11-13
-reading: Aswath Damodaran | 8;A Wealth of Common Sense | 8;Bridgewater | 3;Farnam Street | 8;Federal Reserve | 8;Of Dollars and Data | 8;Visual Capitalist | 13;
-etf: QQQ | 101;SPY | 250;
-darkpool: 111 | 17 | 2026-11-13
-gamma: 1020 | 17 | 2026-11-13
-gamma strikes: 603 | 17 | 2026-11-13; sector tide: 495 | 11 | 2026-11-13; tide sessions: 1
-next fed on calendar: 0; calendar event kinds: Federal Open Market Committe;Kansas City Fed Survey;Money Marketeers dinner even;Philadelphia Fed Business Ou;
-admin sign-in: 200
-/api/me -> 200 id=str email=str name=str role=str push_subscribed=true chatter=true flow=true money=true markets=true new_design=false
-/api/flow/focus -> 200 trading_date=str dates=60 net=17 expiries=4 leaning={3}
-/api/flow/week -> 200 dates=5 rows=17
-/api/flow/week?days=20 -> 200 dates=20 rows=17
-/api/flow/grid?ticker=NVDA -> 200 trading_date=str ticker=str expiries=6 strikes=12 cells=93
-/api/flow/board -> 200 trading_date=str dates=60 bullish=15 bearish=15 map=17
-/api/flow/filters -> 200 trading_date=null filters=0
-/api/money/funds -> 200 funds=17 consensus=25 read_at=str
-/api/money/insiders -> 200 rows=50 next_offset=50 clusters=20 read_at=str
-/api/money/congress -> 200 member=null rows=50 next_offset=50 read_at=str
-/api/markets -> 200 tide={2} tide_change={3} tide_days=1 sectors=11 calendar=18 earnings=2 macro={3} ark=null headlines=40
-/api/tickers/SPY -> 200 ticker=str name=str watching=false signals=0 market={11} flow={5} funds=6 insiders={3} congress={2} chatter={3}
-/api/tickers/NVDA -> 200 ticker=str name=str watching=false signals=0 market={11} flow={5} funds=8 insiders={3} congress={2} chatter={3}
-/api/watchlist -> 200 items=0 follows=0 events=0
-/api/learn/reading -> 200 items=33
-/api/search?q=nv -> 200 tickers=8 funds=2 politicians=0
-/api/record/summary -> 200 signals=0 days=0 first_date=null bullish=0 bearish=0 unclear=0
-SPY market: closes 126 etf 15 darkpool levels 3 gamma 30 seasonality 12
-markets: macro ten_year yes, fed yes, next_fed no; ark waiting for a second day; tide points 105
-/ -> 200; /flow -> 200; /money -> 200; /markets -> 200; /watching -> 200; /search -> 200; /learn -> 200; /method -> 200; /ticker/NVDA -> 200; /record -> 200; /me -> 200; 
-recent web errors: 
-sessions without stored quotes: 8 | 2026-08-21 | 2026-09-01
-fed events: Federal Open Market Committee meeting minutes published | 2026-11-18;
-focus: net rows 17, leaning {"bullish":3,"bearish":7,"none":7}, expiry buckets 4, date 2026-11-13
-week: dates 5 (2026-11-09 .. 2026-11-13), rows 17, in top on all days 4
-grid NVDA: expiries 6, strikes 12, cells 93, above OI 7
-markets charts: tide_change yes, tide days 1, sectors 11
-NVDA ticker: gamma strikes 40, darkpool levels 6
+rate headers:
+x-uw-req-per-minute-remaining: 1000000
+x-uw-req-per-minute-reset: 60000
+flow-alerts -> 200
+  rows 200: has_multileg:boolean iv:number open_interest:number underlying_price:null/string option_chain:string expiry:string iv_start:string sector:null/string end_time:number delta:number rule_id:string ask:string issue_type:null/string has_floor:boolean theta:number iv_end:string trade_count:number total_size:number total_bid_side_prem:string bid:string rho:number has_singleleg:boolean gamma:number price:string missing_periscope:boolean alert_rule:string expiry_count:number all_opening_trades:boolean total_premium:string er_time:null/string start_time:number id:string strike:string ticker:string created_at:string theo:number total_ask_side_prem:string marketcap:null/string vega:number volume_oi_ratio:string type:string has_sweep:boolean volume:number next_earnings_date:null/string
+  row0: created_at="2026-11-13T21:59:38.699864Z" alert_rule="RepeatedHits" type="call" has_sweep=false has_floor=false has_multileg=false has_singleleg=true all_opening_trades=false expiry="2026-11-16" strike="7650" total_premium="19500" volume_oi_ratio="5.59955257270694" total_ask_side_prem="9165" total_bid_side_prem="10335"
+  row199: created_at="2026-11-13T21:08:20.923648Z" alert_rule="RepeatedHits" type="call" has_sweep=false has_floor=false has_multileg=false has_singleleg=true all_opening_trades=false expiry="2026-11-16" strike="752" total_premium="34348" volume_oi_ratio="76.9470046082949" total_ask_side_prem="1648" total_bid_side_prem="32700"
+  rules: {"RepeatedHits":147,"RepeatedHitsAscendingFill":23,"RepeatedHitsDescendingFill":30}
+  issue types: {"null":23,"ETF":172,"Common Stock":5}; span 2026-11-13T21:08:20 .. 2026-11-13T21:59:38
+flow-alerts filtered (min_premium 250k, single-leg) -> 200
+  rows 200; span 2026-11-13T20:32:05 .. 2026-11-13T21:31:00
+hottest chains -> 200
+  rows 50: roc:string/null ask_side_perc_7_day:string vega:string expiry:string option_watchlists:null stock_price:string/null prev_iv:string theta:string bid_side_perc_7_day:string delta:string total_ask_changes:number strike:string open:string ticker_symbol:string no_side_volume:number trades:number prev_oi:number iv_change:string days_of_oi_increases:number low:string sector:null/string close:string vol_pctile_15d:null gamma:string multileg_volume:number avg_price:string cross_volume:number issue_type:string/null premium:string option_type:string stock_multi_leg_volume:number bid_side_volume:number volume:number chain_prev_close:string floor_volume:number days_of_vol_greater_than_oi:number last_fill:string option_symbol:string er_time:null/string next_earnings_date:null/string sweep_volume:number open_interest:number ask_side_volume:number is_new:boolean ticker_vol:number high:string mid_volume:number total_bid_changes:number missing_periscope:boolean
+  row0: option_symbol="SPY261113P00750000" volume=556700 open_interest=19864 premium="64195929.00" ask_side_volume=260658 bid_side_volume=276291 sweep_volume=38572 implied_volatility=undefined delta="-0.1194625822739798" last_fill="2026-11-13T21:14:58Z" close="0.15" prev_oi=11683
+  row49: option_symbol="NVDA261113C00167500" volume=152410 open_interest=20834 premium="5180003.00" ask_side_volume=68886 bid_side_volume=79313 sweep_volume=4397 implied_volatility=undefined delta="0.01346497375938643" last_fill="2026-11-13T20:59:14Z" close="0.01" prev_oi=4428
+top-net-impact -> 200
+  rows 20: ticker:string net_premium:number
+  row0: ticker="MU" net_premium=18022330 net_call_premium=undefined net_put_premium=undefined
+  row19: ticker="NVDA" net_premium=-95154861 net_call_premium=undefined net_put_premium=undefined
+market oi-change -> 200
+  rows 20: trades:number volume:number option_symbol:string underlying_symbol:string curr_oi:number last_fill:string prev_ask_volume:number prev_bid_volume:number prev_mid_volume:number prev_multi_leg_volume:number prev_neutral_volume:number prev_stock_multi_leg_volume:number prev_total_premium:string avg_price:string curr_date:string oi_change:string last_date:string days_of_vol_greater_than_oi:number days_of_oi_increases:number last_ask:string last_oi:number oi_diff_plain:number percentage_of_total:string last_bid:string rnk:number
+  row0: option_symbol="PCG270115C00015000" oi_diff_plain=45119 curr_oi=148148 last_oi=103029 avg_price="0.5874950212815806942871646688" prev_ask_volume=50060 prev_bid_volume=1101
+  row19: option_symbol="NVDA261113P00155000" oi_diff_plain=21295 curr_oi=31102 last_oi=9807 avg_price="1.4513491814089768" prev_ask_volume=93894 prev_bid_volume=118833
+contract intraday -> 200
+  rows 2: close:string high:string low:string open:string start_time:string trading_hours:string avg_price:string iv_high:string iv_low:string premium_ask_side:number premium_bid_side:number premium_mid_side:number premium_no_side:number volume_ask_side:number volume_bid_side:number volume_mid_side:number volume_no_side:number volume_multi:number volume_stock_multi:number
+  row0: start_time="2026-11-13T20:15:00Z" open="74.07" high="74.07" low="74.07" close="74.07" volume=undefined avg_price="74.07" premium_ask_side=7407 premium_bid_side=0 iv_low="0.2023" iv_high="0.2023"
+  row1: start_time="2026-11-13T15:50:00Z" open="71.90" high="72.02" low="71.90" close="72.02" volume=undefined avg_price="71.96" premium_ask_side=14392 premium_bid_side=0 iv_low="0.3536" iv_high="0.3620"
+contract historic -> 200
+  rows 1: chains:array etf_holdings:array
+  row0: date=undefined last_price=undefined nbbo_bid=undefined nbbo_ask=undefined open_interest=undefined implied_volatility=undefined volume=undefined
+  row0: date=undefined last_price=undefined nbbo_bid=undefined nbbo_ask=undefined open_interest=undefined implied_volatility=undefined volume=undefined
+stock option-contracts (chain) -> 200
+  rows 5: delta:number theta:number gamma:number open_interest:number volume:number last_price:string option_symbol:string implied_volatility:string nbbo_ask:string nbbo_bid:string rho:number vega:number bid_volume:number ask_volume:number mid_volume:number avg_price:string prev_oi:number floor_volume:number high_price:string last_tape_time:string low_price:string multi_leg_volume:number stock_multi_leg_volume:number sweep_volume:number total_premium:string no_side_volume:number
+  row0: option_symbol="SPY261113P00750000" nbbo_bid="0.16" nbbo_ask="0.17" last_price="0.15" implied_volatility="1.793050063231413" open_interest=19864 volume=556705
+  row4: option_symbol="SPY261113P00751000" nbbo_bid="0.25" nbbo_ask="0.27" last_price="0.24" implied_volatility="1.517559158929989" open_interest=9528 volume=437629
+news -> 200
+  sentiment: {"neutral":50}; sources: {"Tradex":23,"PR NewsWire":16,"Business Wire":5,"Blockchain News":6}; with tickers 13/50; meta keys 
+vix term structure -> 403
+  rows 1: code:string message:string
+  row0: date=undefined expiry=undefined dte=undefined
+  row0: date=undefined expiry=undefined dte=undefined
+total options volume -> 200
+  rows 5: date:string call_volume:number put_volume:number put_premium:string call_premium:string
+  row0: date="2026-11-13"
+  row4: date="2026-11-09"
+movers -> 403
+  rows 1: code:string message:string
+  row0: ticker=undefined
+  row0: ticker=undefined
+sector etfs -> 200
+  rows 12: high:string low:string open:string last:string ticker:string full_name:string volume:number call_volume:number put_volume:number marketcap:string put_premium:string call_premium:string prev_date:string in_out_flow:array avg30_call_volume:string avg_30_day_call_volume:string avg30_put_volume:string avg_30_day_put_volume:string week52_high:string week52_low:string avg30_stock_volume:string avg_7_day_call_volume:string avg_7_day_put_volume:string bearish_premium:string bullish_premium:string prev_close:string
+  row0: ticker="SPY" full_name="S&P 500 Index"
+  row11: ticker="XLY" full_name="Consumer Discretionary"
+SPY net-prem-ticks -> 200
+  rows 522: date:string call_volume:number put_volume:number call_volume_ask_side:number call_volume_bid_side:number put_volume_ask_side:number put_volume_bid_side:number tape_time:string net_call_volume:number net_call_premium:string net_put_volume:number net_put_premium:string net_delta:string
+  row0: tape_time="2026-11-13T12:30:00.000000Z" date="2026-11-13"
+  row521: tape_time="2026-11-13T21:15:00.000000Z" date="2026-11-13"
+SPY ohlc 5m -> 200
+  rows 5: close:string end_time:string high:string low:string market_time:string open:string start_time:string total_volume:number volume:number
+  row0: start_time="2026-11-14T00:55:00Z" market_time="po" close="749.6"
+  row4: start_time="2026-11-14T00:35:00Z" market_time="po" close="749.74"
+SPY spot-exposures (gex per min) rows -> 200
+  rows 543
+stock-state SPY -> 200
+  rows 1: close:string high:string low:string open:string volume:number total_volume:number market_time:string tape_time:string prev_close:string
+  row0: tape_time="2026-11-14T00:59:40Z" market_time="postmarket"
+  row0: tape_time="2026-11-14T00:59:40Z" market_time="postmarket"
+market correlations -> 200
+  rows 6: rows:number correlation:null max_date:string min_date:string fst:string snd:string
+  row0: fst="IWM" snd="QQQ"
+  row5: fst="SPY" snd="QQQ"
