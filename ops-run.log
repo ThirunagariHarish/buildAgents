@@ -1,4 +1,4 @@
-run 48 at 2026-11-16T03:00:05Z, commit b4de5df
+run 49 at 2026-11-16T03:21:32Z, commit 2c6a3d2
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,22 +6,65 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-spot-exposures/strike NVDA -> 200
-  top data; rows 290: call_gamma_vol:string put_vanna_oi:string call_charm_bid:string call_vanna_oi:string call_charm_vol:string put_vanna_vol:string call_vanna_ask:string ticker:string call_vanna_bid:string call_vanna_vol:string call_delta_bid:string call_delta_oi:string put_vanna_bid:string call_gamma_bid:string call_delta_ask:string time:string put_gamma_ask:string put_charm_ask:string put_delta_bid:string call_gamma_ask:string price:string put_delta_ask:string call_gamma_oi:string put_gamma_vol:string put_charm_bid:string strike:string put_delta_oi:string put_charm_oi:string put_gamma_bid:string put_charm_vol:string put_vanna_ask:string call_delta_vol:string put_gamma_oi:string put_delta_vol:string date:string call_charm_oi:string call_charm_ask:string
-  row0: strike="0.5" time="2026-11-13T21:15:00.000000Z" price="162.85"
-  row289: strike="480" time="2026-11-13T21:15:00.000000Z" price="162.85"
-  strikes 0.5..480; call_gamma_oi +269/-0; put_gamma_oi +0/-253; call_gamma_vol +213/-0; put_gamma_vol +0/-208
-spot-exposures/strike NVDA limited -> 200
-  rows 290
-sector-tide Technology -> 200
-  top data,date; rows 522: timestamp:string date:string net_call_premium:string net_put_premium:string net_volume:number
-  row0: timestamp="2026-11-13T12:30:00Z" date="2026-11-13"
-  row521: timestamp="2026-11-13T21:38:00Z" date="2026-11-13"
-sector-tide Financial Services -> 200
-  top data,date; rows 430: timestamp:string date:string net_call_premium:string net_put_premium:string net_volume:number
-  row0: timestamp="2026-11-13T12:32:00Z" date="2026-11-13"
-  row429: timestamp="2026-11-13T21:14:00Z" date="2026-11-13"
-stock price in spot-exposures (per 1min) NVDA -> 200
-  top data; rows 565: charm_per_one_percent_move_dir:string charm_per_one_percent_move_oi:string charm_per_one_percent_move_vol:string gamma_per_one_percent_move_dir:string gamma_per_one_percent_move_oi:string gamma_per_one_percent_move_vol:string price:string start_time:string ticker:string ticker_id:number time:string vanna_per_one_percent_move_dir:string vanna_per_one_percent_move_oi:string vanna_per_one_percent_move_vol:string
-  row0: time="2026-11-13T11:36:32.199000Z" price="170.44"
-  row564: time="2026-11-13T21:00:16.000000Z" price="162.8201"
+## sync
+Box copy: HEAD f5be042, uncommitted files 0
+GitHub main 53e7507; branch 4d50919
+GitHub main is now 4d50919
+Box copy moved to 4d509197
+## wait for the image pin of 4d50919
+pinned after ~180s
+## deploy
+== code ==
+== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
+== tidy: deploy Jobs for an image that was never built ==
+== apply ==
+job gate-4d50919: complete
+job backup-4d50919: complete
+job migrate-4d50919: complete
+job role-check-4d50919: complete
+unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
+unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
+images now: unusual-options-detector=4d50919 unusual-options-detector-worker=4d50919 
+== Google keys from Doppler ==
+== the live site ==
+health: {"status":"ok"}
+== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
+forced daily read: DELETE 1
+worker: {"level":30,"time":1794799274625,"app":"worker","status":"ok","hourly":false,"daily":true,"tickers":17,"ticker_errors":0,"public_errors":0,"requests":108,"msg":"markets read"}
+macro: DFEDTARL | 2026-11-15 | 121;DFEDTARU | 2026-11-15 | 121;DGS10 | 2026-11-12 | 84;
+ark: 39 | 1 | 2026-11-13
+reading: Aswath Damodaran | 8;A Wealth of Common Sense | 8;Bridgewater | 3;Farnam Street | 8;Federal Reserve | 8;Of Dollars and Data | 8;Visual Capitalist | 13;
+etf: QQQ | 101;SPY | 250;
+darkpool: 111 | 17 | 2026-11-13
+gamma: 1020 | 17 | 2026-11-13
+gamma strikes: 603 | 17 | 2026-11-13; sector tide: 495 | 11 | 2026-11-13; tide sessions: 1
+next fed on calendar: 0; calendar event kinds: Federal Open Market Committe;Kansas City Fed Survey;Money Marketeers dinner even;Philadelphia Fed Business Ou;
+admin sign-in: 200
+/api/me -> 200 id=str email=str name=str role=str push_subscribed=true chatter=true flow=true money=true markets=true new_design=false
+/api/flow/focus -> 200 trading_date=str dates=60 net=17 expiries=4 leaning={3}
+/api/flow/week -> 200 dates=5 rows=17
+/api/flow/week?days=20 -> 200 dates=20 rows=17
+/api/flow/grid?ticker=NVDA -> 200 trading_date=str ticker=str expiries=6 strikes=12 cells=93
+/api/flow/board -> 200 trading_date=str dates=60 bullish=15 bearish=15 map=17
+/api/flow/filters -> 200 trading_date=null filters=0
+/api/money/funds -> 200 funds=17 consensus=25 read_at=str
+/api/money/insiders -> 200 rows=50 next_offset=50 clusters=20 read_at=str
+/api/money/congress -> 200 member=null rows=50 next_offset=50 read_at=str
+/api/markets -> 200 tide={2} tide_change={3} tide_days=1 sectors=11 calendar=18 earnings=2 macro={3} ark=null headlines=40
+/api/tickers/SPY -> 200 ticker=str name=str watching=false signals=0 market={11} flow={5} funds=6 insiders={3} congress={2} chatter={3}
+/api/tickers/NVDA -> 200 ticker=str name=str watching=false signals=0 market={11} flow={5} funds=8 insiders={3} congress={2} chatter={3}
+/api/watchlist -> 200 items=0 follows=0 events=0
+/api/learn/reading -> 200 items=33
+/api/search?q=nv -> 200 tickers=8 funds=2 politicians=0
+/api/record/summary -> 200 signals=0 days=0 first_date=null bullish=0 bearish=0 unclear=0
+SPY market: closes 126 etf 15 darkpool levels 3 gamma 30 seasonality 12
+markets: macro ten_year yes, fed yes, next_fed no; ark waiting for a second day; tide points 105
+/ -> 200; /flow -> 200; /money -> 200; /markets -> 200; /watching -> 200; /search -> 200; /learn -> 200; /method -> 200; /ticker/NVDA -> 200; /record -> 200; /me -> 200; 
+recent web errors: 
+sessions without stored quotes: 8 | 2026-08-21 | 2026-09-01
+fed events: Federal Open Market Committee meeting minutes published | 2026-11-18;
+focus: net rows 17, leaning {"bullish":3,"bearish":7,"none":7}, expiry buckets 4, date 2026-11-13
+week: dates 5 (2026-11-09 .. 2026-11-13), rows 17, in top on all days 4
+grid NVDA: expiries 6, strikes 12, cells 93, above OI 7
+markets charts: tide_change yes, tide days 1, sectors 11
+NVDA ticker: gamma strikes 40, darkpool levels 6
