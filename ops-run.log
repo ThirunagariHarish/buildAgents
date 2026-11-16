@@ -1,4 +1,4 @@
-run 54 at 2026-11-16T09:49:10Z, commit 90e3bc5
+run 55 at 2026-11-16T10:22:14Z, commit 499e0fa
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,68 +6,19 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-## sync
-Box copy: HEAD eb780e0, uncommitted files 0
-GitHub main 7a599b7; branch fc1168a
-GitHub main is now fc1168a
-Box copy moved to fc1168a7
-## wait for the image pin of fc1168a
-pinned after ~210s
-## deploy
-== code ==
-== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
-== tidy: deploy Jobs for an image that was never built ==
-== apply ==
-job gate-fc1168a: complete
-job backup-fc1168a: complete
-job migrate-fc1168a: complete
-job role-check-fc1168a: complete
-unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
-unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
-images now: unusual-options-detector=fc1168a unusual-options-detector-worker=fc1168a 
-== Google keys from Doppler ==
-== the live site ==
-health: {"status":"ok"}
-== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
-health: {"status":"ok"}
-forced daily read: DELETE 1
-trader log:
-{"level":30,"time":1794822384611,"app":"worker","status":"ok","session":"2026-11-13","in_session":false,"alerts":0,"ideas":0,"marks":0,"graded":0,"closed":false,"errors":0,"requests":21,"msg":"trader"}
-markets log: {"level":30,"time":1794822533051,"app":"worker","status":"ok","hourly":false,"daily":true,"tickers":17,"ticker_errors":0,"public_errors":0,"requests":131,"msg":"markets read"}
-settings: legacy_signals | false;show_chatter | false;show_trader | false;
-ideas: 2026-11-13 | intraday | 820 | 196 | 15:07:15 | 21:32:44;2026-11-13 | swing | 1628 | 49 | 15:07:15 | 21:23:42;
-alerts counted: 5000; marks: 431 | 431 | 2026-11-16 09:32:48
-outcomes: intraday | loss | 155 | -0.434;intraday | no_quote | 617 | ;intraday | win | 48 | 0.376;
-tiers: high | bearish | 14;high | bullish | 8;high | unclear | 1;low | bearish | 947;low | bullish | 946;low | unclear | 310;watch | bearish | 98;watch | bullish | 99;watch | unclear | 25;
-series: px | 18 | 7200 | 2026-11-14 00:55:00;sector | 12 | 24 | 2026-11-16 09:45:00;sectorpc | 12 | 24 | 2026-11-16 09:45:00;sectorprem | 12 | 24 | 2026-11-16 09:45:00;spy | 5 | 2610 | 2026-11-13 21:15:00;tide | 2 | 210 | 2026-11-13 21:10:00;
-models: ; direction calls: 0
-headlines: 431 | 98 | 16 | 2026-11-16 09:43:07; vendor sentiment: null | 352;neutral | 79;
-earnings: 2026-11-16 | 83;2026-11-17 | 40;2026-11-18 | 36;2026-11-19 | 36;2026-11-20 | 8;2026-11-23 | 20;
-macro: 26 | 7653 | 2026-11-15
-chatter: 1004 | 2026-11-16 02:52:04; channels read: 132 | 2026-11-16 09:48:38
-admin sign-in: 200
-/api/me -> 200 trader=true chatter=true
-ideas intraday -> 200 date=2026-11-13 live=false dates=1 shown=100 total=820 card={"w":39,"l":115,"nq":42,"pending":0,"ahead":0,"behind":0,"avg":-0.23854285714285714,"due":null} tiers=high:11/3/5,watch:128/23/72,low:681/22/78 model={"v":null,"use":false,"graded":203,"days":1}
-ideas swing -> 200 date=2026-11-13 live=false dates=1 shown=100 total=1628 card={"w":0,"l":0,"nq":0,"pending":49,"ahead":10,"behind":31,"avg":null,"due":"2026-11-20"} tiers=high:2/0/0,watch:32/0/0,low:1594/0/0 model={"v":null,"use":false,"graded":0,"days":0}
-top idea -> 200 {"score":87.4,"tier":"high","lean":"bullish","type":"C","dte":3,"premium":9951276,"ask_share":0.94,"has_ask":true,"itm":0.4696,"be":0.31,"factors":7,"now":true,"outcome":"win"}
-direction -> 200 date=2026-11-13 lean=down score=-0.667 spot=true prev=true inputs=open_move:-1,trend:-1,tide:1,spy_flow:-1,breadth:na,gamma:0 price=79 tide=79 spyflow=391 sectors=0 gamma=neg vix=2026-11-12 calls=0 caldays=11 events=18 earnings=223 expirations=2026-11-20
-chatter 1h -> 200 span=24h widened=true configured=true rows=3 read=2026-11-16T09:48:38 newest=2026-11-16T02:52:04 top=META:2/2p/0.6,VIX:1/1p/0.3,NVDA:1/1p/-1.9
-chatter 24h -> 200 span=24h widened=false configured=true rows=3 read=2026-11-16T09:48:38 newest=2026-11-16T02:52:04 top=META:2/2p/0.6,VIX:1/1p/0.3,NVDA:1/1p/-1.9
-news -> 200 items=150 newest=2026-11-16T09:43:07 pos=7 neg=9 vendor_basis=0 with_tickers=36 with_move=0 board=AI:13,RSI:7,GOLD:3,PM:3,BIDU:2,NEAR:2
-macro -> 200 kpis=23 tail=7 head=4 growth=0.375 inflation=0.5 regime=unclear corr=-0.06 summary=5 live=SPY:-0.99,QQQ:-2.02,IWM:-1.03,TLT:-0.38,UUP:0.23,GLD:0.23,USO:-0.06,HYG:-0.06,VIXY:5.89 tags=cpi:h,core_cpi:h,core_pce:n,breakeven:n,unemployment:n,payrolls:t,claims:n,factories:t,production:t,retail:t,housing:h,sentiment:n,fed_funds:h,two_year:n,ten_year:n,curve:n,mortgage:t,balance_sheet:n,credit:n,conditions:t,dollar:n,vix:n,
-/ -> 200; /?view=swing -> 200; /direction -> 200; /direction?view=calendar -> 200; /chatter -> 200; /news -> 200; /macro -> 200; /me -> 200; /today -> 200; /record -> 200; /ticker/NVDA -> 200; 
-recent web errors: 
-recent worker errors: {"level":30,"time":1794822384611,"app":"worker","status":"ok","session":"2026-11-13","in_session":false,"alerts":0,"ideas":0,"marks":0,"graded":0,"closed":false,"errors":0,"requests":21,"msg":"trader"}
-{"level":30,"time":1794822400773,"app":"worker","status":"ok","channels":132,"messages":0,"mentions":0,"channelErrors":0,"msg":"chatter read"}
-{"level":30,"time":1794822533051,"app":"worker","status":"ok","hourly":false,"daily":true,"tickers":17,"ticker_errors":0,"public_errors":0,"requests":131,"msg":"markets read"}
-series: BAMLH0A0HYM2 | 542 | 2024-10-17 | 2026-11-12;CPIAUCSL | 24 | 2024-10-01 | 2026-10-01;CPILFESL | 24 | 2024-10-01 | 2026-10-01;DFEDTARL | 760 | 2024-10-17 | 2026-11-15;DFEDTARU | 760 | 2024-10-17 | 2026-11-15;DFF | 757 | 2024-10-17 | 2026-11-12;DGS10 | 517 | 2024-10-17 | 2026-11-12;DGS2 | 517 | 2024-10-17 | 2026-11-12;DTWEXBGS | 515 | 2024-10-17 | 2026-11-06;GACDFSA066MSFRBPHI | 25 | 2024-10-01 | 2026-10-01;HOUST | 24 | 2024-10-01 | 2026-09-01;ICSA | 108 | 2024-10-19 | 2026-11-07;INDPRO | 24 | 2024-10-01 | 2026-09-01;MORTGAGE30US | 109 | 2024-10-17 | 2026-11-12;NFCI | 108 | 2024-10-18 | 2026-11-06;PAYEMS | 25 | 2024-10-01 | 2026-10-01;PCEPILFE | 24 | 2024-10-01 | 2026-09-01;RSAFS | 24 | 2024-10-01 | 2026-09-01;SP500 | 521 | 2024-10-17 | 2026-11-13;T10Y2Y | 518 | 2024-10-17 | 2026-11-13;T10Y3M | 518 | 2024-10-17 | 2026-11-13;T5YIE | 518 | 2024-10-17 | 2026-11-13;UMCSENT | 24 | 2024-10-01 | 2026-09-01;UNRATE | 24 | 2024-10-01 | 2026-10-01;VIXCLS | 535 | 2024-10-17 | 2026-11-12;WALCL | 108 | 2024-10-23 | 2026-11-11;
-overlap SP500 x DGS10: 515 | 2024-10-17 | 2026-11-12
-last SP500: 2026-11-13 | 7561.6700;2026-11-12 | 7592.4000;2026-11-11 | 7619.3800;2026-11-10 | 7520.9300;
-last DGS10: 2026-11-12 | 5.1000;2026-11-10 | 4.9800;2026-11-09 | 4.8800;2026-11-06 | 4.8600;
-cpi tail: 2026-10-01 | 337.4760;2026-09-01 | 336.2980;2026-08-01 | 334.1310;2026-07-01 | 332.8130;2026-06-01 | 332.5680;2026-05-01 | 333.9790;2026-04-01 | 332.4070;2026-03-01 | 330.2930;2026-02-01 | 327.4600;2026-01-01 | 326.5880;2025-12-01 | 326.0310;2025-11-01 | 325.0630;2025-09-01 | 324.2450;2025-08-01 | 323.2910;2025-07-01 | 322.1690;2025-06-01 | 321.4350;
-px names: px:AAPL | 400 | 2026-11-11 23:30:00 | 2026-11-14 00:55:00;px:AI | 400 | 2026-11-09 20:55:00 | 2026-11-14 00:55:00;px:AMZN | 400 | 2026-11-11 23:30:00 | 2026-11-14 00:55:00;px:BIDU | 400 | 2026-11-10 20:10:00 | 2026-11-14 00:55:00;px:GLD | 400 | 2026-11-11 21:10:00 | 2026-11-14 00:55:00;px:GOOGL | 400 | 2026-11-11 23:35:00 | 2026-11-14 00:55:00;px:HYG | 400 | 2026-11-09 16:45:00 | 2026-11-13 22:55:00;px:IWM | 400 | 2026-11-11 18:20:00 | 2026-11-14 00:55:00;px:META | 400 | 2026-11-11 22:50:00 | 2026-11-14 00:55:00;px:MSFT | 400 | 2026-11-11 23:00:00 | 2026-11-14 00:55:00;px:NVDA | 400 | 2026-11-11 23:40:00 | 2026-11-14 00:55:00;px:QQQ | 400 | 2026-11-11 23:40:00 | 2026-11-14 00:55:00;px:RSI | 400 | 2026-11-09 14:55:00 | 2026-11-13 21:00:00;px:SPY | 400 | 2026-11-11 23:15:00 | 2026-11-14 00:55:00;px:TLT | 400 | 2026-11-11 19:45:00 | 2026-11-14 00:55:00;px:USO | 400 | 2026-11-11 14:20:00 | 2026-11-14 00:55:00;px:UUP | 400 | 2026-11-09 12:20:00 | 2026-11-13 22:00:00;px:VIXY | 400 | 2026-11-10 18:35:00 | 2026-11-14 00:55:00;
-score spread: intraday | 2 | 1;intraday | 3 | 58;intraday | 4 | 144;intraday | 5 | 210;intraday | 6 | 211;intraday | 7 | 137;intraday | 8 | 52;intraday | 9 | 7;swing | 1 | 2;swing | 2 | 132;swing | 3 | 421;swing | 4 | 477;swing | 5 | 384;swing | 6 | 163;swing | 7 | 35;swing | 8 | 13;swing | 9 | 1;
-graded by score: 2 | no_quote | 1;3 | no_quote | 58;4 | no_quote | 144;5 | no_quote | 210;6 | loss | 40;6 | no_quote | 162;6 | win | 9;7 | loss | 89;7 | no_quote | 23;7 | win | 25;8 | loss | 23;8 | no_quote | 16;8 | win | 13;9 | loss | 3;9 | no_quote | 3;9 | win | 1;
-no_quote by expiry: 2026-11-13 | 160 | 229;2026-11-16 | 72 | 132;2026-11-17 | 24 | 26;2026-11-18 | 50 | 60;2026-11-19 | 11 | 16;2026-11-20 | 300 | 357;
-issue types: Common Stock | 1462;ETF | 758;null | 177;ADR | 50;Structured Product | 1;
-null fields: 0 | 0 | 0 | 173 | 174 | 45 | 2448
+now (ET): Mon 2026-11-16 05:21:57
+images: unusual-options-detector=fc1168a unusual-options-detector-worker=fc1168a 
+options   | newest bet age: 02d 12:49:14 | 0
+options   | newest quote check age: 00d 00:49:11 | 0
+options   | graded sessions: 2026-11-13 | intraday | 820;
+series    | newest point age by family: px | 02d 09:27:01 | 0;sector | 00d 00:02:01 | 24;sectorpc | 00d 00:02:01 | 24;sectorprem | 00d 00:02:01 | 24;spy | 02d 13:07:01 | 0;tide | 02d 13:12:01 | 0;
+series    | px per ticker (age, bars in last hour): GOOGL | 02d 09:27 | 0;ORCL | 02d 09:27 | 0;IWM | 02d 09:27 | 0;BTC | 02d 09:27 | 0;BIDU | 02d 09:27 | 0;GLD | 02d 09:27 | 0;META | 02d 09:27 | 0;MSTR | 02d 09:27 | 0;AI | 02d 09:27 | 0;AMZN | 02d 09:27 | 0;AAPL | 02d 09:27 | 0;MSFT | 02d 09:27 | 0;SPY | 02d 09:27 | 0;QQQ | 02d 09:27 | 0;AMD | 02d 09:27 | 0;TLT | 02d 09:27 | 0;F | 02d 09:27 | 0;USO | 02d 09:27 | 0;NVDA | 02d 09:27 | 0;VIXY | 02d 09:27 | 0;ON | 02d 09:52 | 0;HYG | 02d 11:27 | 0;VIA | 02d 12:02 | 0;EPS | 02d 12:12 | 0;UUP | 02d 12:22 | 0;NDAQ | 02d 13:12 | 0;RSI | 02d 13:22 | 0;
+direction | calls today: ; market_tide newest age: 02d 13:12:04
+direction | gamma estimate as of: 2026-11-13 | 40; VIX (FRED) latest: 2026-11-12
+calendar  | econ events ahead: 18 | 2026-11-16 | 2026-11-20; earnings read age: 00d 00:49; econ read (daily) age: 00d 00:33
+chatter   | last Discord read age: 00d 00:00:32 | 132 | 0 | 132; newest message age: 00d 07:30:07 | 0 | 4
+chatter   | all messages per hour, last 6 hours: 00:00 | 1;01:00 | 1;
+news      | newest headline age: 00d 00:08:30 | 67 | 16
+macro     | official series, days since latest reading: DFEDTARL | 1;DFEDTARU | 1;SP500 | 3;T10Y2Y | 3;T10Y3M | 3;T5YIE | 3;BAMLH0A0HYM2 | 4;DFF | 4;DGS10 | 4;DGS2 | 4;MORTGAGE30US | 4;VIXCLS | 4;WALCL | 5;ICSA | 9;DTWEXBGS | 10;NFCI | 10;CPIAUCSL | 46;CPILFESL | 46;GACDFSA066MSFRBPHI | 46;PAYEMS | 46;UNRATE | 46;HOUST | 76;INDPRO | 76;PCEPILFE | 76;RSAFS | 76;UMCSENT | 76;
+worker    | last lines: 
+worker    | errors in 2h: 0
