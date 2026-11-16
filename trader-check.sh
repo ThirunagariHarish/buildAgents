@@ -10,7 +10,7 @@ echo "health: $(curl -s --max-time 20 $SITE/api/health | cut -c1-160)"
 echo "forced daily read: $(Q "DELETE FROM markets_state WHERE key = 'daily'")"
 for i in $(seq 1 60); do
   L=$($K logs deploy/$NS-worker --since=40m 2>/dev/null | grep -E '"trader( failed)?"' | tail -3)
-  echo "$L" | grep -q -E '"closed":true|trader failed|skipped_no_key|"in_session":true' && break; sleep 15
+  echo "$L" | grep -q -E '"msg":"trader' && break; sleep 15
 done
 echo "trader log:"; echo "$L" | cut -c1-420
 for i in $(seq 1 40); do
