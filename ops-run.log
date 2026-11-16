@@ -1,4 +1,4 @@
-run 57 at 2026-11-16T10:51:25Z, commit 8467d35
+run 58 at 2026-11-16T15:42:08Z, commit fb001c6
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,53 +6,74 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-## sync
-Box copy: HEAD fc1168a, uncommitted files 0
-GitHub main bdb1363; branch d8a6c0d
-GitHub main is now d8a6c0d
-Box copy moved to d8a6c0d6
-## wait for the image pin of d8a6c0d
-pinned after ~210s
-## deploy
-== code ==
-== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
-== tidy: deploy Jobs for an image that was never built ==
-== apply ==
-job gate-d8a6c0d: complete
-job backup-d8a6c0d: complete
-job migrate-d8a6c0d: complete
-job role-check-d8a6c0d: complete
-unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
-unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
-images now: unusual-options-detector=d8a6c0d unusual-options-detector-worker=d8a6c0d 
-== Google keys from Doppler ==
-== the live site ==
-health: {"status":"ok"}
-== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
-health: {"status":"ok"}; now ET: Mon 05:50:33
-feeds read since deploy: 4
+health: {"status":"ok"}; now ET: Mon 10:41:41
+feeds read since deploy: 9
 admin sign-in: 200
 status -> 200
-market=extended session=2026-11-13 next_open=2026-11-16T14:30:00.000Z late=1
-  bets       waiting  read -         newest 220717s  
-  quotes     waiting  read -         newest 4713s    
-  prices     live     read 14s       newest 381s     
-  tide       waiting  read -         newest 222081s  
-  spy_flow   waiting  read -         newest 221781s  
-  gamma      waiting  read -         newest -        
-  sectors    live     read 14s       newest -        
-  macro_live live     read 14s       newest 381s     
-  news       live     read 14s       newest 53s      
-  chatter    live     read 29s       newest 28757s    (132 channels)
-  calendar   live     read 3763s     newest -        
-  earnings   live     read 4713s     newest -        
-  macro      never    read -         newest 125481s   (Published daily, weekly or monthly by the source; each row o)
-px freshness: NVDA | 02d 09:56;QQQ | 00d 00:06;SPY | 00d 00:06;TLT | 00d 00:06;VIXY | 00d 00:16;
-macro -> 200 live_at=2026-11-16T10:45:00.000Z live=SPY:-0.37,QQQ:-0.99,IWM:-0.49,TLT:0.13,UUP:0.23,GLD:-0.30,USO:-0.51,HYG:-0.06,VIXY:0.17 kpis=23 corr=-0.06277196870763449
-news -> 200 newest=2026-11-16T10:50:28.000Z items=150 with_move=3
-direction -> 200 date=2026-11-13 as_of=2026-11-13T20:55:00.000Z lean=down gamma=-12065630459.43 sectors=0
-ideas -> 200 date=2026-11-13 live=false total=820 last_alert=2026-11-13T21:32:44.246Z last_quote=2026-11-16T09:32:47.966Z
+market=open session=2026-11-16 next_open=null late=0
+  bets       live     read 22s       newest 23s      
+  quotes     live     read 682s      newest 682s     
+  prices     live     read 22s       newest 106s     
+  tide       live     read 22s       newest 106s     
+  spy_flow   live     read 22s       newest 46s      
+  gamma      live     read 22s       newest 46s      
+  sectors    live     read 22s       newest -        
+  macro_live live     read 22s       newest 106s     
+  news       live     read 22s       newest 127s     
+  chatter    live     read 22s       newest 822s      (132 channels)
+  calendar   live     read 21188s    newest -        
+  earnings   live     read 22138s    newest -        
+  macro      live     read 2184s     newest 56506s    (Published daily, weekly or monthly by the source; each row o)
+px freshness: NVDA | 00d 00:41;QQQ | 00d 00:01;SPY | 00d 00:01;TLT | 00d 00:01;VIXY | 00d 00:01;
+macro -> 200 live_at=2026-11-16T15:40:00.000Z live=SPY:-1.36,QQQ:-2.35,IWM:-1.25,TLT:0.30,UUP:0.13,GLD:-0.44,USO:-1.96,HYG:-0.06,VIXY:5.36 kpis=23 corr=-0.06277196870763449
+news -> 200 newest=2026-11-16T15:39:39.000Z items=150 with_move=35
+direction -> 200 date=2026-11-16 as_of=2026-11-16T15:40:00.000Z lean=down gamma=-13452333883.11 sectors=12
+ideas -> 200 date=2026-11-16 live=true total=454 last_alert=2026-11-16T15:41:22.680Z last_quote=2026-11-16T15:30:23.219Z
 / -> 200; /direction -> 200; /chatter -> 200; /news -> 200; /macro -> 200; /status -> 200; /me -> 200; /today -> 200; /record -> 200; /ticker/NVDA -> 200; /login -> 307; 
 font served: 200 font/woff2
 recent web errors: 
 recent worker errors: 
+health: {"status":"ok"}
+trader log:
+{"level":30,"time":1794842133929,"app":"worker","status":"ok","session":"2026-11-16","in_session":true,"alerts":31,"ideas":30,"marks":495,"graded":0,"closed":false,"errors":0,"requests":118,"msg":"trader"}
+{"level":30,"time":1794843037431,"app":"worker","status":"ok","session":"2026-11-16","in_session":true,"alerts":12,"ideas":12,"marks":496,"graded":0,"closed":false,"errors":0,"requests":119,"msg":"trader"}
+markets log: 
+settings: legacy_signals | false;show_chatter | false;show_trader | false;
+ideas: 2026-11-16 | intraday | 454 | 62 | 12:47:25 | 15:41:23;2026-11-16 | swing | 732 | 28 | 12:30:12 | 15:41:23;2026-11-13 | intraday | 820 | 196 | 15:07:15 | 21:32:44;2026-11-13 | swing | 1628 | 49 | 15:07:15 | 21:23:42;
+alerts counted: 6955; marks: 2668 | 887 | 2026-11-16 15:30:23
+outcomes: intraday | loss | 155 | -0.434;intraday | no_quote | 617 | ;intraday | win | 48 | 0.376;
+tiers: high | bearish | 17;high | bullish | 13;high | unclear | 1;low | bearish | 1465;low | bullish | 1370;low | unclear | 464;watch | bearish | 140;watch | bullish | 130;watch | unclear | 34;
+series: gex | 1 | 236 | 2026-11-16 15:41:00;px | 169 | 31924 | 2026-11-16 15:40:00;sector | 12 | 876 | 2026-11-16 15:40:00;sectorpc | 12 | 875 | 2026-11-16 15:40:00;sectorprem | 12 | 876 | 2026-11-16 15:40:00;spy | 5 | 3545 | 2026-11-16 15:41:00;tide | 2 | 288 | 2026-11-16 15:40:00;
+models: ; direction calls: 1
+headlines: 1141 | 335 | 114 | 2026-11-16 15:39:39; vendor sentiment: neutral | 789;null | 352;
+earnings: 2026-11-16 | 83;2026-11-17 | 40;2026-11-18 | 36;2026-11-19 | 36;2026-11-20 | 8;2026-11-23 | 20;
+macro: 26 | 7657 | 2026-11-16
+chatter: 1034 | 2026-11-16 15:28:04; channels read: 132 | 2026-11-16 15:41:23
+admin sign-in: 200
+/api/me -> 200 trader=true chatter=true
+ideas intraday -> 200 date=2026-11-16 live=true dates=2 shown=100 total=454 card={"w":0,"l":0,"nq":0,"pending":62,"ahead":22,"behind":34,"avg":null,"due":null} tiers=watch:27/0/0,low:427/0/0 model={"v":null,"use":false,"graded":203,"days":1}
+ideas swing -> 200 date=2026-11-16 live=true dates=2 shown=100 total=732 card={"w":0,"l":0,"nq":0,"pending":28,"ahead":13,"behind":14,"avg":null,"due":"2026-11-23"} tiers=high:2/0/0,watch:17/0/0,low:713/0/0 model={"v":null,"use":false,"graded":0,"days":0}
+top idea -> 200 {"score":81.5,"tier":"high","lean":"bullish","type":"C","dte":0,"premium":714551,"ask_share":0.94,"has_ask":true,"itm":0.4423,"be":0.3,"factors":8,"now":true,"outcome":null}
+direction -> 200 date=2026-11-16 lean=down score=-0.667 spot=true prev=true inputs=open_move:-1,trend:-1,tide:-1,spy_flow:1,breadth:0,gamma:0 price=15 tide=15 spyflow=72 sectors=12 gamma=neg vix=2026-11-13 calls=1 caldays=11 events=18 earnings=223 expirations=2026-11-20
+chatter 1h -> 200 span=1h widened=false configured=true rows=11 read=2026-11-16T15:41:23 newest=2026-11-16T15:28:03 top=SPX:6/4p/1.7,MCD:3/2p/2.9,AMD:3/2p/2.6,TSLA:2/2p/1.8,META:1/1p/0.9
+chatter 24h -> 200 span=24h widened=false configured=true rows=16 read=2026-11-16T15:41:23 newest=2026-11-16T15:28:03 top=SPX:11/4p/-1.5,META:3/3p/1.4,MCD:3/2p/0.7,AMD:3/2p/-1.1,TSLA:2/2p/-0.6
+news -> 200 items=150 newest=2026-11-16T15:39:39 pos=7 neg=23 vendor_basis=0 with_tickers=48 with_move=35 board=ON:16,YORK:7,NVDA:5,TSLA:5,SAN:4,PARK:3
+macro -> 200 kpis=23 tail=7 head=4 growth=0.375 inflation=0.5 regime=unclear corr=-0.06 summary=5 live=SPY:-1.36,QQQ:-2.35,IWM:-1.25,TLT:0.30,UUP:0.13,GLD:-0.44,USO:-1.96,HYG:-0.06,VIXY:5.36 tags=cpi:h,core_cpi:h,core_pce:n,breakeven:n,unemployment:n,payrolls:t,claims:n,factories:t,production:t,retail:t,housing:h,sentiment:n,fed_funds:h,two_year:n,ten_year:n,curve:n,mortgage:t,balance_sheet:n,credit:n,conditions:t,dollar:n,vix:n,
+/ -> 200; /?view=swing -> 200; /direction -> 200; /direction?view=calendar -> 200; /chatter -> 200; /news -> 200; /macro -> 200; /me -> 200; /today -> 200; /record -> 200; /ticker/NVDA -> 200; 
+recent web errors: 
+recent worker errors: {"level":30,"time":1794842940108,"app":"worker","status":"ok","channels":132,"messages":1,"mentions":1,"channelErrors":0,"msg":"chatter read"}
+{"level":30,"time":1794842996673,"app":"worker","status":"ok","channels":132,"messages":1,"mentions":0,"channelErrors":0,"msg":"chatter read"}
+{"level":30,"time":1794843037431,"app":"worker","status":"ok","session":"2026-11-16","in_session":true,"alerts":12,"ideas":12,"marks":496,"graded":0,"closed":false,"errors":0,"requests":119,"msg":"trader"}
+{"level":30,"time":1794843173553,"app":"worker","status":"ok","channels":132,"messages":1,"mentions":0,"channelErrors":0,"msg":"chatter read"}
+{"level":30,"time":1794843354246,"app":"worker","status":"ok","channels":132,"messages":1,"mentions":0,"channelErrors":0,"msg":"chatter read"}
+marks by 15-minute slot today: 09:30 | 269;09:45 | 481;10:00 | 496;10:15 | 495;10:30 | 496;
+ideas per 10 minutes today: 07:30 | 4;07:40 | 2;07:50 | 1;08:10 | 2;08:20 | 5;08:50 | 1;09:00 | 1;09:20 | 1;09:30 | 341;09:40 | 172;09:50 | 120;10:00 | 178;10:10 | 138;10:20 | 113;10:30 | 90;10:40 | 17;
+direction calls today: 10:00 | down | -0.667 | 745.6500 | 10:00:23;
+today series points: gex | 1 | 71 | 00:01:07;px | 47 | 409 | 00:02:07;sector | 12 | 168 | 00:02:07;sectorpc | 12 | 168 | 00:02:07;sectorprem | 12 | 168 | 00:02:07;spy | 5 | 355 | 00:01:07;tide | 2 | 28 | 00:02:07;
+worker trader lines (last 6): 
+{"level":30,"time":1794839436573,"app":"worker","status":"ok","session":"2026-11-16","in_session":true,"alerts":44,"ideas":41,"marks":271,"graded":0,"closed":false,"errors":0,"requests":111,"msg":"trader"}
+{"level":30,"time":1794840336324,"app":"worker","status":"ok","session":"2026-11-16","in_session":true,"alerts":39,"ideas":36,"marks":481,"graded":0,"closed":false,"errors":0,"requests":125,"msg":"trader"}
+{"level":30,"time":1794841248312,"app":"worker","status":"ok","session":"2026-11-16","in_session":true,"alerts":49,"ideas":44,"marks":496,"graded":0,"closed":false,"errors":0,"requests":125,"msg":"trader"}
+{"level":30,"time":1794842133929,"app":"worker","status":"ok","session":"2026-11-16","in_session":true,"alerts":31,"ideas":30,"marks":495,"graded":0,"closed":false,"errors":0,"requests":118,"msg":"trader"}
+{"level":30,"time":1794843037431,"app":"worker","status":"ok","session":"2026-11-16","in_session":true,"alerts":12,"ideas":12,"marks":496,"graded":0,"closed":false,"errors":0,"requests":119,"msg":"trader"}
+worker failures in 2h: 0
