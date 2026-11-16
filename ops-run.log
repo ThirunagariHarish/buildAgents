@@ -1,4 +1,4 @@
-run 56 at 2026-11-16T10:24:17Z, commit cff6d8b
+run 57 at 2026-11-16T10:51:25Z, commit 8467d35
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,97 +6,53 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-now ET: 2026-11-16 05:24:13
-/api/stock/SPY/ohlc/5m?limit=6 -> 200
-  rows 6 keys close,end_time,high,low,market_time,open,start_time,total_volume,volume
-  first: start_time="2026-11-14T00:55:00Z" end_time="2026-11-14T01:00:00Z" market_time="po" close="749.6" volume=23551
-  last:  start_time="2026-11-14T00:30:00Z" end_time="2026-11-14T00:35:00Z" market_time="po" close="750.001" volume=20631
-/api/stock/SPY/ohlc/5m?limit=6&date=2026-11-16 -> 200
-  rows 6 keys close,end_time,high,low,market_time,open,start_time,total_volume,volume
-  first: start_time="2026-11-16T10:20:00Z" end_time="2026-11-16T10:25:00Z" market_time="pr" close="751.5881" volume=209
-  last:  start_time="2026-11-16T09:55:00Z" end_time="2026-11-16T10:00:00Z" market_time="pr" close="751.78" volume=403
-/api/stock/SPY/ohlc/5m?limit=6&end_date=2026-11-16 -> 200
-  rows 6 keys close,end_time,high,low,market_time,open,start_time,total_volume,volume
-  first: start_time="2026-11-16T10:20:00Z" end_time="2026-11-16T10:25:00Z" market_time="pr" close="751.5881" volume=209
-  last:  start_time="2026-11-16T09:55:00Z" end_time="2026-11-16T10:00:00Z" market_time="pr" close="751.78" volume=403
-/api/stock/SPY/ohlc/1m?limit=6 -> 200
-  rows 6 keys close,end_time,high,low,market_time,open,start_time,total_volume,volume
-  first: start_time="2026-11-14T00:59:00Z" end_time="2026-11-14T01:00:00Z" market_time="po" close="749.6" volume=1444
-  last:  start_time="2026-11-14T00:53:00Z" end_time="2026-11-14T00:54:00Z" market_time="po" close="749.4707" volume=2936
-/api/stock/SPY/ohlc/5m?limit=6&timeframe=1D -> 200
-  rows 6 keys close,end_time,high,low,market_time,open,start_time,total_volume,volume
-  first: start_time="2026-11-14T00:55:00Z" end_time="2026-11-14T01:00:00Z" market_time="po" close="749.6" volume=23551
-  last:  start_time="2026-11-14T00:30:00Z" end_time="2026-11-14T00:35:00Z" market_time="po" close="750.001" volume=20631
-stock-state SPY -> 200
-  rows 1 keys close,high,low,open,volume,total_volume,market_time,tape_time,prev_close
-  first: tape_time="2026-11-16T10:20:46Z" market_time="premarket" close="751.5881" prev_close="754.37" volume=114228
-  last:  tape_time="2026-11-16T10:20:46Z" market_time="premarket" close="751.5881" prev_close="754.37" volume=114228
-stock-state NVDA -> 200
-  rows 1 keys close,high,low,open,volume,total_volume,market_time,tape_time,prev_close
-  first: tape_time="2026-11-16T10:24:14Z" market_time="premarket" close="159.26" prev_close="162.85"
-  last:  tape_time="2026-11-16T10:24:14Z" market_time="premarket" close="159.26" prev_close="162.85"
-ohlc VIX -> 422
-  rows 1 keys code,path,msg,query,url
-  first: start_time=undefined market_time=undefined close=undefined
-  last:  start_time=undefined market_time=undefined close=undefined
-stock-state VIX -> 422
-  rows 1 keys path,msg,query,url
-  first: tape_time=undefined market_time=undefined close=undefined prev_close=undefined
-  last:  tape_time=undefined market_time=undefined close=undefined prev_close=undefined
-ohlc SPX -> 422
-  rows 1 keys code,path,msg,query,url
-  first: start_time=undefined market_time=undefined close=undefined
-  last:  start_time=undefined market_time=undefined close=undefined
-stock-state SPX -> 422
-  rows 1 keys path,msg,query,url
-  first: tape_time=undefined market_time=undefined close=undefined prev_close=undefined
-  last:  tape_time=undefined market_time=undefined close=undefined prev_close=undefined
-ohlc VIXY -> 200
-  rows 3 keys close,end_time,high,low,market_time,open,start_time,total_volume,volume
-  first: start_time="2026-11-14T00:55:00Z" market_time="po" close="18.5516"
-  last:  start_time="2026-11-14T00:30:00Z" market_time="po" close="18.53"
-stock-state VIXY -> 200
-  rows 1 keys close,high,low,open,volume,total_volume,market_time,tape_time,prev_close
-  first: tape_time="2026-11-16T10:17:31Z" market_time="premarket" close="17.92" prev_close="17.94"
-  last:  tape_time="2026-11-16T10:17:31Z" market_time="premarket" close="17.92" prev_close="17.94"
-spot-exposures/strike SPY -> 200
-  rows 491 keys call_gamma_vol,put_vanna_oi,call_charm_bid,call_vanna_oi,call_charm_vol,put_vanna_vol,call_vanna_ask,ticker,call_vanna_bid,call_vanna_vol,call_delta_bid,call_delta_oi,put_vanna_bid,call_gamma_bid,call_delta_ask,time,put_gamma_ask,put_charm_ask,put_delta_bid,call_gamma_ask,price,put_delta_ask,call_gamma_oi,put_gamma_vol
-  first: time="2026-11-13T21:15:00.000000Z" strike="50" price="754.37"
-  last:  time="2026-11-13T21:15:00.000000Z" strike="1480" price="754.37"
-spot-exposures SPY (per minute) -> 200
-  rows 543 keys charm_per_one_percent_move_dir,charm_per_one_percent_move_oi,charm_per_one_percent_move_vol,gamma_per_one_percent_move_dir,gamma_per_one_percent_move_oi,gamma_per_one_percent_move_vol,price,start_time,ticker,ticker_id,time,vanna_per_one_percent_move_dir,vanna_per_one_percent_move_oi,vanna_per_one_percent_move_vol
-  first: time="2026-11-13T11:37:58.818000Z" price="758.26" gamma_per_one_percent_move_oi="-7401073747.21" gamma_per_one_percent_move_vol="0"
-  last:  time="2026-11-13T21:00:58.520000Z" price="753.31" gamma_per_one_percent_move_oi="-14528030836.24" gamma_per_one_percent_move_vol="96103895146.42"
-greek-exposure SPY -> 200
-  rows 250 keys date,call_charm,call_delta,call_vanna,put_charm,put_delta,put_vanna,call_gamma,put_gamma
-  first: date="2025-11-17" call_gamma="3601569.9222" put_gamma="-4824840.1658"
-  last:  date="2026-11-13" call_gamma="3894466.6252" put_gamma="-4656425.5044"
-market tide -> 200
-  rows 105 keys timestamp,date,net_call_premium,net_put_premium,net_volume
-  first: timestamp="2026-11-13T07:30:00-05:00" date="2026-11-13"
-  last:  timestamp="2026-11-13T16:10:00-05:00" date="2026-11-13"
-market tide 5m -> 200
-  rows 521 keys timestamp,date,net_call_premium,net_put_premium,net_volume
-  first: timestamp="2026-11-13T07:30:00-05:00" date="2026-11-13"
-  last:  timestamp="2026-11-13T16:14:00-05:00" date="2026-11-13"
-flow alerts newest -> 200
-  rows 3 keys has_multileg,iv,open_interest,underlying_price,option_chain,expiry,iv_start,sector,end_time,delta,rule_id,ask,issue_type,has_floor,theta,iv_end,trade_count,total_size,total_bid_side_prem,bid,rho,has_singleleg,gamma,price
-  first: created_at="2026-11-13T21:32:44.246565Z" ticker="SPXW" issue_type=null
-  last:  created_at="2026-11-13T21:23:41.827174Z" ticker="SPXW" issue_type=null
-news newest -> 200
-  rows 3 keys meta,source,created_at,tags,tickers,headline,is_major,sentiment
-  first: created_at="2026-11-16T10:24:05Z" source="Tradex" sentiment="neutral" tickers=[]
-  last:  created_at="2026-11-16T10:19:40Z" source="Blockchain News" sentiment="neutral" tickers=["COIN"]
-economic calendar -> 200
-  rows 36 keys type,time,prev,event,forecast,reported_period
-  first: time="2026-11-18T13:30:00Z" event="Housing Starts"
-  last:  time="2026-11-16T13:30:00Z" event="Empire State Manufacturing Survey"
-interest/yields? treasury -> 200
-screener stocks (movers stand-in) -> 200
-  rows 3 keys week_52_low,put_premium_mid_side,implied_move_perc_90,gex_charm_per_one_percent_move_dir,one_week_return_stddevs,put_volume_ask_side,cum_dir_vega,three_month_perc,gex_delta_per_one_percent_move_vol,stoch_5_3_3_k,one_week_perc,prev_4_day_option_volume,gex_perc_change,beta,call_premium_mid_side,iv30d,gex_charm_per_one_percent_move_oi,sma_10,full_name,reg_sho_status,prev_put_volume,gex_charm_per_one_percent_move_vol,prev_call_oi,repeated_hits
-  first: ticker="PMCB" close="6.68" prev_close="0.402" perc_change=undefined
-  last:  ticker="VTSI" close="4.2399" prev_close="2.62" perc_change=undefined
-market spike -> 404
-  rows 1 keys error,help
-  first: time=undefined value=undefined
-  last:  time=undefined value=undefined
+## sync
+Box copy: HEAD fc1168a, uncommitted files 0
+GitHub main bdb1363; branch d8a6c0d
+GitHub main is now d8a6c0d
+Box copy moved to d8a6c0d6
+## wait for the image pin of d8a6c0d
+pinned after ~210s
+## deploy
+== code ==
+== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
+== tidy: deploy Jobs for an image that was never built ==
+== apply ==
+job gate-d8a6c0d: complete
+job backup-d8a6c0d: complete
+job migrate-d8a6c0d: complete
+job role-check-d8a6c0d: complete
+unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
+unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
+images now: unusual-options-detector=d8a6c0d unusual-options-detector-worker=d8a6c0d 
+== Google keys from Doppler ==
+== the live site ==
+health: {"status":"ok"}
+== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
+health: {"status":"ok"}; now ET: Mon 05:50:33
+feeds read since deploy: 4
+admin sign-in: 200
+status -> 200
+market=extended session=2026-11-13 next_open=2026-11-16T14:30:00.000Z late=1
+  bets       waiting  read -         newest 220717s  
+  quotes     waiting  read -         newest 4713s    
+  prices     live     read 14s       newest 381s     
+  tide       waiting  read -         newest 222081s  
+  spy_flow   waiting  read -         newest 221781s  
+  gamma      waiting  read -         newest -        
+  sectors    live     read 14s       newest -        
+  macro_live live     read 14s       newest 381s     
+  news       live     read 14s       newest 53s      
+  chatter    live     read 29s       newest 28757s    (132 channels)
+  calendar   live     read 3763s     newest -        
+  earnings   live     read 4713s     newest -        
+  macro      never    read -         newest 125481s   (Published daily, weekly or monthly by the source; each row o)
+px freshness: NVDA | 02d 09:56;QQQ | 00d 00:06;SPY | 00d 00:06;TLT | 00d 00:06;VIXY | 00d 00:16;
+macro -> 200 live_at=2026-11-16T10:45:00.000Z live=SPY:-0.37,QQQ:-0.99,IWM:-0.49,TLT:0.13,UUP:0.23,GLD:-0.30,USO:-0.51,HYG:-0.06,VIXY:0.17 kpis=23 corr=-0.06277196870763449
+news -> 200 newest=2026-11-16T10:50:28.000Z items=150 with_move=3
+direction -> 200 date=2026-11-13 as_of=2026-11-13T20:55:00.000Z lean=down gamma=-12065630459.43 sectors=0
+ideas -> 200 date=2026-11-13 live=false total=820 last_alert=2026-11-13T21:32:44.246Z last_quote=2026-11-16T09:32:47.966Z
+/ -> 200; /direction -> 200; /chatter -> 200; /news -> 200; /macro -> 200; /status -> 200; /me -> 200; /today -> 200; /record -> 200; /ticker/NVDA -> 200; /login -> 307; 
+font served: 200 font/woff2
+recent web errors: 
+recent worker errors: 
