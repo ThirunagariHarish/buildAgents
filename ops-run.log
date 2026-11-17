@@ -1,4 +1,4 @@
-run 68 at 2026-11-17T04:37:04Z, commit cd76765
+run 69 at 2026-11-17T04:51:20Z, commit c7b01d7
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,52 +6,35 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-numpy 2.5.5 sklearn 1.9.1 optuna 5.1.0
-[     4s] loaded flow-30d-1000c
-
-== A. Stacking plain avoid-rules, one pass at a time (30 sessions, first sighting, expiring within a week)
-  0 every priced bet: n=7728 win=33% avg=-10.4% med=-12.4% | first half n=3835 win=34% avg=-7.8% med=-11.1% | second half n=3893 win=32% avg=-12.9% med=-14.1% | best day 51%, days above 50%: 1/30
-  1 mostly bought (60%+ at the ask): n=7250 win=33% avg=-10.2% med=-12.1% | first half n=3614 win=34% avg=-7.5% med=-11.0% | second half n=3636 win=32% avg=-12.9% med=-13.5% | best day 50%, days above 50%: 0/30
-  2 no index options: n=6664 win=35% avg=-5.0% med=-9.7% | first half n=3337 win=35% avg=-5.3% med=-9.4% | second half n=3327 win=35% avg=-4.8% med=-10.1% | best day 57%, days above 50%: 1/30
-  3 no same-day expiry: n=5448 win=35% avg=-3.4% med=-8.2% | first half n=2753 win=35% avg=-4.2% med=-8.1% | second half n=2695 win=36% avg=-2.7% med=-8.3% | best day 56%, days above 50%: 1/30
-  4 spread 8% or less: n=4670 win=37% avg=-1.7% med=-6.9% | first half n=2325 win=37% avg=-2.6% med=-6.6% | second half n=2345 win=38% avg=-0.8% med=-7.1% | best day 60%, days above 50%: 1/30
-  5 delta 0.30 or more: n=3874 win=38% avg=-1.6% med=-6.0% | first half n=1952 win=38% avg=-2.6% med=-6.2% | second half n=1922 win=39% avg=-0.5% med=-5.9% | best day 62%, days above 50%: 2/30
-  6 seen before 14:30: n=3257 win=40% avg=-1.1% med=-7.2% | first half n=1665 win=39% avg=-2.2% med=-7.2% | second half n=1592 win=40% avg=+0.2% med=-7.1% | best day 65%, days above 50%: 4/30
-  7 option price $1 or more: n=3227 win=40% avg=-1.1% med=-7.2% | first half n=1648 win=39% avg=-2.2% med=-7.2% | second half n=1579 win=40% avg=+0.2% med=-7.1% | best day 65%, days above 50%: 5/30
-  8 tighter: spread 4%, delta 0.45+: n=1734 win=40% avg=+0.8% med=-5.5% | first half n=869 win=42% avg=-0.1% med=-3.9% | second half n=865 win=38% avg=+1.7% med=-7.0% | best day 70%, days above 50%: 3/30
-    pass 7 on calls only: n=1689 win=34% avg=-8.3% med=-11.1% | first half n=883 win=35% avg=-7.6% med=-11.2% | second half n=806 win=33% avg=-9.1% med=-10.7% | best day 86%, days above 50%: 6/30
-    pass 7 on puts only: n=1538 win=46% avg=+6.9% med=-3.3% | first half n=765 win=44% avg=+4.0% med=-3.6% | second half n=773 win=47% avg=+9.8% med=-2.8% | best day 94%, days above 50%: 10/30
-    pass 7, stock moving toward the bet: n=1718 win=38% avg=-0.0% med=-8.8% | first half n=905 win=35% avg=-4.1% med=-10.5% | second half n=813 win=41% avg=+4.5% med=-6.3% | best day 91%, days above 50%: 9/30
-    pass 7, stock moving against the bet: n=1277 win=41% avg=-2.7% med=-5.7% | first half n=612 win=44% avg=-0.5% med=-2.9% | second half n=665 win=38% avg=-4.6% med=-8.5% | best day 89%, days above 50%: 10/30
-  swings (more than a week out), same-day close: n=22267 win=26% avg=-7.1% med=-5.3% | passes 1-2,4-7: n=9631 win=31% avg=-3.8% med=-4.1%
-
-== B. The other side: selling the same contract at the bid when seen, closing at the day's closing ask
-  every priced bet within a week: n=7727 win=51% avg=-3.5% med=+1.4% | worst 5% of trades lose 123% or more of the premium, worst 1% 331%, lose more than was collected: 6.6%
-  mostly bought, no index: n=6663 win=48% avg=-9.7% med=-1.3% | worst 5% of trades lose 129% or more of the premium, worst 1% 325%, lose more than was collected: 7.0%
-  same-day expiry only: n=1292 win=55% avg=-13.4% med=+11.2% | worst 5% of trades lose 257% or more of the premium, worst 1% 639%, lose more than was collected: 16.3%
-  1-7 days: n=5793 win=46% avg=-8.9% med=-2.0% | worst 5% of trades lose 100% or more of the premium, worst 1% 230%, lose more than was collected: 5.0%
-  index options: n=642 win=88% avg=+65.2% med=+100.0% | worst 5% of trades lose 30% or more of the premium, worst 1% 352%, lose more than was collected: 2.0%
-  far out of the money (delta under 0.3): n=1155 win=53% avg=-8.6% med=+3.1% | worst 5% of trades lose 151% or more of the premium, worst 1% 444%, lose more than was collected: 7.4%
-  swings: n=22265 win=26% avg=-7.6% med=-6.0% | worst 5% of trades lose 43% or more of the premium, worst 1% 84%, lose more than was collected: 0.6%
-
-== C. Faster exits, from each contract's minute bars after the alert (exit price marked down by half the entry spread)
-[   139s] minute bars for 6664 contract-days in 131s; with any bar after the alert: 6511
-[   145s] stored flow-30d-1000c-intra: 6.4 MB gz in 3 parts
-  contract-days with bars after the alert, by day: 10-06:191 10-07:219 10-08:176 10-09:301 10-12:251 10-13:212 10-14:193 10-15:173 10-16:245 10-19:199 10-20:240 10-21:197 10-22:165 10-23:254 10-26:251 10-27:202 10-28:218 10-29:160 10-30:215 11-02:253 11-03:232 11-04:183 11-05:152 11-06:245 11-09:208 11-10:184 11-11:215 11-12:205 11-13:304 11-16:268
-  bets passing pass 7 with bars: 3219 (held to the close: n=3219 win=40% avg=-1.0% med=-7.2%)
-  exit at the first trade 5 min after the alert: n=3219 win=40% avg=-1.4% med=-1.8%
-  exit at the first trade 15 min after the alert: n=3219 win=41% avg=-1.2% med=-2.2%
-  exit at the first trade 30 min after the alert: n=3219 win=42% avg=-0.9% med=-2.5%
-  exit at the first trade 60 min after the alert: n=3219 win=42% avg=-0.2% med=-3.3%
-  exit at the first trade 120 min after the alert: n=3219 win=43% avg=-0.1% med=-4.0%
-  take +10% / stop -10% / else the close: n=3219 win=42% avg=-2.7% med=-12.0% | halves win 41% / 43%, avg -2.9% / -2.5%
-  take +15% / stop -15% / else the close: n=3219 win=44% avg=-2.7% med=-13.9% | halves win 42% / 45%, avg -3.2% / -2.3%
-  take +20% / stop -20% / else the close: n=3219 win=44% avg=-2.9% med=-8.0% | halves win 42% / 45%, avg -3.4% / -2.4%
-  take +30% / stop -30% / else the close: n=3219 win=44% avg=-2.9% med=-5.7% | halves win 42% / 45%, avg -3.4% / -2.3%
-  take +30% / stop -20% / else the close: n=3219 win=38% avg=-2.6% med=-14.5% | halves win 36% / 40%, avg -3.4% / -1.8%
-  take +50% / stop -25% / else the close: n=3219 win=37% avg=-2.1% med=-11.8% | halves win 36% / 37%, avg -2.8% / -1.5%
-  take +10% / stop -20% / else the close: n=3219 win=56% avg=-3.1% med=+10.0% | halves win 55% / 56%, avg -3.2% / -3.0%
-  take +15% / stop -30% / else the close: n=3219 win=55% avg=-3.1% med=+13.6% | halves win 54% / 55%, avg -3.2% / -3.1%
-  take +20% / stop -50% / else the close: n=3219 win=53% avg=-3.7% med=+3.5% | halves win 52% / 53%, avg -4.1% / -3.3%
-  at some point after the alert the bid estimate was up at least: +5%: 73%, +10%: 63%, +20%: 45%, +30%: 33%, +50%: 19%, +100%: 7%
-[   146s] round 2 done
+## sync
+Box copy: HEAD e2002c4, uncommitted files 0
+GitHub main 0dd46dc; branch 379e702
+GitHub main is now 379e702
+Box copy moved to 379e7023
+## wait for the image pin of 379e702
+pinned after ~180s
+## deploy
+== code ==
+== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
+== tidy: deploy Jobs for an image that was never built ==
+== apply ==
+job gate-379e702: complete
+job backup-379e702: complete
+job migrate-379e702: complete
+job role-check-379e702: complete
+unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
+unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
+images now: unusual-options-detector=379e702 unusual-options-detector-worker=379e702 
+== Google keys from Doppler ==
+== the live site ==
+health: {"status":"ok"}
+== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
+health: {"status":"ok"}; now ET: Mon 23:51:17
+admin sign-in: 200
+ideas intraday -> 200 date=2026-11-16 live=false total=953 shown=100 card={"n":225,"w":79,"l":146,"nq":0,"pending":0,"ahead":0,"behind":0,"spy":-0.018839907192575445} type=C:113/12/101,P:112/67/45 tiers=watch:98/25/70,low:855/205/306 off_list_shown=0
+ideas swing -> 200 date=2026-11-16 live=false total=2304 shown=100 card={"n":123,"w":0,"l":0,"nq":0,"pending":123,"ahead":36,"behind":87,"spy":-0.018839907192575445} type=C:50/0/0,P:73/0/0 tiers=watch:87/0/0,low:2217/0/0 off_list_shown=0
+everything -> 200 shown=100 off_list={"listable":100}
+status -> 200 market=closed late=0
+/ -> 200; /?view=swing -> 200; /direction -> 200; /chatter -> 200; /news -> 200; /macro -> 200; /status -> 200; /me -> 200; 
+recent web errors: 
+recent worker errors: 
