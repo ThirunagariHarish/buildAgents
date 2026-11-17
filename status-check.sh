@@ -28,3 +28,4 @@ for P in / /direction /chatter /news /macro /status /me /today /record /ticker/N
 echo "font served: $(curl -s -b "$TMP/jar" --max-time 30 "$SITE/" | grep -o '/_next/static/media/[^"]*\.woff2' | head -1 | xargs -I{} curl -s -o /dev/null -w '%{http_code} %{content_type}' --max-time 20 "$SITE{}")"
 echo "recent web errors: $($K logs deploy/$NS --since=10m 2>/dev/null | grep -i -E 'error|unhandled' | tail -3 | sed -E 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/<email>/g' | cut -c1-240)"
 echo "recent worker errors: $($K logs deploy/$NS-worker --since=10m 2>/dev/null | grep -i -E 'failed|unhandled' | tail -3 | cut -c1-260)"
+echo "header keeps clear of the status bar: $(curl -s -b "$TMP/jar" --max-time 30 "$SITE/" | grep -o '/_next/static/[^"]*\.css' | sort -u | while read -r c; do curl -s --max-time 20 "$SITE$c"; done | grep -c 'safe-area-inset-top') stylesheet(s) carry the top inset"
