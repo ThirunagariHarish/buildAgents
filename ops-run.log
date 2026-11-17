@@ -1,4 +1,4 @@
-run 63 at 2026-11-17T03:40:16Z, commit 045ce7b
+run 64 at 2026-11-17T03:53:27Z, commit 309a466
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,68 +6,35 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-## revised score, all graded (band | day | n | win% | avg% | median% | reached +20%)
-a <45 | 2026-11-13 | 49 | 16 | -41.8 | -45.8 | 14
-a <45 | 2026-11-16 | 227 | 34 | -1.7 | -16.2 | 37
-b 45-60 | 2026-11-13 | 99 | 22 | -25.5 | -21.8 | 12
-b 45-60 | 2026-11-16 | 285 | 40 | -7.5 | -5.7 | 32
-c 60-75 | 2026-11-13 | 53 | 30 | -7.3 | -8.8 | 13
-c 60-75 | 2026-11-16 | 92 | 43 | 1.6 | -2.7 | 24
-d 75+ | 2026-11-13 | 2 | 100 | 21.3 | 21.3 | 50
-d 75+ | 2026-11-16 | 2 | 0 | -8.1 | -8.1 | 0
-## revised score, bought at the ask (60%+) with spread under 12% only
-a <45 | 2026-11-13 | 17 | 12 | -48.9 | -70.8 | 12
-a <45 | 2026-11-16 | 60 | 35 | -16.6 | -18.2 | 40
-b 45-60 | 2026-11-13 | 68 | 22 | -27.3 | -29.3 | 13
-b 45-60 | 2026-11-16 | 185 | 38 | -9.8 | -6.7 | 32
-c 60-75 | 2026-11-13 | 48 | 29 | -7.8 | -9.3 | 13
-c 60-75 | 2026-11-16 | 80 | 45 | 2.1 | -1.9 | 24
-d 75+ | 2026-11-13 | 2 | 100 | 21.3 | 21.3 | 50
-d 75+ | 2026-11-16 | 2 | 0 | -8.1 | -8.1 | 0
-## revised score distribution (decile of v2 | n | win% | avg%), Monday only
-1 | 122 | 30 | -17.4 | 8 | 39
-2 | 121 | 39 | 12.5 | 39 | 47
-3 | 121 | 40 | -9.1 | 47 | 52
-4 | 121 | 41 | -6.1 | 52 | 58
-5 | 121 | 40 | 0.5 | 59 | 75
-## Monday graded on a closing quote only (exit at or after 15:45 ET) vs earlier
-closing quote | 264 | 38 | -0.4 | -7.9 | 42
-stale exit | 342 | 38 | -6.7 | -6.6 | 25
-## with or against SPY's move so far when the bet was seen, bets bought at the ask (60%+), by day
-2026-11-13 | against | 73 | 34 | -4.7
-2026-11-13 | with | 78 | 12 | -41.7
-2026-11-16 | against | 182 | 20 | -29.7
-2026-11-16 | with | 174 | 56 | 12.8
-## with or against the stock's own move so far that day (stocks with bars), bought at the ask
-2026-11-13 | against | 32 | 28 | -13.3
-2026-11-13 | with | 49 | 16 | -37.4
-2026-11-16 | against | 80 | 16 | -33.9
-2026-11-16 | flat | 3 | 33 | -26.8
-2026-11-16 | with | 107 | 60 | 16.6
-## Monday, exit rule: take +0.25, stop -0.25, else the close (15-minute quotes): how | n | avg result
-close | 270 | -3.5
-stop | 205 | -38.5
-target | 131 | 42.6
- | 606 | -5.4
-## Monday, exit rule: take +0.3, stop -0.2, else the close (15-minute quotes): how | n | avg result
-close | 251 | -0.8
-stop | 269 | -32.8
-target | 86 | 49.3
- | 606 | -7.9
-## Monday, exit rule: take +0.5, stop -0.3, else the close (15-minute quotes): how | n | avg result
-close | 347 | -0.6
-stop | 200 | -42.4
-target | 59 | 69.3
- | 606 | -7.6
-## Monday, exit rule: take +0.2, stop -0.2, else the close (15-minute quotes): how | n | avg result
-close | 215 | -2.9
-stop | 252 | -33.1
-target | 139 | 37.2
- | 606 | -6.3
-## same +25/-25 rule on Monday by call or put and by the revised-score band (band | type | n | win% (result > 0) | avg%)
-a <60 | C | 242 | 28 | -11.6
-a <60 | P | 270 | 47 | -1.3
-b 60+ | C | 45 | 27 | -8.5
-b 60+ | P | 49 | 53 | 5.5
-## how many bets per contract were also quoted at the close on Monday (ever quoted | closing quote)
-902 | 450
+## sync
+Box copy: HEAD d512c11, uncommitted files 0
+GitHub main ba139d4; branch e2002c4
+GitHub main is now e2002c4
+Box copy moved to e2002c44
+## wait for the image pin of e2002c4
+pinned after ~180s
+## deploy
+== code ==
+== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
+== tidy: deploy Jobs for an image that was never built ==
+== apply ==
+job gate-e2002c4: complete
+job backup-e2002c4: complete
+job migrate-e2002c4: complete
+job role-check-e2002c4: complete
+unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
+unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
+images now: unusual-options-detector=e2002c4 unusual-options-detector-worker=e2002c4 
+== Google keys from Doppler ==
+== the live site ==
+health: {"status":"ok"}
+== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
+health: {"status":"ok"}; now ET: Mon 22:53:20
+admin sign-in: 200
+ideas intraday -> 200 date=2026-11-16 live=false total=953 shown=100 card={"n":225,"w":79,"l":146,"nq":0,"pending":0,"ahead":0,"behind":0,"spy":-0.018839907192575445} type=C:113/12/101,P:112/67/45 tiers=extreme:3/0/3,high:13/4/9,watch:82/21/58,low:855/205/306 off_list_shown=34
+ideas swing -> 200 date=2026-11-16 live=false total=2304 shown=100 card={"n":123,"w":0,"l":0,"nq":0,"pending":123,"ahead":36,"behind":87,"spy":-0.018839907192575445} type=C:50/0/0,P:73/0/0 tiers=extreme:1/0/0,high:10/0/0,watch:76/0/0,low:2217/0/0 off_list_shown=29
+everything -> 200 shown=100 off_list={"listable":66,"two_sided":16,"sold":15,"wide_quote":3}
+status -> 200 market=closed late=0
+/ -> 200; /?view=swing -> 200; /direction -> 200; /chatter -> 200; /news -> 200; /macro -> 200; /status -> 200; /me -> 200; 
+recent web errors: 
+recent worker errors: 
