@@ -1,4 +1,4 @@
-run 65 at 2026-11-17T04:14:53Z, commit a2d06eb
+run 66 at 2026-11-17T04:19:44Z, commit fbf0132
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,43 +6,61 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-alerts older_than 3 days ago (2026-11-14T21:00:00Z) -> 200 0.151515s
-   rows 200 span 2026-11-13T20:58 .. 2026-11-13T21:32 has_bid_ask 200 has_delta 200
-alerts older_than 7 days ago (2026-11-10T21:00:00Z) -> 200 0.105686s
-   rows 200 span 2026-11-10T20:50 .. 2026-11-10T20:59 has_bid_ask 200 has_delta 200
-alerts older_than 14 days ago (2026-11-03T21:00:00Z) -> 200 0.108615s
-   rows 200 span 2026-11-03T20:48 .. 2026-11-03T20:59 has_bid_ask 200 has_delta 200
-alerts older_than 21 days ago (2026-10-27T21:00:00Z) -> 200 0.129021s
-   rows 200 span 2026-10-27T19:51 .. 2026-10-27T20:36 has_bid_ask 200 has_delta 200
-alerts older_than 30 days ago (2026-10-18T21:00:00Z) -> 200 0.105611s
-   rows 200 span 2026-10-16T19:57 .. 2026-10-16T20:17 has_bid_ask 200 has_delta 200
-alerts older_than 45 days ago (2026-10-03T21:00:00Z) -> 200 0.110943s
-   rows 200 span 2026-10-02T19:46 .. 2026-10-02T20:19 has_bid_ask 200 has_delta 200
-alerts older_than 60 days ago (2026-09-18T21:00:00Z) -> 200 0.124800s
-   rows 200 span 2026-09-18T19:54 .. 2026-09-18T20:54 has_bid_ask 200 has_delta 0
-alerts older_than 90 days ago (2026-08-19T21:00:00Z) -> 200 0.103194s
-   rows 200 span 2026-08-19T19:39 .. 2026-08-19T20:59 has_bid_ask 200 has_delta 0
-alerts older_than 180 days ago (2026-05-21T21:00:00Z) -> 200 0.117457s
-   rows 200 span 2026-05-21T19:40 .. 2026-05-21T20:45 has_bid_ask 200 has_delta 0
-one past day 2026-11-06: alerts 7503 in 38 pages, distinct contracts 3958, distinct tickers 466, first alert 2026-11-06T12:30, last 2026-11-06T21:22
-sample alert (line 40): ask 26.37 bid 26.2 at 2026-11-06T21:08:24
-contract historic -> 200 0.211171s
-   top keys chains,etf_holdings rows 261 keys stock_multi_leg_volume,cross_volume,open_interest,nbbo_bid,nbbo_ask_size,sweep_volume,date,nbbo_bid_size,last_price,multi_leg_volume,volume,open_price,iv_low,iv_high,low_price,floor_volume,high_price,bid_volume,trades,avg_price,total_ask_changes,mid_volume,flex_oi_transfer,implied_volatility,ask_volume,ticker_vol,total_premium,neutral_volume,nbbo_ask,underlying_close,last_tape_time,total_bid_changes,canceled_volume
-   2026-11-11 bid 11.93 ask 12.01 last 12.02 high 14.11 low 11.59 open 13.66 vol 291 oi 8427
-   2026-11-10 bid 16.22 ask 16.32 last 16.52 high 19.26 low 16.05 open 18.22 vol 1893 oi 7113
-   2026-11-09 bid 15.98 ask 16.07 last 15.99 high 22.36 low 15.28 open 22.27 vol 1360 oi 6932
-   2026-11-06 bid 26.29 ask 26.49 last 26.29 high 26.94 low 22.30 open 26.94 vol 1631 oi 7371
-   dates 2025-11-03 .. 2026-11-16
-contract intraday for that day -> 200 0.092556s
-   rows 91 keys close,high,low,open,start_time,trading_hours,premium_mid_side,premium_no_side,premium_ask_side,premium_bid_side,volume_bid_side,volume_ask_side,volume_no_side,volume_mid_side,iv_low,iv_high,avg_price,volume_multi,volume_stock_multi
-   first {"close":"26.29","high":"26.29","low":"26.29","open":"26.29","start_time":"2026-11-06T21:08:00Z","trading_hours":"rth","premium_mid_side":0,"premium_no_side":0,"premium_ask_side":525800,"premium_bid_side":0,"volume_bid_side":0,"volume_ask_side":200,"volume_no_
-   last {"close":"26.94","high":"26.94","low":"26.94","open":"26.94","start_time":"2026-11-06T14:30:00Z","trading_hours":"rth","premium_mid_side":0,"premium_no_side":0,"premium_ask_side":0,"premium_bid_side":
-ticker daily bars -> 200 0.097096s
-   rows 30 keys close,date,high,low,market_time,open,total_volume,volume dates 2026-11-03 .. 2026-11-16
-ticker 5m bars on a past day -> 200 0.087966s
-   rows 120 span 2026-11-06T15:00 .. 2026-11-07T00:55
-SPY 5m bars 45 days ago -> 200 0.078991s
-   rows 0 span undefined .. undefined
-sort: write failed: 'standard output': Broken pipe
-     29 200      11 429 in .7361s for 40 contract histories
-runner: Python 3.14.4, cores 4, mem 15G
+numpy 2.5.5 sklearn 1.9.1 optuna 5.1.0
+[     5s] alerts 2026-11-13: 6301
+[     9s] alerts 2026-11-12: 6929
+[     9s] contracts 2026-11-13: 2975 seen, 1388 pass the loose gate, 120 priced
+[     9s] contracts 2026-11-12: 3016 seen, 1494 pass the loose gate, 120 priced
+[    20s] closes: 240 of 240 contracts in 11s
+[    21s] daily bars: 73 of 77 tickers
+[    21s] SPY intraday bars for 2 of 2 days
+[    24s] stored flow-2d-120c: 1.7 MB gz in 1 parts
+[    24s] dataset: 2 sessions 2026-11-12 .. 2026-11-13, 380 graded alert-entries, 240 contract-days
+
+== 1. Base rates (first sighting, one per contract and day; in at the ask, out at that day's closing bid)
+all priced bets (loose gate: half or more at the ask, spread to 25%): n=240 win=27% avg=-14.0% med=-6.9%
+  expiring within a week: n=75 win=27% avg=-23.9% med=-18.7% | longer: n=165 win=27% avg=-9.5% med=-5.1%
+  calls: n=128 win=34% avg=-8.9% med=-5.3% | puts: n=112 win=18% avg=-19.7% med=-8.5%
+  per day (within a week): 11-12:27%/33 11-13:26%/42
+
+== 2. The app's version-2 score on these sessions (first sighting, within a week)
+  score 0-45: n=13 win=23% avg=-34.7% med=-41.3%
+  score 45-60: n=52 win=27% avg=-23.0% med=-19.3%
+  score 60-70: n=10 win=30% avg=-14.6% med=-9.1%
+  score 70-80: n=0
+  score 80-101: n=0
+  the list (60+): n=10 win=30% avg=-14.6% med=-9.1% | days with 3+ picks 2/2; day win rate med 30% (min 0%, max 60%), days above 50% 1, days with a positive average 1
+
+== 3. Single facts, first sighting within a week (bucket: n, win rate, average)
+  days to expiry: 4-7: 33/36%/-2.1%
+  spread: 
+  abs delta: .45-.6: 34/29%/-17.3%
+  share at ask: 95+: 54/28%/-17.6%
+  premium: <250k: 57/28%/-19.0%
+  time of day: 
+  stock move so far, toward the bet: 
+  SPY move so far, toward the bet: 
+  5-day stock trend toward the bet: 
+  ticker flow agrees (share of ask-side premium): 
+  market flow so far toward the bet: even: 39/21%/-29.5%
+  kind: stock: 38/39%/-5.5%
+  option price: 
+  entering at alert number 1: n=75 win=27% avg=-23.9% med=-18.7%
+  entering at alert number 2: n=29 win=21% avg=-34.1% med=-23.6%
+  entering at alert number 3: n=20 win=20% avg=-38.4% med=-30.2%
+  entering at alert number 4: n=14 win=7% avg=-47.5% med=-45.1%
+  shares after the bet, toward it: avg +0.08%, moved toward 38% of the time (n=65)
+
+== 4. A model trained only on earlier days (walk-forward), scored on each later day
+  logit: too few scored
+  gbm: too few scored
+
+== 5. Multi-pass rule, tuned on the earlier days and checked on later days it never saw
+Traceback (most recent call last):
+  File "/home/runner/work/buildAgents/buildAgents/flow_research.py", line 630, in <module>
+    main()
+    ~~~~^^
+  File "/home/runner/work/buildAgents/buildAgents/flow_research.py", line 550, in main
+    print(f"  tuned on {len(tune_days)} days ({tune_days[0]} .. {tune_days[-1]}), checked on {len(hold_days)} days ({hold_days[0]} .. {hold_days[-1]})")
+                                               ~~~~~~~~~^^^
+IndexError: list index out of range
