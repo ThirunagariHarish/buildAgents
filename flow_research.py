@@ -373,7 +373,133 @@ def first_pick(meta, mask):
     return np.array(out, dtype=int)
 
 
+# ---------------------------------------------------------------- round 2: exits, the other side, plain avoid-rules
+
+def round2(ds):
+    days = sorted(ds["days"])
+    X, meta = build(ds)
+    F = {k: X[:, i] for i, k in enumerate(FEATS)}
+    ret = np.array([m["ret"] for m in meta])
+    k1 = np.array([m["k"] == 1 for m in meta]); intr = np.array([m["dte"] <= 7 for m in meta])
+    dte = np.array([m["dte"] for m in meta]); absd = np.nan_to_num(F["abs_delta"], nan=0.4)
+    half = np.array([m["day"] <= days[len(days) // 2 - 1] for m in meta])
+    idx_of = {(m["day"], m["sym"]): i for i, m in enumerate(meta) if m["k"] == 1}
+
+    def line(label, mk):
+        bd = by_day(meta, np.where(mk)[0])
+        wr = [np.mean(np.array(bd[d]) > 0) for d in days if len(bd[d]) >= 3]
+        print(f"  {label}: {stats(ret[mk])} | first half {stats(ret[mk & half])} | second half {stats(ret[mk & ~half])}"
+              f" | best day {100 * max(wr):.0f}%, days above 50%: {sum(w > 0.5 for w in wr)}/{len(wr)}")
+
+    print("\n== A. Stacking plain avoid-rules, one pass at a time (30 sessions, first sighting, expiring within a week)")
+    mk = k1 & intr
+    line("0 every priced bet", mk)
+    mk = mk & (F["ask_share"] >= 0.6); line("1 mostly bought (60%+ at the ask)", mk)
+    mk = mk & (F["is_index"] == 0); line("2 no index options", mk)
+    mk = mk & (dte >= 1); line("3 no same-day expiry", mk)
+    mk = mk & (F["spread"] <= 0.08); line("4 spread 8% or less", mk)
+    mk = mk & (absd >= 0.3); line("5 delta 0.30 or more", mk)
+    mk = mk & (F["tod"] <= 0.77); line("6 seen before 14:30", mk)
+    mk = mk & (F["log_ask"] >= 0); line("7 option price $1 or more", mk)
+    m8 = mk & (F["spread"] <= 0.04) & (absd >= 0.45); line("8 tighter: spread 4%, delta 0.45+", m8)
+    line("  pass 7 on calls only", mk & (F["is_call"] == 1)); line("  pass 7 on puts only", mk & (F["is_call"] == 0))
+    line("  pass 7, stock moving toward the bet", mk & (np.nan_to_num(F["und_move"], nan=0) > 0.002))
+    line("  pass 7, stock moving against the bet", mk & (np.nan_to_num(F["und_move"], nan=0) < -0.002))
+    gate7 = mk.copy()
+    sw = np.array([m["dte"] > 7 for m in meta]) & k1
+    r1 = np.array([m["ret1"] for m in meta])
+    print("  swings (more than a week out), same-day close:", stats(ret[sw]), "| passes 1-2,4-7:", stats(ret[sw & (F['ask_share'] >= 0.6) & (F['is_index'] == 0) & (F['spread'] <= 0.08) & (absd >= 0.3) & (F['tod'] <= 0.77) & (F['log_ask'] >= 0)]))
+
+    print("\n== B. The other side: selling the same contract at the bid when seen, closing at the day's closing ask")
+    sret, ok = np.full(len(meta), np.nan), np.zeros(len(meta), bool)
+    for i, m in enumerate(meta):
+        cl = (ds["closes"].get(m["sym"]) or {}).get(m["day"])
+        bid = m["ask"] * (1 - m["spread"])
+        if cl and cl[1] is not None and bid > 0.05:
+            sret[i] = (bid - cl[1]) / bid; ok[i] = True
+    def sline(label, mk):
+        r = sret[mk & ok]
+        if len(r) < 30: print(f"  {label}: n={len(r)}"); return
+        print(f"  {label}: n={len(r)} win={100 * np.mean(r > 0):.0f}% avg={100 * np.mean(r):+.1f}% med={100 * np.median(r):+.1f}% "
+              f"| worst 5% of trades lose {100 * -np.quantile(r, 0.05):.0f}% or more of the premium, worst 1% {100 * -np.quantile(r, 0.01):.0f}%, "
+              f"lose more than was collected: {100 * np.mean(r < -1):.1f}%")
+    sline("every priced bet within a week", k1 & intr)
+    sline("mostly bought, no index", k1 & intr & (F["ask_share"] >= 0.6) & (F["is_index"] == 0))
+    sline("same-day expiry only", k1 & (dte == 0) & (F["is_index"] == 0))
+    sline("1-7 days", k1 & intr & (dte >= 1) & (F["is_index"] == 0))
+    sline("index options", k1 & intr & (F["is_index"] == 1))
+    sline("far out of the money (delta under 0.3)", k1 & intr & (absd < 0.3) & (F["is_index"] == 0))
+    sline("swings", sw)
+
+    print("\n== C. Faster exits, from each contract's minute bars after the alert (exit price marked down by half the entry spread)")
+    key2 = KEY + "-intra"
+    intra = None if os.environ.get("FORCE2") else blob_get(key2)
+    todo = [i for i in np.where(k1 & intr & (F["ask_share"] >= 0.6) & (F["is_index"] == 0))[0]]
+    if intra is None:
+        intra, t = {}, time.time()
+        def one(i):
+            m = meta[i]
+            j = get(f"/api/option-contract/{m['sym']}/intraday", {"date": m["day"]})
+            open_ts = datetime.fromisoformat(m["day"] + "T09:30:00").replace(tzinfo=ET).timestamp()
+            out = []
+            for r in (j or {}).get("data") or []:
+                ts_ = datetime.fromisoformat(r["start_time"].replace("Z", "+00:00")).timestamp() - open_ts
+                if ts_ > m["ts"] and ts_ <= 23400:
+                    out.append([round(ts_ - m["ts"]), num(r.get("high")), num(r.get("low")), num(r.get("close"))])
+            return f"{m['day']}|{m['sym']}", sorted(out)
+        with ThreadPoolExecutor(int(os.environ.get("WORKERS", "8"))) as ex:
+            for k_, v in ex.map(one, todo):
+                intra[k_] = v
+        log(f"minute bars for {len(intra)} contract-days in {time.time() - t:.0f}s; with any bar after the alert: {sum(1 for v in intra.values() if v)}")
+        blob_put(key2, intra)
+    else:
+        log(f"loaded {key2}")
+    per_day = defaultdict(int)
+    for k_, v in intra.items():
+        if v: per_day[k_.split("|")[0]] += 1
+    print("  contract-days with bars after the alert, by day: " + " ".join(f"{d[5:]}:{per_day[d]}" for d in days))
+    rows = []
+    for i in todo:
+        m = meta[i]; bars = intra.get(f"{m['day']}|{m['sym']}") or []
+        if not bars or not gate7[i]:
+            continue
+        rows.append((i, bars))
+    print(f"  bets passing pass 7 with bars: {len(rows)} (held to the close: {stats([ret[i] for i, _ in rows])})")
+    def px(v, m): return v * (1 - m["spread"] / 2)
+    for mins in (5, 15, 30, 60, 120):
+        out = []
+        for i, bars in rows:
+            m = meta[i]; e = None
+            for t_, hi, lo, c in bars:
+                if t_ >= mins * 60 and c: e = px(c, m) / m["ask"] - 1; break
+            out.append(e if e is not None else ret[i])
+        print(f"  exit at the first trade {mins} min after the alert: {stats(out)}")
+    for T_, S_ in ((0.1, 0.1), (0.15, 0.15), (0.2, 0.2), (0.3, 0.3), (0.3, 0.2), (0.5, 0.25), (0.1, 0.2), (0.15, 0.3), (0.2, 0.5)):
+        out, h1, h2 = [], [], []
+        for i, bars in rows:
+            m = meta[i]; e = None
+            for t_, hi, lo, c in bars:
+                # Both inside one minute: the stop is assumed to have come first.
+                if lo and px(lo, m) / m["ask"] - 1 <= -S_: e = -S_ - 0.02; break
+                if hi and px(hi, m) / m["ask"] - 1 >= T_: e = T_; break
+            e = e if e is not None else ret[i]
+            out.append(e); (h1 if half[i] else h2).append(e)
+        print(f"  take +{int(T_ * 100)}% / stop -{int(S_ * 100)}% / else the close: {stats(out)} | halves win {100 * np.mean(np.array(h1) > 0):.0f}% / {100 * np.mean(np.array(h2) > 0):.0f}%, avg {100 * np.mean(h1):+.1f}% / {100 * np.mean(h2):+.1f}%")
+    mfe = []
+    for i, bars in rows:
+        m = meta[i]; mfe.append(max([px(hi, m) / m["ask"] - 1 for _, hi, _, _ in bars if hi] or [-1]))
+    mfe = np.array(mfe)
+    print("  at some point after the alert the bid estimate was up at least: " + ", ".join(f"+{int(t * 100)}%: {100 * np.mean(mfe >= t):.0f}%" for t in (0.05, 0.1, 0.2, 0.3, 0.5, 1.0)))
+    log("round 2 done")
+
+
 def main():
+    if STAGE == "round2":
+        ds = blob_get(KEY)
+        if ds is None:
+            log("no stored dataset"); return
+        log(f"loaded {KEY}")
+        round2(ds); return
     ds = None if os.environ.get("FORCE") else blob_get(KEY)
     if ds is None:
         if STAGE == "tune":
