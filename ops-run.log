@@ -1,4 +1,4 @@
-run 60 at 2026-11-16T16:04:04Z, commit d9a2aa2
+run 61 at 2026-11-17T03:33:42Z, commit 62d19d6
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -7,91 +7,53 @@ GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
 ## sync
-Box copy: HEAD d8a6c0d, uncommitted files 0
-GitHub main 2b52ab7; branch 9b8ce0a
-GitHub main is now 9b8ce0a
-Box copy moved to 9b8ce0ad
-## wait for the image pin of 9b8ce0a
+Box copy: HEAD 9b8ce0a, uncommitted files 0
+GitHub main 93bbd0d; branch d512c11
+GitHub main is now d512c11
+Box copy moved to d512c114
+## wait for the image pin of d512c11
 pinned after ~210s
 ## deploy
 == code ==
 == Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
 == tidy: deploy Jobs for an image that was never built ==
 == apply ==
-job gate-9b8ce0a: complete
-job backup-9b8ce0a: complete
-job migrate-9b8ce0a: complete
-job role-check-9b8ce0a: complete
+job gate-d512c11: complete
+job backup-d512c11: complete
+job migrate-d512c11: complete
+job role-check-d512c11: complete
 unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
 unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
-images now: unusual-options-detector=9b8ce0a unusual-options-detector-worker=9b8ce0a 
+images now: unusual-options-detector=d512c11 unusual-options-detector-worker=d512c11 
 == Google keys from Doppler ==
 == the live site ==
-health: Bad Gateway
+health: {"status":"ok"}
 == Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
-health: {"status":"ok"}; now ET: Mon 11:03:50
-feeds read since deploy: 9
+health: {"status":"ok"}; now ET: Mon 22:23:09
+feeds read since deploy: 2
 admin sign-in: 200
 status -> 200
-market=open session=2026-11-16 next_open=null late=0
-  bets       live     read 28s       newest 29s      
-  quotes     live     read 208s      newest 208s     
-  prices     live     read 28s       newest 232s     
-  tide       live     read 28s       newest 232s     
-  spy_flow   live     read 28s       newest 52s      
-  gamma      live     read 28s       newest 52s      
-  sectors    live     read 148s      newest -        
-  macro_live live     read 148s      newest 232s     
-  news       live     read 28s       newest 71s      
-  chatter    live     read 28s       newest 627s      (132 channels)
-  calendar   live     read 22513s    newest -        
-  earnings   live     read 23464s    newest -        
-  macro      live     read 3509s     newest 57832s    (Published daily, weekly or monthly by the source; each row o)
-px freshness: NVDA | 00d 01:03;QQQ | 00d 00:03;SPY | 00d 00:03;TLT | 00d 00:03;VIXY | 00d 00:03;
-macro -> 200 live_at=2026-11-16T16:00:00.000Z live=SPY:-0.99,QQQ:-1.68,IWM:-0.99,TLT:0.13,UUP:0.12,GLD:-0.54,USO:-2.42,HYG:-0.09,VIXY:3.40 kpis=23 corr=-0.06277196870763449
-news -> 200 newest=2026-11-16T16:02:41.000Z items=150 with_tickers=21 with_move=15 board=NVDA:7,TSLA:5,LE:2,PEN:2,T:2,API:1,BG:1,BTI:1,CBOE:1,CDNL:1
-direction -> 200 date=2026-11-16 as_of=2026-11-16T16:00:00.000Z lean=none gamma=-12096341411.07 sectors=12
-ideas -> 200 date=2026-11-16 live=true total=512 last_alert=2026-11-16T16:03:23.008Z last_quote=2026-11-16T16:00:23.348Z
+market=closed session=2026-11-16 next_open=2026-11-17T14:30:00.000Z late=0
+  bets       waiting  read 23650s    newest 23605s   
+  quotes     waiting  read 24250s    newest 23590s   
+  prices     waiting  read 9249s     newest 9517s    
+  tide       waiting  read 23590s    newest 23917s   
+  spy_flow   waiting  read 23590s    newest 23617s   
+  gamma      waiting  read 23590s    newest 23617s   
+  sectors    waiting  read 9249s     newest -        
+  macro_live waiting  read 9249s     newest 9517s    
+  news       live     read 594s      newest 838s     
+  chatter    live     read 39s       newest 9894s     (132 channels)
+  calendar   live     read 63898s    newest -        
+  earnings   live     read 64849s    newest -        
+  macro      live     read 911s      newest 99217s    (Published daily, weekly or monthly by the source; each row o)
+px freshness: NVDA | 00d 02:38;QQQ | 00d 02:38;SPY | 00d 02:38;TLT | 00d 02:38;VIXY | 00d 02:38;
+macro -> 200 live_at=2026-11-17T00:55:00.000Z live=SPY:-1.86,QQQ:-2.58,IWM:-1.88,TLT:-0.00,UUP:0.34,GLD:-0.67,USO:-4.33,HYG:-0.26,VIXY:7.93 kpis=23 corr=-0.053634943184920576
+news -> 200 newest=2026-11-17T03:19:39.000Z items=150 with_tickers=51 with_move=6 board=RBA:30,UAL:8,NVDA:6,AMD:1,API:1,ASHR:1,AVDX:1,BAC:1,BLX:1,BWIN:1
+direction -> 200 date=2026-11-16 as_of=2026-11-16T20:55:00.000Z lean=down gamma=-17612984310.61 sectors=12
+ideas -> 200 date=2026-11-16 live=false total=953 last_alert=2026-11-16T21:00:11.414Z last_quote=2026-11-16T21:00:26.671Z
 / -> 200; /direction -> 200; /chatter -> 200; /news -> 200; /macro -> 200; /status -> 200; /me -> 200; /today -> 200; /record -> 200; /ticker/NVDA -> 200; /login -> 307; 
 font served: 200 font/woff2
 recent web errors: 
 recent worker errors: 
-top tags 24h: YORK | 24;ON | 22;AI | 17;NVDA | 10;PM | 8;RSI | 8;SAN | 5;TSLA | 5;FANG | 3;PARK | 3;BAC | 3;GOLD | 3;BTI | 2;BIDU | 2;RVMD | 2;BXDC | 2;LE | 2;MSTR | 2;NEAR | 2;MSFT | 2;NDAQ | 2;BIS | 2;NET | 2;IPO | 2;T | 2;CBSH | 2;EPS | 2;BTC | 2;TSM | 2;UAE | 2;
--- ON
-Tradex | Trump on Meeting Xi and Putin in China: We will talk about the economy and trade too. | ON
-Tradex | Trump on meeting Xi and Putin in China: We'll talk about denuclearization, Iran and Ukraine | ON
-Tradex | Trump on Alice Huang: I don't know that she's a Chinese spy | ON
--- YORK
-Business Wire | Republic Brands Group Acquires Rebecca Minkoff, Unveils Ambitious Global Growth Strategy | YORK
-PR NewsWire | Heytea Opens Its First-Ever Matcha Lab on New York's Lower East Side | YORK
-PR NewsWire | accessiBe's accessFlow Is Now One Agentic Accessibility Suite, From Design to Production | YORK
--- SAN
-Business Wire | DoorDash Helping Families Put Food on the Table This Holiday Season | SAN
-PR NewsWire | Remedy Robotics Raises $62 Million Series B to Bring Life-Saving Cardiovascular Intervention to Patients Everywhere | SAN
-Business Wire | Thumbtack Appoints Randy Hunt as First Chief Design Officer | SAN
--- PARK
-Business Wire | Mediacom Communications Appoints Jimmie Coker Vice President of Maintenance | PARK
-Business Wire | Mediacom Communications Names Ineshia Proctor Group Vice President, Customer Service Operations | PARK
-Business Wire | Mediacom Communications Names Heidi Ferolito As Group Vice President, Talent &amp; Learning | PARK
--- AI
-Tradex | OpenAI Explored $5B–Plus Acquisition Of Startup That Decodes How AI ‘Thinks’ – Information www.theinformation.com/articles/ope... | AI
-Tradex | US license needed to re-export advanced AI chips to Brazil and Singapore | AI
-Tradex | Commerce Dept issues rule on access to American AI technology; BIS rule restricts remote access to AI chips | AI,BIS
--- RSI
-Blockchain News | Oklo Stock Price Prediction: Bearish trend, but buyers are still showing up on the dip | OKLO,RSI
-Blockchain News | Pepe Price Prediction: Bulls Lose Momentum as PEPE Tests Lower-Band Support | RSI
-Blockchain News | Cardano (ADA) Price Prediction: Oversold spot price meets bearish structure as futures positioning stays net-long | RSI
--- PM
-Tradex | Canada's PM Carney arrives in Shenzhen for APEC - Xinhua | PM
-Tradex | BELGIAN PM DE WEVER WILL REPORT BACK TO THE KING ON NOV 23, KING'S OFFICE SAYS | PM,DE
-Tradex | Belgian PM leaves palace after updating king on budget talks following political crisis | PM
--- GOLD
-Tradex | Gold Prices Fall 1%, With Spot Bullion Sliding to $3,840.89/Oz. | GOLD
-Tradex | Gold Stabilises At $3,877.66 As Investors Await Interest Rate Clues From Warsh's Remarks - RTRS | GOLD
-Tradex | GOLD STEADIED NEAR $3,890 AN OUNCE AFTER FALLING 4.6% LAST WEEK, ITS WORST WEEKLY PERFORMANCE SINCE JUNE, AS STRONG US INFLATION DATA AND HAWKISH FED  | GOLD,NEAR
--- NVDA
-Tradex | Nvidia launches Vera CPU rack-scale platform for HPC $NVDA | NVDA
-Tradex | IBM, Fermilab and Nvidia report plans for new quantum co-design platform; Fermilab to host Nvidia DGX B200 and IBM quantum computers. $IBM $NVDA | DGX,IBM,NVDA
-Tradex | $NVDA: UBS CUTS TARGET PRICE TO $240 FROM $300 | NVDA,UBS
-tag appears in headline as an upper-case word (share, 24h): 156 | 336
-sources: Tradex | 559 | 124;PR NewsWire | 256 | 76;Business Wire | 153 | 53;Blockchain News | 48 | 43;NYT | 15 | 0;Cointelegraph | 9 | 3;Decrypt | 4 | 0;Investors.com | 4 | 2;Unusual Whales | 2 | 1;Politico | 1 | 0;
+header keeps clear of the status bar: 1 stylesheet(s) carry the top inset
