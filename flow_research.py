@@ -98,7 +98,8 @@ def et_day(iso):
 
 def sessions(n):
     """The last n weekdays before today (ET) that have alerts; holidays drop out when a day comes back empty."""
-    out, d = [], datetime.now(ET).date() - timedelta(days=1)
+    now = datetime.now(ET)
+    out, d = [], now.date() if now.hour >= 17 else now.date() - timedelta(days=1)
     while len(out) < n + 4:
         if d.weekday() < 5:
             out.append(d.isoformat())
@@ -547,6 +548,8 @@ def main():
     base = {"share": 0.6, "spread": 0.12, "prem": 5.0, "dte_lo": 0, "dte_hi": 7, "d_lo": 0.0, "d_hi": 1.0, "tod": 1.0,
             "price": -2.0, "hits": 1, "kind": "any", "side": "any", "und": None, "spy": None, "mom": None, "conf": None,
             "tide": None, "model": 0.0}
+    if len(tune_days) < 4 or len(hold_days) < 3:
+        print("  too few scored days to tune"); log("done"); return
     print(f"  tuned on {len(tune_days)} days ({tune_days[0]} .. {tune_days[-1]}), checked on {len(hold_days)} days ({hold_days[0]} .. {hold_days[-1]})")
     for label, ds_ in (("tuning days", tune_days), ("unseen days", hold_days)):
         _, idx = score(select(base), ds_)
