@@ -1,4 +1,4 @@
-run 69 at 2026-11-17T04:51:20Z, commit c7b01d7
+run 70 at 2026-11-17T19:00:08Z, commit 0c5e8a5
 
 DOPPLER_TOKEN: missing
 DOPPLER_SERVICE_TOKEN: missing
@@ -6,35 +6,6 @@ GOOGLE_CLIENT_ID: missing
 GOOGLE_CLIENT_SECRET: missing
 
 BOX_KUBECONFIG: set; API server port 6443
-## sync
-Box copy: HEAD e2002c4, uncommitted files 0
-GitHub main 0dd46dc; branch 379e702
-GitHub main is now 379e702
-Box copy moved to 379e7023
-## wait for the image pin of 379e702
-pinned after ~180s
-## deploy
-== code ==
-== Doppler token for the Google keys (copied from the ytclipper namespace: Doppler project dev-platform) ==
-== tidy: deploy Jobs for an image that was never built ==
-== apply ==
-job gate-379e702: complete
-job backup-379e702: complete
-job migrate-379e702: complete
-job role-check-379e702: complete
-unusual-options-detector: deployment "unusual-options-detector" successfully rolled out
-unusual-options-detector-worker: deployment "unusual-options-detector-worker" successfully rolled out
-images now: unusual-options-detector=379e702 unusual-options-detector-worker=379e702 
-== Google keys from Doppler ==
-== the live site ==
-health: {"status":"ok"}
-== Chatter: Discord bot from the analyst-team Doppler secret into the app's encrypted Settings (only if empty) ==
-health: {"status":"ok"}; now ET: Mon 23:51:17
-admin sign-in: 200
-ideas intraday -> 200 date=2026-11-16 live=false total=953 shown=100 card={"n":225,"w":79,"l":146,"nq":0,"pending":0,"ahead":0,"behind":0,"spy":-0.018839907192575445} type=C:113/12/101,P:112/67/45 tiers=watch:98/25/70,low:855/205/306 off_list_shown=0
-ideas swing -> 200 date=2026-11-16 live=false total=2304 shown=100 card={"n":123,"w":0,"l":0,"nq":0,"pending":123,"ahead":36,"behind":87,"spy":-0.018839907192575445} type=C:50/0/0,P:73/0/0 tiers=watch:87/0/0,low:2217/0/0 off_list_shown=0
-everything -> 200 shown=100 off_list={"listable":100}
-status -> 200 market=closed late=0
-/ -> 200; /?view=swing -> 200; /direction -> 200; /chatter -> 200; /news -> 200; /macro -> 200; /status -> 200; /me -> 200; 
-recent web errors: 
-recent worker errors: 
+before (role, enabled, count): admin | t | 1;user | t | 1;
+update: UPDATE 1
+after (role, enabled, count): admin | t | 2;
